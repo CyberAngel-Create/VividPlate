@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { MenuCategory, MenuItem } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTrigger, 
+  DialogTitle,
+  DialogHeader,
+  DialogDescription
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -83,7 +90,13 @@ const MenuItemsList = ({
                 <PlusCircle className="mr-1 h-4 w-4" /> Add Item
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>{category.name} - Add Menu Item</DialogTitle>
+                <DialogDescription>
+                  Add a new item to the "{category.name}" category
+                </DialogDescription>
+              </DialogHeader>
               <MenuItemForm 
                 categoryId={category.id} 
                 onSubmit={handleAddItem} 
@@ -181,7 +194,13 @@ const MenuItemsList = ({
       {/* Edit Dialog */}
       {editingItem && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Menu Item</DialogTitle>
+              <DialogDescription>
+                Make changes to your menu item below
+              </DialogDescription>
+            </DialogHeader>
             <MenuItemForm 
               categoryId={editingItem.categoryId} 
               item={editingItem}
