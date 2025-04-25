@@ -27,7 +27,7 @@ interface Update {
 
 const Dashboard = () => {
   const { toast } = useToast();
-  const { activeRestaurant } = useRestaurant();
+  const { activeRestaurant, restaurants, isLoading: isLoadingRestaurants, refetchActiveRestaurant } = useRestaurant();
   
   // Stats query
   const { data: stats, isLoading: isLoadingStats } = useQuery({
@@ -63,6 +63,26 @@ const Dashboard = () => {
       ]);
     }
   }, [activeRestaurant]);
+
+  // If we have restaurants but no active restaurant, refetch to ensure we have the latest data
+  useEffect(() => {
+    if (restaurants.length > 0 && !activeRestaurant) {
+      refetchActiveRestaurant();
+    }
+  }, [restaurants, activeRestaurant, refetchActiveRestaurant]);
+
+  if (isLoadingRestaurants) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="container mx-auto px-4 py-6">
+          <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeRestaurant) {
     return (
