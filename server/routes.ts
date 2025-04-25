@@ -155,6 +155,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(userWithoutPassword);
   });
 
+  // Subscription Status Endpoint
+  app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.user.id;
+      
+      // Check if user has an active subscription
+      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      
+      // Count restaurants to enforce limits
+      const restaurantCount = await storage.countRestaurantsByUserId(userId);
+      
+      if (activeSubscription && activeSubscription.tier === "premium") {
+        return res.json({
+          tier: activeSubscription.tier,
+          isPaid: true,
+          maxRestaurants: 3,
+          currentRestaurants: restaurantCount,
+          expiresAt: activeSubscription.endDate
+        });
+      } else {
+        return res.json({
+          tier: "free",
+          isPaid: false,
+          maxRestaurants: 1,
+          currentRestaurants: restaurantCount,
+          expiresAt: null
+        });
+      }
+    } catch (error) {
+      console.error("Error getting subscription status:", error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
   // Restaurant routes
   app.get('/api/restaurants', isAuthenticated, async (req, res) => {
     try {
@@ -167,9 +201,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/restaurants', isAuthenticated, async (req, res) => {
     try {
+      const userId = (req.user as any).id;
+      
+      // Check subscription status to enforce restaurant limits
+      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      const restaurantCount = await storage.countRestaurantsByUserId(userId);
+      
+      // Determine max restaurants based on subscription tier
+      const maxRestaurants = activeSubscription && activeSubscription.tier === "premium" ? 3 : 1;
+      
+      // Check if user has reached their limit
+      if (restaurantCount >= maxRestaurants) {
+        return res.status(403).json({ 
+          message: 'Restaurant limit reached', 
+          limit: maxRestaurants,
+          upgradeRequired: maxRestaurants === 1
+        });
+      }
+      
       const restaurantData = insertRestaurantSchema.parse({
         ...req.body,
-        userId: (req.user as any).id
+        userId
       });
       
       const restaurant = await storage.createRestaurant(restaurantData);

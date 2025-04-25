@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { apiRequest } from "@/lib/queryClient";
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
+import AdBanner from "@/components/ads/AdBanner";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -70,11 +71,19 @@ const ViewMenu = () => {
   const { restaurant, menu } = data;
   
   return (
-    <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
-      <CustomerMenuPreview 
-        restaurant={restaurant}
-        menuData={menu}
-      />
+    <div className="flex flex-col items-center w-full">
+      {/* Top ad banner for free users */}
+      <AdBanner position="top" className="w-full max-w-screen-md my-3" />
+      
+      <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
+        <CustomerMenuPreview 
+          restaurant={restaurant}
+          menuData={menu}
+        />
+      </div>
+      
+      {/* Bottom ad banner for free users */}
+      <AdBanner position="bottom" className="w-full max-w-screen-md my-3" />
     </div>
   );
 };

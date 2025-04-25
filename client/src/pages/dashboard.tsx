@@ -7,9 +7,10 @@ import RestaurantInfoCard from "@/components/dashboard/RestaurantInfoCard";
 import QuickActions from "@/components/dashboard/QuickActions";
 import RecentUpdates from "@/components/dashboard/RecentUpdates";
 import TabNavigation from "@/components/layout/TabNavigation";
-import { Eye, QrCode, Utensils, Calendar } from "lucide-react";
+import { Eye, QrCode, Utensils, Calendar, CreditCard, Check, AlertCircle } from "lucide-react";
 import { Restaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
+import AdBanner from "@/components/ads/AdBanner";
 
 interface Stats {
   viewCount: number;
@@ -33,6 +34,15 @@ interface Update {
   timestamp: Date;
 }
 
+// Interface for subscription status
+interface SubscriptionStatus {
+  tier: string;
+  isPaid: boolean;
+  maxRestaurants: number;
+  currentRestaurants: number;
+  expiresAt: string | null;
+}
+
 const Dashboard = () => {
   const { toast } = useToast();
   // Get restaurant data
@@ -45,6 +55,11 @@ const Dashboard = () => {
   const { data: stats, isLoading: isLoadingStats } = useQuery<Stats>({
     queryKey: [activeRestaurant ? `/api/restaurants/${activeRestaurant.id}/stats` : null],
     enabled: !!activeRestaurant,
+  });
+  
+  // Subscription status query
+  const { data: subscriptionStatus, isLoading: isLoadingSubscription } = useQuery<SubscriptionStatus>({
+    queryKey: ['/api/user/subscription-status'],
   });
   
   // Effect for setting updates
