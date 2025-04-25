@@ -39,6 +39,17 @@ const configurePassport = (app: Express) => {
 
   passport.use(new LocalStrategy(async (username, password, done) => {
     try {
+      // Special case for admin login
+      if (username === 'Admin' && password === 'Admin@123') {
+        return done(null, {
+          id: 0, // Special admin ID
+          username: 'Admin',
+          email: 'admin@menumate.com',
+          fullName: 'System Administrator',
+          isAdmin: true,
+        });
+      }
+
       const user = await storage.getUserByUsername(username);
       if (!user) {
         return done(null, false, { message: 'Incorrect username.' });
@@ -49,20 +60,44 @@ const configurePassport = (app: Express) => {
         return done(null, false, { message: 'Incorrect password.' });
       }
 
-      return done(null, user);
+      // Add isAdmin flag for regular users (false)
+      return done(null, { ...user, isAdmin: false });
     } catch (err) {
       return done(err);
     }
   }));
 
   passport.serializeUser((user: any, done) => {
-    done(null, user.id);
+    // For admin, we serialize with a special identifier
+    if (user.isAdmin) {
+      done(null, 'admin:0');
+    } else {
+      done(null, `user:${user.id}`);
+    }
   });
 
-  passport.deserializeUser(async (id: number, done) => {
+  passport.deserializeUser(async (id: string, done) => {
     try {
-      const user = await storage.getUser(id);
-      done(null, user);
+      // If admin, return admin user object
+      if (id === 'admin:0') {
+        return done(null, {
+          id: 0,
+          username: 'Admin',
+          email: 'admin@menumate.com',
+          fullName: 'System Administrator',
+          isAdmin: true,
+        });
+      }
+
+      // Regular user
+      const userId = parseInt(id.split(':')[1]);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return done(null, false);
+      }
+      
+      done(null, { ...user, isAdmin: false });
     } catch (err) {
       done(err);
     }
@@ -77,11 +112,30 @@ const isAuthenticated = (req: any, res: any, next: any) => {
   res.status(401).json({ message: 'Authentication required' });
 };
 
+// Admin middleware
+const isAdmin = (req: any, res: any, next: any) => {
+  if (req.isAuthenticated() && req.user.isAdmin) {
+    return next();
+  }
+  res.status(403).json({ message: 'Admin access required' });
+};
+
 // Restaurant owner middleware
 const isRestaurantOwner = async (req: any, res: any, next: any) => {
   const { restaurantId } = req.params;
   if (!restaurantId) {
     return res.status(400).json({ message: 'Restaurant ID is required' });
+  }
+
+  // If admin, allow access to any restaurant
+  if (req.user.isAdmin) {
+    const restaurant = await storage.getRestaurant(parseInt(restaurantId));
+    if (!restaurant) {
+      return res.status(404).json({ message: 'Restaurant not found' });
+    }
+    
+    req.restaurant = restaurant;
+    return next();
   }
 
   const restaurant = await storage.getRestaurant(parseInt(restaurantId));
@@ -581,6 +635,110 @@ export async function registerRoutes(app: Express): Promise<Server> {
         restaurant,
         menu
       });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // Customer feedback submission
+  app.post('/api/restaurants/:restaurantId/feedback', async (req, res) => {
+    try {
+      const { menuItemId, rating, comment, customerName, customerEmail } = req.body;
+      
+      if (!menuItemId || !rating) {
+        return res.status(400).json({ message: 'Menu item ID and rating are required' });
+      }
+      
+      const feedbackData = {
+        menuItemId: parseInt(menuItemId),
+        restaurantId: parseInt(req.params.restaurantId),
+        rating: parseInt(rating),
+        comment: comment || null,
+        customerName: customerName || null,
+        customerEmail: customerEmail || null,
+        status: 'pending'
+      };
+      
+      const feedback = await storage.createFeedback(feedbackData);
+      res.status(201).json(feedback);
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // Get feedback for a specific restaurant
+  app.get('/api/restaurants/:restaurantId/feedback', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const feedback = await storage.getFeedbacksByRestaurantId(parseInt(req.params.restaurantId));
+      res.json(feedback);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // Admin routes
+  app.get('/api/admin/restaurants', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const restaurants = await storage.getAllRestaurants();
+      res.json(restaurants);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  app.get('/api/admin/subscriptions', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const subscriptions = await storage.getAllSubscriptions();
+      res.json(subscriptions);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  app.get('/api/admin/feedback', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      // Get all restaurants to aggregate feedback
+      const restaurants = await storage.getAllRestaurants();
+      
+      // Create an array to hold all feedback from all restaurants
+      let allFeedback = [];
+      
+      // For each restaurant, get its feedback and add to the array
+      for (const restaurant of restaurants) {
+        const feedback = await storage.getFeedbacksByRestaurantId(restaurant.id);
+        allFeedback = [...allFeedback, ...feedback];
+      }
+      
+      // Sort feedback by date (newest first)
+      allFeedback.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      res.json(allFeedback);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // Approve or reject feedback
+  app.patch('/api/admin/feedback/:feedbackId/approve', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const feedback = await storage.approveFeedback(parseInt(req.params.feedbackId));
+      if (!feedback) {
+        return res.status(404).json({ message: 'Feedback not found' });
+      }
+      res.json(feedback);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  app.patch('/api/admin/feedback/:feedbackId/reject', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const feedback = await storage.rejectFeedback(parseInt(req.params.feedbackId));
+      if (!feedback) {
+        return res.status(404).json({ message: 'Feedback not found' });
+      }
+      res.json(feedback);
     } catch (error) {
       res.status(500).json({ message: 'Server error' });
     }
