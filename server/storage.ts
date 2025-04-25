@@ -3,7 +3,9 @@ import {
   restaurants, Restaurant, InsertRestaurant,
   menuCategories, MenuCategory, InsertMenuCategory,
   menuItems, MenuItem, InsertMenuItem,
-  menuViews, MenuView, InsertMenuView
+  menuViews, MenuView, InsertMenuView,
+  subscriptions, Subscription, InsertSubscription,
+  payments, Payment, InsertPayment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc } from "drizzle-orm";
@@ -432,6 +434,84 @@ export class DatabaseStorage implements IStorage {
         eq(menuViews.source, 'qr')
       ));
     return result.count;
+  }
+
+  // Count restaurants by user ID
+  async countRestaurantsByUserId(userId: number): Promise<number> {
+    const [result] = await db.select({ count: count() })
+      .from(restaurants)
+      .where(eq(restaurants.userId, userId));
+    return result.count;
+  }
+
+  // Subscription operations
+  async getSubscription(id: number): Promise<Subscription | undefined> {
+    const [subscription] = await db.select()
+      .from(subscriptions)
+      .where(eq(subscriptions.id, id));
+    return subscription;
+  }
+
+  async getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined> {
+    const [subscription] = await db.select()
+      .from(subscriptions)
+      .where(and(
+        eq(subscriptions.userId, userId),
+        eq(subscriptions.isActive, true)
+      ));
+    return subscription;
+  }
+
+  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+    const [subscription] = await db.insert(subscriptions)
+      .values(insertSubscription)
+      .returning();
+    return subscription;
+  }
+
+  async updateSubscription(id: number, subscriptionUpdate: Partial<Subscription>): Promise<Subscription | undefined> {
+    const [updatedSubscription] = await db.update(subscriptions)
+      .set(subscriptionUpdate)
+      .where(eq(subscriptions.id, id))
+      .returning();
+    return updatedSubscription;
+  }
+
+  // Payment operations
+  async getPayment(id: number): Promise<Payment | undefined> {
+    const [payment] = await db.select()
+      .from(payments)
+      .where(eq(payments.id, id));
+    return payment;
+  }
+
+  async getPaymentsByUserId(userId: number): Promise<Payment[]> {
+    return await db.select()
+      .from(payments)
+      .where(eq(payments.userId, userId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async getPaymentsBySubscriptionId(subscriptionId: number): Promise<Payment[]> {
+    return await db.select()
+      .from(payments)
+      .where(eq(payments.subscriptionId, subscriptionId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
+    const [payment] = await db.insert(payments)
+      .values(insertPayment)
+      .returning();
+    return payment;
+  }
+
+  async updatePayment(id: number, paymentUpdate: Partial<Payment>): Promise<Payment | undefined> {
+    const [updatedPayment] = await db.update(payments)
+      .set(paymentUpdate)
+      .where(eq(payments.id, id))
+      .returning();
+    return updatedPayment;
   }
 }
 
