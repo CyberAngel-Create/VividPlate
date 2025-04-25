@@ -5,6 +5,8 @@ import {
   menuItems, MenuItem, InsertMenuItem,
   menuViews, MenuView, InsertMenuView
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, count, desc } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -229,4 +231,186 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db.insert(users).values(insertUser).returning();
+    return user;
+  }
+
+  // Restaurant operations
+  async getRestaurant(id: number): Promise<Restaurant | undefined> {
+    const [restaurant] = await db.select().from(restaurants).where(eq(restaurants.id, id));
+    return restaurant;
+  }
+
+  async getRestaurantsByUserId(userId: number): Promise<Restaurant[]> {
+    return await db.select().from(restaurants).where(eq(restaurants.userId, userId));
+  }
+
+  async createRestaurant(insertRestaurant: InsertRestaurant): Promise<Restaurant> {
+    const [restaurant] = await db.insert(restaurants).values(insertRestaurant).returning();
+    return restaurant;
+  }
+
+  async updateRestaurant(id: number, restaurantUpdate: Partial<InsertRestaurant>): Promise<Restaurant | undefined> {
+    const [updatedRestaurant] = await db.update(restaurants)
+      .set(restaurantUpdate)
+      .where(eq(restaurants.id, id))
+      .returning();
+    return updatedRestaurant;
+  }
+
+  // Menu category operations
+  async getMenuCategory(id: number): Promise<MenuCategory | undefined> {
+    const [category] = await db.select().from(menuCategories).where(eq(menuCategories.id, id));
+    return category;
+  }
+
+  async getMenuCategoriesByRestaurantId(restaurantId: number): Promise<MenuCategory[]> {
+    return await db.select()
+      .from(menuCategories)
+      .where(eq(menuCategories.restaurantId, restaurantId))
+      .orderBy(menuCategories.displayOrder);
+  }
+
+  async createMenuCategory(insertCategory: InsertMenuCategory): Promise<MenuCategory> {
+    const [category] = await db.insert(menuCategories).values(insertCategory).returning();
+    return category;
+  }
+
+  async updateMenuCategory(id: number, categoryUpdate: Partial<InsertMenuCategory>): Promise<MenuCategory | undefined> {
+    const [updatedCategory] = await db.update(menuCategories)
+      .set(categoryUpdate)
+      .where(eq(menuCategories.id, id))
+      .returning();
+    return updatedCategory;
+  }
+
+  async deleteMenuCategory(id: number): Promise<boolean> {
+    // First delete all menu items in this category
+    await db.delete(menuItems).where(eq(menuItems.categoryId, id));
+    
+    // Then delete the category
+    const result = await db.delete(menuCategories).where(eq(menuCategories.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Menu item operations
+  async getMenuItem(id: number): Promise<MenuItem | undefined> {
+    const [item] = await db.select().from(menuItems).where(eq(menuItems.id, id));
+    return item;
+  }
+
+  async getMenuItemsByCategoryId(categoryId: number): Promise<MenuItem[]> {
+    return await db.select()
+      .from(menuItems)
+      .where(eq(menuItems.categoryId, categoryId))
+      .orderBy(menuItems.displayOrder);
+  }
+
+  async getMenuItemsByRestaurantId(restaurantId: number): Promise<MenuItem[]> {
+    // First get all categories for this restaurant
+    const categories = await this.getMenuCategoriesByRestaurantId(restaurantId);
+    
+    if (categories.length === 0) {
+      return [];
+    }
+    
+    // Get all menu items for these categories
+    const items: MenuItem[] = [];
+    for (const category of categories) {
+      const categoryItems = await this.getMenuItemsByCategoryId(category.id);
+      items.push(...categoryItems);
+    }
+    
+    return items;
+  }
+
+  async createMenuItem(insertItem: InsertMenuItem): Promise<MenuItem> {
+    const [item] = await db.insert(menuItems).values(insertItem).returning();
+    return item;
+  }
+
+  async updateMenuItem(id: number, itemUpdate: Partial<InsertMenuItem>): Promise<MenuItem | undefined> {
+    const [updatedItem] = await db.update(menuItems)
+      .set(itemUpdate)
+      .where(eq(menuItems.id, id))
+      .returning();
+    return updatedItem;
+  }
+
+  async deleteMenuItem(id: number): Promise<boolean> {
+    const result = await db.delete(menuItems).where(eq(menuItems.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Menu view operations
+  async getMenuViewsByRestaurantId(restaurantId: number): Promise<MenuView[]> {
+    return await db.select()
+      .from(menuViews)
+      .where(eq(menuViews.restaurantId, restaurantId))
+      .orderBy(desc(menuViews.viewedAt));
+  }
+
+  async countMenuViewsByRestaurantId(restaurantId: number): Promise<number> {
+    const [result] = await db.select({ count: count() })
+      .from(menuViews)
+      .where(eq(menuViews.restaurantId, restaurantId));
+    return result.count;
+  }
+
+  async createMenuView(insertView: InsertMenuView): Promise<MenuView> {
+    const [view] = await db.insert(menuViews).values(insertView).returning();
+    return view;
+  }
+
+  // Stats operations
+  async getMenuItemCountByRestaurantId(restaurantId: number): Promise<number> {
+    // Get all categories for this restaurant
+    const categories = await this.getMenuCategoriesByRestaurantId(restaurantId);
+    
+    if (categories.length === 0) {
+      return 0;
+    }
+    
+    // Count all menu items across all categories
+    let total = 0;
+    for (const category of categories) {
+      const [result] = await db.select({ count: count() })
+        .from(menuItems)
+        .where(eq(menuItems.categoryId, category.id));
+      total += result.count;
+    }
+    
+    return total;
+  }
+
+  async getQrScanCountByRestaurantId(restaurantId: number): Promise<number> {
+    const [result] = await db.select({ count: count() })
+      .from(menuViews)
+      .where(and(
+        eq(menuViews.restaurantId, restaurantId),
+        eq(menuViews.source, 'qr')
+      ));
+    return result.count;
+  }
+}
+
+// Use the database storage instead of memory storage
+export const storage = new DatabaseStorage();
