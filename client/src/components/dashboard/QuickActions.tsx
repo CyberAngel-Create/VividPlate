@@ -1,0 +1,60 @@
+import { useLocation } from "wouter";
+import { PlusCircle, Share, Eye } from "lucide-react";
+
+const QuickActions = () => {
+  const [, setLocation] = useLocation();
+
+  const handleAddMenuItem = () => {
+    setLocation("/create-menu");
+  };
+
+  const handleShareMenu = () => {
+    setLocation("/share-menu");
+  };
+
+  const handlePreviewMenu = () => {
+    setLocation("/menu-preview");
+  };
+
+  return (
+    <div>
+      <h2 className="text-xl font-heading font-semibold mb-4">Quick Actions</h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div 
+          className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center cursor-pointer"
+          onClick={handleAddMenuItem}
+        >
+          <div className="bg-primary bg-opacity-10 p-4 rounded-full mb-3">
+            <PlusCircle className="h-6 w-6 text-primary" />
+          </div>
+          <h3 className="font-heading font-medium mb-2">Add Menu Item</h3>
+          <p className="text-sm text-midgray">Create new dishes or specials</p>
+        </div>
+        
+        <div 
+          className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center cursor-pointer"
+          onClick={handleShareMenu}
+        >
+          <div className="bg-secondary bg-opacity-10 p-4 rounded-full mb-3">
+            <Share className="h-6 w-6 text-secondary" />
+          </div>
+          <h3 className="font-heading font-medium mb-2">Share Menu</h3>
+          <p className="text-sm text-midgray">Generate QR code or share link</p>
+        </div>
+        
+        <div 
+          className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center cursor-pointer"
+          onClick={handlePreviewMenu}
+        >
+          <div className="bg-dark bg-opacity-10 p-4 rounded-full mb-3">
+            <Eye className="h-6 w-6 text-dark" />
+          </div>
+          <h3 className="font-heading font-medium mb-2">Preview Menu</h3>
+          <p className="text-sm text-midgray">See how your menu looks to customers</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default QuickActions;
