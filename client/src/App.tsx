@@ -3,17 +3,18 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/home";
-import Login from "@/pages/login";
-import Register from "@/pages/register";
-import Dashboard from "@/pages/dashboard";
-import CreateMenu from "@/pages/create-menu";
-import EditRestaurant from "@/pages/edit-restaurant";
-import MenuPreview from "@/pages/menu-preview";
-import ShareMenu from "@/pages/share-menu";
-import ViewMenu from "@/pages/view-menu";
-import SubscriptionPage from "@/pages/subscription";
+import NotFound from "./pages/not-found";
+import Home from "./pages/home";
+import Login from "./pages/login";
+import Register from "./pages/register";
+import Dashboard from "./pages/dashboard";
+import CreateMenu from "./pages/create-menu";
+import EditRestaurant from "./pages/edit-restaurant";
+import MenuPreview from "./pages/menu-preview";
+import ShareMenu from "./pages/share-menu";
+import ViewMenu from "./pages/view-menu";
+import SubscriptionPage from "./pages/subscription";
+import AdminDashboard from "./pages/admin-dashboard";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
@@ -49,6 +50,36 @@ function PublicRoute({ component: Component, ...rest }: { component: React.Compo
   return <Route {...rest} component={Component} />;
 }
 
+function AdminRoute({ component: Component, ...rest }: { component: React.ComponentType, path: string }) {
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      try {
+        const user = await apiRequest("GET", "/api/auth/me");
+        if (user.isAdmin) {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+          setLocation("/dashboard");
+        }
+      } catch (error) {
+        setIsAdmin(false);
+        setLocation("/login");
+      }
+    };
+    
+    checkAdminStatus();
+  }, [setLocation]);
+
+  if (isAdmin === null) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  }
+
+  return <Route {...rest} component={Component} />;
+}
+
 function Router() {
   const [location] = useLocation();
   const isPublicMenuView = location.startsWith("/menu/");
@@ -70,6 +101,9 @@ function Router() {
           <AuthenticatedRoute path="/menu-preview" component={MenuPreview} />
           <AuthenticatedRoute path="/share-menu" component={ShareMenu} />
           <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
+          
+          {/* Admin Routes */}
+          <AdminRoute path="/admin" component={AdminDashboard} />
           
           <Route component={NotFound} />
         </Switch>
