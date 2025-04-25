@@ -57,8 +57,9 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
   useEffect(() => {
     const checkAdminStatus = async () => {
       try {
-        const user = await apiRequest("GET", "/api/auth/me");
-        if (user.isAdmin) {
+        const response = await apiRequest("GET", "/api/auth/me");
+        const userData = await response.json();
+        if (userData.isAdmin) {
           setIsAdmin(true);
         } else {
           setIsAdmin(false);

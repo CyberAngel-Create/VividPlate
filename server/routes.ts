@@ -194,6 +194,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { password, ...userWithoutPassword } = req.user as any;
     res.json(userWithoutPassword);
   });
+  
+  // Admin login endpoint
+  app.post('/api/auth/admin-login', passport.authenticate('local'), (req, res) => {
+    // Verify this is actually an admin login
+    if (req.user && (req.user as any).isAdmin) {
+      const { password, ...userWithoutPassword } = req.user as any;
+      return res.json(userWithoutPassword);
+    }
+    
+    // If not admin, logout and return error
+    req.logout((err) => {
+      if (err) {
+        return res.status(500).json({ message: 'Error during logout' });
+      }
+      res.status(403).json({ message: 'Admin credentials required' });
+    });
+  });
 
   app.post('/api/auth/logout', (req, res) => {
     req.logout((err) => {
