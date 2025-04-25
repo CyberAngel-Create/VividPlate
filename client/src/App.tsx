@@ -13,6 +13,7 @@ import EditRestaurant from "@/pages/edit-restaurant";
 import MenuPreview from "@/pages/menu-preview";
 import ShareMenu from "@/pages/share-menu";
 import ViewMenu from "@/pages/view-menu";
+import SubscriptionPage from "@/pages/subscription";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
@@ -68,6 +69,7 @@ function Router() {
           <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
           <AuthenticatedRoute path="/menu-preview" component={MenuPreview} />
           <AuthenticatedRoute path="/share-menu" component={ShareMenu} />
+          <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
           
           <Route component={NotFound} />
         </Switch>

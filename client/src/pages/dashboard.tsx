@@ -133,8 +133,53 @@ const Dashboard = () => {
     <div className="flex flex-col min-h-screen">
       <TabNavigation />
       
+      {/* Top ad banner for free users */}
+      <div className="w-full flex justify-center">
+        <AdBanner position="top" className="w-full max-w-screen-lg my-3" />
+      </div>
+      
       <section className="container mx-auto px-4 py-6">
         <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
+        
+        {/* Subscription Status Card */}
+        {!isLoadingSubscription && subscriptionStatus && (
+          <div className={`mb-6 p-4 rounded-lg border ${subscriptionStatus.isPaid ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-full ${subscriptionStatus.isPaid ? 'bg-green-100' : 'bg-amber-100'}`}>
+                {subscriptionStatus.isPaid ? (
+                  <CreditCard className="h-5 w-5 text-green-600" />
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg">
+                  {subscriptionStatus.isPaid ? 'Premium Subscription' : 'Free Plan'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {subscriptionStatus.isPaid ? (
+                    <>You can create up to {subscriptionStatus.maxRestaurants} restaurants with no ads.</>
+                  ) : (
+                    <>You can create {subscriptionStatus.maxRestaurants} restaurant with the free plan. Upgrade to create more.</>
+                  )}
+                </p>
+                <div className="mt-1 flex items-center gap-1 text-sm">
+                  <span>Restaurants: {subscriptionStatus.currentRestaurants}/{subscriptionStatus.maxRestaurants}</span>
+                  {subscriptionStatus.currentRestaurants >= subscriptionStatus.maxRestaurants && (
+                    <span className="text-red-500 font-medium">Limit reached</span>
+                  )}
+                </div>
+              </div>
+              {!subscriptionStatus.isPaid && (
+                <button 
+                  className="ml-auto bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
+                >
+                  Upgrade Now
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard 
@@ -164,6 +209,11 @@ const Dashboard = () => {
         <QuickActions />
         
         <RecentUpdates updates={updates} />
+        
+        {/* Bottom ad banner for free users */}
+        <div className="w-full flex justify-center mt-6">
+          <AdBanner position="bottom" className="w-full max-w-screen-lg my-3" />
+        </div>
       </section>
     </div>
   );

@@ -461,6 +461,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscription status routes
+  app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      const restaurantCount = await storage.countRestaurantsByUserId(userId);
+      
+      // Determine if user is on a paid plan
+      const isPaid = activeSubscription?.tier === "premium";
+      const maxRestaurants = isPaid ? 3 : 1;
+      
+      res.json({
+        tier: isPaid ? "premium" : "free",
+        isPaid,
+        maxRestaurants,
+        currentRestaurants: restaurantCount,
+        expiresAt: activeSubscription?.expiresAt || null
+      });
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
   // Stats routes
   app.get('/api/restaurants/:restaurantId/stats', isAuthenticated, isRestaurantOwner, async (req, res) => {
     try {
