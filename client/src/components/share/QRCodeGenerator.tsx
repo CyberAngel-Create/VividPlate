@@ -105,7 +105,7 @@ const QRCodeGenerator = ({ restaurant, menuUrl }: QRCodeGeneratorProps) => {
       
       <div className="flex flex-col items-center">
         <div 
-          className="bg-white p-4 border rounded-lg w-48 h-48 flex items-center justify-center mb-4"
+          className="bg-white p-4 border rounded-lg w-60 h-60 sm:w-72 sm:h-72 flex items-center justify-center mb-6"
           ref={qrRef}
         >
           <QRCodeCanvas
@@ -129,15 +129,15 @@ const QRCodeGenerator = ({ restaurant, menuUrl }: QRCodeGeneratorProps) => {
           />
         </div>
         
-        <div className="flex space-x-2 w-full">
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full">
           <Button 
-            className="flex-1 bg-primary text-white hover:bg-primary/90 flex items-center justify-center"
+            className="w-full sm:flex-1 bg-primary text-white hover:bg-primary/90 flex items-center justify-center"
             onClick={downloadQRCode}
           >
             <Download className="mr-1 h-4 w-4" /> Download
           </Button>
           <Button 
-            className="flex-1 bg-secondary text-white hover:bg-secondary/90 flex items-center justify-center"
+            className="w-full sm:flex-1 bg-secondary text-white hover:bg-secondary/90 flex items-center justify-center"
             onClick={printQRCode}
           >
             <Printer className="mr-1 h-4 w-4" /> Print

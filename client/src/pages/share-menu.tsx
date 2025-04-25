@@ -69,7 +69,7 @@ const ShareMenu = () => {
       <section className="container mx-auto px-4 py-6">
         <h1 className="text-2xl font-heading font-bold mb-6">Share Your Menu</h1>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <QRCodeGenerator 
             restaurant={activeRestaurant}
             menuUrl={menuUrl}
