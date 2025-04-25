@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Facebook, Instagram, Globe } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useState } from "react";
+import ItemFeedbackDialog from "@/components/feedback/ItemFeedbackDialog";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -91,41 +92,50 @@ const CustomerMenuPreview = ({
               ) : (
                 <div className="space-y-4">
                   {category.items.map((item) => (
-                    <div key={item.id} className="flex flex-col sm:flex-row border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0">
-                      {item.imageUrl && (
-                        <div className="w-full h-36 sm:w-20 sm:h-20 bg-neutral rounded-md overflow-hidden mb-3 sm:mb-0 sm:mr-3 flex-shrink-0">
-                          <img 
-                            src={item.imageUrl} 
-                            alt={item.name} 
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      )}
-                      <div className="flex-grow">
-                        <div className="flex flex-col sm:flex-row sm:justify-between">
-                          <h4 className="font-medium text-dark mb-1 sm:mb-0">{item.name}</h4>
-                          <span className="text-primary font-medium mb-2 sm:mb-0">
-                            {formatCurrency(item.price)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-midgray">
-                          {item.description || ""}
-                        </p>
-                        {item.tags && item.tags.length > 0 && (
-                          <div className="mt-2 flex flex-wrap">
-                            {item.tags.map((tag, index) => (
-                              <Badge 
-                                key={index} 
-                                variant="outline" 
-                                className="inline-block mr-1 mb-1 px-2 py-0.5 bg-neutral text-xs text-midgray"
-                              >
-                                {tag}
-                              </Badge>
-                            ))}
+                    <ItemFeedbackDialog 
+                      key={item.id} 
+                      menuItem={item} 
+                      restaurantId={restaurant.id}
+                    >
+                      <div className="flex flex-col sm:flex-row border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0 cursor-pointer hover:bg-gray-50 transition-colors rounded-md p-2 -m-2">
+                        {item.imageUrl && (
+                          <div className="w-full h-36 sm:w-20 sm:h-20 bg-neutral rounded-md overflow-hidden mb-3 sm:mb-0 sm:mr-3 flex-shrink-0">
+                            <img 
+                              src={item.imageUrl} 
+                              alt={item.name} 
+                              className="w-full h-full object-cover"
+                            />
                           </div>
                         )}
+                        <div className="flex-grow">
+                          <div className="flex flex-col sm:flex-row sm:justify-between">
+                            <h4 className="font-medium text-dark mb-1 sm:mb-0">{item.name}</h4>
+                            <span className="text-primary font-medium mb-2 sm:mb-0">
+                              {formatCurrency(item.price)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-midgray">
+                            {item.description || ""}
+                          </p>
+                          {item.tags && item.tags.length > 0 && (
+                            <div className="mt-2 flex flex-wrap">
+                              {item.tags.map((tag, index) => (
+                                <Badge 
+                                  key={index} 
+                                  variant="outline" 
+                                  className="inline-block mr-1 mb-1 px-2 py-0.5 bg-neutral text-xs text-midgray"
+                                >
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
+                          <div className="mt-2 text-xs text-primary font-medium">
+                            Click to leave feedback
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </ItemFeedbackDialog>
                   ))}
                 </div>
               )}
