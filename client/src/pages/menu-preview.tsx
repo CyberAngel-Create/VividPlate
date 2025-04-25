@@ -68,8 +68,8 @@ const MenuPreview = () => {
     return (
       <div className="flex flex-col min-h-screen">
         <TabNavigation />
-        <section className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Menu Preview</h1>
+        <section className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+          <h1 className="text-2xl font-heading font-bold mb-4 sm:mb-6">Menu Preview</h1>
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
@@ -82,8 +82,8 @@ const MenuPreview = () => {
     <div className="flex flex-col min-h-screen">
       <TabNavigation />
       
-      <section className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-heading font-bold mb-6">Menu Preview</h1>
+      <section className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
+        <h1 className="text-2xl font-heading font-bold mb-4 sm:mb-6">Menu Preview</h1>
         
         <div className="flex justify-center mb-8">
           <div className="inline-block px-3 py-1 rounded-md bg-neutral text-midgray text-sm flex items-center">
@@ -105,11 +105,13 @@ const MenuPreview = () => {
           </div>
         ) : (
           <>
-            <CustomerMenuPreview 
-              restaurant={activeRestaurant}
-              menuData={menuData}
-              previewMode={true}
-            />
+            <div className="w-full flex justify-center px-0 sm:px-4">
+              <CustomerMenuPreview 
+                restaurant={activeRestaurant}
+                menuData={menuData}
+                previewMode={true}
+              />
+            </div>
             
             <div className="flex justify-center mt-8">
               <Button 

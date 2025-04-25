@@ -70,7 +70,7 @@ const ViewMenu = () => {
   const { restaurant, menu } = data;
   
   return (
-    <div className="flex justify-center py-8 px-4">
+    <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
       <CustomerMenuPreview 
         restaurant={restaurant}
         menuData={menu}

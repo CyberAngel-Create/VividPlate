@@ -31,7 +31,7 @@ const CustomerMenuPreview = ({
     : menuData.filter(category => category.id.toString() === activeCategory);
 
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl overflow-hidden menu-preview-shadow">
+    <div className="w-full max-w-2xl mx-auto bg-white rounded-xl overflow-hidden menu-preview-shadow">
       {/* Restaurant header */}
       <div className="relative">
         <div className="h-40 bg-gray-300 relative">
