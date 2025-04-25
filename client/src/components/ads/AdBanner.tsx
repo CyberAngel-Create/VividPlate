@@ -6,6 +6,15 @@ import AdSense from './AdSense';
 const GOOGLE_ADSENSE_CLIENT = 'ca-pub-xxxxxxxxxxxxxxxx'; // Replace with your AdSense client ID
 const GOOGLE_ADSENSE_SLOT = 'xxxxxxxxxx'; // Replace with your AdSense slot
 
+// Define subscription status interface
+interface SubscriptionStatus {
+  tier: string;
+  isPaid: boolean;
+  maxRestaurants: number;
+  currentRestaurants: number;
+  expiresAt: string | null;
+}
+
 interface AdBannerProps {
   position?: 'top' | 'bottom' | 'sidebar';
   className?: string;
@@ -20,7 +29,7 @@ const AdBanner = ({ position = 'top', className = '' }: AdBannerProps) => {
   });
 
   useEffect(() => {
-    if (subscriptionData) {
+    if (subscriptionData && 'isPaid' in subscriptionData) {
       setIsPaidUser(subscriptionData.isPaid === true);
     }
   }, [subscriptionData]);

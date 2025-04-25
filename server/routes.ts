@@ -477,9 +477,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isPaid,
         maxRestaurants,
         currentRestaurants: restaurantCount,
-        expiresAt: activeSubscription?.expiresAt || null
+        expiresAt: activeSubscription?.endDate || null
       });
     } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // Process subscription upgrade
+  app.post('/api/subscribe', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { planId } = req.body;
+      
+      // Check if user already has an active subscription
+      const existingSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      if (existingSubscription) {
+        return res.status(400).json({ message: 'User already has an active subscription' });
+      }
+      
+      // Create a new subscription (in a real app, we would process payment here)
+      const oneYearFromNow = new Date();
+      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      
+      const newSubscription = await storage.createSubscription({
+        userId,
+        tier: "premium",
+        endDate: oneYearFromNow,
+        paymentMethod: "credit_card",
+        isActive: true
+      });
+      
+      // Create payment record
+      await storage.createPayment({
+        userId,
+        subscriptionId: newSubscription.id,
+        amount: planId === "yearly" ? "99.99" : "9.99",
+        currency: "USD",
+        paymentMethod: "credit_card",
+        status: "completed"
+      });
+      
+      res.status(201).json({
+        success: true,
+        subscription: newSubscription
+      });
+    } catch (error) {
+      console.error("Subscription error:", error);
       res.status(500).json({ message: 'Server error' });
     }
   });

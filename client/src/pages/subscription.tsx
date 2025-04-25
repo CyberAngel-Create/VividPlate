@@ -52,9 +52,15 @@ const SubscriptionPage = () => {
     setLoadingCheckout(true);
     
     try {
-      // If we had Stripe set up, we would redirect to a checkout page
-      // For now, just simulate a successful upgrade
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Call our subscription API
+      const response = await apiRequest('POST', '/api/subscribe', {
+        planId: selectedPlan
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Subscription failed');
+      }
       
       // Show success toast
       toast({
@@ -65,10 +71,10 @@ const SubscriptionPage = () => {
       
       // Redirect to dashboard
       setLocation("/dashboard");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Subscription failed",
-        description: "Please try again or contact support.",
+        description: error.message || "Please try again or contact support.",
         variant: "destructive",
       });
     } finally {
