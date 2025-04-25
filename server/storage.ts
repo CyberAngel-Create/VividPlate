@@ -525,6 +525,50 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedPayment;
   }
+  
+  // Admin methods
+  async getAllRestaurants(): Promise<Restaurant[]> {
+    return db.select().from(restaurants);
+  }
+  
+  async getAllSubscriptions(): Promise<Subscription[]> {
+    return db.select().from(subscriptions);
+  }
+  
+  async getFeedback(id: number): Promise<Feedback | undefined> {
+    const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.id, id));
+    return feedback;
+  }
+  
+  async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
+    return db.select().from(feedbacks).where(eq(feedbacks.restaurantId, restaurantId));
+  }
+  
+  async getFeedbacksByMenuItemId(menuItemId: number): Promise<Feedback[]> {
+    return db.select().from(feedbacks).where(eq(feedbacks.menuItemId, menuItemId));
+  }
+  
+  async createFeedback(feedback: InsertFeedback): Promise<Feedback> {
+    const [newFeedback] = await db.insert(feedbacks).values(feedback).returning();
+    return newFeedback;
+  }
+  
+  async updateFeedback(id: number, feedbackUpdate: Partial<Feedback>): Promise<Feedback | undefined> {
+    const [updatedFeedback] = await db
+      .update(feedbacks)
+      .set(feedbackUpdate)
+      .where(eq(feedbacks.id, id))
+      .returning();
+    return updatedFeedback;
+  }
+  
+  async approveFeedback(id: number): Promise<Feedback | undefined> {
+    return this.updateFeedback(id, { status: 'approved' });
+  }
+  
+  async rejectFeedback(id: number): Promise<Feedback | undefined> {
+    return this.updateFeedback(id, { status: 'rejected' });
+  }
 }
 
 // Use the database storage instead of memory storage
