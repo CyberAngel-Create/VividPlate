@@ -18,6 +18,14 @@ interface Stats {
   daysActive: number;
 }
 
+// Default stats when data is not available
+const defaultStats: Stats = {
+  viewCount: 0,
+  qrScanCount: 0,
+  menuItemCount: 0,
+  daysActive: 0
+};
+
 interface Update {
   id: string;
   title: string;
@@ -27,17 +35,19 @@ interface Update {
 
 const Dashboard = () => {
   const { toast } = useToast();
+  // Get restaurant data
   const { activeRestaurant, restaurants, isLoading: isLoadingRestaurants, refetchActiveRestaurant } = useRestaurant();
-  
-  // Stats query
-  const { data: stats, isLoading: isLoadingStats } = useQuery({
-    queryKey: [activeRestaurant ? `/api/restaurants/${activeRestaurant.id}/stats` : null],
-    enabled: !!activeRestaurant,
-  });
   
   // Generate some recent updates based on activities
   const [updates, setUpdates] = useState<Update[]>([]);
   
+  // Stats query
+  const { data: stats, isLoading: isLoadingStats } = useQuery<Stats>({
+    queryKey: [activeRestaurant ? `/api/restaurants/${activeRestaurant.id}/stats` : null],
+    enabled: !!activeRestaurant,
+  });
+  
+  // Effect for setting updates
   useEffect(() => {
     if (activeRestaurant) {
       // This would ideally come from an API, but for now we'll generate some dummy updates
@@ -64,9 +74,9 @@ const Dashboard = () => {
     }
   }, [activeRestaurant]);
 
-  // If we have restaurants but no active restaurant, refetch to ensure we have the latest data
+  // Effect for auto-select restaurant
   useEffect(() => {
-    if (restaurants.length > 0 && !activeRestaurant) {
+    if (restaurants && restaurants.length > 0 && !activeRestaurant) {
       refetchActiveRestaurant();
     }
   }, [restaurants, activeRestaurant, refetchActiveRestaurant]);
@@ -114,22 +124,22 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard 
             icon={<Eye className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : stats?.viewCount || 0} 
+            value={isLoadingStats ? "..." : (stats?.viewCount ?? defaultStats.viewCount)} 
             label="Menu Views" 
           />
           <StatCard 
             icon={<QrCode className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : stats?.qrScanCount || 0} 
+            value={isLoadingStats ? "..." : (stats?.qrScanCount ?? defaultStats.qrScanCount)} 
             label="QR Scans" 
           />
           <StatCard 
             icon={<Utensils className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : stats?.menuItemCount || 0} 
+            value={isLoadingStats ? "..." : (stats?.menuItemCount ?? defaultStats.menuItemCount)} 
             label="Menu Items" 
           />
           <StatCard 
             icon={<Calendar className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : stats?.daysActive || 0} 
+            value={isLoadingStats ? "..." : (stats?.daysActive ?? defaultStats.daysActive)} 
             label="Days Active" 
           />
         </div>
