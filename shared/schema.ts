@@ -144,6 +144,29 @@ export const insertPaymentSchema = createInsertSchema(payments).pick({
   status: true,
 });
 
+// Feedback table
+export const feedbacks = pgTable("feedbacks", {
+  id: serial("id").primaryKey(),
+  menuItemId: integer("menu_item_id").notNull(),
+  restaurantId: integer("restaurant_id").notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  customerName: text("customer_name"),
+  customerEmail: text("customer_email"),
+  status: text("status").default("pending"), // "pending", "approved", "rejected"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertFeedbackSchema = createInsertSchema(feedbacks).pick({
+  menuItemId: true,
+  restaurantId: true,
+  rating: true,
+  comment: true,
+  customerName: true,
+  customerEmail: true,
+  status: true,
+});
+
 // Types for TypeScript
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -165,3 +188,6 @@ export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 
 export type Payment = typeof payments.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+
+export type Feedback = typeof feedbacks.$inferSelect;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;

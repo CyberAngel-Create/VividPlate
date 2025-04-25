@@ -5,7 +5,8 @@ import {
   menuItems, MenuItem, InsertMenuItem,
   menuViews, MenuView, InsertMenuView,
   subscriptions, Subscription, InsertSubscription,
-  payments, Payment, InsertPayment
+  payments, Payment, InsertPayment,
+  feedbacks, Feedback, InsertFeedback
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc } from "drizzle-orm";
@@ -24,6 +25,7 @@ export interface IStorage {
   createRestaurant(restaurant: InsertRestaurant): Promise<Restaurant>;
   updateRestaurant(id: number, restaurant: Partial<InsertRestaurant>): Promise<Restaurant | undefined>;
   countRestaurantsByUserId(userId: number): Promise<number>;
+  getAllRestaurants(): Promise<Restaurant[]>;
   
   // Menu category operations
   getMenuCategory(id: number): Promise<MenuCategory | undefined>;
@@ -54,6 +56,7 @@ export interface IStorage {
   getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined>;
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   updateSubscription(id: number, subscription: Partial<Subscription>): Promise<Subscription | undefined>;
+  getAllSubscriptions(): Promise<Subscription[]>;
   
   // Payment operations
   getPayment(id: number): Promise<Payment | undefined>;
@@ -61,6 +64,15 @@ export interface IStorage {
   getPaymentsBySubscriptionId(subscriptionId: number): Promise<Payment[]>;
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePayment(id: number, payment: Partial<Payment>): Promise<Payment | undefined>;
+  
+  // Feedback operations
+  getFeedback(id: number): Promise<Feedback | undefined>;
+  getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]>;
+  getFeedbacksByMenuItemId(menuItemId: number): Promise<Feedback[]>;
+  createFeedback(feedback: InsertFeedback): Promise<Feedback>;
+  updateFeedback(id: number, feedback: Partial<Feedback>): Promise<Feedback | undefined>;
+  approveFeedback(id: number): Promise<Feedback | undefined>;
+  rejectFeedback(id: number): Promise<Feedback | undefined>;
 }
 
 export class MemStorage implements IStorage {

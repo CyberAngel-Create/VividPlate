@@ -25,15 +25,12 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
     setIsSubmitting(true);
     
     try {
-      // In a real app, we would send this to the server
-      // await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback`, {
-      //   menuItemId: menuItem.id,
-      //   rating,
-      //   comment
-      // });
-      
-      // For now, just simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Send feedback to the server
+      await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback`, {
+        menuItemId: menuItem.id,
+        rating,
+        comment
+      });
       
       toast({
         title: "Feedback submitted",
