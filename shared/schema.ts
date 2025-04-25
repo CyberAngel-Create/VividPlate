@@ -9,6 +9,11 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
+  subscriptionTier: text("subscription_tier").default("free"),
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  telebirrCustomerId: text("telebirr_customer_id"),
+  subscriptionExpiry: timestamp("subscription_expiry"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -97,6 +102,48 @@ export const insertMenuViewSchema = createInsertSchema(menuViews).pick({
   source: true,
 });
 
+// Subscriptions table
+export const subscriptions = pgTable("subscriptions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  tier: text("tier").notNull().default("free"),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  paymentMethod: text("payment_method"), // "stripe", "telebirr", etc.
+  isActive: boolean("is_active").default(true),
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
+  userId: true,
+  tier: true,
+  endDate: true,
+  paymentMethod: true,
+  isActive: true,
+});
+
+// Payments table
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  subscriptionId: integer("subscription_id"),
+  amount: text("amount").notNull(),
+  currency: text("currency").default("USD"),
+  paymentMethod: text("payment_method").notNull(), // "stripe", "telebirr", etc.
+  paymentId: text("payment_id"), // External payment ID
+  status: text("status").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).pick({
+  userId: true,
+  subscriptionId: true,
+  amount: true,
+  currency: true,
+  paymentMethod: true,
+  paymentId: true,
+  status: true,
+});
+
 // Types for TypeScript
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -112,3 +159,9 @@ export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 
 export type MenuView = typeof menuViews.$inferSelect;
 export type InsertMenuView = z.infer<typeof insertMenuViewSchema>;
+
+export type Subscription = typeof subscriptions.$inferSelect;
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+
+export type Payment = typeof payments.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;

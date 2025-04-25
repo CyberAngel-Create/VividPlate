@@ -14,12 +14,14 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
 
   // Restaurant operations
   getRestaurant(id: number): Promise<Restaurant | undefined>;
   getRestaurantsByUserId(userId: number): Promise<Restaurant[]>;
   createRestaurant(restaurant: InsertRestaurant): Promise<Restaurant>;
   updateRestaurant(id: number, restaurant: Partial<InsertRestaurant>): Promise<Restaurant | undefined>;
+  countRestaurantsByUserId(userId: number): Promise<number>;
   
   // Menu category operations
   getMenuCategory(id: number): Promise<MenuCategory | undefined>;
@@ -44,6 +46,19 @@ export interface IStorage {
   // Stats operations
   getMenuItemCountByRestaurantId(restaurantId: number): Promise<number>;
   getQrScanCountByRestaurantId(restaurantId: number): Promise<number>;
+  
+  // Subscription operations
+  getSubscription(id: number): Promise<Subscription | undefined>;
+  getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined>;
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  updateSubscription(id: number, subscription: Partial<Subscription>): Promise<Subscription | undefined>;
+  
+  // Payment operations
+  getPayment(id: number): Promise<Payment | undefined>;
+  getPaymentsByUserId(userId: number): Promise<Payment[]>;
+  getPaymentsBySubscriptionId(subscriptionId: number): Promise<Payment[]>;
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  updatePayment(id: number, payment: Partial<Payment>): Promise<Payment | undefined>;
 }
 
 export class MemStorage implements IStorage {
@@ -251,6 +266,14 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+  
+  async updateUser(id: number, userUpdate: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set(userUpdate)
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
   }
 
   // Restaurant operations
