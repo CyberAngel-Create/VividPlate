@@ -24,18 +24,22 @@ const AdBanner = ({ position = 'top', className = '' }: AdBannerProps) => {
   const [isPaidUser, setIsPaidUser] = useState<boolean>(false);
 
   // Check if user has premium subscription
-  const { data: subscriptionData } = useQuery({
+  const { data: subscriptionData } = useQuery<SubscriptionStatus>({
     queryKey: ['/api/user/subscription-status'],
+    // Only run query when authenticated
+    enabled: typeof window !== 'undefined',
+    // Don't show error for unauthenticated users viewing public menus
+    retry: false
   });
 
   useEffect(() => {
-    if (subscriptionData && 'isPaid' in subscriptionData) {
-      setIsPaidUser(subscriptionData.isPaid === true);
+    if (subscriptionData?.isPaid) {
+      setIsPaidUser(true);
     }
   }, [subscriptionData]);
 
-  // Don't show ads for paid users
-  if (isPaidUser) {
+  // Don't show ads for paid users (including when we don't know the status yet)
+  if (isPaidUser || subscriptionData === undefined) {
     return null;
   }
 
