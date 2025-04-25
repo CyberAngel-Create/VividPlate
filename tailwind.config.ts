@@ -65,6 +65,12 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Custom MenuMate colors
+        neutral: "hsl(var(--neutral))",
+        dark: "hsl(var(--dark))",
+        midgray: "hsl(var(--midgray))",
+        success: "hsl(var(--success))",
+        error: "hsl(var(--error))",
       },
       keyframes: {
         "accordion-down": {
