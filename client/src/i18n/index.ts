@@ -66,6 +66,8 @@ const translations = {
   restaurant: {
     uploadLogo: 'Upload Restaurant Logo',
     logoSize: 'Max logo size: 3MB',
+    uploadBanner: 'Upload Restaurant Banner',
+    bannerSize: 'Max banner size: 3MB',
     feedback: 'Customer Feedback',
     viewFeedback: 'View Feedback',
     noFeedback: 'No feedback yet',

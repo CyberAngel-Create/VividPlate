@@ -432,6 +432,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Error uploading logo', error: errorMsg });
     }
   });
+  
+  // Restaurant banner upload route
+  app.post('/api/restaurants/:restaurantId/upload-banner', isAuthenticated, isRestaurantOwner, upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      const restaurantId = parseInt(req.params.restaurantId);
+      const bannerUrl = `/uploads/${req.file.filename}`;
+      
+      // Update restaurant with new banner URL
+      const restaurant = await storage.updateRestaurant(restaurantId, { bannerUrl });
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      res.json({ bannerUrl, success: true });
+    } catch (error) {
+      console.error('Error uploading banner:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ message: 'Error uploading banner', error: errorMsg });
+    }
+  });
 
   // Menu category routes
   app.get('/api/restaurants/:restaurantId/categories', async (req, res) => {
