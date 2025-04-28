@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, RouteComponentProps } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -22,7 +22,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
 
-function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType, path: string }) {
+function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [, setLocation] = useLocation();
 
@@ -47,11 +47,11 @@ function AuthenticatedRoute({ component: Component, ...rest }: { component: Reac
   return <Route {...rest} component={Component} />;
 }
 
-function PublicRoute({ component: Component, ...rest }: { component: React.ComponentType, path: string }) {
+function PublicRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   return <Route {...rest} component={Component} />;
 }
 
-function AdminRoute({ component: Component, ...rest }: { component: React.ComponentType, path: string }) {
+function AdminRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [, setLocation] = useLocation();
 
