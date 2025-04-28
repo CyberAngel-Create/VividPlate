@@ -69,6 +69,7 @@ const translations = {
     feedback: 'Customer Feedback',
     viewFeedback: 'View Feedback',
     noFeedback: 'No feedback yet',
+    leaveFeedback: 'Share Your Experience',
   },
   subscription: {
     choosePlan: 'Choose Your Plan',

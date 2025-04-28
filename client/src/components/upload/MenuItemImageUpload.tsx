@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Image, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, X } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 interface MenuItemImageUploadProps {
   itemId: number;
@@ -12,49 +12,57 @@ interface MenuItemImageUploadProps {
   onSuccess?: (imageUrl: string) => void;
 }
 
-const MenuItemImageUpload = ({ itemId, currentImageUrl, onSuccess }: MenuItemImageUploadProps) => {
+const MenuItemImageUpload: React.FC<MenuItemImageUploadProps> = ({ 
+  itemId, 
+  currentImageUrl, 
+  onSuccess 
+}) => {
   const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentImageUrl || null);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-
+  
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
     if (!file) return;
     
-    // Validate file type
-    if (!['image/jpeg', 'image/png', 'image/gif', 'image/webp'].includes(file.type)) {
+    // Check file size (max 3MB)
+    const maxSize = 3 * 1024 * 1024; // 3MB in bytes
+    if (file.size > maxSize) {
+      setError(`File size exceeds the limit of 3MB.`);
       toast({
-        title: 'Invalid file type',
-        description: 'Please upload a JPEG, PNG, GIF, or WebP image',
+        title: 'Error',
+        description: 'File size exceeds the limit of 3MB.',
         variant: 'destructive',
       });
       return;
     }
     
-    // Validate file size (3MB max)
-    if (file.size > 3 * 1024 * 1024) {
+    // Check file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setError('Only JPEG, PNG, GIF, and WebP images are allowed.');
       toast({
-        title: 'File too large',
-        description: 'Image must be less than 3MB',
+        title: 'Error',
+        description: 'Only JPEG, PNG, GIF, and WebP images are allowed.',
         variant: 'destructive',
       });
       return;
     }
     
-    // Show preview
+    // Create local preview
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
     
-    // Upload file
+    // Upload to server
+    const formData = new FormData();
+    formData.append('image', file);
+    
     setIsUploading(true);
+    setError(null);
     
     try {
-      const formData = new FormData();
-      formData.append('image', file);
-      
       const response = await apiRequest(
         'POST', 
         `/api/items/${itemId}/upload-image`, 
@@ -62,97 +70,110 @@ const MenuItemImageUpload = ({ itemId, currentImageUrl, onSuccess }: MenuItemIma
         true // Use FormData
       );
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload image');
+      }
+      
       const data = await response.json();
       
-      if (response.ok) {
-        toast({
-          title: 'Image uploaded',
-          description: 'Menu item image has been updated',
-        });
-        
-        // Invalidate menu item cache to update image
-        queryClient.invalidateQueries({ queryKey: [`/api/items/${itemId}`] });
-        
-        if (onSuccess) {
-          onSuccess(data.imageUrl);
-        }
-      } else {
-        throw new Error(data.message || 'Failed to upload image');
+      toast({
+        title: 'Success',
+        description: 'Image uploaded successfully.',
+      });
+      
+      if (onSuccess) {
+        onSuccess(data.imageUrl);
       }
     } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to upload image');
       toast({
-        title: 'Upload failed',
-        description: error instanceof Error ? error.message : 'An error occurred while uploading your image',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to upload image',
         variant: 'destructive',
       });
       
-      // Reset preview if upload failed
-      if (currentImageUrl) {
-        setPreviewUrl(currentImageUrl);
-      } else {
-        setPreviewUrl(null);
-      }
+      // Revert to previous image if upload failed
+      setPreviewUrl(currentImageUrl || null);
     } finally {
       setIsUploading(false);
     }
   };
   
-  const handleRemoveImage = () => {
-    setPreviewUrl(null);
-    // Here you would typically update the menu item to remove the image
-    // For now, we'll just reset the preview
-  };
-  
   return (
-    <div className="w-full">
-      <div className="mb-4">
-        <div className="text-sm font-medium mb-2">{t('menu.uploadImage')}</div>
-        <div className="text-xs text-gray-500 mb-4">{t('menu.imageSize')}</div>
-        
-        {previewUrl ? (
-          <div className="relative w-full max-w-xs mb-4">
-            <img 
-              src={previewUrl}
-              alt="Menu item image preview" 
-              className="w-full h-auto object-cover rounded-md"
-            />
-            <button
-              type="button"
-              onClick={handleRemoveImage}
-              className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
-              aria-label="Remove image"
+    <Card className="w-full overflow-hidden border">
+      <CardContent className="p-4 space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-lg font-medium">{t('menu.uploadImage')}</h3>
+            <p className="text-xs text-muted-foreground">{t('menu.imageSize')}</p>
+          </div>
+          
+          {previewUrl ? (
+            <div className="relative aspect-video w-full rounded-md overflow-hidden bg-muted">
+              <img 
+                src={previewUrl} 
+                alt="Menu item preview" 
+                className="object-cover w-full h-full" 
+              />
+              <div className="absolute inset-0 flex items-end justify-end p-2">
+                <label 
+                  htmlFor="itemImage" 
+                  className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md text-sm cursor-pointer transition-colors"
+                >
+                  Change Image
+                </label>
+              </div>
+            </div>
+          ) : (
+            <label
+              htmlFor="itemImage"
+              className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-md border-muted-foreground/20 hover:border-muted-foreground/40 cursor-pointer transition-colors"
             >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="w-full max-w-xs h-40 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-md mb-4">
-            <span className="text-gray-500 text-sm">No image</span>
-          </div>
-        )}
-        
-        <div>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => document.getElementById(`item-image-upload-${itemId}`)?.click()}
-            disabled={isUploading}
-            className="flex items-center gap-2"
-          >
-            <Upload className="h-4 w-4" />
-            {isUploading ? 'Uploading...' : 'Upload Image'}
-          </Button>
+              <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                <p className="mb-1 text-sm">
+                  <span className="font-medium">Click to upload</span> or drag and drop
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  JPEG, PNG, GIF, WEBP (MAX 3MB)
+                </p>
+              </div>
+            </label>
+          )}
+          
           <input
+            id="itemImage"
             type="file"
-            id={`item-image-upload-${itemId}`}
             className="hidden"
             accept="image/jpeg,image/png,image/gif,image/webp"
             onChange={handleFileChange}
             disabled={isUploading}
           />
         </div>
-      </div>
-    </div>
+        
+        {isUploading && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
+            <span>Uploading image...</span>
+          </div>
+        )}
+        
+        {error && (
+          <div className="flex items-center gap-2 text-sm text-destructive">
+            <AlertCircle className="w-4 h-4" />
+            <span>{error}</span>
+          </div>
+        )}
+        
+        {!error && previewUrl && !isUploading && (
+          <div className="flex items-center gap-2 text-sm text-green-600">
+            <CheckCircle className="w-4 h-4" />
+            <span>Image ready</span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

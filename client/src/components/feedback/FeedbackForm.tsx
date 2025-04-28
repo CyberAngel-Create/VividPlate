@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Star } from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
+import { apiRequest } from '@/lib/queryClient';
+import { Star } from 'lucide-react';
 
 interface FeedbackFormProps {
   restaurantId: number;
@@ -16,51 +16,79 @@ interface FeedbackFormProps {
 
 const FeedbackForm: React.FC<FeedbackFormProps> = ({ restaurantId, menuItemId }) => {
   const [rating, setRating] = useState<number>(0);
-  const [comment, setComment] = useState<string>('');
-  const [customerName, setCustomerName] = useState<string>('');
-  const [customerEmail, setCustomerEmail] = useState<string>('');
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [comment, setComment] = useState('');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  
   const { toast } = useToast();
   const { t } = useTranslation();
-
+  
+  const handleStarHover = (value: number) => {
+    setHoveredRating(value);
+  };
+  
+  const handleStarLeave = () => {
+    setHoveredRating(null);
+  };
+  
+  const handleStarClick = (value: number) => {
+    setRating(value);
+  };
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
     if (rating === 0) {
       toast({
-        title: 'Rating required',
-        description: 'Please select a rating before submitting',
+        title: 'Error',
+        description: 'Please select a rating',
         variant: 'destructive',
       });
       return;
     }
-
+    
+    setIsSubmitting(true);
+    
     try {
-      setSubmitting(true);
-      const feedbackData = {
+      // Prepare form data
+      const formData = {
         rating,
-        comment,
-        customerName: customerName || null,
-        customerEmail: customerEmail || null,
-        menuItemId: menuItemId || null,
+        comment: comment.trim() || null,
+        customerName: name.trim() || null,
+        customerEmail: email.trim() || null,
       };
-
+      
+      // Add menuItemId if provided
+      if (menuItemId) {
+        Object.assign(formData, { menuItemId });
+      }
+      
+      // Send to server
       const response = await apiRequest(
         'POST',
-        `/api/restaurants/${restaurantId}/feedback/submit`,
-        feedbackData
+        `/api/restaurants/${restaurantId}/feedback`,
+        formData
       );
-
-      if (response.ok) {
-        setSubmitted(true);
-        toast({
-          title: 'Thank you!',
-          description: 'Your feedback has been submitted.',
-        });
-      } else {
+      
+      if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Failed to submit feedback');
       }
+      
+      // Reset form
+      setRating(0);
+      setComment('');
+      setName('');
+      setEmail('');
+      setIsSubmitted(true);
+      
+      toast({
+        title: 'Success',
+        description: t('feedback.thankYou'),
+      });
     } catch (error) {
       toast({
         title: 'Error',
@@ -68,109 +96,107 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ restaurantId, menuItemId })
         variant: 'destructive',
       });
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
-
-  const renderStars = () => {
-    return (
-      <div className="flex items-center gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-8 w-8 cursor-pointer transition-colors 
-            ${
-              rating >= star
-                ? 'text-yellow-500 fill-yellow-500'
-                : 'text-gray-300 hover:text-yellow-300'
-            }`}
-            onClick={() => setRating(star)}
-          />
-        ))}
-      </div>
-    );
-  };
-
-  if (submitted) {
+  
+  // If feedback was successfully submitted, show thank you message
+  if (isSubmitted) {
     return (
       <Card>
-        <CardHeader>
-          <CardTitle>Thank You!</CardTitle>
-          <CardDescription>
-            Your feedback has been submitted and will be reviewed soon.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6 text-center">
+          <div className="text-4xl mb-4">🎉</div>
+          <h3 className="text-xl font-medium mb-2">{t('feedback.thankYou')}</h3>
+          <p className="text-muted-foreground">Your feedback helps improve the dining experience for everyone.</p>
           <Button 
-            variant="outline" 
-            onClick={() => {
-              setRating(0);
-              setComment('');
-              setCustomerName('');
-              setCustomerEmail('');
-              setSubmitted(false);
-            }}
+            className="mt-4" 
+            variant="outline"
+            onClick={() => setIsSubmitted(false)}
           >
-            Submit Another Review
+            Submit Another Feedback
           </Button>
         </CardContent>
       </Card>
     );
   }
-
+  
   return (
     <Card>
       <CardHeader>
         <CardTitle>{t('restaurant.leaveFeedback')}</CardTitle>
-        <CardDescription>
-          Share your experience with this restaurant
-        </CardDescription>
+        <CardDescription>Share your dining experience with us and other customers</CardDescription>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="rating">Rating</Label>
-            {renderStars()}
+            <Label htmlFor="rating">{t('feedback.yourRating')}</Label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => handleStarClick(value)}
+                  onMouseEnter={() => handleStarHover(value)}
+                  onMouseLeave={handleStarLeave}
+                  className="p-1 focus:outline-none"
+                >
+                  <Star
+                    size={32}
+                    className={`${
+                      (hoveredRating !== null
+                        ? value <= hoveredRating
+                        : value <= rating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-muted-foreground'
+                    } transition-colors`}
+                  />
+                </button>
+              ))}
+            </div>
           </div>
-
+          
           <div className="space-y-2">
-            <Label htmlFor="comment">Comment (optional)</Label>
+            <Label htmlFor="comment">{t('feedback.yourComment')}</Label>
             <Textarea
               id="comment"
-              placeholder="Tell us what you liked or didn't like..."
+              placeholder="Tell us what you liked or didn't like"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              rows={3}
+              rows={4}
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="name">Your Name (optional)</Label>
-            <Input
-              id="name"
-              placeholder="Enter your name"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-            />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">{t('feedback.name')}</Label>
+              <Input
+                id="name"
+                placeholder="Your name (optional)"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">{t('feedback.email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="Your email (optional)"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Your Email (optional)</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
-            />
-          </div>
-
-          <Button 
-            type="submit" 
-            className="w-full"
-            disabled={submitting || rating === 0}
-          >
-            {submitting ? 'Submitting...' : 'Submit Feedback'}
+          
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <span className="mr-2">Submitting...</span>
+                <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full"></div>
+              </>
+            ) : (
+              t('feedback.submit')
+            )}
           </Button>
         </form>
       </CardContent>
