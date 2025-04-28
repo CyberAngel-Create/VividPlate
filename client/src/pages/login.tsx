@@ -102,7 +102,7 @@ const Login = () => {
     <div className="container mx-auto px-4 py-12 flex justify-center">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading text-center">Log in to MenuMate</CardTitle>
+          <CardTitle className="text-2xl font-heading text-center">{t('common.login')} - MenuMate</CardTitle>
           <CardDescription className="text-center">
             Enter your credentials to access your account
           </CardDescription>
@@ -110,8 +110,8 @@ const Login = () => {
         <CardContent>
           <Tabs defaultValue="user" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="user">Restaurant Owner</TabsTrigger>
-              <TabsTrigger value="admin">Admin</TabsTrigger>
+              <TabsTrigger value="user">{t('common.restaurantOwner')}</TabsTrigger>
+              <TabsTrigger value="admin">{t('common.admin')}</TabsTrigger>
             </TabsList>
             
             {/* User Login Tab */}
@@ -123,9 +123,9 @@ const Login = () => {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Username</FormLabel>
+                        <FormLabel>{t('common.username')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your username" {...field} />
+                          <Input placeholder={`${t('common.username')}...`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -136,9 +136,9 @@ const Login = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Password</FormLabel>
+                        <FormLabel>{t('common.password')}</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Your password" {...field} />
+                          <Input type="password" placeholder={`${t('common.password')}...`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -146,10 +146,10 @@ const Login = () => {
                   />
                   <Button 
                     type="submit" 
-                    className="w-full bg-primary hover:bg-primary/90"
+                    className="w-full bg-primary hover:bg-primary/90 text-white"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Logging in..." : "Log in"}
+                    {isLoading ? `${t('common.login')}...` : t('common.login')}
                   </Button>
                 </form>
               </Form>
@@ -164,9 +164,9 @@ const Login = () => {
                     name="username"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Admin Username</FormLabel>
+                        <FormLabel>{t('common.adminUsername')}</FormLabel>
                         <FormControl>
-                          <Input placeholder="Admin username" {...field} />
+                          <Input placeholder={`${t('common.adminUsername')}...`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -177,9 +177,9 @@ const Login = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Admin Password</FormLabel>
+                        <FormLabel>{t('common.adminPassword')}</FormLabel>
                         <FormControl>
-                          <Input type="password" placeholder="Admin password" {...field} />
+                          <Input type="password" placeholder={`${t('common.adminPassword')}...`} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -187,13 +187,13 @@ const Login = () => {
                   />
                   <Button 
                     type="submit" 
-                    className="w-full bg-primary hover:bg-primary/90"
+                    className="w-full bg-primary hover:bg-primary/90 text-white"
                     disabled={isLoading}
                   >
-                    {isLoading ? "Logging in..." : "Admin Login"}
+                    {isLoading ? `${t('common.login')}...` : t('common.adminLogin')}
                   </Button>
                   <p className="text-xs text-center text-gray-500 mt-2">
-                    For platform administrators only
+                    {t('common.adminOnly')}
                   </p>
                 </form>
               </Form>
@@ -202,9 +202,9 @@ const Login = () => {
         </CardContent>
         <CardFooter className="flex flex-col space-y-2 text-center">
           <div className="text-sm text-midgray">
-            Don't have an account?{" "}
+            {t('common.noAccount')}{" "}
             <Link href="/register">
-              <a className="text-primary hover:underline">Register</a>
+              <a className="text-primary hover:underline">{t('common.register')}</a>
             </Link>
           </div>
         </CardFooter>
