@@ -935,8 +935,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Rating is required' });
       }
       
-      const feedbackData = {
-        menuItemId: menuItemId ? parseInt(menuItemId) : null,
+      // Prepare feedback data with proper types
+      let feedbackData: any = {
         restaurantId,
         rating: parseInt(rating),
         comment: comment || null,
@@ -944,6 +944,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerEmail: customerEmail || null,
         status: 'pending' // All new feedback starts as pending
       };
+      
+      // Only add menuItemId if it's provided
+      if (menuItemId) {
+        feedbackData.menuItemId = parseInt(menuItemId);
+      }
       
       const feedback = await storage.createFeedback(feedbackData);
       res.status(201).json(feedback);

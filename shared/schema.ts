@@ -147,7 +147,7 @@ export const insertPaymentSchema = createInsertSchema(payments).pick({
 // Feedback table
 export const feedbacks = pgTable("feedbacks", {
   id: serial("id").primaryKey(),
-  menuItemId: integer("menu_item_id").notNull(),
+  menuItemId: integer("menu_item_id"),
   restaurantId: integer("restaurant_id").notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment"),

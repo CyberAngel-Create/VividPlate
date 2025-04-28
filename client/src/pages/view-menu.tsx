@@ -6,6 +6,7 @@ import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { apiRequest } from "@/lib/queryClient";
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import AdBanner from "@/components/ads/AdBanner";
+import FeedbackForm from "@/components/feedback/FeedbackForm";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -79,6 +80,13 @@ const ViewMenu = () => {
         <CustomerMenuPreview 
           restaurant={restaurant}
           menuData={menu}
+        />
+      </div>
+      
+      {/* Feedback Form Section */}
+      <div className="w-full max-w-screen-md my-6 px-4">
+        <FeedbackForm 
+          restaurantId={parseInt(restaurantId as string)}
         />
       </div>
       

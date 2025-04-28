@@ -6,6 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { useTranslation } from 'react-i18next';
 import { Feedback } from '@shared/schema';
+import FeedbackItem from './FeedbackItem';
 
 interface RestaurantFeedbackProps {
   restaurantId: number;
