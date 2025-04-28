@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -15,6 +15,9 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import memorystore from 'memorystore';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 // Configure session
 const configureSession = (app: Express) => {
@@ -151,9 +154,80 @@ const isRestaurantOwner = async (req: any, res: any, next: any) => {
   next();
 };
 
+// Configure multer for file uploads
+const configureFileUpload = () => {
+  // Create uploads directory if it doesn't exist
+  const uploadDir = path.join(process.cwd(), 'uploads');
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+
+  // Configure storage
+  const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      // Create a unique filename with original extension
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const ext = path.extname(file.originalname);
+      cb(null, uniqueSuffix + ext);
+    }
+  });
+
+  // File size limit (3MB)
+  const fileSizeLimit = 3 * 1024 * 1024;
+
+  // File filter to only allow image files
+  const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'));
+    }
+  };
+
+  return multer({ 
+    storage, 
+    limits: { fileSize: fileSizeLimit },
+    fileFilter
+  });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   configureSession(app);
   configurePassport(app);
+  
+  // Configure file upload middleware
+  const upload = configureFileUpload();
+  
+  // Serve static files from the uploads directory
+  app.use('/uploads', (req, res, next) => {
+    const options = {
+      root: path.join(process.cwd(), 'uploads'),
+      dotfiles: 'deny',
+      headers: {
+        'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+      }
+    };
+    
+    const fileName = req.path.substring(1); // Remove leading slash
+    
+    if (!fileName || fileName.includes('..')) {
+      return res.status(403).send('Forbidden');
+    }
+    
+    res.sendFile(fileName, options, (err) => {
+      if (err) {
+        if (err.code === 'ENOENT') {
+          return res.status(404).send('File not found');
+        }
+        return next(err);
+      }
+    });
+  });
 
   // Auth routes
   app.post('/api/auth/register', async (req, res) => {
@@ -333,6 +407,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  
+  // Restaurant logo upload route
+  app.post('/api/restaurants/:restaurantId/upload-logo', isAuthenticated, isRestaurantOwner, upload.single('logo'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      const restaurantId = parseInt(req.params.restaurantId);
+      const logoUrl = `/uploads/${req.file.filename}`;
+      
+      // Update restaurant with new logo URL
+      const restaurant = await storage.updateRestaurant(restaurantId, { logoUrl });
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      res.json({ logoUrl, success: true });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      res.status(500).json({ message: 'Error uploading logo', error: error.message });
+    }
+  });
 
   // Menu category routes
   app.get('/api/restaurants/:restaurantId/categories', async (req, res) => {
@@ -481,6 +578,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(updatedItem);
     } catch (error) {
       res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // Menu item image upload route
+  app.post('/api/items/:itemId/upload-image', isAuthenticated, upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      const itemId = parseInt(req.params.itemId);
+      const item = await storage.getMenuItem(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      
+      const category = await storage.getMenuCategory(item.categoryId);
+      if (!category) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
+      
+      // Check if user owns the restaurant
+      const restaurant = await storage.getRestaurant(category.restaurantId);
+      if (!restaurant || restaurant.userId !== (req.user as any).id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const imageUrl = `/uploads/${req.file.filename}`;
+      
+      // Update menu item with new image URL
+      const updatedItem = await storage.updateMenuItem(itemId, { imageUrl });
+      if (!updatedItem) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      
+      res.json({ imageUrl, success: true });
+    } catch (error) {
+      console.error('Error uploading menu item image:', error);
+      res.status(500).json({ message: 'Error uploading image', error: error.message });
     }
   });
 
