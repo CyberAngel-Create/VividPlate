@@ -16,6 +16,8 @@ import ViewMenu from "./pages/view-menu";
 import SubscriptionPage from "./pages/subscription";
 import AdminDashboard from "./pages/admin-dashboard";
 import AdminLogin from "./pages/admin-login";
+import Pricing from "./pages/pricing";
+import Contact from "./pages/contact";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
@@ -96,6 +98,8 @@ function Router() {
           <PublicRoute path="/login" component={Login} />
           <PublicRoute path="/admin-login" component={AdminLogin} />
           <PublicRoute path="/register" component={Register} />
+          <PublicRoute path="/pricing" component={Pricing} />
+          <PublicRoute path="/contact" component={Contact} />
           <PublicRoute path="/menu/:restaurantId" component={ViewMenu} />
           <PublicRoute path="/view-menu/:restaurantId" component={ViewMenu} />
           
