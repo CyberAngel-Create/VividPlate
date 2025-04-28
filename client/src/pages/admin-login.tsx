@@ -24,7 +24,6 @@ import {
   CardHeader, 
   CardTitle 
 } from "../components/ui/card";
-import { Link } from "wouter";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -33,13 +32,12 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-const Login = () => {
+const AdminLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
 
-  // User Login Form
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -51,16 +49,16 @@ const Login = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await apiRequest("POST", "/api/auth/login", data);
+      await apiRequest("POST", "/api/auth/admin-login", data);
       toast({
         title: "Success",
-        description: t('common.successLogin'),
+        description: t('common.successAdminLogin'),
       });
-      setLocation("/dashboard");
+      setLocation("/admin");
     } catch (error) {
       toast({
         title: "Error",
-        description: t('common.invalidCredentials'),
+        description: t('common.invalidAdminCredentials'),
         variant: "destructive",
       });
     } finally {
@@ -72,9 +70,9 @@ const Login = () => {
     <div className="container mx-auto px-4 py-12 flex justify-center">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading text-center">{t('common.login')} - MenuMate</CardTitle>
+          <CardTitle className="text-2xl font-heading text-center">{t('common.adminLogin')} - MenuMate</CardTitle>
           <CardDescription className="text-center">
-            Enter your credentials to access your account
+            {t('common.adminOnly')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -85,9 +83,9 @@ const Login = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.username')}</FormLabel>
+                    <FormLabel>{t('common.adminUsername')}</FormLabel>
                     <FormControl>
-                      <Input placeholder={`${t('common.username')}...`} {...field} />
+                      <Input placeholder={`${t('common.adminUsername')}...`} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -98,9 +96,9 @@ const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.password')}</FormLabel>
+                    <FormLabel>{t('common.adminPassword')}</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder={`${t('common.password')}...`} {...field} />
+                      <Input type="password" placeholder={`${t('common.adminPassword')}...`} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -111,17 +109,14 @@ const Login = () => {
                 className="w-full bg-primary hover:bg-primary/90 text-white"
                 disabled={isLoading}
               >
-                {isLoading ? `${t('common.login')}...` : t('common.login')}
+                {isLoading ? `${t('common.login')}...` : t('common.adminLogin')}
               </Button>
             </form>
           </Form>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2 text-center">
           <div className="text-sm text-midgray">
-            {t('common.noAccount')}{" "}
-            <Link href="/register">
-              <a className="text-primary hover:underline">{t('common.register')}</a>
-            </Link>
+            <a href="/login" className="text-primary hover:underline">{t('common.login')}</a>
           </div>
         </CardFooter>
       </Card>
@@ -129,4 +124,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default AdminLogin;
