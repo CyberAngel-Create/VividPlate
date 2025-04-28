@@ -86,35 +86,11 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({ restaurantId })
         ) : (
           <div className="space-y-4">
             {feedbacks.map((feedback) => (
-              <div key={feedback.id} className="border rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <div className="flex items-center">
-                    {renderStars(feedback.rating)}
-                    <span className="ml-2 text-sm text-gray-600">
-                      {feedback.rating}/5
-                    </span>
-                  </div>
-                  <Badge className={getFeedbackStatusColor(feedback.status || 'pending')}>
-                    {feedback.status || 'pending'}
-                  </Badge>
-                </div>
-                {feedback.comment && (
-                  <div className="flex items-start mt-2">
-                    <MessageSquare className="h-4 w-4 mr-2 mt-1 text-gray-500" />
-                    <p className="text-sm text-gray-700">{feedback.comment || ''}</p>
-                  </div>
-                )}
-                <div className="mt-2 text-xs text-gray-500">
-                  <span>
-                    {feedback.customerName
-                      ? `From: ${feedback.customerName}`
-                      : 'Anonymous feedback'}
-                  </span>
-                  <span className="ml-4">
-                    {feedback.createdAt ? new Date(feedback.createdAt.toString()).toLocaleDateString() : ''}
-                  </span>
-                </div>
-              </div>
+              <FeedbackItem 
+                key={feedback.id} 
+                feedback={feedback} 
+                restaurantId={restaurantId}
+              />
             ))}
           </div>
         )}

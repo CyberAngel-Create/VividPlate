@@ -6,7 +6,8 @@ import {
   insertRestaurantSchema, 
   insertMenuCategorySchema, 
   insertMenuItemSchema,
-  insertMenuViewSchema
+  insertMenuViewSchema,
+  insertFeedbackSchema
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
@@ -427,7 +428,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ logoUrl, success: true });
     } catch (error) {
       console.error('Error uploading logo:', error);
-      res.status(500).json({ message: 'Error uploading logo', error: error.message });
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ message: 'Error uploading logo', error: errorMsg });
     }
   });
 
@@ -617,7 +619,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ imageUrl, success: true });
     } catch (error) {
       console.error('Error uploading menu item image:', error);
-      res.status(500).json({ message: 'Error uploading image', error: error.message });
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ message: 'Error uploading image', error: errorMsg });
     }
   });
 
@@ -900,6 +903,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(feedback);
     } catch (error) {
       res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Restaurant owner feedback endpoints
+  app.get('/api/restaurants/:restaurantId/feedback', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const feedbacks = await storage.getFeedbacksByRestaurantId(restaurantId);
+      res.json(feedbacks);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Server error';
+      res.status(500).json({ message: errorMsg });
+    }
+  });
+  
+  // Customer feedback submission endpoint (no auth required)
+  app.post('/api/restaurants/:restaurantId/feedback/submit', async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const restaurant = await storage.getRestaurant(restaurantId);
+      
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      // Create feedback with validation
+      const { menuItemId, rating, comment, customerName, customerEmail } = req.body;
+      
+      if (!rating) {
+        return res.status(400).json({ message: 'Rating is required' });
+      }
+      
+      const feedbackData = {
+        menuItemId: menuItemId ? parseInt(menuItemId) : null,
+        restaurantId,
+        rating: parseInt(rating),
+        comment: comment || null,
+        customerName: customerName || null,
+        customerEmail: customerEmail || null,
+        status: 'pending' // All new feedback starts as pending
+      };
+      
+      const feedback = await storage.createFeedback(feedbackData);
+      res.status(201).json(feedback);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: 'Validation error', errors: error.errors });
+      } else {
+        const errorMsg = error instanceof Error ? error.message : 'Server error';
+        res.status(500).json({ message: errorMsg });
+      }
+    }
+  });
+  
+  app.post('/api/feedback/:feedbackId/approve', isAuthenticated, async (req, res) => {
+    try {
+      const feedbackId = parseInt(req.params.feedbackId);
+      const feedback = await storage.getFeedback(feedbackId);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: 'Feedback not found' });
+      }
+      
+      // Check if user owns the restaurant
+      const restaurant = await storage.getRestaurant(feedback.restaurantId);
+      if (!restaurant || restaurant.userId !== (req.user as any).id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updatedFeedback = await storage.approveFeedback(feedbackId);
+      res.json(updatedFeedback);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Server error';
+      res.status(500).json({ message: errorMsg });
+    }
+  });
+  
+  app.post('/api/feedback/:feedbackId/reject', isAuthenticated, async (req, res) => {
+    try {
+      const feedbackId = parseInt(req.params.feedbackId);
+      const feedback = await storage.getFeedback(feedbackId);
+      
+      if (!feedback) {
+        return res.status(404).json({ message: 'Feedback not found' });
+      }
+      
+      // Check if user owns the restaurant
+      const restaurant = await storage.getRestaurant(feedback.restaurantId);
+      if (!restaurant || restaurant.userId !== (req.user as any).id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      const updatedFeedback = await storage.rejectFeedback(feedbackId);
+      res.json(updatedFeedback);
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Server error';
+      res.status(500).json({ message: errorMsg });
     }
   });
 
