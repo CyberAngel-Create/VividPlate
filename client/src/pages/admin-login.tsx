@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { apiRequest } from "../lib/queryClient";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
@@ -106,7 +106,7 @@ const AdminLogin = () => {
               />
               <Button 
                 type="submit" 
-                className="w-full bg-primary hover:bg-primary/90 text-white"
+                className="w-full bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
                 disabled={isLoading}
               >
                 {isLoading ? `${t('common.login')}...` : t('common.adminLogin')}

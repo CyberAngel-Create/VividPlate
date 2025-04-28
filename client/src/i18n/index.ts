@@ -5,9 +5,9 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // English translations
 const enTranslations = {
   common: {
-    login: 'Log in',
+    login: 'Login',
     register: 'Register',
-    logout: 'Log out',
+    logout: 'Logout',
     username: 'Username',
     password: 'Password',
     adminUsername: 'Admin Username',

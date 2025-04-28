@@ -82,7 +82,7 @@ const Header = () => {
               </Link>
               <Button 
                 variant="default" 
-                className="bg-primary hover:bg-primary/90 text-white"
+                className="bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
                 onClick={handleLogout}
               >
                 {t('common.logout')}
@@ -95,7 +95,7 @@ const Header = () => {
               </Link>
               <Button 
                 variant="default" 
-                className="bg-primary hover:bg-primary/90 text-white"
+                className="bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
                 onClick={() => window.location.href = '/register'}
               >
                 {t('home.getStarted')}

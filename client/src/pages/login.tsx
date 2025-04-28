@@ -108,7 +108,7 @@ const Login = () => {
               />
               <Button 
                 type="submit" 
-                className="w-full bg-primary hover:bg-primary/90 text-white"
+                className="w-full bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
                 disabled={isLoading}
               >
                 {isLoading ? `${t('common.login')}...` : t('common.login')}
