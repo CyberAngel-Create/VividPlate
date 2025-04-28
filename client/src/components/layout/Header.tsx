@@ -77,8 +77,8 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard">
-                <a className="text-dark hover:text-primary transition-colors font-medium hidden md:block">{t('common.dashboard')}</a>
+              <Link href="/dashboard" className="text-dark hover:text-primary transition-colors font-medium hidden md:block">
+                {t('common.dashboard')}
               </Link>
               <Button 
                 variant="default" 
@@ -90,14 +90,16 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link href="/login">
-                <a className="text-dark hover:text-primary transition-colors font-medium hidden md:block">{t('common.login')}</a>
+              <Link href="/login" className="text-dark hover:text-primary transition-colors font-medium hidden md:block">
+                {t('common.login')}
               </Link>
-              <Link href="/register">
-                <Button variant="default" className="bg-primary hover:bg-primary/90 text-white">
-                  {t('home.getStarted')}
-                </Button>
-              </Link>
+              <Button 
+                variant="default" 
+                className="bg-primary hover:bg-primary/90 text-white"
+                onClick={() => window.location.href = '/register'}
+              >
+                {t('home.getStarted')}
+              </Button>
             </>
           )}
           <LanguageSwitcher />
@@ -115,23 +117,23 @@ const Header = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white pb-4 px-4">
           <nav className="flex flex-col space-y-3">
-            <Link href="/">
-              <a className="text-dark hover:text-primary transition-colors py-2 font-medium">Home</a>
+            <Link href="/" className="text-dark hover:text-primary transition-colors py-2 font-medium">
+              Home
             </Link>
-            <Link href="/features">
-              <a className="text-dark hover:text-primary transition-colors py-2 font-medium">Features</a>
+            <Link href="/features" className="text-dark hover:text-primary transition-colors py-2 font-medium">
+              Features
             </Link>
-            <Link href="/pricing">
-              <a className="text-dark hover:text-primary transition-colors py-2 font-medium">Pricing</a>
+            <Link href="/pricing" className="text-dark hover:text-primary transition-colors py-2 font-medium">
+              Pricing
             </Link>
-            <Link href="/contact">
-              <a className="text-dark hover:text-primary transition-colors py-2 font-medium">Contact</a>
+            <Link href="/contact" className="text-dark hover:text-primary transition-colors py-2 font-medium">
+              Contact
             </Link>
             
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard">
-                  <a className="text-dark hover:text-primary transition-colors py-2 font-medium">{t('common.dashboard')}</a>
+                <Link href="/dashboard" className="text-dark hover:text-primary transition-colors py-2 font-medium">
+                  {t('common.dashboard')}
                 </Link>
                 <a 
                   href="#" 
@@ -146,11 +148,11 @@ const Header = () => {
               </>
             ) : (
               <>
-                <Link href="/login">
-                  <a className="text-dark hover:text-primary transition-colors py-2 font-medium">{t('common.login')}</a>
+                <Link href="/login" className="text-dark hover:text-primary transition-colors py-2 font-medium">
+                  {t('common.login')}
                 </Link>
-                <Link href="/register">
-                  <a className="text-primary font-medium py-2">{t('home.getStarted')}</a>
+                <Link href="/register" className="text-primary font-medium py-2">
+                  {t('home.getStarted')}
                 </Link>
               </>
             )}

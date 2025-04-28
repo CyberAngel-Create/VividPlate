@@ -116,7 +116,7 @@ const AdminLogin = () => {
         </CardContent>
         <CardFooter className="flex flex-col space-y-2 text-center">
           <div className="text-sm text-midgray">
-            <a href="/login" className="text-primary hover:underline">{t('common.login')}</a>
+            <Link href="/login" className="text-primary hover:underline">{t('common.login')}</Link>
           </div>
         </CardFooter>
       </Card>

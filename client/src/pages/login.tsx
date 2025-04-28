@@ -119,8 +119,8 @@ const Login = () => {
         <CardFooter className="flex flex-col space-y-2 text-center">
           <div className="text-sm text-midgray">
             {t('common.noAccount')}{" "}
-            <Link href="/register">
-              <a className="text-primary hover:underline">{t('common.register')}</a>
+            <Link href="/register" className="text-primary hover:underline">
+              {t('common.register')}
             </Link>
           </div>
         </CardFooter>
