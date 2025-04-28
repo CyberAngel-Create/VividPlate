@@ -207,7 +207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use('/uploads', (req, res, next) => {
     const options = {
       root: path.join(process.cwd(), 'uploads'),
-      dotfiles: 'deny',
+      dotfiles: 'deny' as const,
       headers: {
         'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
       }
@@ -221,7 +221,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.sendFile(fileName, options, (err) => {
       if (err) {
-        if (err.code === 'ENOENT') {
+        if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
           return res.status(404).send('File not found');
         }
         return next(err);

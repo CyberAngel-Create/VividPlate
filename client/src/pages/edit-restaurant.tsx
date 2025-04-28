@@ -7,6 +7,9 @@ import TabNavigation from "@/components/layout/TabNavigation";
 import RestaurantProfileForm from "@/components/restaurant/RestaurantProfileForm";
 import { Restaurant, InsertRestaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
+import RestaurantLogoUpload from "@/components/upload/RestaurantLogoUpload";
+import RestaurantFeedback from "@/components/feedback/RestaurantFeedback";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const EditRestaurant = () => {
   const { toast } = useToast();
@@ -89,6 +92,38 @@ const EditRestaurant = () => {
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
+        ) : activeRestaurant ? (
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="logo">Logo</TabsTrigger>
+              <TabsTrigger value="feedback">Customer Feedback</TabsTrigger>
+            </TabsList>
+            <TabsContent value="profile">
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <RestaurantProfileForm 
+                  restaurant={activeRestaurant}
+                  onSubmit={handleSubmit}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="logo">
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <RestaurantLogoUpload
+                  restaurantId={activeRestaurant.id}
+                  currentLogoUrl={activeRestaurant.logoUrl || undefined}
+                  onSuccess={() => {
+                    refetchActiveRestaurant();
+                  }}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="feedback">
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <RestaurantFeedback restaurantId={activeRestaurant.id} />
+              </div>
+            </TabsContent>
+          </Tabs>
         ) : (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <RestaurantProfileForm 
