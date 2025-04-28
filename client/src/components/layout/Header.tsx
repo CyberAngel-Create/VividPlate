@@ -12,6 +12,7 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -77,28 +78,29 @@ const Header = () => {
           {isAuthenticated ? (
             <>
               <Link href="/dashboard">
-                <a className="text-dark hover:text-primary transition-colors font-medium hidden md:block">Dashboard</a>
+                <a className="text-dark hover:text-primary transition-colors font-medium hidden md:block">{t('common.dashboard')}</a>
               </Link>
               <Button 
                 variant="default" 
                 className="bg-primary hover:bg-primary/90 text-white"
                 onClick={handleLogout}
               >
-                Log Out
+                {t('common.logout')}
               </Button>
             </>
           ) : (
             <>
               <Link href="/login">
-                <a className="text-dark hover:text-primary transition-colors font-medium hidden md:block">Log in</a>
+                <a className="text-dark hover:text-primary transition-colors font-medium hidden md:block">{t('common.login')}</a>
               </Link>
               <Link href="/register">
                 <Button variant="default" className="bg-primary hover:bg-primary/90 text-white">
-                  Get Started
+                  {t('home.getStarted')}
                 </Button>
               </Link>
             </>
           )}
+          <LanguageSwitcher />
           <button 
             className="md:hidden text-dark" 
             onClick={toggleMobileMenu}
@@ -129,7 +131,7 @@ const Header = () => {
             {isAuthenticated ? (
               <>
                 <Link href="/dashboard">
-                  <a className="text-dark hover:text-primary transition-colors py-2 font-medium">Dashboard</a>
+                  <a className="text-dark hover:text-primary transition-colors py-2 font-medium">{t('common.dashboard')}</a>
                 </Link>
                 <a 
                   href="#" 
@@ -139,19 +141,23 @@ const Header = () => {
                     handleLogout();
                   }}
                 >
-                  Log Out
+                  {t('common.logout')}
                 </a>
               </>
             ) : (
               <>
                 <Link href="/login">
-                  <a className="text-dark hover:text-primary transition-colors py-2 font-medium">Log in</a>
+                  <a className="text-dark hover:text-primary transition-colors py-2 font-medium">{t('common.login')}</a>
                 </Link>
                 <Link href="/register">
-                  <a className="text-primary font-medium py-2">Get Started</a>
+                  <a className="text-primary font-medium py-2">{t('home.getStarted')}</a>
                 </Link>
               </>
             )}
+            <div className="py-2">
+              <span className="text-sm text-gray-500 mr-2">{t('common.language')}:</span>
+              <LanguageSwitcher />
+            </div>
           </nav>
         </div>
       )}

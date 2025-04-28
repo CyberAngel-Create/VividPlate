@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useLocation } from "wouter";
 import { apiRequest } from "../lib/queryClient";
 import { useToast } from "../hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import {
   Form,
   FormControl,
@@ -37,6 +38,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // User Login Form
   const userForm = useForm<LoginFormValues>({
@@ -62,13 +64,13 @@ const Login = () => {
       await apiRequest("POST", "/api/auth/login", data);
       toast({
         title: "Success",
-        description: "You have been logged in successfully",
+        description: t('common.successLogin'),
       });
       setLocation("/dashboard");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid username or password",
+        description: t('common.invalidCredentials'),
         variant: "destructive",
       });
     } finally {
@@ -82,13 +84,13 @@ const Login = () => {
       await apiRequest("POST", "/api/auth/admin-login", data);
       toast({
         title: "Success",
-        description: "Admin login successful",
+        description: t('common.successAdminLogin'),
       });
       setLocation("/admin");
     } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid admin credentials",
+        description: t('common.invalidAdminCredentials'),
         variant: "destructive",
       });
     } finally {
