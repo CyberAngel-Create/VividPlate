@@ -94,14 +94,14 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({ restaurantId })
                       {feedback.rating}/5
                     </span>
                   </div>
-                  <Badge className={getFeedbackStatusColor(feedback.status)}>
-                    {feedback.status}
+                  <Badge className={getFeedbackStatusColor(feedback.status || 'pending')}>
+                    {feedback.status || 'pending'}
                   </Badge>
                 </div>
                 {feedback.comment && (
                   <div className="flex items-start mt-2">
                     <MessageSquare className="h-4 w-4 mr-2 mt-1 text-gray-500" />
-                    <p className="text-sm text-gray-700">{feedback.comment}</p>
+                    <p className="text-sm text-gray-700">{feedback.comment || ''}</p>
                   </div>
                 )}
                 <div className="mt-2 text-xs text-gray-500">
@@ -111,7 +111,7 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({ restaurantId })
                       : 'Anonymous feedback'}
                   </span>
                   <span className="ml-4">
-                    {new Date(feedback.createdAt).toLocaleDateString()}
+                    {feedback.createdAt ? new Date(feedback.createdAt.toString()).toLocaleDateString() : ''}
                   </span>
                 </div>
               </div>

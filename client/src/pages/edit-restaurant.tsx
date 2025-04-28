@@ -127,7 +127,7 @@ const EditRestaurant = () => {
         ) : (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
             <RestaurantProfileForm 
-              restaurant={activeRestaurant}
+              restaurant={undefined}
               onSubmit={handleSubmit}
             />
           </div>

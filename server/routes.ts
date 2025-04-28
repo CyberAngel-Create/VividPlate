@@ -303,7 +303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Subscription Status Endpoint
   app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
     try {
-      const userId = req.user.id;
+      const userId = (req.user as any).id;
       
       // Check if user has an active subscription
       const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
@@ -856,7 +856,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const restaurants = await storage.getAllRestaurants();
       
       // Create an array to hold all feedback from all restaurants
-      let allFeedback = [];
+      let allFeedback: any[] = [];
       
       // For each restaurant, get its feedback and add to the array
       for (const restaurant of restaurants) {
@@ -865,11 +865,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Sort feedback by date (newest first)
-      allFeedback.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      allFeedback.sort((a, b) => {
+        const dateA = new Date(a.createdAt ? a.createdAt.toString() : 0).getTime();
+        const dateB = new Date(b.createdAt ? b.createdAt.toString() : 0).getTime();
+        return dateB - dateA;
+      });
       
       res.json(allFeedback);
     } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+      const errorMsg = error instanceof Error ? error.message : 'Server error';
+      res.status(500).json({ message: errorMsg });
     }
   });
   
