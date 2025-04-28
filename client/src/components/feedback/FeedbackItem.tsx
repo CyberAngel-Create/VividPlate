@@ -10,10 +10,10 @@ import { Feedback } from '@shared/schema';
 
 interface FeedbackItemProps {
   feedback: Feedback;
-  isOwner: boolean;
+  isOwner?: boolean;
 }
 
-const FeedbackItem: React.FC<FeedbackItemProps> = ({ feedback, isOwner }) => {
+const FeedbackItem: React.FC<FeedbackItemProps> = ({ feedback, isOwner = false }) => {
   const { toast } = useToast();
   const { t } = useTranslation();
   const [isApproving, setIsApproving] = React.useState(false);

@@ -120,7 +120,7 @@ const EditRestaurant = () => {
             </TabsContent>
             <TabsContent value="feedback">
               <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                <RestaurantFeedback restaurantId={activeRestaurant.id} />
+                <RestaurantFeedback restaurantId={activeRestaurant.id} isOwner={true} />
               </div>
             </TabsContent>
           </Tabs>

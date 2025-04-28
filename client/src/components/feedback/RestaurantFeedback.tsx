@@ -10,12 +10,12 @@ import { MessageSquare } from 'lucide-react';
 
 interface RestaurantFeedbackProps {
   restaurantId: number;
-  isOwner: boolean;
+  isOwner?: boolean;
 }
 
 const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({ 
   restaurantId,
-  isOwner 
+  isOwner = false 
 }) => {
   const [activeTab, setActiveTab] = useState<string>('all');
   const { toast } = useToast();
