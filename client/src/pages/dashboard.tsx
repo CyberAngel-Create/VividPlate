@@ -27,13 +27,6 @@ const defaultStats: Stats = {
   daysActive: 0
 };
 
-interface Update {
-  id: string;
-  title: string;
-  description: string;
-  timestamp: Date;
-}
-
 // Interface for subscription status
 interface SubscriptionStatus {
   tier: string;
@@ -48,9 +41,6 @@ const Dashboard = () => {
   // Get restaurant data
   const { activeRestaurant, restaurants, isLoading: isLoadingRestaurants, refetchActiveRestaurant } = useRestaurant();
   
-  // Generate some recent updates based on activities
-  const [updates, setUpdates] = useState<Update[]>([]);
-  
   // Stats query
   const { data: stats, isLoading: isLoadingStats } = useQuery<Stats>({
     queryKey: [activeRestaurant ? `/api/restaurants/${activeRestaurant.id}/stats` : null],
@@ -61,33 +51,6 @@ const Dashboard = () => {
   const { data: subscriptionStatus, isLoading: isLoadingSubscription } = useQuery<SubscriptionStatus>({
     queryKey: ['/api/user/subscription-status'],
   });
-  
-  // Effect for setting updates
-  useEffect(() => {
-    if (activeRestaurant) {
-      // This would ideally come from an API, but for now we'll generate some dummy updates
-      setUpdates([
-        {
-          id: "1",
-          title: "Added New Item: Truffle Pasta",
-          description: "Added to Main Courses category",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60) // 1 hour ago
-        },
-        {
-          id: "2",
-          title: "Updated Restaurant Hours",
-          description: "Changed Friday closing time to 11:00 PM",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24) // 1 day ago
-        },
-        {
-          id: "3",
-          title: "Menu Link Shared",
-          description: "Shared menu link via email to 5 recipients",
-          timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2) // 2 days ago
-        }
-      ]);
-    }
-  }, [activeRestaurant]);
 
   // Effect for auto-select restaurant
   useEffect(() => {
@@ -209,7 +172,7 @@ const Dashboard = () => {
         
         <QuickActions />
         
-        <RecentUpdates updates={updates} />
+        <FeedbackSummary />
         
         {/* Bottom ad banner for free users */}
         <div className="w-full flex justify-center mt-6">

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MessageSquare, Star, ChevronRight } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
 
 const FeedbackSummary = () => {
   const { activeRestaurant } = useRestaurant();
@@ -17,7 +18,7 @@ const FeedbackSummary = () => {
   
   // Helper function to calculate average rating
   const calculateAverageRating = (feedbacks: Feedback[] = []) => {
-    if (feedbacks.length === 0) return 0;
+    if (feedbacks.length === 0) return "0";
     const sum = feedbacks.reduce((acc, feedback) => acc + feedback.rating, 0);
     return (sum / feedbacks.length).toFixed(1);
   };
@@ -27,7 +28,11 @@ const FeedbackSummary = () => {
   
   // Get most recent 3 feedbacks
   const recentFeedbacks = [...(approvedFeedbacks || [])]
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateB - dateA;
+    })
     .slice(0, 3);
   
   const renderStars = (rating: number) => {
@@ -74,7 +79,7 @@ const FeedbackSummary = () => {
                 <span className="block text-sm text-gray-500">Average Rating</span>
                 <div className="flex items-center">
                   <span className="text-2xl font-bold mr-2">{calculateAverageRating(approvedFeedbacks)}</span>
-                  {renderStars(Math.round(parseFloat(calculateAverageRating(approvedFeedbacks))))}
+                  {renderStars(approvedFeedbacks.length ? Math.round(approvedFeedbacks.reduce((acc, f) => acc + f.rating, 0) / approvedFeedbacks.length) : 0)}
                 </div>
               </div>
               <div className="text-right">
@@ -95,7 +100,7 @@ const FeedbackSummary = () => {
                   </div>
                   <p className="text-sm text-gray-600 line-clamp-2">{feedback.comment}</p>
                   <div className="text-xs text-gray-400 mt-2">
-                    {new Date(feedback.createdAt).toLocaleDateString()}
+                    {feedback.createdAt ? new Date(feedback.createdAt).toLocaleDateString() : 'N/A'}
                   </div>
                 </div>
               ))}
