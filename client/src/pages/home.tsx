@@ -22,7 +22,7 @@ const Home = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   size="lg"
-                  className="bg-white text-primary hover:bg-white/90"
+                  className="bg-white text-primary hover:bg-white/90 font-semibold"
                   onClick={() => setLocation("/register")}
                 >
                   Get Started Free
@@ -241,7 +241,7 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg"
-              className="bg-white text-primary hover:bg-white/90"
+              className="bg-white text-primary hover:bg-white/90 font-semibold"
               onClick={() => setLocation("/register")}
             >
               Get Started Free

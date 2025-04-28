@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import StatCard from "@/components/dashboard/StatCard";
 import RestaurantInfoCard from "@/components/dashboard/RestaurantInfoCard";
 import QuickActions from "@/components/dashboard/QuickActions";
-import RecentUpdates from "@/components/dashboard/RecentUpdates";
+import FeedbackSummary from "@/components/dashboard/FeedbackSummary";
 import TabNavigation from "@/components/layout/TabNavigation";
 import { Eye, QrCode, Utensils, Calendar, CreditCard, Check, AlertCircle } from "lucide-react";
 import { Restaurant } from "@shared/schema";

@@ -44,7 +44,7 @@ const MenuCategoriesList = ({
               <button
                 className={`flex justify-between items-center p-2 rounded w-full text-left ${
                   selectedCategoryId === category.id
-                    ? 'bg-primary bg-opacity-10'
+                    ? 'bg-primary/15'
                     : 'hover:bg-neutral group'
                 }`}
                 onClick={() => onSelectCategory(category.id)}
@@ -58,7 +58,7 @@ const MenuCategoriesList = ({
                 </span>
                 <Badge className={`${
                   selectedCategoryId === category.id
-                    ? 'bg-primary bg-opacity-20 text-primary'
+                    ? 'bg-primary/15 text-primary font-medium'
                     : 'bg-neutral text-midgray'
                 }`}>
                   {menuItemCounts[category.id] || 0}
