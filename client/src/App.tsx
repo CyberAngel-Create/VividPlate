@@ -84,7 +84,7 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
 
 function Router() {
   const [location] = useLocation();
-  const isPublicMenuView = location.startsWith("/menu/");
+  const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -97,6 +97,7 @@ function Router() {
           <PublicRoute path="/admin-login" component={AdminLogin} />
           <PublicRoute path="/register" component={Register} />
           <PublicRoute path="/menu/:restaurantId" component={ViewMenu} />
+          <PublicRoute path="/view-menu/:restaurantId" component={ViewMenu} />
           
           <AuthenticatedRoute path="/dashboard" component={Dashboard} />
           <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
