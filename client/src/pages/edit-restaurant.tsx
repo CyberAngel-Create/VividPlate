@@ -8,6 +8,7 @@ import RestaurantProfileForm from "@/components/restaurant/RestaurantProfileForm
 import { Restaurant, InsertRestaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import RestaurantLogoUpload from "@/components/upload/RestaurantLogoUpload";
+import RestaurantBannerUpload from "@/components/upload/RestaurantBannerUpload";
 import RestaurantFeedback from "@/components/feedback/RestaurantFeedback";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -97,6 +98,7 @@ const EditRestaurant = () => {
             <TabsList>
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="logo">Logo</TabsTrigger>
+              <TabsTrigger value="banner">Banner</TabsTrigger>
               <TabsTrigger value="feedback">Customer Feedback</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
@@ -112,6 +114,17 @@ const EditRestaurant = () => {
                 <RestaurantLogoUpload
                   restaurantId={activeRestaurant.id}
                   currentLogoUrl={activeRestaurant.logoUrl || undefined}
+                  onSuccess={() => {
+                    refetchActiveRestaurant();
+                  }}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="banner">
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <RestaurantBannerUpload
+                  restaurantId={activeRestaurant.id}
+                  currentBannerUrl={activeRestaurant.bannerUrl || undefined}
                   onSuccess={() => {
                     refetchActiveRestaurant();
                   }}

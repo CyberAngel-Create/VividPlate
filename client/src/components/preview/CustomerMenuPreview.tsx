@@ -36,6 +36,13 @@ const CustomerMenuPreview = ({
       {/* Restaurant header */}
       <div className="relative">
         <div className="h-40 bg-gray-300 relative">
+          {restaurant.bannerUrl ? (
+            <img 
+              src={restaurant.bannerUrl} 
+              alt={`${restaurant.name} banner`}
+              className="w-full h-full object-cover"
+            />
+          ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
         </div>
         <div className="absolute bottom-4 left-4 text-white">
