@@ -1,9 +1,8 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
 
-// English translations
-const enTranslations = {
+// English translations only
+const translations = {
   common: {
     login: 'Login',
     register: 'Register',
@@ -17,7 +16,6 @@ const enTranslations = {
     dashboard: 'Dashboard',
     profile: 'Profile',
     admin: 'Admin',
-    language: 'Language',
     restaurantOwner: 'Restaurant Owner',
     adminLogin: 'Admin Login',
     adminOnly: 'For platform administrators only',
@@ -62,6 +60,15 @@ const enTranslations = {
     confirmDelete: 'Are you sure you want to delete this?',
     availableItems: 'Available Items',
     tags: 'Tags',
+    uploadImage: 'Upload Image',
+    imageSize: 'Max image size: 3MB',
+  },
+  restaurant: {
+    uploadLogo: 'Upload Restaurant Logo',
+    logoSize: 'Max logo size: 3MB',
+    feedback: 'Customer Feedback',
+    viewFeedback: 'View Feedback',
+    noFeedback: 'No feedback yet',
   },
   subscription: {
     choosePlan: 'Choose Your Plan',
@@ -108,129 +115,18 @@ const enTranslations = {
   },
 };
 
-// Amharic translations
-const amTranslations = {
-  common: {
-    login: 'ግባ',
-    register: 'ተመዝገብ',
-    logout: 'ውጣ',
-    username: 'የተጠቃሚ ስም',
-    password: 'የይለፍ ቃል',
-    adminUsername: 'የአስተዳዳሪ ተጠቃሚ ስም',
-    adminPassword: 'የአስተዳዳሪ የይለፍ ቃል',
-    email: 'ኢሜይል',
-    fullName: 'ሙሉ ስም',
-    dashboard: 'ዳሽቦርድ',
-    profile: 'መገለጫ',
-    admin: 'አስተዳዳሪ',
-    language: 'ቋንቋ',
-    restaurantOwner: 'የምግብ ቤት ባለቤት',
-    adminLogin: 'የአስተዳዳሪ መግቢያ',
-    adminOnly: 'ለመድረኩ አስተዳዳሪዎች ብቻ',
-    noAccount: 'መለያ የለዎትም?',
-    createAccount: 'መለያ ይፍጠሩ',
-    successLogin: 'በተሳካ ሁኔታ ገብተዋል',
-    successAdminLogin: 'የአስተዳዳሪ መግቢያ ተሳክቷል',
-    invalidCredentials: 'ልክ ያልሆነ የተጠቃሚ ስም ወይም የይለፍ ቃል',
-    invalidAdminCredentials: 'ልክ ያልሆነ የአስተዳዳሪ መረጃ',
-  },
-  home: {
-    welcome: 'እንኳን ወደ MenuMate በደህና መጡ',
-    subtitle: 'ለምግብ ቤትዎ ዲጂታል ምናሌዎችን ይፍጠሩ እና ያጋሩ',
-    getStarted: 'ጀምር',
-    learnMore: 'ተጨማሪ ይወቁ',
-  },
-  dashboard: {
-    myRestaurants: 'የእኔ ምግብ ቤቶች',
-    createRestaurant: 'ምግብ ቤት ይፍጠሩ',
-    subscriptionStatus: 'የምዝገባ ሁኔታ',
-    stats: 'ስታቲስቲክስ',
-    viewMenu: 'ምናሌ ይመልከቱ',
-    editMenu: 'ምናሌ ያርትዑ',
-    shareMenu: 'ምናሌ ያጋሩ',
-    upgradeAccount: 'መለያ ያሻሽሉ',
-    freeAccount: 'ነፃ መለያ',
-    premiumAccount: 'ፕሪሚየም መለያ',
-    restaurantLimit: 'የምግብ ቤት ገደብ:',
-    expirationDate: 'የቀን መቁዉተሪያ:',
-  },
-  menu: {
-    categories: 'ምድቦች',
-    items: 'ንጥሎች',
-    price: 'ዋጋ',
-    description: 'መግለጫ',
-    addCategory: 'ምድብ አክል',
-    addItem: 'ንጥል አክል',
-    editCategory: 'ምድብ አርትዕ',
-    editItem: 'ንጥል አርትዕ',
-    deleteCategory: 'ምድብ ሰርዝ',
-    deleteItem: 'ንጥል ሰርዝ',
-    confirmDelete: 'ይህን መሰረዝ እርግጠኛ ነዎት?',
-    availableItems: 'ያሉ ንጥሎች',
-    tags: 'መለያዎች',
-  },
-  subscription: {
-    choosePlan: 'እቅድዎን ይምረጡ',
-    freePlan: 'ነፃ እቅድ',
-    premiumPlan: 'ፕሪሚየም እቅድ',
-    monthlyBilling: 'ወርሃዊ ክፍያ',
-    yearlyBilling: 'ዓመታዊ ክፍያ',
-    subscribe: 'ተመዝገብ',
-    features: 'ገፅታዎች',
-    includedFeatures: 'የተካተቱ ገፅታዎች',
-    restaurantLimit: 'የምግብ ቤት ገደብ',
-    adsDisplay: 'ማስታወቂያዎች ማሳየት',
-    support: 'ድጋፍ',
-    yes: 'አዎ',
-    no: 'አይ',
-    basic: 'መሰረታዊ',
-    priority: 'የቅድሚያ',
-  },
-  feedback: {
-    leaveFeedback: 'አስተያየት ይስጡ',
-    yourRating: 'የእርስዎ ደረጃ',
-    yourComment: 'የእርስዎ አስተያየት',
-    name: 'ስም',
-    email: 'ኢሜይል',
-    submit: 'አስተያየት አስገባ',
-    thankYou: 'ለአስተያየትዎ እናመሰግናለን!',
-  },
-  admin: {
-    adminPanel: 'የአስተዳዳሪ ፓነል',
-    restaurants: 'ምግብ ቤቶች',
-    users: 'ተጠቃሚዎች',
-    subscriptions: 'ምዝገባዎች',
-    feedback: 'አስተያየት',
-    overview: 'አጠቃላይ ዕይታ',
-    premiumUsers: 'ፕሪሚየም ተጠቃሚዎች',
-    totalRestaurants: 'ጠቅላላ ምግብ ቤቶች',
-    totalFeedback: 'ጠቅላላ አስተያየት',
-    recentSubscriptions: 'የቅርብ ጊዜ ምዝገባዎች',
-    allRestaurants: 'ሁሉም ምግብ ቤቶች',
-    allSubscriptions: 'ሁሉም ምዝገባዎች',
-    allFeedback: 'ሁሉም አስተያየት',
-    approveFeedback: 'ጸድቅ',
-    rejectFeedback: 'ውደቅ',
-  },
-};
-
 // Initialize i18next
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
-      en: enTranslations,
-      am: amTranslations,
+      en: translations,
     },
+    lng: 'en',
     fallbackLng: 'en',
     debug: process.env.NODE_ENV === 'development',
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
-    },
-    detection: {
-      order: ['localStorage', 'navigator'],
-      caches: ['localStorage'],
     },
   });
 

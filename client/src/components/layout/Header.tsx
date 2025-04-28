@@ -5,7 +5,7 @@ import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
 import { User, Menu } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import LanguageSwitcher from "../LanguageSwitcher";
+
 
 const Header = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -53,24 +53,24 @@ const Header = () => {
     <header className="bg-white shadow-md">
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center">
-          <Link href="/">
-            <a className="text-primary font-heading font-bold text-2xl">MenuMate</a>
+          <Link href="/" className="text-primary font-heading font-bold text-2xl">
+            MenuMate
           </Link>
         </div>
         
         {/* Desktop Navigation */}
         <nav className="hidden md:flex space-x-6">
-          <Link href="/">
-            <a className="text-dark hover:text-primary transition-colors font-medium">Home</a>
+          <Link href="/" className="text-dark hover:text-primary transition-colors font-medium">
+            Home
           </Link>
-          <Link href="/features">
-            <a className="text-dark hover:text-primary transition-colors font-medium">Features</a>
+          <Link href="/features" className="text-dark hover:text-primary transition-colors font-medium">
+            Features
           </Link>
-          <Link href="/pricing">
-            <a className="text-dark hover:text-primary transition-colors font-medium">Pricing</a>
+          <Link href="/pricing" className="text-dark hover:text-primary transition-colors font-medium">
+            Pricing
           </Link>
-          <Link href="/contact">
-            <a className="text-dark hover:text-primary transition-colors font-medium">Contact</a>
+          <Link href="/contact" className="text-dark hover:text-primary transition-colors font-medium">
+            Contact
           </Link>
         </nav>
         
@@ -102,7 +102,6 @@ const Header = () => {
               </Button>
             </>
           )}
-          <LanguageSwitcher />
           <button 
             className="md:hidden text-dark" 
             onClick={toggleMobileMenu}
@@ -156,10 +155,7 @@ const Header = () => {
                 </Link>
               </>
             )}
-            <div className="py-2">
-              <span className="text-sm text-gray-500 mr-2">{t('common.language')}:</span>
-              <LanguageSwitcher />
-            </div>
+
           </nav>
         </div>
       )}
