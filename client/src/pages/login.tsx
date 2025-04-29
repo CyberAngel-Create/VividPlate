@@ -119,7 +119,15 @@ const Login = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.password')}</FormLabel>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>{t('common.password')}</FormLabel>
+                      <Link 
+                        href="/forgot-password" 
+                        className="text-xs text-primary hover:underline"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
                     <FormControl>
                       <Input type="password" placeholder={`${t('common.password')}...`} {...field} />
                     </FormControl>
