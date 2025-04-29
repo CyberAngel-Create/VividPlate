@@ -220,6 +220,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configure file upload middleware
   const upload = configureFileUpload();
   
+  // Serve ads.txt file
+  app.get('/ads.txt', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'client/public/ads.txt'));
+  });
+  
   // Serve static files from the uploads directory
   app.use('/uploads', (req, res, next) => {
     const options = {
