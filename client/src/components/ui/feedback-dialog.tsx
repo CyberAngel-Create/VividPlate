@@ -64,7 +64,7 @@ const FeedbackDialog = ({ menuItem, restaurantId, trigger }: FeedbackDialogProps
       // Send to server
       const response = await apiRequest(
         'POST',
-        `/api/restaurants/${restaurantId}/feedback`,
+        `/api/restaurants/${restaurantId}/feedback/submit`,
         formData
       );
       
