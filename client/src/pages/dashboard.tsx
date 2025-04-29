@@ -135,7 +135,7 @@ const Dashboard = () => {
               </div>
               {!subscriptionStatus.isPaid && (
                 <button 
-                  onClick={() => window.location.href = "/subscription"}
+                  onClick={() => window.location.href = "/subscribe"}
                   className="ml-auto bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
                 >
                   Upgrade Now

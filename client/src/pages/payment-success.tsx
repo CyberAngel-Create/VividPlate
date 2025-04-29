@@ -9,7 +9,7 @@ import { queryClient } from '@/lib/queryClient';
 export default function PaymentSuccess() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
 
   useEffect(() => {
     const verifyPayment = async () => {
@@ -43,7 +43,7 @@ export default function PaymentSuccess() {
     };
 
     verifyPayment();
-  }, [location]);
+  }, []);
 
   const handleContinue = () => {
     navigate('/dashboard');
