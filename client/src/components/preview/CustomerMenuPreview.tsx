@@ -101,12 +101,13 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             {/* Search button */}
             {allMenuItems.length > 0 && (
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 size="sm" 
-                className="h-9 w-9 rounded-full p-0 flex items-center justify-center"
+                className="h-10 px-3 rounded-full flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
                 onClick={() => setSearchDialogOpen(true)}
               >
                 <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Search</span>
               </Button>
             )}
           </div>

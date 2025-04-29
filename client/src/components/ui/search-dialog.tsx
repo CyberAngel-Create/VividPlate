@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, X } from 'lucide-react';
@@ -111,14 +111,15 @@ const SearchDialog = ({ open, onOpenChange, menuItems }: SearchDialogProps) => {
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Search Menu Items</DialogTitle>
+            <DialogTitle className="text-xl font-bold">Search Menu Items</DialogTitle>
+            <DialogDescription>Find your favorite dishes easily</DialogDescription>
           </DialogHeader>
           <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+            <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-500" />
             <Input
               type="search"
               placeholder="Search by name, description or tags..."
-              className="pl-8"
+              className="pl-10 py-6 text-base rounded-md"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               autoFocus
@@ -133,15 +134,15 @@ const SearchDialog = ({ open, onOpenChange, menuItems }: SearchDialogProps) => {
                 <p className="text-center text-gray-500 py-4">Start typing to search...</p>
               )
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {searchResults.map((item) => (
                   <div 
                     key={item.id}
-                    className="flex items-center p-2 hover:bg-gray-100 rounded-md cursor-pointer"
+                    className="flex items-center p-3 hover:bg-gray-100 border border-gray-200 rounded-lg cursor-pointer transition-all transform hover:scale-[1.02]"
                     onClick={() => handleSelectItem(item)}
                   >
                     {item.imageUrl ? (
-                      <div className="w-12 h-12 mr-3 rounded overflow-hidden flex-shrink-0">
+                      <div className="w-16 h-16 mr-4 rounded overflow-hidden flex-shrink-0 border border-gray-100">
                         <img 
                           src={item.imageUrl} 
                           alt={item.name} 
@@ -149,14 +150,14 @@ const SearchDialog = ({ open, onOpenChange, menuItems }: SearchDialogProps) => {
                         />
                       </div>
                     ) : (
-                      <div className="w-12 h-12 mr-3 rounded bg-gray-200 flex-shrink-0 flex items-center justify-center">
-                        <span className="text-xs text-gray-500">No img</span>
+                      <div className="w-16 h-16 mr-4 rounded bg-gray-100 flex-shrink-0 flex items-center justify-center border border-gray-200">
+                        <span className="text-xs text-gray-500">No image</span>
                       </div>
                     )}
                     <div className="flex-grow min-w-0">
-                      <h4 className="font-medium text-sm truncate">{item.name}</h4>
-                      <div className="flex justify-between items-center">
-                        <span className="text-primary text-xs font-medium">
+                      <h4 className="font-medium text-base truncate">{item.name}</h4>
+                      <div className="flex justify-between items-center mt-1">
+                        <span className="text-primary text-sm font-medium">
                           {formatCurrency(item.price)}
                         </span>
                         {item.tags && item.tags.length > 0 && (
@@ -166,6 +167,9 @@ const SearchDialog = ({ open, onOpenChange, menuItems }: SearchDialogProps) => {
                           </span>
                         )}
                       </div>
+                      {item.description && (
+                        <p className="text-xs text-gray-500 mt-1 line-clamp-1">{item.description}</p>
+                      )}
                     </div>
                   </div>
                 ))}
