@@ -1,12 +1,13 @@
 import React from 'react';
 import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Check, X, Star, CalendarIcon, User } from 'lucide-react';
+import { Check, X, Star, CalendarIcon, User, Utensils } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { apiRequest, queryClient } from '@/lib/queryClient';
 import { formatDate } from '@/lib/utils';
-import { Feedback } from '@shared/schema';
+import { Feedback, MenuItem } from '@shared/schema';
+import { useQuery } from '@tanstack/react-query';
 
 interface FeedbackItemProps {
   feedback: Feedback;
@@ -18,6 +19,12 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ feedback, isOwner = false }
   const { t } = useTranslation();
   const [isApproving, setIsApproving] = React.useState(false);
   const [isRejecting, setIsRejecting] = React.useState(false);
+  
+  // Fetch menu item details if feedback is for a specific menu item
+  const { data: menuItem, isLoading: isLoadingMenuItem } = useQuery<MenuItem>({
+    queryKey: [feedback.menuItemId ? `/api/menu-items/${feedback.menuItemId}` : null],
+    enabled: !!feedback.menuItemId,
+  });
   
   const handleApprove = async () => {
     setIsApproving(true);

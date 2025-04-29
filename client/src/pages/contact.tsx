@@ -94,7 +94,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium">Email Us</h3>
-                      <p className="text-sm text-gray-600">support@menumate.com</p>
+                      <p className="text-sm text-gray-600">menumate.spp@gmail.com</p>
                     </div>
                   </div>
                   
@@ -104,7 +104,7 @@ const Contact = () => {
                     </div>
                     <div>
                       <h3 className="text-sm font-medium">Call Us</h3>
-                      <p className="text-sm text-gray-600">+251 911 123 456</p>
+                      <p className="text-sm text-gray-600">+251-913-690-687</p>
                     </div>
                   </div>
                   
@@ -115,7 +115,7 @@ const Contact = () => {
                     <div>
                       <h3 className="text-sm font-medium">Visit Our Office</h3>
                       <p className="text-sm text-gray-600">
-                        Bole Road, Addis Ababa<br />
+                        Addis Ababa<br />
                         Ethiopia
                       </p>
                     </div>
