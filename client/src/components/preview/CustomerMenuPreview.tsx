@@ -5,7 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
-import FixedSearch from "@/components/ui/fixed-search";
+import CompactSearch from "@/components/ui/compact-search";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -40,9 +40,6 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
 
   return (
     <>
-      {/* Fixed Search Component */}
-      <FixedSearch menuItems={allMenuItems} />
-      
       <div className="w-full max-w-2xl mx-auto bg-white rounded-xl overflow-hidden menu-preview-shadow">
         {/* Restaurant header */}
         <div className="relative">
@@ -93,6 +90,11 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* Compact Search Component */}
+        {allMenuItems.length > 0 && (
+          <CompactSearch menuItems={allMenuItems} />
+        )}
         
         {/* Menu Items */}
         <div className="p-4">
