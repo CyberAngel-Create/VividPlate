@@ -553,6 +553,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  
+  // Get single menu item by ID
+  app.get('/api/menu-items/:itemId', async (req, res) => {
+    try {
+      const item = await storage.getMenuItem(parseInt(req.params.itemId));
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+      res.json(item);
+    } catch (error) {
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
 
   app.post('/api/categories/:categoryId/items', isAuthenticated, async (req, res) => {
     try {

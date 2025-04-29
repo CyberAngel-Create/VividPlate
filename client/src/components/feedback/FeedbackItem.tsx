@@ -151,8 +151,41 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ feedback, isOwner = false }
         
         {/* Menu item reference if available */}
         {feedback.menuItemId && (
-          <div className="mt-2 text-xs text-muted-foreground border-t pt-2">
-            <span>Feedback for specific menu item (ID: {feedback.menuItemId})</span>
+          <div className="mt-2 text-sm border-t pt-2">
+            {isLoadingMenuItem ? (
+              <div className="flex items-center space-x-2">
+                <div className="h-10 w-10 bg-gray-200 animate-pulse rounded"></div>
+                <div className="h-4 w-24 bg-gray-200 animate-pulse rounded"></div>
+              </div>
+            ) : menuItem ? (
+              <div className="flex items-center space-x-3">
+                {menuItem.imageUrl ? (
+                  <div className="h-12 w-12 relative rounded overflow-hidden border">
+                    <img 
+                      src={menuItem.imageUrl} 
+                      alt={menuItem.name} 
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="h-12 w-12 bg-gray-100 rounded flex items-center justify-center">
+                    <Utensils size={18} className="text-gray-400" />
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium text-sm">{menuItem.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {menuItem.price && (
+                      <span>{menuItem.currency || 'USD'} {menuItem.price}</span>
+                    )}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <span className="text-xs text-muted-foreground">
+                Feedback for menu item (ID: {feedback.menuItemId})
+              </span>
+            )}
           </div>
         )}
       </CardContent>
