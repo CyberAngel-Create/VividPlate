@@ -1,12 +1,11 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, Search, MessageSquare } from "lucide-react";
+import { Facebook, Instagram, Globe, MessageSquare } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useState, useMemo } from "react";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
-import SearchDialog from "@/components/ui/search-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
-import { Button } from "@/components/ui/button";
+import FixedSearch from "@/components/ui/fixed-search";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -24,7 +23,6 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   previewMode = false
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [searchDialogOpen, setSearchDialogOpen] = useState(false);
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -42,12 +40,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
 
   return (
     <>
-      {/* Search Dialog */}
-      <SearchDialog 
-        open={searchDialogOpen} 
-        onOpenChange={setSearchDialogOpen} 
-        menuItems={allMenuItems} 
-      />
+      {/* Fixed Search Component */}
+      <FixedSearch menuItems={allMenuItems} />
       
       <div className="w-full max-w-2xl mx-auto bg-white rounded-xl overflow-hidden menu-preview-shadow">
         {/* Restaurant header */}
@@ -97,19 +91,6 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                 </button>
               ))}
             </div>
-            
-            {/* Search button */}
-            {allMenuItems.length > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-10 px-3 rounded-full flex items-center justify-center gap-2 border-primary text-primary hover:bg-primary hover:text-white"
-                onClick={() => setSearchDialogOpen(true)}
-              >
-                <Search className="h-4 w-4" />
-                <span className="hidden sm:inline">Search</span>
-              </Button>
-            )}
           </div>
         </div>
         
