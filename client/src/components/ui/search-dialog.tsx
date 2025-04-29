@@ -19,23 +19,26 @@ interface DetailedItemViewProps {
 
 const DetailedItemView = ({ item, onClose }: DetailedItemViewProps) => {
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
       <div 
-        className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto p-4" 
+        className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto shadow-xl animate-scaleIn" 
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex justify-between items-start mb-4">
-          <h3 className="text-xl font-bold">{item.name}</h3>
+        {/* Item header with close button */}
+        <div className="flex justify-between items-center p-4 border-b">
+          <h3 className="text-xl font-bold text-dark">{item.name}</h3>
           <button 
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-800 transition-colors"
+            className="text-gray-500 hover:text-primary transition-colors rounded-full hover:bg-gray-100 p-1"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
         
+        {/* Item image (enlarged) */}
         {item.imageUrl && (
-          <div className="w-full h-56 bg-neutral rounded-md overflow-hidden mb-4">
+          <div className="w-full h-64 sm:h-72 overflow-hidden">
             <img 
               src={item.imageUrl} 
               alt={item.name} 
@@ -44,35 +47,41 @@ const DetailedItemView = ({ item, onClose }: DetailedItemViewProps) => {
           </div>
         )}
         
-        <div className="mb-4">
-          <span className="text-primary font-medium text-lg">
-            {formatCurrency(item.price)}
-          </span>
-        </div>
-        
-        {item.description && (
-          <div className="mb-4">
-            <h4 className="text-sm font-medium mb-1">Description</h4>
-            <p className="text-sm text-gray-600">{item.description}</p>
+        {/* Item details */}
+        <div className="p-5">
+          {/* Price */}
+          <div className="mb-4 bg-gray-50 p-3 rounded-lg inline-block">
+            <span className="text-primary font-semibold text-xl">
+              {formatCurrency(item.price)}
+            </span>
           </div>
-        )}
-        
-        {item.tags && item.tags.length > 0 && (
-          <div className="mb-4">
-            <h4 className="text-sm font-medium mb-1">Tags</h4>
-            <div className="flex flex-wrap">
-              {item.tags.map((tag, index) => (
-                <Badge 
-                  key={index} 
-                  variant="outline" 
-                  className="inline-block mr-1 mb-1 px-2 py-0.5 bg-neutral text-xs text-midgray"
-                >
-                  {tag}
-                </Badge>
-              ))}
+          
+          {/* Description */}
+          {item.description && (
+            <div className="mb-5">
+              <h4 className="text-sm font-medium mb-2 text-dark">Description</h4>
+              <p className="text-gray-600 leading-relaxed">{item.description}</p>
             </div>
-          </div>
-        )}
+          )}
+          
+          {/* Tags */}
+          {item.tags && item.tags.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-2 text-dark">Tags</h4>
+              <div className="flex flex-wrap">
+                {item.tags.map((tag, index) => (
+                  <Badge 
+                    key={index} 
+                    variant="outline" 
+                    className="inline-block mr-2 mb-2 px-3 py-1 bg-gray-50 text-sm border-gray-200"
+                  >
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
