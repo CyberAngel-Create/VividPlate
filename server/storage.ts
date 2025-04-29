@@ -16,8 +16,12 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  setResetPasswordToken(email: string, token: string, expires: Date): Promise<User | undefined>;
+  resetPassword(token: string, newPassword: string): Promise<boolean>;
+  changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean>;
 
   // Restaurant operations
   getRestaurant(id: number): Promise<Restaurant | undefined>;
@@ -277,6 +281,11 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.resetPasswordToken, token));
+    return user;
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
@@ -288,6 +297,52 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return updatedUser;
+  }
+
+  async setResetPasswordToken(email: string, token: string, expires: Date): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set({
+        resetPasswordToken: token,
+        resetPasswordExpires: expires
+      })
+      .where(eq(users.email, email))
+      .returning();
+    return updatedUser;
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    const user = await this.getUserByResetToken(token);
+    if (!user || !user.resetPasswordExpires) return false;
+    
+    // Check if token is expired
+    const now = new Date();
+    if (now > user.resetPasswordExpires) return false;
+    
+    // Update password and clear token
+    const [updatedUser] = await db.update(users)
+      .set({
+        password: newPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+    
+    return !!updatedUser;
+  }
+
+  async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+    
+    // Compare passwords happens at the route level
+    
+    const [updatedUser] = await db.update(users)
+      .set({ password: newPassword })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    return !!updatedUser;
   }
 
   // Restaurant operations

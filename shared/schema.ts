@@ -14,6 +14,8 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   telebirrCustomerId: text("telebirr_customer_id"),
   subscriptionExpiry: timestamp("subscription_expiry"),
+  resetPasswordToken: text("reset_password_token"),
+  resetPasswordExpires: timestamp("reset_password_expires"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
