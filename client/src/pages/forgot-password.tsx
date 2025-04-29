@@ -5,7 +5,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Helmet>
-        <title>Forgot Password | MenuMate</title>
+        <title>Forgot Password | DigitaMenuMate</title>
       </Helmet>
       
       <div className="flex-1 flex flex-col lg:flex-row">
@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
         {/* Right side - Hero Section */}
         <div className="w-full lg:w-1/2 bg-gradient-to-r from-orange-500 to-orange-600 p-8 flex flex-col justify-center text-white">
           <div className="max-w-md mx-auto space-y-6">
-            <h2 className="text-4xl font-bold">Welcome to MenuMate</h2>
+            <h2 className="text-4xl font-bold">Welcome to DigitaMenuMate</h2>
             <p className="text-xl">
               The modern solution for digital restaurant menus. Create dynamic, shareable menus with advanced engagement features.
             </p>
