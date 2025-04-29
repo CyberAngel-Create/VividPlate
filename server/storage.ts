@@ -126,12 +126,76 @@ export class MemStorage implements IStorage {
       (user) => user.email === email
     );
   }
+  
+  async getUserByResetToken(token: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.resetPasswordToken === token
+    );
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentIds.users++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      subscriptionTier: "free",
+      stripeCustomerId: null,
+      stripeSubscriptionId: null,
+      telebirrCustomerId: null,
+      subscriptionExpiry: null,
+      resetPasswordToken: null,
+      resetPasswordExpires: null
+    };
     this.users.set(id, user);
     return user;
+  }
+  
+  async updateUser(id: number, userUpdate: Partial<User>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (!user) return undefined;
+    
+    const updatedUser = { ...user, ...userUpdate };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async setResetPasswordToken(email: string, token: string, expires: Date): Promise<User | undefined> {
+    const user = await this.getUserByEmail(email);
+    if (!user) return undefined;
+    
+    user.resetPasswordToken = token;
+    user.resetPasswordExpires = expires;
+    this.users.set(user.id, user);
+    
+    return user;
+  }
+  
+  async resetPassword(token: string, newPassword: string): Promise<boolean> {
+    const user = await this.getUserByResetToken(token);
+    if (!user || !user.resetPasswordExpires) return false;
+    
+    // Check if token is expired
+    const now = new Date();
+    if (now > user.resetPasswordExpires) return false;
+    
+    // Update password and clear token
+    user.password = newPassword;
+    user.resetPasswordToken = null;
+    user.resetPasswordExpires = null;
+    this.users.set(user.id, user);
+    
+    return true;
+  }
+  
+  async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+    
+    // Note: Password comparison is handled at the route level
+    user.password = newPassword;
+    this.users.set(userId, user);
+    
+    return true;
   }
 
   // Restaurant operations
@@ -147,7 +211,19 @@ export class MemStorage implements IStorage {
 
   async createRestaurant(insertRestaurant: InsertRestaurant): Promise<Restaurant> {
     const id = this.currentIds.restaurants++;
-    const restaurant: Restaurant = { ...insertRestaurant, id };
+    const restaurant: Restaurant = { 
+      ...insertRestaurant, 
+      id,
+      description: insertRestaurant.description || null,
+      cuisine: insertRestaurant.cuisine || null,
+      logoUrl: insertRestaurant.logoUrl || null,
+      bannerUrl: insertRestaurant.bannerUrl || null,
+      phone: insertRestaurant.phone || null,
+      email: insertRestaurant.email || null,
+      address: insertRestaurant.address || null,
+      hoursOfOperation: insertRestaurant.hoursOfOperation || null,
+      tags: insertRestaurant.tags || null
+    };
     this.restaurants.set(id, restaurant);
     return restaurant;
   }
@@ -174,7 +250,11 @@ export class MemStorage implements IStorage {
 
   async createMenuCategory(insertCategory: InsertMenuCategory): Promise<MenuCategory> {
     const id = this.currentIds.menuCategories++;
-    const category: MenuCategory = { ...insertCategory, id };
+    const category: MenuCategory = { 
+      ...insertCategory, 
+      id,
+      displayOrder: insertCategory.displayOrder ?? 0
+    };
     this.menuCategories.set(id, category);
     return category;
   }
@@ -213,7 +293,16 @@ export class MemStorage implements IStorage {
 
   async createMenuItem(insertItem: InsertMenuItem): Promise<MenuItem> {
     const id = this.currentIds.menuItems++;
-    const item: MenuItem = { ...insertItem, id };
+    const item: MenuItem = { 
+      ...insertItem, 
+      id,
+      description: insertItem.description || null,
+      tags: insertItem.tags || null,
+      displayOrder: insertItem.displayOrder ?? 0,
+      currency: insertItem.currency || null,
+      imageUrl: insertItem.imageUrl || null,
+      isAvailable: insertItem.isAvailable ?? true
+    };
     this.menuItems.set(id, item);
     return item;
   }
@@ -261,6 +350,87 @@ export class MemStorage implements IStorage {
     return (await this.getMenuViewsByRestaurantId(restaurantId))
       .filter(view => view.source === 'qr')
       .length;
+  }
+  
+  // Count restaurants by user ID
+  async countRestaurantsByUserId(userId: number): Promise<number> {
+    return (await this.getRestaurantsByUserId(userId)).length;
+  }
+  
+  // Subscription operations
+  async getSubscription(id: number): Promise<Subscription | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+
+  async getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+
+  async createSubscription(subscription: InsertSubscription): Promise<Subscription> {
+    return { ...subscription, id: 1, startDate: new Date() }; // Minimal implementation
+  }
+
+  async updateSubscription(id: number, subscription: Partial<Subscription>): Promise<Subscription | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+  
+  async getAllSubscriptions(): Promise<Subscription[]> {
+    return []; // Not implemented in memory storage
+  }
+  
+  // Payment operations
+  async getPayment(id: number): Promise<Payment | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+
+  async getPaymentsByUserId(userId: number): Promise<Payment[]> {
+    return []; // Not implemented in memory storage
+  }
+
+  async getPaymentsBySubscriptionId(subscriptionId: number): Promise<Payment[]> {
+    return []; // Not implemented in memory storage
+  }
+
+  async createPayment(payment: InsertPayment): Promise<Payment> {
+    return { ...payment, id: 1, createdAt: new Date() }; // Minimal implementation
+  }
+
+  async updatePayment(id: number, payment: Partial<Payment>): Promise<Payment | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+  
+  // Admin methods
+  async getAllRestaurants(): Promise<Restaurant[]> {
+    return Array.from(this.restaurants.values());
+  }
+  
+  // Feedback operations
+  async getFeedback(id: number): Promise<Feedback | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+  
+  async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
+    return []; // Not implemented in memory storage
+  }
+  
+  async getFeedbacksByMenuItemId(menuItemId: number): Promise<Feedback[]> {
+    return []; // Not implemented in memory storage
+  }
+  
+  async createFeedback(feedback: InsertFeedback): Promise<Feedback> {
+    return { ...feedback, id: 1, createdAt: new Date() }; // Minimal implementation
+  }
+  
+  async updateFeedback(id: number, feedbackUpdate: Partial<Feedback>): Promise<Feedback | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+  
+  async approveFeedback(id: number): Promise<Feedback | undefined> {
+    return undefined; // Not implemented in memory storage
+  }
+  
+  async rejectFeedback(id: number): Promise<Feedback | undefined> {
+    return undefined; // Not implemented in memory storage
   }
 }
 

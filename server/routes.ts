@@ -321,6 +321,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { password, ...userWithoutPassword } = req.user as any;
     res.json(userWithoutPassword);
   });
+  
+  // Forgot password - request reset token
+  app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ message: 'Email is required' });
+      }
+      
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        // For security, don't reveal that the email doesn't exist
+        return res.status(200).json({ message: 'If that email exists, a password reset link has been sent' });
+      }
+      
+      // Generate token
+      const token = uuidv4();
+      
+      // Set expiration to 1 hour from now
+      const expires = new Date();
+      expires.setHours(expires.getHours() + 1);
+      
+      // Store token in database
+      await storage.setResetPasswordToken(email, token, expires);
+      
+      // In a real app, send an email with the reset link
+      // Here we just return the token for testing purposes
+      
+      res.status(200).json({ 
+        message: 'Password reset link sent',
+        // In production, don't return the token in the response
+        // This is just for testing purposes
+        resetToken: token
+      });
+    } catch (error) {
+      console.error('Forgot password error:', error);
+      res.status(500).json({ message: 'Failed to process password reset request' });
+    }
+  });
+
+  // Reset password using token
+  app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: 'Token and new password are required' });
+      }
+      
+      // Validate token
+      const user = await storage.getUserByResetToken(token);
+      if (!user || !user.resetPasswordExpires) {
+        return res.status(400).json({ message: 'Invalid or expired token' });
+      }
+      
+      // Check if token is expired
+      const now = new Date();
+      if (now > user.resetPasswordExpires) {
+        return res.status(400).json({ message: 'Token has expired' });
+      }
+      
+      // Hash the new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Reset password
+      const success = await storage.resetPassword(token, hashedPassword);
+      
+      if (!success) {
+        return res.status(500).json({ message: 'Failed to reset password' });
+      }
+      
+      res.status(200).json({ message: 'Password has been reset successfully' });
+    } catch (error) {
+      console.error('Reset password error:', error);
+      res.status(500).json({ message: 'Failed to reset password' });
+    }
+  });
+
+  // Change password (when logged in)
+  app.post('/api/auth/change-password', isAuthenticated, async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Current password and new password are required' });
+      }
+      
+      // Verify current password
+      const user = await storage.getUserByUsername((req.user as any).username);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: 'Current password is incorrect' });
+      }
+      
+      // Hash new password
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Update password
+      const success = await storage.changePassword(user.id, currentPassword, hashedPassword);
+      
+      if (!success) {
+        return res.status(500).json({ message: 'Failed to change password' });
+      }
+      
+      res.status(200).json({ message: 'Password changed successfully' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ message: 'Failed to change password' });
+    }
+  });
 
   // Subscription Status Endpoint
   app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
