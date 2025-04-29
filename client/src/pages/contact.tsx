@@ -90,10 +90,22 @@ const Contact = () => {
                 <div className="space-y-4">
                   <div className="flex items-start">
                     <div className="flex-shrink-0 p-2 bg-primary/10 rounded-full mr-3">
+                      <MapPin className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-medium">Location</h3>
+                      <p className="text-sm text-gray-600">
+                        Ethiopia, Addis Abeba
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 p-2 bg-primary/10 rounded-full mr-3">
                       <Mail className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium">Email Us</h3>
+                      <h3 className="text-sm font-medium">Email</h3>
                       <p className="text-sm text-gray-600">menumate.spp@gmail.com</p>
                     </div>
                   </div>
@@ -103,20 +115,8 @@ const Contact = () => {
                       <Phone className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-sm font-medium">Call Us</h3>
+                      <h3 className="text-sm font-medium">Phone</h3>
                       <p className="text-sm text-gray-600">+251-913-690-687</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 p-2 bg-primary/10 rounded-full mr-3">
-                      <MapPin className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-medium">Visit Our Office</h3>
-                      <p className="text-sm text-gray-600">
-                        Ethiopia, Addis Abeba
-                      </p>
                     </div>
                   </div>
                   
