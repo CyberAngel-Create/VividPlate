@@ -607,7 +607,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Menu item image upload route
+  // General menu item image upload route - for new items
+  app.post('/api/upload/menuitem', isAuthenticated, upload.single('image'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+      
+      // Simply return the URL to the uploaded file
+      const imageUrl = `/uploads/${req.file.filename}`;
+      
+      res.json({ 
+        imageUrl, 
+        success: true 
+      });
+    } catch (error) {
+      console.error('Error uploading menu item image:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ message: 'Error uploading image', error: errorMsg });
+    }
+  });
+
+  // Menu item image upload route - for existing items
   app.post('/api/items/:itemId/upload-image', isAuthenticated, upload.single('image'), async (req, res) => {
     try {
       if (!req.file) {
