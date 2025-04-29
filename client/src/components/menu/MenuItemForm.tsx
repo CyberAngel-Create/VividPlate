@@ -13,11 +13,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import MenuItemImageUpload from "../upload/MenuItemImageUpload";
 
 interface MenuItemFormProps {
   categoryId: number;
@@ -29,6 +37,7 @@ const menuItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   price: z.string().min(1, "Price is required"),
+  currency: z.string().default("USD"),
   imageUrl: z.string().optional(),
   isAvailable: z.boolean().default(true),
   tagInput: z.string().optional(),
@@ -45,6 +54,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
       name: item?.name || "",
       description: item?.description || "",
       price: item?.price || "",
+      currency: item?.currency || "USD",
       imageUrl: item?.imageUrl || "",
       isAvailable: item?.isAvailable !== false,
       tagInput: "",
