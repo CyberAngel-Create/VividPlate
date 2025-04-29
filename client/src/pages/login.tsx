@@ -52,18 +52,39 @@ const Login = () => {
     setIsLoading(true);
     try {
       await apiRequest("POST", "/api/auth/login", data);
-      toast({
-        title: "Success",
-        description: t('common.successLogin'),
-      });
-      setLocation("/dashboard");
+
+      // Verify the user is actually logged in before redirecting
+      try {
+        await apiRequest("GET", "/api/auth/me");
+        
+        // If we get here, the user is authenticated
+        toast({
+          title: "Success", 
+          description: t('common.successLogin'),
+        });
+        
+        // Add a slight delay before redirection to ensure session is properly set
+        setTimeout(() => {
+          window.location.href = "/dashboard"; // Use direct navigation instead of wouter
+        }, 300);
+        
+        // Don't set isLoading to false as we're redirecting
+      } catch (authError) {
+        // If /api/auth/me fails, the session wasn't properly established
+        console.error("Login succeeded but session verification failed", authError);
+        toast({
+          title: "Error",
+          description: "Login successful but session could not be established. Please try again.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
     } catch (error) {
       toast({
         title: "Error",
         description: t('common.invalidCredentials'),
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
