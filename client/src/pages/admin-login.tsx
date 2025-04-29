@@ -50,18 +50,50 @@ const AdminLogin = () => {
     setIsLoading(true);
     try {
       await apiRequest("POST", "/api/auth/admin-login", data);
-      toast({
-        title: "Success",
-        description: t('common.successAdminLogin'),
-      });
-      setLocation("/admin");
+      
+      // Verify the admin is actually logged in before redirecting
+      try {
+        const response = await apiRequest("GET", "/api/auth/me");
+        const userData = await response.json();
+        
+        if (userData.isAdmin) {
+          // If we get here, the admin is authenticated
+          toast({
+            title: "Success", 
+            description: t('common.successAdminLogin'),
+          });
+          
+          // Add a slight delay before redirection to ensure session is properly set
+          setTimeout(() => {
+            window.location.href = "/admin"; // Use direct navigation instead of wouter
+          }, 300);
+          
+          // Don't set isLoading to false as we're redirecting
+        } else {
+          // User is logged in but not an admin
+          toast({
+            title: "Error",
+            description: "Authentication succeeded but admin rights are required",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+        }
+      } catch (authError) {
+        // If /api/auth/me fails, the session wasn't properly established
+        console.error("Login succeeded but session verification failed", authError);
+        toast({
+          title: "Error",
+          description: "Login successful but session could not be established. Please try again.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+      }
     } catch (error) {
       toast({
         title: "Error",
         description: t('common.invalidAdminCredentials'),
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

@@ -54,12 +54,49 @@ const Register = () => {
       
       await apiRequest("POST", "/api/auth/register", registrationData);
       
-      toast({
-        title: "Success",
-        description: "Your account has been created. Please log in.",
-      });
-      
-      setLocation("/login");
+      // Attempt to log in the user automatically after registration
+      try {
+        await apiRequest("POST", "/api/auth/login", {
+          username: data.username,
+          password: data.password
+        });
+        
+        // Verify login success
+        try {
+          await apiRequest("GET", "/api/auth/me");
+          
+          toast({
+            title: "Success",
+            description: "Your account has been created and you are now logged in.",
+          });
+          
+          // Add a slight delay before redirection to ensure session is properly set
+          setTimeout(() => {
+            window.location.href = "/dashboard"; // Use direct navigation instead of wouter
+          }, 300);
+          
+          // Don't set isLoading to false as we're redirecting
+        } catch (verifyError) {
+          // Login verification failed, redirect to login page
+          toast({
+            title: "Success",
+            description: "Your account has been created. Please log in.",
+          });
+          
+          setTimeout(() => {
+            window.location.href = "/login"; // Use direct navigation instead of wouter
+          }, 300);
+        }
+      } catch (loginError) {
+        // Auto-login failed, redirect to login page
+        toast({
+          title: "Success",
+          description: "Your account has been created. Please log in.",
+        });
+        
+        setLocation("/login");
+        setIsLoading(false);
+      }
     } catch (error: any) {
       let errorMessage = "An error occurred during registration";
       
@@ -74,7 +111,6 @@ const Register = () => {
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };

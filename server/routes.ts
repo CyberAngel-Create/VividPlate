@@ -37,11 +37,19 @@ const configureSession = (app: Express) => {
     secret: process.env.SESSION_SECRET || 'menumate-secret',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: process.env.NODE_ENV === 'production', maxAge: 86400000 }, // 1 day
+    cookie: { 
+      // Don't force secure cookies in production as Replit might not have HTTPS
+      secure: false, 
+      maxAge: 86400000, // 1 day
+      sameSite: 'lax' // Helps with CSRF protection while allowing redirects
+    },
     store: new MemoryStore({
       checkPeriod: 86400000 // Clear expired sessions once per day
     })
   }));
+  
+  // Enable trust proxy if running behind a reverse proxy (like on Replit)
+  app.set('trust proxy', 1);
 };
 
 // Configure passport for authentication
