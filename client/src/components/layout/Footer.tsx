@@ -67,15 +67,15 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start">
                 <MapPin className="h-5 w-5 text-primary mt-1 mr-2" />
-                <span className="text-gray-400">123 Restaurant Ave, Food City, FC 12345</span>
+                <span className="text-gray-400">Ethiopia, Addis Abeba</span>
               </li>
               <li className="flex items-center">
                 <Mail className="h-5 w-5 text-primary mr-2" />
-                <span className="text-gray-400">support@menumate.com</span>
+                <span className="text-gray-400">menumate.spp@gmail.com</span>
               </li>
               <li className="flex items-center">
                 <Phone className="h-5 w-5 text-primary mr-2" />
-                <span className="text-gray-400">(123) 456-7890</span>
+                <span className="text-gray-400">+251-913-690-687</span>
               </li>
             </ul>
           </div>
