@@ -19,6 +19,15 @@ import memorystore from 'memorystore';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import Stripe from "stripe";
+
+// Initialize Stripe
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
+}
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: "2022-11-15",
+});
 
 // Configure session
 const configureSession = (app: Express) => {
@@ -740,11 +749,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Process subscription upgrade
-  app.post('/api/subscribe', isAuthenticated, async (req, res) => {
+  // Create a Stripe subscription
+  app.post('/api/create-subscription', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
       const { planId } = req.body;
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
       
       // Check if user already has an active subscription
       const existingSubscription = await storage.getActiveSubscriptionByUserId(userId);
@@ -752,7 +766,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'User already has an active subscription' });
       }
       
-      // Create a new subscription (in a real app, we would process payment here)
+      // Set subscription amount based on plan
+      const amount = planId === "yearly" ? 9999 : 999; // In cents
+      
+      // Create a payment intent
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: 'usd',
+        metadata: {
+          userId: userId.toString(),
+          planId,
+          userEmail: user.email,
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+      });
+    } catch (error) {
+      console.error("Subscription payment error:", error);
+      res.status(500).json({ 
+        message: 'Error creating payment intent', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+  
+  // Verify payment and finalize subscription
+  app.post('/api/verify-payment', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { paymentIntentId } = req.body;
+      
+      if (!paymentIntentId) {
+        return res.status(400).json({ message: 'Payment ID is required' });
+      }
+      
+      // Verify the payment intent
+      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+      
+      // Ensure this payment belongs to the right user
+      if (paymentIntent.metadata.userId !== userId.toString()) {
+        return res.status(403).json({ message: 'Unauthorized payment verification' });
+      }
+      
+      // Check if payment was successful
+      if (paymentIntent.status !== 'succeeded') {
+        return res.status(400).json({ 
+          message: 'Payment not completed', 
+          status: paymentIntent.status 
+        });
+      }
+      
+      // Payment successful, create subscription
+      const planId = paymentIntent.metadata.planId;
       const oneYearFromNow = new Date();
       oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
       
@@ -760,7 +830,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId,
         tier: "premium",
         endDate: oneYearFromNow,
-        paymentMethod: "credit_card",
+        paymentMethod: "stripe",
         isActive: true
       });
       
@@ -770,17 +840,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         subscriptionId: newSubscription.id,
         amount: planId === "yearly" ? "99.99" : "9.99",
         currency: "USD",
-        paymentMethod: "credit_card",
+        paymentMethod: "stripe",
+        paymentId: paymentIntentId,
         status: "completed"
       });
       
-      res.status(201).json({
+      res.json({
         success: true,
         subscription: newSubscription
       });
     } catch (error) {
-      console.error("Subscription error:", error);
-      res.status(500).json({ message: 'Server error' });
+      console.error("Payment verification error:", error);
+      res.status(500).json({ 
+        message: 'Error verifying payment', 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
