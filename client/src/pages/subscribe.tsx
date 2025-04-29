@@ -20,7 +20,7 @@ const SubscribeForm = ({ planName, planPrice }: { planName: string, planPrice: s
   const stripe = useStripe();
   const elements = useElements();
   const { toast } = useToast();
-  const navigate = useNavigate();
+  const [, navigate] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

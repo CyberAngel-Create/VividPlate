@@ -70,7 +70,8 @@ const Pricing = () => {
     if (planName === "Free") {
       setLocation("/register");
     } else {
-      setLocation("/subscription");
+      // Now redirecting to the Stripe payment flow for Premium
+      setLocation("/subscribe");
     }
   };
   
