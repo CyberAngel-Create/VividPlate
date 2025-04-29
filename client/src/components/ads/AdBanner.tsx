@@ -2,9 +2,9 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import AdSense from './AdSense';
 
-// AdSense configuration - these should come from environment variables
-const GOOGLE_ADSENSE_CLIENT = 'ca-pub-xxxxxxxxxxxxxxxx'; // Replace with your AdSense client ID
-const GOOGLE_ADSENSE_SLOT = 'xxxxxxxxxx'; // Replace with your AdSense slot
+// AdSense configuration with provided client ID
+const GOOGLE_ADSENSE_CLIENT = 'ca-pub-8447200389101391'; // Client ID provided
+const GOOGLE_ADSENSE_SLOT = '1234567890'; // You may need to replace this with your actual slot ID
 
 // Define subscription status interface
 interface SubscriptionStatus {

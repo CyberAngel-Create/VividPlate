@@ -22,10 +22,34 @@ const AdSense = ({
   style = {} 
 }: AdSenseProps) => {
   useEffect(() => {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (error) {
-      console.error('AdSense error:', error);
+    // Load the Google AdSense script if it's not already loaded
+    const loadAdSenseScript = () => {
+      const script = document.createElement('script');
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447200389101391';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      document.head.appendChild(script);
+      
+      // Initialize adsbygoogle when script loads
+      script.onload = () => {
+        try {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (error) {
+          console.error('AdSense error:', error);
+        }
+      };
+    };
+
+    // Check if script is already loaded
+    if (!document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')) {
+      loadAdSenseScript();
+    } else {
+      // If script is already loaded, just push the ad
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      } catch (error) {
+        console.error('AdSense error:', error);
+      }
     }
   }, []);
 

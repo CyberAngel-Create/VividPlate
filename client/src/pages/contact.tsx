@@ -115,8 +115,7 @@ const Contact = () => {
                     <div>
                       <h3 className="text-sm font-medium">Visit Our Office</h3>
                       <p className="text-sm text-gray-600">
-                        Addis Ababa<br />
-                        Ethiopia
+                        Ethiopia, Addis Abeba
                       </p>
                     </div>
                   </div>
