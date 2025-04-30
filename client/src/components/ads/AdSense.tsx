@@ -1,64 +1,44 @@
 import React, { useEffect } from 'react';
+import { useSubscription } from '@/hooks/use-subscription';
 
-interface AdSenseProps {
-  adClient: string;
-  adSlot: string;
-  adFormat?: 'auto' | 'fluid' | 'rectangle' | 'vertical';
-  adLayout?: string;
-  className?: string;
-  style?: React.CSSProperties;
-  responsive?: 'true' | 'false';
-}
-
-declare global {
-  interface Window {
-    adsbygoogle: any[];
-  }
-}
-
-function AdSense({
-  adClient,
-  adSlot,
-  adFormat = 'auto',
-  adLayout,
-  className = '',
-  style = {},
-  responsive = 'true',
-}: AdSenseProps) {
+const AdSense: React.FC = () => {
+  const { isPaid } = useSubscription();
+  
   useEffect(() => {
-    try {
-      // Check if adsense is already loaded
-      const hasAds = Array.isArray(window.adsbygoogle);
+    // Skip loading AdSense for paid users
+    if (isPaid) return;
+    
+    // Only add the script if it doesn't already exist
+    if (!document.getElementById('google-adsense-script')) {
+      const script = document.createElement('script');
+      script.id = 'google-adsense-script';
+      script.async = true;
+      script.crossOrigin = 'anonymous';
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447200389101391';
       
-      // Push the current ad to be rendered
-      if (hasAds) {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      }
-    } catch (error) {
-      console.error('AdSense error:', error);
+      // Add script to document head
+      document.head.appendChild(script);
+
+      // Create and append ads.txt if it doesn't exist
+      const metaTag = document.createElement('meta');
+      metaTag.name = 'google-adsense-account';
+      metaTag.content = 'ca-pub-8447200389101391';
+      document.head.appendChild(metaTag);
     }
-  }, []);
 
-  // Combine passed in styles with default styles
-  const combinedStyle: React.CSSProperties = {
-    display: 'block',
-    textAlign: 'center',
-    ...style,
-  };
+    // Initialize AdSense
+    if (!window.adsbygoogle) {
+      window.adsbygoogle = [];
+    }
+    
+    return () => {
+      // Cleanup function - in practice, we wouldn't remove the script
+      // But we could handle other cleanup if needed
+    };
+  }, [isPaid]);
 
-  return (
-    <div className={className}>
-      <ins
-        className="adsbygoogle"
-        style={combinedStyle}
-        data-ad-client={adClient}
-        data-ad-slot={adSlot}
-        data-ad-format={adFormat}
-        data-full-width-responsive={responsive}
-        {...(adLayout ? { 'data-ad-layout': adLayout } : {})}
-      ></ins>
-    </div>
-  );
-}
+  // This component doesn't render anything visible
+  return null;
+};
 
 export default AdSense;

@@ -60,12 +60,14 @@ export const menuCategories = pgTable("menu_categories", {
   id: serial("id").primaryKey(),
   restaurantId: integer("restaurant_id").notNull(),
   name: text("name").notNull(),
+  description: text("description"),
   displayOrder: integer("display_order").default(0),
 });
 
 export const insertMenuCategorySchema = createInsertSchema(menuCategories).pick({
   restaurantId: true,
   name: true,
+  description: true,
   displayOrder: true,
 });
 

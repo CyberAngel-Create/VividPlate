@@ -16,6 +16,7 @@ interface SubscriptionContextType {
   isLoading: boolean;
   error: Error | null;
   refreshSubscription: () => Promise<void>;
+  isPaid: boolean;
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
@@ -60,7 +61,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     subscription,
     isLoading,
     error,
-    refreshSubscription
+    refreshSubscription,
+    isPaid: !!subscription?.isPaid
   };
 
   return (

@@ -183,7 +183,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
     setCategoryForm({
       name: category.name,
       description: category.description || "",
-      displayOrder: category.displayOrder,
+      displayOrder: category.displayOrder || 0,
     });
     setIsEditDialogOpen(true);
   };
