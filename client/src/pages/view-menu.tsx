@@ -6,6 +6,7 @@ import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { apiRequest } from "@/lib/queryClient";
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import AdBanner from "@/components/ads/AdBanner";
+import DietaryRecommendationsOverlay from "@/components/dietary/DietaryRecommendationsOverlay";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];

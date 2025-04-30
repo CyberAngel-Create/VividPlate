@@ -30,6 +30,7 @@ import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
+import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -140,8 +141,10 @@ function App() {
         <TooltipProvider>
           <AuthProvider>
             <SubscriptionProvider>
-              <Toaster />
-              <Router />
+              <DietaryPreferencesProvider>
+                <Toaster />
+                <Router />
+              </DietaryPreferencesProvider>
             </SubscriptionProvider>
           </AuthProvider>
         </TooltipProvider>
