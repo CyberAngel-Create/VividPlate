@@ -24,7 +24,7 @@ interface FeedbackDialogProps {
   trigger?: React.ReactNode;
 }
 
-export function FeedbackDialog({
+function FeedbackDialog({
   menuItemId,
   menuItemName,
   restaurantId,
@@ -183,3 +183,5 @@ export function FeedbackDialog({
     </Dialog>
   );
 }
+
+export default FeedbackDialog;
