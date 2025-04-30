@@ -28,6 +28,8 @@ import Footer from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
+import { AuthProvider } from "@/hooks/use-auth";
+import { SubscriptionProvider } from "@/hooks/use-subscription";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -136,8 +138,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <TooltipProvider>
-          <Toaster />
-          <Router />
+          <AuthProvider>
+            <SubscriptionProvider>
+              <Toaster />
+              <Router />
+            </SubscriptionProvider>
+          </AuthProvider>
         </TooltipProvider>
       </HelmetProvider>
     </QueryClientProvider>

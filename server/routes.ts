@@ -351,7 +351,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/profile', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const { username, email, fullName, phoneNumber, address } = req.body;
+      const { username, email, fullName } = req.body;
       
       // Check if username already exists (if changing username)
       if (username && username !== (req.user as any).username) {
@@ -372,9 +372,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const updatedUser = await storage.updateUser(userId, {
         username,
         email,
-        fullName,
-        phoneNumber,
-        address
+        fullName
       });
       
       if (!updatedUser) {

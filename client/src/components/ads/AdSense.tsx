@@ -1,11 +1,13 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 interface AdSenseProps {
-  client: string;
-  slot: string;
-  format?: string;
-  responsive?: boolean;
+  adClient: string;
+  adSlot: string;
+  adFormat?: 'auto' | 'fluid' | 'rectangle' | 'vertical';
+  adLayout?: string;
+  className?: string;
   style?: React.CSSProperties;
+  responsive?: 'true' | 'false';
 }
 
 declare global {
@@ -14,57 +16,47 @@ declare global {
   }
 }
 
-const AdSense = ({ 
-  client, 
-  slot, 
-  format = 'auto', 
-  responsive = true, 
-  style = {} 
-}: AdSenseProps) => {
+export function AdSense({
+  adClient,
+  adSlot,
+  adFormat = 'auto',
+  adLayout,
+  className = '',
+  style = {},
+  responsive = 'true',
+}: AdSenseProps) {
   useEffect(() => {
-    // Load the Google AdSense script if it's not already loaded
-    const loadAdSenseScript = () => {
-      const script = document.createElement('script');
-      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447200389101391';
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      document.head.appendChild(script);
+    try {
+      // Check if adsense is already loaded
+      const hasAds = Array.isArray(window.adsbygoogle);
       
-      // Initialize adsbygoogle when script loads
-      script.onload = () => {
-        try {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (error) {
-          console.error('AdSense error:', error);
-        }
-      };
-    };
-
-    // Check if script is already loaded
-    if (!document.querySelector('script[src*="pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"]')) {
-      loadAdSenseScript();
-    } else {
-      // If script is already loaded, just push the ad
-      try {
+      // Push the current ad to be rendered
+      if (hasAds) {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
-      } catch (error) {
-        console.error('AdSense error:', error);
       }
+    } catch (error) {
+      console.error('AdSense error:', error);
     }
   }, []);
 
+  // Combine passed in styles with default styles
+  const combinedStyle: React.CSSProperties = {
+    display: 'block',
+    textAlign: 'center',
+    ...style,
+  };
+
   return (
-    <div className="ad-container my-4">
-      <ins 
-        className={`adsbygoogle ${responsive ? 'adsbygoogle-responsive' : ''}`}
-        style={{ display: 'block', ...style }}
-        data-ad-client={client}
-        data-ad-slot={slot}
-        data-ad-format={format}
-        data-full-width-responsive={responsive ? 'true' : 'false'}
+    <div className={className}>
+      <ins
+        className="adsbygoogle"
+        style={combinedStyle}
+        data-ad-client={adClient}
+        data-ad-slot={adSlot}
+        data-ad-format={adFormat}
+        data-full-width-responsive={responsive}
+        {...(adLayout ? { 'data-ad-layout': adLayout } : {})}
       ></ins>
     </div>
   );
-};
-
-export default AdSense;
+}
