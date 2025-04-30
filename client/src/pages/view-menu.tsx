@@ -74,7 +74,12 @@ const ViewMenu = () => {
   return (
     <div className="flex flex-col items-center w-full">
       {/* Top ad banner for free users */}
-      <AdBanner position="top" className="w-full max-w-screen-md my-3" />
+      <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+      
+      {/* Dietary Recommendations Button */}
+      <div className="w-full max-w-screen-md flex justify-end mb-2 px-4">
+        <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+      </div>
       
       <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
         <CustomerMenuPreview 
@@ -84,7 +89,7 @@ const ViewMenu = () => {
       </div>
       
       {/* Bottom ad banner for free users */}
-      <AdBanner position="bottom" className="w-full max-w-screen-md my-3" />
+      <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
     </div>
   );
 };
