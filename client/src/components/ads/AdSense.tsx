@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-export function AdSense({
+function AdSense({
   adClient,
   adSlot,
   adFormat = 'auto',
@@ -60,3 +60,5 @@ export function AdSense({
     </div>
   );
 }
+
+export default AdSense;

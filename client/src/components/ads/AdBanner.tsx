@@ -1,5 +1,5 @@
 import React from 'react';
-import { AdSense } from './AdSense';
+import AdSense from './AdSense';
 
 interface AdBannerProps {
   adSlot: string;
@@ -13,7 +13,7 @@ interface AdBannerProps {
 // DigitaMenuMate AdSense publisher ID
 const PUBLISHER_ID = 'ca-pub-8447200389101391';
 
-export function AdBanner({ 
+function AdBanner({ 
   adSlot, 
   format = 'auto', 
   layout,
@@ -43,3 +43,5 @@ export function AdBanner({
     </div>
   );
 }
+
+export default AdBanner;
