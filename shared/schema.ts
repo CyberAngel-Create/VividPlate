@@ -83,6 +83,10 @@ export const menuItems = pgTable("menu_items", {
   tags: text("tags").array(),
   isAvailable: boolean("is_available").default(true),
   displayOrder: integer("display_order").default(0),
+  // Dietary information
+  dietaryInfo: jsonb("dietary_info"),
+  calories: integer("calories"),
+  allergens: text("allergens").array(),
 });
 
 export const insertMenuItemSchema = createInsertSchema(menuItems).pick({
@@ -95,6 +99,9 @@ export const insertMenuItemSchema = createInsertSchema(menuItems).pick({
   tags: true,
   isAvailable: true,
   displayOrder: true,
+  dietaryInfo: true,
+  calories: true,
+  allergens: true,
 });
 
 // Menu views tracking
@@ -175,9 +182,31 @@ export const insertFeedbackSchema = createInsertSchema(feedbacks).pick({
   status: true,
 });
 
+// Customer dietary preferences
+export const dietaryPreferences = pgTable("dietary_preferences", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"), // null for anonymous customers
+  sessionId: text("session_id"), // for anonymous customers
+  preferences: jsonb("preferences").notNull(),
+  allergies: text("allergies").array(),
+  calorieGoal: integer("calorie_goal"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDietaryPreferencesSchema = createInsertSchema(dietaryPreferences).pick({
+  userId: true,
+  sessionId: true,
+  preferences: true,
+  allergies: true,
+  calorieGoal: true,
+});
+
 // Types for TypeScript
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type DietaryPreference = typeof dietaryPreferences.$inferSelect;
+export type InsertDietaryPreference = z.infer<typeof insertDietaryPreferencesSchema>;
 
 export type Restaurant = typeof restaurants.$inferSelect;
 export type InsertRestaurant = z.infer<typeof insertRestaurantSchema>;
