@@ -57,10 +57,13 @@ const configurePassport = (app: Express) => {
   app.use(passport.initialize());
   app.use(passport.session());
 
-  passport.use(new LocalStrategy(async (username, password, done) => {
+  passport.use(new LocalStrategy({
+    usernameField: 'identifier',
+    passwordField: 'password'
+  }, async (identifier, password, done) => {
     try {
       // Special case for admin login
-      if (username === 'Admin' && password === 'Admin@123') {
+      if (identifier === 'Admin' && password === 'Admin@123') {
         return done(null, {
           id: 0, // Special admin ID
           username: 'Admin',
@@ -70,9 +73,16 @@ const configurePassport = (app: Express) => {
         });
       }
 
-      const user = await storage.getUserByUsername(username);
+      // Check if identifier is username or email
+      let user = await storage.getUserByUsername(identifier);
+      
+      // If not found by username, try by email
       if (!user) {
-        return done(null, false, { message: 'Incorrect username.' });
+        user = await storage.getUserByEmail(identifier);
+      }
+      
+      if (!user) {
+        return done(null, false, { message: 'Incorrect username or email.' });
       }
 
       // In a real app, we would hash the password, but for simplicity we'll just compare directly
@@ -320,6 +330,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/auth/me', isAuthenticated, (req, res) => {
     const { password, ...userWithoutPassword } = req.user as any;
     res.json(userWithoutPassword);
+  });
+  
+  // User profile management routes
+  app.get('/api/profile', isAuthenticated, async (req, res) => {
+    try {
+      const user = await storage.getUser((req.user as any).id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const { password, resetPasswordToken, resetPasswordExpires, ...userProfile } = user;
+      res.json(userProfile);
+    } catch (error) {
+      console.error('Get profile error:', error);
+      res.status(500).json({ message: 'Failed to fetch profile' });
+    }
+  });
+  
+  app.put('/api/profile', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { username, email, fullName, phoneNumber, address } = req.body;
+      
+      // Check if username already exists (if changing username)
+      if (username && username !== (req.user as any).username) {
+        const existingUser = await storage.getUserByUsername(username);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: 'Username already taken' });
+        }
+      }
+      
+      // Check if email already exists (if changing email)
+      if (email && email !== (req.user as any).email) {
+        const existingUser = await storage.getUserByEmail(email);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: 'Email already taken' });
+        }
+      }
+      
+      const updatedUser = await storage.updateUser(userId, {
+        username,
+        email,
+        fullName,
+        phoneNumber,
+        address
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const { password, resetPasswordToken, resetPasswordExpires, ...userProfile } = updatedUser;
+      res.json(userProfile);
+    } catch (error) {
+      console.error('Update profile error:', error);
+      res.status(500).json({ message: 'Failed to update profile' });
+    }
   });
   
   // Forgot password - request reset token

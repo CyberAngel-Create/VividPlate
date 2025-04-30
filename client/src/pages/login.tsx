@@ -27,7 +27,7 @@ import {
 import { Link } from "wouter";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  identifier: z.string().min(1, "Username or Email is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -43,7 +43,7 @@ const Login = () => {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: "",
+      identifier: "",
       password: "",
     },
   });
@@ -103,12 +103,12 @@ const Login = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
                 control={form.control}
-                name="username"
+                name="identifier"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.username')}</FormLabel>
+                    <FormLabel>Username or Email</FormLabel>
                     <FormControl>
-                      <Input placeholder={`${t('common.username')}...`} {...field} />
+                      <Input placeholder="Enter your username or email..." {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
