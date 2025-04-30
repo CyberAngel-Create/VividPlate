@@ -692,6 +692,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   });
+  
+  // Update a category
+  app.put('/api/categories/:categoryId', isAuthenticated, async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      
+      // Get the category
+      const category = await storage.getMenuCategory(categoryId);
+      if (!category) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
+      
+      // Get the restaurant to check ownership
+      const restaurant = await storage.getRestaurant(category.restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      // Check if user owns the restaurant
+      if (restaurant.userId !== (req.user as any).id && !(req.user as any).isAdmin) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Update the category
+      const updatedCategory = await storage.updateMenuCategory(categoryId, req.body);
+      if (!updatedCategory) {
+        return res.status(404).json({ message: 'Category not found' });
+      }
+      
+      res.json(updatedCategory);
+    } catch (error) {
+      console.error('Error updating category:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
 
   app.patch('/api/categories/:categoryId', isAuthenticated, async (req, res) => {
     try {
