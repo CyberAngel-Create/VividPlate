@@ -46,7 +46,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           <div className="h-40 bg-gray-300 relative">
             {restaurant.bannerUrl ? (
               <img 
-                src={restaurant.bannerUrl.startsWith('/') ? restaurant.bannerUrl : `/${restaurant.bannerUrl}`} 
+                src={restaurant.bannerUrl}
                 alt={`${restaurant.name} banner`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
@@ -126,12 +126,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                         {item.imageUrl ? (
                           <div className="w-1/3 pr-4">
                             <ImageViewDialog 
-                              imageSrc={item.imageUrl.startsWith('/') ? item.imageUrl : `/${item.imageUrl}`} 
+                              imageSrc={item.imageUrl} 
                               imageAlt={item.name}
                             >
                               <div className="w-full h-24 sm:h-28 bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                                 <img 
-                                  src={item.imageUrl.startsWith('/') ? item.imageUrl : `/${item.imageUrl}`} 
+                                  src={item.imageUrl} 
                                   alt={item.name} 
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -181,8 +181,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                   </div>
                                 )}
                                 
-                                {/* Feedback button indicator - visible on hover */}
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity mt-2 text-xs flex items-center text-primary">
+                                {/* Feedback button indicator - always visible */}
+                                <div className="mt-2 text-xs flex items-center text-primary">
                                   <MessageSquare className="h-3 w-3 mr-1" />
                                   <span>Click to leave feedback</span>
                                 </div>
