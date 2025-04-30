@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "../ui/button";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
-import { User, Menu } from "lucide-react";
+import { User, Menu, UserCog } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 
@@ -80,6 +80,10 @@ const Header = () => {
               <Link href="/dashboard" className="text-dark hover:text-primary transition-colors font-medium hidden md:block">
                 {t('common.dashboard')}
               </Link>
+              <Link href="/profile" className="text-dark hover:text-primary transition-colors font-medium hidden md:flex items-center">
+                <UserCog className="h-4 w-4 mr-1" />
+                {t('common.profile') || "Profile"}
+              </Link>
               <Button 
                 variant="default" 
                 className="bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
@@ -133,6 +137,10 @@ const Header = () => {
               <>
                 <Link href="/dashboard" className="text-dark hover:text-primary transition-colors py-2 font-medium">
                   {t('common.dashboard')}
+                </Link>
+                <Link href="/profile" className="text-dark hover:text-primary transition-colors py-2 font-medium flex items-center">
+                  <UserCog className="h-4 w-4 mr-1" />
+                  {t('common.profile') || "Profile"}
                 </Link>
                 <a 
                   href="#" 

@@ -9,6 +9,7 @@ import Home from "./pages/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import Dashboard from "./pages/dashboard";
+import Profile from "./pages/profile";
 import CreateMenu from "./pages/create-menu";
 import EditRestaurant from "./pages/edit-restaurant";
 import MenuPreview from "./pages/menu-preview";
@@ -114,6 +115,7 @@ function Router() {
           <PublicRoute path="/view-menu/:restaurantId" component={ViewMenu} />
 
           <AuthenticatedRoute path="/dashboard" component={Dashboard} />
+          <AuthenticatedRoute path="/profile" component={Profile} />
           <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
           <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
           <AuthenticatedRoute path="/menu-preview" component={MenuPreview} />
