@@ -6,7 +6,8 @@ import {
   menuViews, MenuView, InsertMenuView,
   subscriptions, Subscription, InsertSubscription,
   payments, Payment, InsertPayment,
-  feedbacks, Feedback, InsertFeedback
+  feedbacks, Feedback, InsertFeedback,
+  dietaryPreferences, DietaryPreference, InsertDietaryPreference
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc } from "drizzle-orm";
@@ -77,6 +78,14 @@ export interface IStorage {
   updateFeedback(id: number, feedback: Partial<Feedback>): Promise<Feedback | undefined>;
   approveFeedback(id: number): Promise<Feedback | undefined>;
   rejectFeedback(id: number): Promise<Feedback | undefined>;
+  
+  // Dietary preferences operations
+  getDietaryPreference(id: number): Promise<DietaryPreference | undefined>;
+  getDietaryPreferenceByUserId(userId: number): Promise<DietaryPreference | undefined>;
+  getDietaryPreferenceBySessionId(sessionId: string): Promise<DietaryPreference | undefined>;
+  createDietaryPreference(preference: InsertDietaryPreference): Promise<DietaryPreference>;
+  updateDietaryPreference(id: number, preference: Partial<InsertDietaryPreference>): Promise<DietaryPreference | undefined>;
+  deleteDietaryPreference(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -85,6 +94,7 @@ export class MemStorage implements IStorage {
   private menuCategories: Map<number, MenuCategory>;
   private menuItems: Map<number, MenuItem>;
   private menuViews: Map<number, MenuView>;
+  private dietaryPreferences: Map<number, DietaryPreference>;
   
   private currentIds: {
     users: number;
@@ -92,6 +102,7 @@ export class MemStorage implements IStorage {
     menuCategories: number;
     menuItems: number;
     menuViews: number;
+    dietaryPreferences: number;
   };
 
   constructor() {
@@ -100,13 +111,15 @@ export class MemStorage implements IStorage {
     this.menuCategories = new Map();
     this.menuItems = new Map();
     this.menuViews = new Map();
+    this.dietaryPreferences = new Map();
     
     this.currentIds = {
       users: 1,
       restaurants: 1,
       menuCategories: 1,
       menuItems: 1,
-      menuViews: 1
+      menuViews: 1,
+      dietaryPreferences: 1
     };
   }
 
@@ -431,6 +444,53 @@ export class MemStorage implements IStorage {
   
   async rejectFeedback(id: number): Promise<Feedback | undefined> {
     return undefined; // Not implemented in memory storage
+  }
+  
+  // Dietary preferences operations
+  async getDietaryPreference(id: number): Promise<DietaryPreference | undefined> {
+    return this.dietaryPreferences.get(id);
+  }
+  
+  async getDietaryPreferenceByUserId(userId: number): Promise<DietaryPreference | undefined> {
+    return Array.from(this.dietaryPreferences.values()).find(
+      (pref) => pref.userId === userId
+    );
+  }
+  
+  async getDietaryPreferenceBySessionId(sessionId: string): Promise<DietaryPreference | undefined> {
+    return Array.from(this.dietaryPreferences.values()).find(
+      (pref) => pref.sessionId === sessionId
+    );
+  }
+  
+  async createDietaryPreference(insertPreference: InsertDietaryPreference): Promise<DietaryPreference> {
+    const id = this.currentIds.dietaryPreferences++;
+    const now = new Date();
+    const preference: DietaryPreference = {
+      ...insertPreference,
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.dietaryPreferences.set(id, preference);
+    return preference;
+  }
+  
+  async updateDietaryPreference(id: number, preferenceUpdate: Partial<InsertDietaryPreference>): Promise<DietaryPreference | undefined> {
+    const preference = this.dietaryPreferences.get(id);
+    if (!preference) return undefined;
+    
+    const updatedPreference = { 
+      ...preference, 
+      ...preferenceUpdate,
+      updatedAt: new Date()
+    };
+    this.dietaryPreferences.set(id, updatedPreference);
+    return updatedPreference;
+  }
+  
+  async deleteDietaryPreference(id: number): Promise<boolean> {
+    return this.dietaryPreferences.delete(id);
   }
 }
 
@@ -793,6 +853,54 @@ export class DatabaseStorage implements IStorage {
   
   async rejectFeedback(id: number): Promise<Feedback | undefined> {
     return this.updateFeedback(id, { status: 'rejected' });
+  }
+
+  // Dietary preferences operations
+  async getDietaryPreference(id: number): Promise<DietaryPreference | undefined> {
+    const [preference] = await db.select()
+      .from(dietaryPreferences)
+      .where(eq(dietaryPreferences.id, id));
+    return preference;
+  }
+  
+  async getDietaryPreferenceByUserId(userId: number): Promise<DietaryPreference | undefined> {
+    const [preference] = await db.select()
+      .from(dietaryPreferences)
+      .where(eq(dietaryPreferences.userId, userId));
+    return preference;
+  }
+  
+  async getDietaryPreferenceBySessionId(sessionId: string): Promise<DietaryPreference | undefined> {
+    const [preference] = await db.select()
+      .from(dietaryPreferences)
+      .where(eq(dietaryPreferences.sessionId, sessionId));
+    return preference;
+  }
+  
+  async createDietaryPreference(insertPreference: InsertDietaryPreference): Promise<DietaryPreference> {
+    const [preference] = await db.insert(dietaryPreferences)
+      .values(insertPreference)
+      .returning();
+    return preference;
+  }
+  
+  async updateDietaryPreference(id: number, preferenceUpdate: Partial<InsertDietaryPreference>): Promise<DietaryPreference | undefined> {
+    const now = new Date();
+    const [updatedPreference] = await db.update(dietaryPreferences)
+      .set({
+        ...preferenceUpdate,
+        updatedAt: now
+      })
+      .where(eq(dietaryPreferences.id, id))
+      .returning();
+    return updatedPreference;
+  }
+  
+  async deleteDietaryPreference(id: number): Promise<boolean> {
+    const result = await db.delete(dietaryPreferences)
+      .where(eq(dietaryPreferences.id, id))
+      .returning();
+    return result.length > 0;
   }
 }
 
