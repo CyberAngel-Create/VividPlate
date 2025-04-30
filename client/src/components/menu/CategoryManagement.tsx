@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardContent,
@@ -38,7 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MenuCategory } from "@shared/schema";
@@ -169,6 +170,62 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
       });
     },
   });
+  
+  // Move category mutation
+  const moveCategoryMutation = useMutation({
+    mutationFn: async ({ id, direction }: { id: number; direction: "up" | "down" }) => {
+      const categoryToMove = categories.find(cat => cat.id === id);
+      if (!categoryToMove) return;
+      
+      // Sort categories by display order to find adjacent categories
+      const sortedCategories = [...categories].sort((a, b) => 
+        (a.displayOrder || 0) - (b.displayOrder || 0)
+      );
+      const currentIndex = sortedCategories.findIndex(cat => cat.id === id);
+      
+      if (
+        (direction === "up" && currentIndex <= 0) || 
+        (direction === "down" && currentIndex >= sortedCategories.length - 1)
+      ) {
+        return; // Already at the top/bottom
+      }
+      
+      const adjacentIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
+      const adjacentCategory = sortedCategories[adjacentIndex];
+      
+      // Swap display orders
+      const newOrder = adjacentCategory.displayOrder || 0;
+      const adjacentNewOrder = categoryToMove.displayOrder || 0;
+      
+      // Update the category's display order
+      await apiRequest(
+        "PUT",
+        `/api/categories/${categoryToMove.id}`,
+        { ...categoryToMove, displayOrder: newOrder }
+      );
+      
+      // Update the adjacent category's display order
+      return apiRequest(
+        "PUT",
+        `/api/categories/${adjacentCategory.id}`,
+        { ...adjacentCategory, displayOrder: adjacentNewOrder }
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/restaurants", restaurantId, "categories"] });
+      toast({
+        title: t("Category Order Updated"),
+        description: t("The category order has been updated successfully"),
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: t("Failed to Update Order"),
+        description: error instanceof Error ? error.message : String(error),
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -268,6 +325,26 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
                   <TableCell>{category.displayOrder}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
+                      <div className="flex space-x-1 mr-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => moveCategoryMutation.mutate({ id: category.id, direction: "up" })}
+                          disabled={moveCategoryMutation.isPending}
+                        >
+                          <ArrowUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => moveCategoryMutation.mutate({ id: category.id, direction: "down" })}
+                          disabled={moveCategoryMutation.isPending}
+                        >
+                          <ArrowDown className="h-4 w-4" />
+                        </Button>
+                      </div>
                       <Button
                         variant="outline"
                         size="icon"
