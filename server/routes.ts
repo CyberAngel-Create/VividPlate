@@ -348,7 +348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  app.put('/api/profile', isAuthenticated, async (req, res) => {
+  app.put('/api/user/profile', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const { username, email, fullName } = req.body;
@@ -466,7 +466,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Change password (when logged in)
-  app.post('/api/auth/change-password', isAuthenticated, async (req, res) => {
+  app.put('/api/user/change-password', isAuthenticated, async (req, res) => {
     try {
       const { currentPassword, newPassword } = req.body;
       
