@@ -1332,6 +1332,160 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // API: Dietary Preferences
+  app.post('/api/dietary-preferences', async (req, res) => {
+    try {
+      // For logged in users, associate with user ID
+      let userId = null;
+      if (req.isAuthenticated()) {
+        userId = req.user.id;
+      }
+      
+      // For anonymous users, store session ID
+      let sessionId = req.body.sessionId;
+      if (!userId && !sessionId) {
+        sessionId = uuidv4();
+      }
+      
+      // Check if preferences already exist for this user/session
+      let preference;
+      if (userId) {
+        preference = await storage.getDietaryPreferenceByUserId(userId);
+      } else if (sessionId) {
+        preference = await storage.getDietaryPreferenceBySessionId(sessionId);
+      }
+      
+      // If preference exists, update it
+      if (preference) {
+        preference = await storage.updateDietaryPreference(preference.id, {
+          ...req.body,
+          userId,
+          sessionId
+        });
+        return res.json({ preference, sessionId });
+      }
+      
+      // Otherwise create new preference
+      preference = await storage.createDietaryPreference({
+        ...req.body,
+        userId,
+        sessionId
+      });
+      
+      res.status(201).json({ preference, sessionId });
+    } catch (error) {
+      console.error('Error saving dietary preferences:', error);
+      res.status(500).json({ message: 'Error saving dietary preferences', error: String(error) });
+    }
+  });
+  
+  app.get('/api/dietary-preferences', async (req, res) => {
+    try {
+      let preference;
+      
+      // For logged in users, get by user ID
+      if (req.isAuthenticated()) {
+        preference = await storage.getDietaryPreferenceByUserId(req.user.id);
+        if (preference) {
+          return res.json(preference);
+        }
+      }
+      
+      // For anonymous users, get by session ID
+      const sessionId = req.query.sessionId as string;
+      if (sessionId) {
+        preference = await storage.getDietaryPreferenceBySessionId(sessionId);
+        if (preference) {
+          return res.json(preference);
+        }
+      }
+      
+      res.status(404).json({ message: 'No dietary preferences found' });
+    } catch (error) {
+      console.error('Error fetching dietary preferences:', error);
+      res.status(500).json({ message: 'Error fetching dietary preferences', error: String(error) });
+    }
+  });
+  
+  app.get('/api/menu-recommendations/:restaurantId', async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const sessionId = req.query.sessionId as string;
+      
+      // Get dietary preferences
+      let preference;
+      if (req.isAuthenticated()) {
+        preference = await storage.getDietaryPreferenceByUserId(req.user.id);
+      } else if (sessionId) {
+        preference = await storage.getDietaryPreferenceBySessionId(sessionId);
+      }
+      
+      if (!preference) {
+        return res.status(404).json({ message: 'No dietary preferences found' });
+      }
+      
+      // Get all menu items for this restaurant
+      const menuItems = await storage.getMenuItemsByRestaurantId(restaurantId);
+      
+      // Filter and score items based on preferences
+      const recommendations = menuItems.map(item => {
+        let score = 0;
+        let match = false;
+        
+        // Return early if no dietary info for this item
+        if (!item.dietaryInfo) {
+          return { item, score, match: false };
+        }
+        
+        // Check for allergies
+        if (preference.allergies && item.allergens) {
+          const hasAllergens = preference.allergies.some(allergy => 
+            item.allergens?.includes(allergy)
+          );
+          if (hasAllergens) {
+            return { item, score: -100, match: false };
+          }
+        }
+        
+        // Score based on preferences
+        if (preference.preferences && item.dietaryInfo) {
+          // TypeScript will see dietaryInfo as unknown, so we need to cast
+          const dietaryInfo = item.dietaryInfo as any;
+          
+          // For each preference, check if the item matches
+          for (const [key, value] of Object.entries(preference.preferences)) {
+            if (dietaryInfo[key] === value) {
+              score += 10;
+              match = true;
+            }
+          }
+        }
+        
+        // Calorie matching
+        if (preference.calorieGoal && item.calories) {
+          // Higher score for items closer to calorie goal
+          const calorieScore = 10 - Math.min(10, Math.abs(preference.calorieGoal - item.calories) / 100);
+          score += calorieScore;
+          
+          // If within 20% of calorie goal, consider it a match
+          if (Math.abs(preference.calorieGoal - item.calories) < preference.calorieGoal * 0.2) {
+            match = true;
+          }
+        }
+        
+        return { item, score, match };
+      });
+      
+      // Sort by score descending
+      recommendations.sort((a, b) => b.score - a.score);
+      
+      res.json(recommendations);
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+      res.status(500).json({ message: 'Error getting recommendations', error: String(error) });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
