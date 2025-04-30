@@ -46,9 +46,13 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           <div className="h-40 bg-gray-300 relative">
             {restaurant.bannerUrl ? (
               <img 
-                src={restaurant.bannerUrl} 
+                src={restaurant.bannerUrl.startsWith('/') ? restaurant.bannerUrl : `/${restaurant.bannerUrl}`} 
                 alt={`${restaurant.name} banner`}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  console.error("Failed to load banner image:", restaurant.bannerUrl);
+                  e.currentTarget.src = "/placeholder-banner.jpg";
+                }}
               />
             ) : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
@@ -122,14 +126,18 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                         {item.imageUrl ? (
                           <div className="w-1/3 pr-4">
                             <ImageViewDialog 
-                              imageSrc={item.imageUrl} 
+                              imageSrc={item.imageUrl.startsWith('/') ? item.imageUrl : `/${item.imageUrl}`} 
                               imageAlt={item.name}
                             >
                               <div className="w-full h-24 sm:h-28 bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                                 <img 
-                                  src={item.imageUrl} 
+                                  src={item.imageUrl.startsWith('/') ? item.imageUrl : `/${item.imageUrl}`} 
                                   alt={item.name} 
                                   className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    console.error("Failed to load menu item image:", item.imageUrl);
+                                    e.currentTarget.src = "/placeholder-food.jpg";
+                                  }}
                                 />
                               </div>
                             </ImageViewDialog>
@@ -145,7 +153,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                         {/* Details on right side */}
                         <div className="flex-grow w-2/3">
                           <FeedbackDialog
-                            menuItem={item}
+                            menuItemId={item.id}
+                            menuItemName={item.name}
                             restaurantId={restaurant.id}
                             trigger={
                               <div className="flex flex-col cursor-pointer relative group">

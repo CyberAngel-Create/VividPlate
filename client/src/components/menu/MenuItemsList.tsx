@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { MenuCategory, MenuItem } from "@shared/schema";
 import { Button } from "@/components/ui/button";
 import { 
@@ -19,8 +19,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash } from "lucide-react";
+import { PlusCircle, Edit, Trash, Search } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import MenuItemForm from "./MenuItemForm";
 import { formatCurrency } from "@/lib/utils";
 
@@ -44,6 +45,7 @@ const MenuItemsList = ({
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleAddItem = async (newItem: Omit<MenuItem, "id">) => {
     await onAddItem(newItem);
@@ -75,6 +77,20 @@ const MenuItemsList = ({
     setDeletingItem(item);
     setIsDeleteDialogOpen(true);
   };
+  
+  // Filter items based on search query
+  const filteredItems = useMemo(() => {
+    if (!searchQuery.trim()) return items;
+    
+    const query = searchQuery.toLowerCase().trim();
+    return items.filter(item => {
+      const nameMatch = item.name.toLowerCase().includes(query);
+      const descMatch = item.description?.toLowerCase().includes(query);
+      const tagMatch = item.tags?.some(tag => tag.toLowerCase().includes(query));
+      
+      return nameMatch || descMatch || tagMatch;
+    });
+  }, [items, searchQuery]);
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -106,6 +122,22 @@ const MenuItemsList = ({
         )}
       </div>
       
+      {/* Search bar for menu items */}
+      {category && items.length > 0 && (
+        <div className="relative mb-6">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="w-5 h-5 text-gray-400" />
+          </div>
+          <Input
+            type="search"
+            placeholder="Search menu items by name, description, or tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-white"
+          />
+        </div>
+      )}
+      
       {!category ? (
         <div className="text-center py-12">
           <p className="text-midgray mb-2">No category selected</p>
@@ -122,9 +154,20 @@ const MenuItemsList = ({
             <PlusCircle className="mr-1 h-4 w-4" /> Add First Item
           </Button>
         </div>
+      ) : filteredItems.length === 0 && searchQuery.trim() !== "" ? (
+        <div className="text-center py-12 border border-dashed rounded-lg">
+          <p className="text-midgray mb-2">No matching items found</p>
+          <p className="text-sm text-midgray mb-4">Try adjusting your search criteria</p>
+          <Button 
+            variant="outline"
+            onClick={() => setSearchQuery("")}
+          >
+            Clear Search
+          </Button>
+        </div>
       ) : (
         <div className="space-y-6">
-          {items.map((item) => (
+          {filteredItems.map((item) => (
             <div 
               key={item.id} 
               className="border rounded-lg p-4 hover:shadow-md transition-shadow"
