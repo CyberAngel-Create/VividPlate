@@ -45,7 +45,7 @@ function AuthenticatedRoute({ component: Component, ...rest }: { component: Reac
         setLocation("/login");
       }
     };
-    
+
     checkAuth();
   }, [setLocation]);
 
@@ -80,7 +80,7 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
         setLocation("/login");
       }
     };
-    
+
     checkAdminStatus();
   }, [setLocation]);
 
@@ -98,7 +98,7 @@ function Router() {
   return (
     <div className="flex flex-col min-h-screen">
       {!isPublicMenuView && <Header />}
-      
+
       <main className="flex-grow">
         <Switch>
           <PublicRoute path="/" component={Home} />
@@ -111,7 +111,7 @@ function Router() {
           <PublicRoute path="/contact" component={Contact} />
           <PublicRoute path="/menu/:restaurantId" component={ViewMenu} />
           <PublicRoute path="/view-menu/:restaurantId" component={ViewMenu} />
-          
+
           <AuthenticatedRoute path="/dashboard" component={Dashboard} />
           <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
           <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
@@ -120,14 +120,14 @@ function Router() {
           <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
           <AuthenticatedRoute path="/subscribe" component={Subscribe} />
           <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
-          
+
           {/* Admin Routes */}
           <AdminRoute path="/admin" component={AdminDashboard} />
-          
+
           <Route component={NotFound} />
         </Switch>
       </main>
-      
+
       {!isPublicMenuView && <Footer />}
     </div>
   );
