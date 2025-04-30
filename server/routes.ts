@@ -394,6 +394,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Change password endpoint
+  app.put('/api/user/change-password', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Current password and new password are required' });
+      }
+      
+      // Use storage operation to change password
+      const passwordChanged = await storage.changePassword(userId, currentPassword, newPassword);
+      
+      if (!passwordChanged) {
+        return res.status(400).json({ message: 'Current password is incorrect' });
+      }
+      
+      res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ message: 'Failed to change password' });
+    }
+  });
+  
   // Forgot password - request reset token
   app.post('/api/auth/forgot-password', async (req, res) => {
     try {
@@ -472,42 +496,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Change password (when logged in)
-  app.put('/api/user/change-password', isAuthenticated, async (req, res) => {
-    try {
-      const { currentPassword, newPassword } = req.body;
-      
-      if (!currentPassword || !newPassword) {
-        return res.status(400).json({ message: 'Current password and new password are required' });
-      }
-      
-      // Verify current password
-      const user = await storage.getUserByUsername((req.user as any).username);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-      
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ message: 'Current password is incorrect' });
-      }
-      
-      // Hash new password
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-      
-      // Update password
-      const success = await storage.changePassword(user.id, currentPassword, hashedPassword);
-      
-      if (!success) {
-        return res.status(500).json({ message: 'Failed to change password' });
-      }
-      
-      res.status(200).json({ message: 'Password changed successfully' });
-    } catch (error) {
-      console.error('Change password error:', error);
-      res.status(500).json({ message: 'Failed to change password' });
-    }
-  });
+
 
   // Subscription Status Endpoint
   app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
