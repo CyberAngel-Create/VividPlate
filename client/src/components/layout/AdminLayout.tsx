@@ -100,6 +100,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       href: "/admin/contact-info",
       icon: <Mail className="h-5 w-5" />,
     },
+    {
+      title: "Logout",
+      href: "#logout",
+      icon: <LogOut className="h-5 w-5" />,
+    },
   ];
 
   return (
@@ -126,6 +131,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                     onClick={() => setIsProfileOpen(true)}
                     className="flex items-center px-2 py-1.5 text-xs font-medium rounded-md group w-full text-left
                       text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                  >
+                    <div className="mr-2">{item.icon}</div>
+                    {item.title}
+                  </button>
+                );
+              }
+              
+              if (item.href === "#logout") {
+                return (
+                  <button
+                    key={item.title}
+                    onClick={handleLogout}
+                    className="flex items-center px-2 py-1.5 text-xs font-medium rounded-md group w-full text-left
+                      text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
                   >
                     <div className="mr-2">{item.icon}</div>
                     {item.title}
@@ -205,6 +224,23 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                     );
                   }
                   
+                  if (item.href === "#logout") {
+                    return (
+                      <button
+                        key={item.title}
+                        onClick={() => {
+                          handleLogout();
+                          setIsOpen(false);
+                        }}
+                        className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
+                          text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
+                      >
+                        <div className="mr-3">{item.icon}</div>
+                        {item.title}
+                      </button>
+                    );
+                  }
+                  
                   return (
                     <Link
                       key={item.href}
@@ -232,19 +268,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Topbar */}
         <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
           <div className="px-4 h-10 flex items-center justify-end">
-            <div className="flex items-center">
-              {user && (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="flex items-center gap-1"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </Button>
-              )}
-            </div>
+            {/* Header is kept empty as logout is now in the sidebar */}
           </div>
         </header>
 
