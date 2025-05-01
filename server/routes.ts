@@ -1584,7 +1584,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/restaurants', isAdmin, async (req, res) => {
     try {
       const restaurants = await storage.getAllRestaurants();
-      res.json(restaurants);
+      
+      // Enhanced restaurants with additional data
+      const enhancedRestaurants = await Promise.all(restaurants.map(async (restaurant) => {
+        // Get restaurant owner info
+        const owner = await storage.getUser(restaurant.userId);
+        
+        // Get category and menu item counts
+        const categories = await storage.getMenuCategoriesByRestaurantId(restaurant.id);
+        const menuItems = await storage.getMenuItemsByRestaurantId(restaurant.id);
+        const viewCount = await storage.countMenuViewsByRestaurantId(restaurant.id);
+        
+        return {
+          ...restaurant,
+          ownerName: owner ? owner.username : 'N/A',
+          categoryCount: categories.length,
+          menuItemCount: menuItems.length,
+          viewCount: viewCount
+        };
+      }));
+      
+      res.json(enhancedRestaurants);
     } catch (error) {
       console.error('Error fetching restaurants:', error);
       res.status(500).json({ message: 'Server error' });
