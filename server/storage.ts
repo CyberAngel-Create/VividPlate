@@ -7,7 +7,8 @@ import {
   subscriptions, Subscription, InsertSubscription,
   payments, Payment, InsertPayment,
   feedbacks, Feedback, InsertFeedback,
-  dietaryPreferences, DietaryPreference, InsertDietaryPreference
+  dietaryPreferences, DietaryPreference, InsertDietaryPreference,
+  adminLogs, AdminLog, InsertAdminLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc } from "drizzle-orm";
@@ -913,6 +914,73 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dietaryPreferences.id, id))
       .returning();
     return result.length > 0;
+  }
+
+  // Admin user operations
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt));
+  }
+
+  async countUsers(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users);
+    return result[0].count;
+  }
+
+  async countActiveUsers(): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(users)
+      .where(eq(users.isActive, true));
+    return result[0].count;
+  }
+
+  async countUsersBySubscriptionTier(tier: string): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(users)
+      .where(eq(users.subscriptionTier, tier));
+    return result[0].count;
+  }
+
+  async getRecentUsers(limit: number): Promise<User[]> {
+    return await db.select().from(users)
+      .orderBy(desc(users.createdAt))
+      .limit(limit);
+  }
+
+  async toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ isActive })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async upgradeUserSubscription(id: number, tier: string): Promise<User | undefined> {
+    const [user] = await db.update(users)
+      .set({ subscriptionTier: tier })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  // Admin logs operations
+  async createAdminLog(log: InsertAdminLog): Promise<AdminLog> {
+    const [adminLog] = await db.insert(adminLogs)
+      .values(log)
+      .returning();
+    return adminLog;
+  }
+
+  async getAdminLogs(limit: number = 50): Promise<AdminLog[]> {
+    return await db.select().from(adminLogs)
+      .orderBy(desc(adminLogs.createdAt))
+      .limit(limit);
+  }
+
+  async getAdminLogsByAdminId(adminId: number, limit: number = 50): Promise<AdminLog[]> {
+    return await db.select().from(adminLogs)
+      .where(eq(adminLogs.adminId, adminId))
+      .orderBy(desc(adminLogs.createdAt))
+      .limit(limit);
   }
 }
 
