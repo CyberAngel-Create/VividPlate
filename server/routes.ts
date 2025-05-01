@@ -1612,8 +1612,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAdminLog({
         adminId: (req.user as any).id,
         action: 'create_user',
-        details: `Created user ${user.username} (ID: ${user.id})`,
-        ipAddress: req.ip,
+        entityType: 'user',
+        entityId: user.id,
+        details: `Created user ${user.username} from IP ${req.ip}`,
       });
       
       // Exclude sensitive data
