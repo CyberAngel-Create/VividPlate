@@ -6,6 +6,7 @@ import { useLocation } from "wouter";
 import { apiRequest } from "../lib/queryClient";
 import { useToast } from "../hooks/use-toast";
 import { useTranslation } from "react-i18next";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -35,6 +36,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { t } = useTranslation();
@@ -129,7 +131,24 @@ const Login = () => {
                       </Link>
                     </div>
                     <FormControl>
-                      <Input type="password" placeholder={`${t('common.password')}...`} {...field} />
+                      <div className="relative">
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder={`${t('common.password')}...`} 
+                          {...field} 
+                        />
+                        <button 
+                          type="button"
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOffIcon className="h-5 w-5" />
+                          ) : (
+                            <EyeIcon className="h-5 w-5" />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
