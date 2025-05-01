@@ -68,9 +68,6 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard" className="text-dark hover:text-primary transition-colors font-medium hidden md:block">
-                Dashboard
-              </Link>
               <Button 
                 variant="outline" 
                 size="sm"
@@ -113,9 +110,6 @@ const Header = () => {
             
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard" className="text-dark hover:text-primary transition-colors py-2 font-medium">
-                  Dashboard
-                </Link>
                 <button 
                   onClick={handleLogout}
                   className="flex items-center gap-2 text-red-600 hover:text-red-700 py-2 font-medium"
