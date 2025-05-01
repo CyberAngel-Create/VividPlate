@@ -1,110 +1,81 @@
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation, Link } from "wouter";
-import { apiRequest } from "../lib/queryClient";
-import { useToast } from "../hooks/use-toast";
-import { useTranslation } from "react-i18next";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "../components/ui/form";
-import { Input } from "../components/ui/input";
-import { Button } from "../components/ui/button";
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardFooter, 
-  CardHeader, 
-  CardTitle 
-} from "../components/ui/card";
+import { useState } from "react";
+import { useLocation } from "wouter";
+import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
-const loginSchema = z.object({
+const adminLoginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
-const AdminLogin = () => {
+const AdminLoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
+  const { user } = useAuth();
   const { toast } = useToast();
-  const { t } = useTranslation();
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  // If user is already authenticated and is an admin, redirect to admin dashboard
+  if (user && user.isAdmin) {
+    setLocation("/admin-dashboard");
+    return null;
+  }
+
+  const form = useForm<AdminLoginFormValues>({
+    resolver: zodResolver(adminLoginSchema),
     defaultValues: {
       username: "",
       password: "",
     },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
+  const onSubmit = async (values: AdminLoginFormValues) => {
     setIsLoading(true);
     try {
-      await apiRequest("POST", "/api/auth/admin-login", data);
+      const response = await apiRequest("POST", "/api/admin/login", values);
       
-      // Verify the admin is actually logged in before redirecting
-      try {
-        const response = await apiRequest("GET", "/api/auth/me");
-        const userData = await response.json();
-        
-        if (userData.isAdmin) {
-          // If we get here, the admin is authenticated
-          toast({
-            title: "Success", 
-            description: t('common.successAdminLogin'),
-          });
-          
-          // Add a slight delay before redirection to ensure session is properly set
-          setTimeout(() => {
-            window.location.href = "/admin"; // Use direct navigation instead of wouter
-          }, 300);
-          
-          // Don't set isLoading to false as we're redirecting
-        } else {
-          // User is logged in but not an admin
-          toast({
-            title: "Error",
-            description: "Authentication succeeded but admin rights are required",
-            variant: "destructive",
-          });
-          setIsLoading(false);
-        }
-      } catch (authError) {
-        // If /api/auth/me fails, the session wasn't properly established
-        console.error("Login succeeded but session verification failed", authError);
+      if (response.ok) {
         toast({
-          title: "Error",
-          description: "Login successful but session could not be established. Please try again.",
+          title: "Login successful",
+          description: "Welcome to the admin dashboard",
+        });
+        setLocation("/admin-dashboard");
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Login failed",
+          description: errorData.message || "Invalid admin credentials",
           variant: "destructive",
         });
-        setIsLoading(false);
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: t('common.invalidAdminCredentials'),
+        title: "Login failed",
+        description: "An error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 flex justify-center">
-      <Card className="w-full max-w-md">
+    <div className="flex items-center justify-center min-h-screen bg-background">
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading text-center">{t('common.adminLogin')} - MenuMate</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center">Admin Login</CardTitle>
           <CardDescription className="text-center">
-            {t('common.adminOnly')}
+            Enter your credentials to access the admin dashboard
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -115,45 +86,54 @@ const AdminLogin = () => {
                 name="username"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.adminUsername')}</FormLabel>
+                    <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder={`${t('common.adminUsername')}...`} {...field} />
+                      <Input placeholder="admin" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+              
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('common.adminPassword')}</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder={`${t('common.adminPassword')}...`} {...field} />
+                      <Input type="password" placeholder="••••••••" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <Button 
-                type="submit" 
-                className="w-full bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
-                disabled={isLoading}
-              >
-                {isLoading ? `${t('common.login')}...` : t('common.adminLogin')}
+              
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
           </Form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2 text-center">
-          <div className="text-sm text-midgray">
-            <Link href="/login" className="text-primary hover:underline">{t('common.login')}</Link>
-          </div>
+        <CardFooter className="flex flex-col">
+          <p className="text-center text-sm text-muted-foreground mt-2">
+            This page is for administrators only.
+            <br />
+            <a href="/" className="text-primary hover:underline">
+              Return to main site
+            </a>
+          </p>
         </CardFooter>
       </Card>
     </div>
   );
 };
 
-export default AdminLogin;
+export default AdminLoginPage;

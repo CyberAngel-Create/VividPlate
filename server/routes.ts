@@ -7,7 +7,9 @@ import {
   insertMenuCategorySchema, 
   insertMenuItemSchema,
   insertMenuViewSchema,
-  insertFeedbackSchema
+  insertFeedbackSchema,
+  insertAdminLogSchema,
+  insertDietaryPreferencesSchema
 } from "@shared/schema";
 import session from "express-session";
 import passport from "passport";
@@ -1515,6 +1517,219 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error getting recommendations:', error);
       res.status(500).json({ message: 'Error getting recommendations', error: String(error) });
     }
+  });
+
+  // Admin routes
+  app.get('/api/admin/dashboard', isAdmin, async (req, res) => {
+    try {
+      const totalUsers = await storage.countUsers();
+      const activeUsers = await storage.countActiveUsers();
+      const freeUsers = await storage.countUsersBySubscriptionTier('free');
+      const paidUsers = await storage.countUsersBySubscriptionTier('premium');
+      const recentUsers = await storage.getRecentUsers(5);
+
+      // Exclude sensitive data
+      const sanitizedUsers = recentUsers.map(user => {
+        const { password, resetPasswordToken, resetPasswordExpires, ...rest } = user;
+        return rest;
+      });
+
+      res.json({
+        totalUsers,
+        activeUsers,
+        freeUsers,
+        paidUsers,
+        recentUsers: sanitizedUsers
+      });
+    } catch (error) {
+      console.error('Error fetching admin dashboard data:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.get('/api/admin/users', isAdmin, async (req, res) => {
+    try {
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = 10;
+      const offset = (page - 1) * limit;
+      
+      const users = await storage.getAllUsers();
+      
+      // Simple pagination for now, in production would use proper SQL pagination
+      const paginatedUsers = users.slice(offset, offset + limit);
+      
+      // Exclude sensitive data
+      const sanitizedUsers = paginatedUsers.map(user => {
+        const { password, resetPasswordToken, resetPasswordExpires, ...rest } = user;
+        return rest;
+      });
+      
+      res.json(sanitizedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.get('/api/admin/restaurants', isAdmin, async (req, res) => {
+    try {
+      const restaurants = await storage.getAllRestaurants();
+      res.json(restaurants);
+    } catch (error) {
+      console.error('Error fetching restaurants:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.post('/api/admin/users', isAdmin, async (req, res) => {
+    try {
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username or email already exists
+      const existingUsername = await storage.getUserByUsername(userData.username);
+      if (existingUsername) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      
+      const existingEmail = await storage.getUserByEmail(userData.email);
+      if (existingEmail) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+      
+      const user = await storage.createUser(userData);
+      
+      // Create admin log for this action
+      await storage.createAdminLog({
+        adminId: (req.user as any).id,
+        action: 'create_user',
+        details: `Created user ${user.username} (ID: ${user.id})`,
+        ipAddress: req.ip,
+      });
+      
+      // Exclude sensitive data
+      const { password, ...sanitizedUser } = user;
+      
+      res.status(201).json(sanitizedUser);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: 'Validation error', errors: error.errors });
+      } else {
+        res.status(500).json({ message: 'Server error' });
+      }
+    }
+  });
+
+  app.patch('/api/admin/users/:id/status', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: 'isActive must be a boolean' });
+      }
+      
+      const updatedUser = await storage.toggleUserStatus(userId, isActive);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Create admin log for this action
+      await storage.createAdminLog({
+        adminId: (req.user as any).id,
+        action: 'update_user_status',
+        details: `Set user ${updatedUser.username} (ID: ${updatedUser.id}) status to ${isActive ? 'active' : 'inactive'}`,
+        ipAddress: req.ip,
+      });
+      
+      // Exclude sensitive data
+      const { password, resetPasswordToken, resetPasswordExpires, ...sanitizedUser } = updatedUser;
+      
+      res.json(sanitizedUser);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.patch('/api/admin/users/:id/subscription', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { subscriptionTier } = req.body;
+      
+      if (!['free', 'premium'].includes(subscriptionTier)) {
+        return res.status(400).json({ message: 'Invalid subscription tier' });
+      }
+      
+      const updatedUser = await storage.upgradeUserSubscription(userId, subscriptionTier);
+      
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Create admin log for this action
+      await storage.createAdminLog({
+        adminId: (req.user as any).id,
+        action: 'update_subscription',
+        details: `Changed user ${updatedUser.username} (ID: ${updatedUser.id}) subscription to ${subscriptionTier}`,
+        ipAddress: req.ip,
+      });
+      
+      // Exclude sensitive data
+      const { password, resetPasswordToken, resetPasswordExpires, ...sanitizedUser } = updatedUser;
+      
+      res.json(sanitizedUser);
+    } catch (error) {
+      console.error('Error updating user subscription:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Get admin logs
+  app.get('/api/admin/logs', isAdmin, async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const logs = await storage.getAdminLogs(limit);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching admin logs:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Admin login
+  app.post('/api/admin/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+      
+      if (!user) {
+        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
+      }
+      
+      // Check if the user has admin privileges
+      if (!user.isAdmin) {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+      
+      req.login(user, (err) => {
+        if (err) {
+          return next(err);
+        }
+        
+        // Create admin log for successful login
+        storage.createAdminLog({
+          adminId: user.id,
+          action: 'admin_login',
+          details: `Admin logged in: ${user.username}`,
+          ipAddress: req.ip,
+        }).catch(console.error);
+        
+        const { password, ...sanitizedUser } = user;
+        return res.json(sanitizedUser);
+      });
+    })(req, res, next);
   });
 
   const httpServer = createServer(app);
