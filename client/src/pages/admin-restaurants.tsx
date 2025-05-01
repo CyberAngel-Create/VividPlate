@@ -27,6 +27,7 @@ const AdminRestaurants = () => {
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/admin/restaurants");
       const data = await response.json();
+      console.log("Restaurant data:", data);
       return data;
     }
   });
@@ -71,14 +72,14 @@ const AdminRestaurants = () => {
               <div className="bg-white shadow rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500">Premium Restaurants</div>
                 <div className="text-3xl font-bold">
-                  {restaurants.filter((r: any) => r.isPremium).length}
+                  {restaurants.filter((r: any) => r.subscriptionTier === 'premium').length}
                 </div>
               </div>
               
               <div className="bg-white shadow rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500">Free Restaurants</div>
                 <div className="text-3xl font-bold">
-                  {restaurants.filter((r: any) => !r.isPremium).length}
+                  {restaurants.filter((r: any) => r.subscriptionTier !== 'premium').length}
                 </div>
               </div>
             </div>
@@ -104,7 +105,7 @@ const AdminRestaurants = () => {
                         <TableCell>{restaurant.id}</TableCell>
                         <TableCell className="font-medium">
                           {restaurant.name}
-                          {restaurant.isPremium && (
+                          {restaurant.subscriptionTier === 'premium' && (
                             <Badge className="ml-2 bg-orange-500">Premium</Badge>
                           )}
                         </TableCell>
@@ -115,7 +116,10 @@ const AdminRestaurants = () => {
                               <span className="text-xs text-gray-500">{restaurant.userEmail}</span>
                             )}
                             {restaurant.subscriptionTier === 'premium' && (
-                              <Badge className="mt-1 w-fit bg-orange-500">Premium User</Badge>
+                              <>
+                                <Badge className="mt-1 w-fit bg-orange-500">Premium User</Badge>
+                                {console.log("Subscription tier:", restaurant.subscriptionTier)}
+                              </>
                             )}
                           </div>
                         </TableCell>
