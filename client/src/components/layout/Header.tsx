@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "../ui/button";
 import { useToast } from "../../hooks/use-toast";
 import { apiRequest } from "../../lib/queryClient";
-import { User, Menu, UserCog } from "lucide-react";
+import { User, Menu, UserCog, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 
@@ -68,7 +68,18 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              {/* Navigation items removed as requested */}
+              <Link href="/dashboard" className="text-dark hover:text-primary transition-colors font-medium hidden md:block">
+                Dashboard
+              </Link>
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="hidden md:flex items-center gap-1" 
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
             </>
           ) : (
             <>
@@ -102,7 +113,16 @@ const Header = () => {
             
             {isAuthenticated ? (
               <>
-                {/* Mobile navigation items removed as requested */}
+                <Link href="/dashboard" className="text-dark hover:text-primary transition-colors py-2 font-medium">
+                  Dashboard
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 text-red-600 hover:text-red-700 py-2 font-medium"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
               </>
             ) : (
               <>
