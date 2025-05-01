@@ -17,6 +17,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -34,13 +42,13 @@ interface NavItem {
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
-      // Use the correct API endpoint for logout
       await apiRequest("POST", "/api/auth/logout");
       toast({
         title: "Logged out",
@@ -79,7 +87,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     },
     {
       title: "Profile",
-      href: "/admin/profile",
+      href: "#profile",
       icon: <UserCircle className="h-5 w-5" />,
     },
     {
@@ -105,6 +113,21 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <nav className="flex-1 px-2 pb-4 space-y-1 mt-3">
             {navItems.map((item) => {
               const isActive = location === item.href;
+              
+              if (item.href === "#profile") {
+                return (
+                  <button
+                    key={item.title}
+                    onClick={() => setIsProfileOpen(true)}
+                    className="flex items-center px-2 py-1.5 text-xs font-medium rounded-md group w-full text-left
+                      text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                  >
+                    <div className="mr-2">{item.icon}</div>
+                    {item.title}
+                  </button>
+                );
+              }
+              
               return (
                 <Link
                   key={item.href}
@@ -159,6 +182,24 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <nav className="px-2 pt-4 pb-10">
                 {navItems.map((item) => {
                   const isActive = location === item.href;
+                  
+                  if (item.href === "#profile") {
+                    return (
+                      <button
+                        key={item.title}
+                        onClick={() => {
+                          setIsProfileOpen(true);
+                          setIsOpen(false);
+                        }}
+                        className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
+                          text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                      >
+                        <div className="mr-3">{item.icon}</div>
+                        {item.title}
+                      </button>
+                    );
+                  }
+                  
                   return (
                     <Link
                       key={item.href}
@@ -185,7 +226,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       <div className="flex flex-col flex-1 overflow-hidden md:ml-52">
         {/* Topbar */}
         <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
-          <div className="px-4 h-12 flex items-center justify-end">
+          <div className="px-4 h-10 flex items-center justify-end">
             <div className="flex items-center">
               {user && (
                 <DropdownMenu>
@@ -197,11 +238,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/profile" className="cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </Link>
+                    <DropdownMenuItem onClick={() => setIsProfileOpen(true)} className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
@@ -219,6 +258,53 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           {children}
         </main>
       </div>
+
+      {/* Profile Dialog */}
+      {user && (
+        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Admin Profile</DialogTitle>
+              <DialogDescription>
+                Your account details
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <UserCircle className="h-20 w-20 text-gray-400" />
+                <h3 className="text-lg font-medium">{user.username}</h3>
+                <p className="text-sm text-gray-500">{user.email}</p>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Role</p>
+                  <p className="text-sm">Administrator</p>
+                </div>
+                {user.isActive !== undefined && (
+                  <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Account Status</p>
+                    <p className="text-sm">{user.isActive ? "Active" : "Inactive"}</p>
+                  </div>
+                )}
+                {user.createdAt && (
+                  <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Joined Date</p>
+                    <p className="text-sm">{new Date(user.createdAt).toLocaleDateString()}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+            <DialogFooter className="sm:justify-center">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsProfileOpen(false)}
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
