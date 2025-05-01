@@ -100,18 +100,52 @@ const AdminRestaurants = () => {
                 <TableBody>
                   {filteredRestaurants.length > 0 ? (
                     filteredRestaurants.map((restaurant: any) => (
-                      <TableRow key={restaurant.id}>
+                      <TableRow key={restaurant.id} className="hover:bg-gray-50">
                         <TableCell>{restaurant.id}</TableCell>
                         <TableCell className="font-medium">
                           {restaurant.name}
                           {restaurant.isPremium && (
-                            <Badge className="ml-2 bg-primary">Premium</Badge>
+                            <Badge className="ml-2 bg-orange-500">Premium</Badge>
                           )}
                         </TableCell>
-                        <TableCell>{restaurant.ownerName || "N/A"}</TableCell>
-                        <TableCell>{restaurant.categoryCount || 0}</TableCell>
-                        <TableCell>{restaurant.menuItemCount || 0}</TableCell>
-                        <TableCell>{restaurant.viewCount || 0}</TableCell>
+                        <TableCell>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{restaurant.ownerName || "N/A"}</span>
+                            {restaurant.userEmail && (
+                              <span className="text-xs text-gray-500">{restaurant.userEmail}</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <span className="font-medium">{restaurant.categoryCount || 0}</span>
+                            {restaurant.categoryCount > 0 && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                {restaurant.categoryCount === 1 ? "1 category" : `${restaurant.categoryCount} categories`}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <span className="font-medium">{restaurant.menuItemCount || 0}</span>
+                            {restaurant.menuItemCount > 0 && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                {restaurant.menuItemCount === 1 ? "1 item" : `${restaurant.menuItemCount} items`}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center">
+                            <span className="font-medium">{restaurant.viewCount || 0}</span>
+                            {restaurant.viewCount > 0 && (
+                              <Badge variant="outline" className="ml-2 text-xs">
+                                {restaurant.viewCount === 1 ? "1 view" : `${restaurant.viewCount} views`}
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell>
                           <Badge className={restaurant.isActive ? "bg-green-500" : "bg-red-500"}>
                             {restaurant.isActive ? "Active" : "Inactive"}
@@ -127,6 +161,15 @@ const AdminRestaurants = () => {
                               }}
                             >
                               View Menu
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                // Implement details view
+                              }}
+                            >
+                              Details
                             </Button>
                           </div>
                         </TableCell>

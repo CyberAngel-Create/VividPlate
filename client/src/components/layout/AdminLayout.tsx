@@ -6,6 +6,7 @@ import {
   UserCircle, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { 
   Sheet, 
   SheetContent, 
@@ -266,26 +267,76 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <DialogHeader>
               <DialogTitle>Admin Profile</DialogTitle>
               <DialogDescription>
-                Your account details
+                Manage your admin account details
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
+            <form 
+              className="space-y-4 py-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                // Implement profile update logic here
+                toast({
+                  title: "Profile updated",
+                  description: "Your profile has been updated successfully",
+                });
+              }}
+            >
               <div className="flex flex-col items-center justify-center space-y-2">
-                <UserCircle className="h-20 w-20 text-gray-400" />
-                <h3 className="text-lg font-medium">{user.username}</h3>
-                <p className="text-sm text-gray-500">{user.email}</p>
+                <div className="relative">
+                  <UserCircle className="h-20 w-20 text-gray-400" />
+                  <Button 
+                    type="button"
+                    size="sm" 
+                    variant="outline" 
+                    className="absolute bottom-0 right-0 rounded-full p-1"
+                  >
+                    <span className="sr-only">Change picture</span>
+                    Upload
+                  </Button>
+                </div>
               </div>
-              <div className="grid grid-cols-1 gap-2">
+              
+              <div className="grid gap-4">
+                <div className="grid gap-2">
+                  <label htmlFor="username" className="text-sm font-medium">Username</label>
+                  <Input 
+                    id="username"
+                    defaultValue={user.username}
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <label htmlFor="email" className="text-sm font-medium">Email</label>
+                  <Input 
+                    id="email"
+                    type="email"
+                    defaultValue={user.email}
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <label htmlFor="current-password" className="text-sm font-medium">Current Password</label>
+                  <Input 
+                    id="current-password"
+                    type="password"
+                    placeholder="Enter current password to confirm changes"
+                  />
+                </div>
+                
+                <div className="grid gap-2">
+                  <label htmlFor="new-password" className="text-sm font-medium">New Password (optional)</label>
+                  <Input 
+                    id="new-password"
+                    type="password"
+                    placeholder="Leave blank to keep current password"
+                  />
+                </div>
+                
                 <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Role</p>
                   <p className="text-sm">Administrator</p>
                 </div>
-                {user.isActive !== undefined && (
-                  <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Account Status</p>
-                    <p className="text-sm">{user.isActive ? "Active" : "Inactive"}</p>
-                  </div>
-                )}
+                
                 {user.createdAt && (
                   <div className="rounded-lg bg-gray-50 p-2 dark:bg-gray-800">
                     <p className="text-xs font-medium text-gray-500 dark:text-gray-400">Joined Date</p>
@@ -293,15 +344,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   </div>
                 )}
               </div>
-            </div>
-            <DialogFooter className="sm:justify-center">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsProfileOpen(false)}
-              >
-                Close
-              </Button>
-            </DialogFooter>
+              
+              <DialogFooter>
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => setIsProfileOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
           </DialogContent>
         </Dialog>
       )}
