@@ -70,16 +70,16 @@ const AdminRestaurants = () => {
               </div>
               
               <div className="bg-white shadow rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Premium Restaurants</div>
+                <div className="text-sm font-medium text-gray-500">Premium Users' Restaurants</div>
                 <div className="text-3xl font-bold">
-                  {restaurants.filter((r: any) => r.isPremium).length}
+                  {restaurants.filter((r: any) => r.ownerSubscriptionTier === 'premium').length}
                 </div>
               </div>
               
               <div className="bg-white shadow rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Free Restaurants</div>
+                <div className="text-sm font-medium text-gray-500">Free Users' Restaurants</div>
                 <div className="text-3xl font-bold">
-                  {restaurants.filter((r: any) => !r.isPremium).length}
+                  {restaurants.filter((r: any) => r.ownerSubscriptionTier === 'free').length}
                 </div>
               </div>
             </div>
@@ -105,7 +105,7 @@ const AdminRestaurants = () => {
                         <TableCell>{restaurant.id}</TableCell>
                         <TableCell className="font-medium">
                           {restaurant.name}
-                          {restaurant.isPremium && (
+                          {restaurant.ownerSubscriptionTier === 'premium' && (
                             <Badge className="ml-2 bg-orange-500">Premium</Badge>
                           )}
                         </TableCell>

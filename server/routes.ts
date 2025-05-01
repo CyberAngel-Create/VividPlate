@@ -1666,8 +1666,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const recentViews = await storage.getMenuViewsByRestaurantId(restaurant.id);
         const lastVisitDate = recentViews.length > 0 ? recentViews[0].viewedAt : null;
         
-        // Determine if restaurant should have premium status based on owner's subscription tier
-        const isPremium = owner?.subscriptionTier === 'premium';
+        // Get owner's subscription tier
+        const ownerSubscriptionTier = owner?.subscriptionTier || 'free';
         
         return {
           ...restaurant,
@@ -1677,9 +1677,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           menuItemCount: menuItems.length,
           viewCount: viewCount,
           lastVisitDate: lastVisitDate,
-          isPremium: isPremium,
-          subscriptionTier: owner?.subscriptionTier || 'free',
-          ownerSubscriptionTier: owner?.subscriptionTier || 'free'
+          // Only use the owner's subscription tier
+          ownerSubscriptionTier: ownerSubscriptionTier
         };
       }));
       
