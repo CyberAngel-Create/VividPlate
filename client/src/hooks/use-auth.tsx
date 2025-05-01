@@ -50,7 +50,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData): Promise<User> => {
-      const res = await apiRequest("POST", "/api/auth/login", credentials);
+      // Map username to identifier as expected by the server
+      const mappedCredentials = {
+        identifier: credentials.username,
+        password: credentials.password
+      };
+      const res = await apiRequest("POST", "/api/auth/login", mappedCredentials);
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Login failed");
@@ -76,7 +81,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const adminLoginMutation = useMutation({
     mutationFn: async (credentials: LoginData): Promise<User> => {
-      const res = await apiRequest("POST", "/api/auth/admin-login", credentials);
+      // Map username to identifier as expected by the server
+      const mappedCredentials = {
+        identifier: credentials.username,
+        password: credentials.password
+      };
+      const res = await apiRequest("POST", "/api/auth/admin-login", mappedCredentials);
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "Admin login failed");
