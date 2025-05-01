@@ -39,8 +39,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const handleLogout = async () => {
     try {
-      // Fix: Use the correct API endpoint for logout
-      await apiRequest("POST", "/api/logout");
+      // Use the correct API endpoint for logout
+      await apiRequest("POST", "/api/auth/logout");
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",

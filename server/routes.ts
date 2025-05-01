@@ -112,7 +112,7 @@ const configurePassport = (app: Express) => {
   passport.serializeUser((user: any, done) => {
     // For admin, we serialize with a special identifier
     if (user.isAdmin) {
-      done(null, 'admin:0');
+      done(null, `admin:${user.id}`);
     } else {
       done(null, `user:${user.id}`);
     }
@@ -120,18 +120,18 @@ const configurePassport = (app: Express) => {
 
   passport.deserializeUser(async (id: string, done) => {
     try {
-      // If admin, return admin user object
-      if (id === 'admin:0') {
+      // Check for admin format (admin:id)
+      if (id.startsWith('admin:')) {
         return done(null, {
-          id: 0,
-          username: 'Admin',
-          email: 'admin@menumate.com',
+          id: parseInt(id.split(':')[1]),
+          username: 'admin',
+          email: 'admin@digitamenumate.com',
           fullName: 'System Administrator',
           isAdmin: true,
         });
       }
 
-      // Regular user
+      // Regular user (user:id)
       const userId = parseInt(id.split(':')[1]);
       const user = await storage.getUser(userId);
       
@@ -139,7 +139,7 @@ const configurePassport = (app: Express) => {
         return done(null, false);
       }
       
-      done(null, { ...user, isAdmin: false });
+      done(null, user);
     } catch (err) {
       done(err);
     }
