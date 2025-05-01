@@ -58,21 +58,12 @@ const Header = () => {
           </Link>
         </div>
         
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex space-x-6">
-          <Link href="/" className="text-dark hover:text-primary transition-colors font-medium">
-            Home
-          </Link>
-          <Link href="/features" className="text-dark hover:text-primary transition-colors font-medium">
-            Features
-          </Link>
-          <Link href="/pricing" className="text-dark hover:text-primary transition-colors font-medium">
-            Pricing
-          </Link>
-          <Link href="/contact" className="text-dark hover:text-primary transition-colors font-medium">
-            Contact
-          </Link>
-        </nav>
+        {/* Desktop Navigation - Only shown when not authenticated */}
+        {!isAuthenticated && (
+          <nav className="hidden md:flex space-x-6">
+            {/* Removed navigation items as requested */}
+          </nav>
+        )}
         
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
@@ -120,18 +111,7 @@ const Header = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white pb-4 px-4">
           <nav className="flex flex-col space-y-3">
-            <Link href="/" className="text-dark hover:text-primary transition-colors py-2 font-medium">
-              Home
-            </Link>
-            <Link href="/features" className="text-dark hover:text-primary transition-colors py-2 font-medium">
-              Features
-            </Link>
-            <Link href="/pricing" className="text-dark hover:text-primary transition-colors py-2 font-medium">
-              Pricing
-            </Link>
-            <Link href="/contact" className="text-dark hover:text-primary transition-colors py-2 font-medium">
-              Contact
-            </Link>
+            {/* Navigation items removed as requested */}
             
             {isAuthenticated ? (
               <>
