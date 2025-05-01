@@ -59,7 +59,7 @@ const formSchema = z.object({
   currency: z.string().default("USD"),
   isPopular: z.boolean().default(false),
   isActive: z.boolean().default(true),
-  features: z.string().transform((val) => val.split("\n").filter(Boolean)),
+  features: z.string().transform((val) => val.split("\n").filter(Boolean)).default(""),
   tier: z.string().default("free"),
   billingPeriod: z.string().default("monthly"),
 });
@@ -226,7 +226,7 @@ const AdminPricingPage = () => {
       currency: plan.currency,
       isPopular: plan.isPopular,
       isActive: plan.isActive,
-      features: plan.features.join('\n'),
+      features: Array.isArray(plan.features) ? plan.features.join('\n') : "",
       tier: plan.tier,
       billingPeriod: plan.billingPeriod,
     });
