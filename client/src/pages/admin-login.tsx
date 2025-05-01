@@ -1,12 +1,11 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, Shield } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Card,
   CardContent,
@@ -33,9 +32,15 @@ const adminLoginSchema = z.object({
 type AdminLoginFormValues = z.infer<typeof adminLoginSchema>;
 
 const AdminLogin = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { user, adminLoginMutation } = useAuth();
+  
+  // Redirect to admin dashboard if already logged in
+  useEffect(() => {
+    if (user && user.isAdmin) {
+      setLocation("/admin");
+    }
+  }, [user, setLocation]);
 
   const form = useForm<AdminLoginFormValues>({
     resolver: zodResolver(adminLoginSchema),
@@ -45,35 +50,11 @@ const AdminLogin = () => {
     },
   });
 
-  const onSubmit = async (values: AdminLoginFormValues) => {
-    setIsLoading(true);
-    try {
-      // Use the auth/admin-login endpoint as specified in routes.ts
-      const response = await apiRequest("POST", "/api/auth/admin-login", {
-        identifier: values.username, 
-        password: values.password
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Invalid credentials");
-      }
-      
-      toast({
-        title: "Admin Login Successful",
-        description: "Welcome to the admin dashboard",
-      });
-      
-      setLocation("/admin");
-    } catch (error) {
-      toast({
-        title: "Login Failed",
-        description: error instanceof Error ? error.message : "Invalid credentials",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  const onSubmit = (values: AdminLoginFormValues) => {
+    adminLoginMutation.mutate({
+      username: values.username,
+      password: values.password
+    });
   };
 
   return (
@@ -104,7 +85,7 @@ const AdminLogin = () => {
                         <Input
                           placeholder="Enter your admin username"
                           {...field}
-                          disabled={isLoading}
+                          disabled={adminLoginMutation.isPending}
                         />
                       </FormControl>
                       <FormMessage />
@@ -122,15 +103,15 @@ const AdminLogin = () => {
                           type="password"
                           placeholder="Enter your password"
                           {...field}
-                          disabled={isLoading}
+                          disabled={adminLoginMutation.isPending}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" className="w-full" disabled={adminLoginMutation.isPending}>
+                  {adminLoginMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Logging in...
