@@ -89,28 +89,55 @@ const configurePassport = (app: Express) => {
     passwordField: 'password'
   }, async (identifier, password, done) => {
     try {
+      console.log(`Login attempt for identifier: ${identifier}`);
+      
       // Check if identifier is username or email
       let user = await storage.getUserByUsername(identifier);
       
       // If not found by username, try by email
       if (!user) {
+        console.log(`User not found by username, trying email...`);
         user = await storage.getUserByEmail(identifier);
       }
       
       if (!user) {
+        console.log(`User not found with identifier: ${identifier}`);
         return done(null, false, { message: 'Incorrect username or email.' });
       }
 
-      // Verify password with hashed version from database
+      console.log(`User found: ${user.username}, checking password...`);
+      console.log(`Password type in DB: ${user.password.startsWith('$2') ? 'bcrypt' : 'plain/other'}`);
+      
+      // Special handling for non-hashed legacy passwords
+      if (!user.password.startsWith('$2') && !user.password.includes('.')) {
+        console.log('Legacy password detected (plain text), comparing directly');
+        // Direct comparison for plain text passwords
+        if (password === user.password) {
+          console.log('Plain text password matched, upgrading to bcrypt...');
+          // Upgrade to bcrypt hash
+          const hashedPassword = await bcrypt.hash(password, 10);
+          await storage.updateUser(user.id, { password: hashedPassword });
+          return done(null, user);
+        } else {
+          console.log('Plain text password did not match');
+          return done(null, false, { message: 'Incorrect password.' });
+        }
+      }
+      
+      // Normal password verification with hashing
+      console.log('Comparing password with hashed version...');
       const isPasswordValid = await comparePasswords(password, user.password);
       
       if (!isPasswordValid) {
+        console.log('Password comparison failed');
         return done(null, false, { message: 'Incorrect password.' });
       }
 
+      console.log('Password verified successfully');
       // User is properly authenticated
       return done(null, user);
     } catch (err) {
+      console.error('Authentication error:', err);
       return done(err);
     }
   }));
@@ -320,10 +347,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/login', passport.authenticate('local'), (req, res) => {
-    // Successful login
-    const { password, ...userWithoutPassword } = req.user as any;
-    res.json(userWithoutPassword);
+  app.post('/api/auth/login', (req, res, next) => {
+    passport.authenticate('local', (err, user, info) => {
+      if (err) {
+        console.error('Login error:', err);
+        return res.status(500).json({ message: 'Internal server error during login' });
+      }
+      
+      if (!user) {
+        console.log('Authentication failed:', info?.message);
+        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
+      }
+      
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('Session error during login:', loginErr);
+          return res.status(500).json({ message: 'Error establishing session' });
+        }
+        
+        console.log(`User ${user.username} (ID: ${user.id}) logged in successfully`);
+        const { password, ...userWithoutPassword } = user;
+        return res.json(userWithoutPassword);
+      });
+    })(req, res, next);
   });
   
   // Admin login endpoint
