@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   Users, Settings, LayoutDashboard, LogOut, 
-  Menu, X, ChevronDown, Building, FileText,
+  Menu, X, Building, FileText,
   UserCircle, User, Crown, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,6 @@ import {
   SheetContent, 
   SheetTrigger 
 } from "@/components/ui/sheet";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -240,24 +234,15 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <div className="px-4 h-10 flex items-center justify-end">
             <div className="flex items-center">
               {user && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex items-center">
-                      <span className="mr-1">{user.username}</span>
-                      <ChevronDown className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setIsProfileOpen(true)} className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>Logout</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="flex items-center gap-1"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </Button>
               )}
             </div>
           </div>
