@@ -23,6 +23,18 @@ export interface IStorage {
   setResetPasswordToken(email: string, token: string, expires: Date): Promise<User | undefined>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
   changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean>;
+  getAllUsers(): Promise<User[]>;
+  countUsers(): Promise<number>;
+  countActiveUsers(): Promise<number>;
+  countUsersBySubscriptionTier(tier: string): Promise<number>;
+  getRecentUsers(limit: number): Promise<User[]>;
+  toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
+  upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
+  
+  // Admin operations
+  createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
+  getAdminLogs(limit?: number): Promise<AdminLog[]>;
+  getAdminLogsByAdminId(adminId: number, limit?: number): Promise<AdminLog[]>;
 
   // Restaurant operations
   getRestaurant(id: number): Promise<Restaurant | undefined>;

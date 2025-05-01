@@ -23,9 +23,18 @@ const AdBanner: React.FC<AdBannerProps> = ({ format = 'horizontal', className = 
   useEffect(() => {
     try {
       // Push ad to adsbygoogle when component mounts
-      if (window.adsbygoogle && window.adsbygoogle.push) {
-        window.adsbygoogle.push({});
-      }
+      // Make sure we wait for the adsbygoogle array to be defined
+      const pushAd = () => {
+        if (window.adsbygoogle) {
+          window.adsbygoogle.push({});
+        } else {
+          // If adsbygoogle is not available yet, retry after a delay
+          setTimeout(pushAd, 200);
+        }
+      };
+      
+      // Start the process
+      pushAd();
     } catch (error) {
       console.error('AdSense error:', error);
     }

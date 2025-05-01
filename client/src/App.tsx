@@ -146,6 +146,7 @@ function App() {
             <SubscriptionProvider>
               <DietaryPreferencesProvider>
                 <Toaster />
+                <AdSense />
                 <Router />
               </DietaryPreferencesProvider>
             </SubscriptionProvider>

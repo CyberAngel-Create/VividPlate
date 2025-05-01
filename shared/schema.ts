@@ -16,6 +16,10 @@ export const users = pgTable("users", {
   subscriptionExpiry: timestamp("subscription_expiry"),
   resetPasswordToken: text("reset_password_token"),
   resetPasswordExpires: timestamp("reset_password_expires"),
+  isAdmin: boolean("is_admin").default(false),
+  isActive: boolean("is_active").default(true),
+  lastLogin: timestamp("last_login"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -228,3 +232,25 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 export type Feedback = typeof feedbacks.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+
+// Admin activity logs
+export const adminLogs = pgTable("admin_logs", {
+  id: serial("id").primaryKey(),
+  adminId: integer("admin_id").notNull(),
+  action: text("action").notNull(), // "create_user", "update_user", "delete_user", etc.
+  entityType: text("entity_type").notNull(), // "user", "restaurant", "subscription", etc.
+  entityId: integer("entity_id"),
+  details: jsonb("details"), // Additional details about the action
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertAdminLogSchema = createInsertSchema(adminLogs).pick({
+  adminId: true,
+  action: true,
+  entityType: true,
+  entityId: true,
+  details: true,
+});
+
+export type AdminLog = typeof adminLogs.$inferSelect;
+export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
