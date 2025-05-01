@@ -63,18 +63,30 @@ const UsersAdminPage = () => {
   const { data: users, isLoading, error } = useQuery<User[]>({
     queryKey: ["/api/admin/users", page],
     placeholderData: (previousData) => previousData, // Similar to keepPreviousData but with correct syntax
-    retry: false,
+    retry: 1,
+    gcTime: 0,
   });
 
-  // Redirect to login page if unauthorized
+  // Redirect to login page if unauthorized and show toast notification
   useEffect(() => {
     if (error) {
       const errorObj = error as any;
       if (errorObj.status === 401 || errorObj.status === 403) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in as an admin to access this page",
+          variant: "destructive",
+        });
         setLocation("/admin-login");
+      } else {
+        toast({
+          title: "Error loading users data",
+          description: errorObj.message || "Something went wrong",
+          variant: "destructive",
+        });
       }
     }
-  }, [error, setLocation]);
+  }, [error, setLocation, toast]);
 
   // Filter users by search term
   const filteredUsers = users?.filter(user => 

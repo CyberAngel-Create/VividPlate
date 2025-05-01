@@ -31,31 +31,34 @@ type StatCard = {
 const AdminDashboard = () => {
   const [, setLocation] = useLocation();
   
+  const { toast } = useToast();
+  
   const { data, isLoading, error } = useQuery<UserData>({
     queryKey: ["/api/admin/dashboard"],
     retry: 1,
-    // Add error handling for auth issues
-    onError: (error: any) => {
-      if (error.status === 401 || error.status === 403) {
+    gcTime: 0,
+  });
+
+  // Redirect to login page if unauthorized and show toast notification
+  useEffect(() => {
+    if (error) {
+      const errorObj = error as any;
+      if (errorObj.status === 401 || errorObj.status === 403) {
         toast({
           title: "Authentication Error",
           description: "Please log in as an admin to access this page",
           variant: "destructive",
         });
         setLocation("/admin-login");
-      }
-    },
-  });
-
-  // Redirect to login page if unauthorized
-  useEffect(() => {
-    if (error) {
-      const errorObj = error as any;
-      if (errorObj.status === 401 || errorObj.status === 403) {
-        setLocation("/admin-login");
+      } else {
+        toast({
+          title: "Error loading dashboard data",
+          description: errorObj.message || "Something went wrong",
+          variant: "destructive",
+        });
       }
     }
-  }, [error, setLocation]);
+  }, [error, setLocation, toast]);
 
   const statCards: StatCard[] = [
     {
