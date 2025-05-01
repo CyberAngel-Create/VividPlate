@@ -2,7 +2,8 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { 
   Users, Settings, LayoutDashboard, LogOut, 
-  Menu, X, ChevronDown, Building, FileText 
+  Menu, X, ChevronDown, Building, FileText,
+  UserCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -77,6 +78,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <FileText className="h-5 w-5" />,
     },
     {
+      title: "Profile",
+      href: "/admin/profile",
+      icon: <UserCircle className="h-5 w-5" />,
+    },
+    {
       title: "Settings",
       href: "/admin/settings",
       icon: <Settings className="h-5 w-5" />,
@@ -86,7 +92,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
       {/* Sidebar for desktop */}
-      <div className="hidden md:flex md:w-64 md:flex-col">
+      <div className="hidden md:flex md:w-64 md:flex-col md:fixed h-full">
         <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between px-4">
             <Link href="/admin">
@@ -176,7 +182,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       </Sheet>
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 overflow-hidden md:ml-64">
         {/* Topbar */}
         <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
           <div className="px-4 h-16 flex items-center justify-between">
