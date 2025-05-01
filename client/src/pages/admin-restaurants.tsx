@@ -114,6 +114,9 @@ const AdminRestaurants = () => {
                             {restaurant.userEmail && (
                               <span className="text-xs text-gray-500">{restaurant.userEmail}</span>
                             )}
+                            {restaurant.subscriptionTier === 'premium' && (
+                              <Badge className="mt-1 w-fit bg-orange-500">Premium User</Badge>
+                            )}
                           </div>
                         </TableCell>
                         <TableCell>

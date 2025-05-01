@@ -1595,12 +1595,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const menuItems = await storage.getMenuItemsByRestaurantId(restaurant.id);
         const viewCount = await storage.countMenuViewsByRestaurantId(restaurant.id);
         
+        // Get most recent visits
+        const recentViews = await storage.getMenuViewsByRestaurantId(restaurant.id);
+        const lastVisitDate = recentViews.length > 0 ? recentViews[0].viewedAt : null;
+        
         return {
           ...restaurant,
           ownerName: owner ? owner.username : 'N/A',
+          userEmail: owner ? owner.email : null,
           categoryCount: categories.length,
           menuItemCount: menuItems.length,
-          viewCount: viewCount
+          viewCount: viewCount,
+          lastVisitDate: lastVisitDate,
+          isSubscriptionActive: owner?.isActive || false,
+          subscriptionTier: owner?.subscriptionTier || 'free'
         };
       }));
       
