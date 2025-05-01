@@ -30,6 +30,12 @@ const scryptAsync = promisify(scrypt);
 
 async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
   try {
+    // First check if it's a bcrypt hash that starts with $2a$, $2b$, etc.
+    if (stored.startsWith('$2')) {
+      return await bcrypt.compare(supplied, stored);
+    }
+
+    // Otherwise treat it as a scrypt hash with salt
     const [hashed, salt] = stored.split('.');
     if (!hashed || !salt) return false;
     
