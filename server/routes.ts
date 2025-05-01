@@ -22,6 +22,25 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import Stripe from "stripe";
+import { promisify } from "util";
+import { scrypt, timingSafeEqual } from "crypto";
+
+// Password comparison utility for authentication
+const scryptAsync = promisify(scrypt);
+
+async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+  try {
+    const [hashed, salt] = stored.split('.');
+    if (!hashed || !salt) return false;
+    
+    const hashedBuf = Buffer.from(hashed, 'hex');
+    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+    return timingSafeEqual(hashedBuf, suppliedBuf);
+  } catch (error) {
+    console.error("Password comparison error:", error);
+    return false;
+  }
+}
 
 // Initialize Stripe
 if (!process.env.STRIPE_SECRET_KEY) {

@@ -50,7 +50,7 @@ const AdminLogin = () => {
     try {
       // Use the auth/admin-login endpoint as specified in routes.ts
       const response = await apiRequest("POST", "/api/auth/admin-login", {
-        identifier: values.username,
+        identifier: values.username, 
         password: values.password
       });
       
