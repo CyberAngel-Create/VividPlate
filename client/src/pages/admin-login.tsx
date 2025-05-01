@@ -48,7 +48,11 @@ const AdminLogin = () => {
   const onSubmit = async (values: AdminLoginFormValues) => {
     setIsLoading(true);
     try {
-      const response = await apiRequest("POST", "/api/admin/login", values);
+      // Use the auth/admin-login endpoint as specified in routes.ts
+      const response = await apiRequest("POST", "/api/auth/admin-login", {
+        identifier: values.username,
+        password: values.password
+      });
       
       if (!response.ok) {
         const errorData = await response.json();

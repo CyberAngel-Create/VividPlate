@@ -30,34 +30,28 @@ import Footer from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        await apiRequest("GET", "/api/auth/me");
-        setIsAuthenticated(true);
-      } catch (error) {
-        setIsAuthenticated(false);
-        setLocation("/login");
-      }
-    };
+    if (!isLoading && !user) {
+      setLocation("/login");
+    }
+  }, [user, isLoading, setLocation]);
 
-    checkAuth();
-  }, [setLocation]);
-
-  if (isAuthenticated === null) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
+    </div>;
   }
 
-  return <Route {...rest} component={Component} />;
+  return user ? <Route {...rest} component={Component} /> : null;
 }
 
 function PublicRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -65,34 +59,26 @@ function PublicRoute({ component: Component, ...rest }: { component: React.Compo
 }
 
 function AdminRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await apiRequest("GET", "/api/auth/me");
-        const userData = await response.json();
-        if (userData.isAdmin) {
-          setIsAdmin(true);
-        } else {
-          setIsAdmin(false);
-          setLocation("/dashboard");
-        }
-      } catch (error) {
-        setIsAdmin(false);
+    if (!isLoading) {
+      if (!user) {
+        setLocation("/admin-login");
+      } else if (!user.isAdmin) {
         setLocation("/login");
       }
-    };
+    }
+  }, [user, isLoading, setLocation]);
 
-    checkAdminStatus();
-  }, [setLocation]);
-
-  if (isAdmin === null) {
-    return <div className="flex justify-center items-center h-screen">Loading...</div>;
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
+    </div>;
   }
 
-  return <Route {...rest} component={Component} />;
+  return (user && user.isAdmin) ? <Route {...rest} component={Component} /> : null;
 }
 
 function Router() {

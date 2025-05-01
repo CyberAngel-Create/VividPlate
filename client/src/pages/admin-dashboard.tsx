@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 import AdminLayout from "../components/layout/AdminLayout";
 import { User } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 type UserData = {
   totalUsers: number;
@@ -32,7 +33,18 @@ const AdminDashboard = () => {
   
   const { data, isLoading, error } = useQuery<UserData>({
     queryKey: ["/api/admin/dashboard"],
-    retry: false,
+    retry: 1,
+    // Add error handling for auth issues
+    onError: (error: any) => {
+      if (error.status === 401 || error.status === 403) {
+        toast({
+          title: "Authentication Error",
+          description: "Please log in as an admin to access this page",
+          variant: "destructive",
+        });
+        setLocation("/admin-login");
+      }
+    },
   });
 
   // Redirect to login page if unauthorized
