@@ -5,6 +5,7 @@ import { Image, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from '@/lib/queryClient';
+import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
 
 interface RestaurantBannerUploadProps {
   restaurantId: number;
@@ -112,9 +113,13 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
           {previewUrl ? (
             <div className="relative aspect-[3/1] w-full rounded-md overflow-hidden bg-muted">
               <img 
-                src={previewUrl} 
+                src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)} 
                 alt="Restaurant banner preview" 
-                className="object-cover w-full h-full" 
+                className="object-cover w-full h-full"
+                onError={(e) => {
+                  console.error("Failed to load banner image:", previewUrl);
+                  e.currentTarget.src = getFallbackImage('banner');
+                }}
               />
               <div className="absolute inset-0 flex items-end justify-end p-2">
                 <label 

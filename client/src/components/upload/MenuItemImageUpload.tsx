@@ -2,6 +2,7 @@ import { useState, useRef, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 
 interface MenuItemImageUploadProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -98,9 +99,13 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
         {previewUrl ? (
           <div className="relative w-full">
             <img
-              src={previewUrl}
+              src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)}
               alt="Menu item"
               className="w-full h-48 object-cover rounded-md"
+              onError={(e) => {
+                console.error("Failed to load menu item image:", previewUrl);
+                e.currentTarget.src = getFallbackImage('menu');
+              }}
             />
             <button
               type="button"
