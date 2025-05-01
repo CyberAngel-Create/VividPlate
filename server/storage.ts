@@ -108,6 +108,10 @@ export class MemStorage implements IStorage {
   private menuItems: Map<number, MenuItem>;
   private menuViews: Map<number, MenuView>;
   private dietaryPreferences: Map<number, DietaryPreference>;
+  private subscriptions: Map<number, Subscription>;
+  private payments: Map<number, Payment>;
+  private feedbacks: Map<number, Feedback>;
+  private adminLogs: Map<number, AdminLog>;
   
   private currentIds: {
     users: number;
@@ -116,6 +120,10 @@ export class MemStorage implements IStorage {
     menuItems: number;
     menuViews: number;
     dietaryPreferences: number;
+    subscriptions: number;
+    payments: number;
+    feedbacks: number;
+    adminLogs: number;
   };
 
   constructor() {
@@ -125,6 +133,10 @@ export class MemStorage implements IStorage {
     this.menuItems = new Map();
     this.menuViews = new Map();
     this.dietaryPreferences = new Map();
+    this.subscriptions = new Map();
+    this.payments = new Map();
+    this.feedbacks = new Map();
+    this.adminLogs = new Map();
     
     this.currentIds = {
       users: 1,
@@ -132,8 +144,47 @@ export class MemStorage implements IStorage {
       menuCategories: 1,
       menuItems: 1,
       menuViews: 1,
-      dietaryPreferences: 1
+      dietaryPreferences: 1,
+      subscriptions: 1,
+      payments: 1,
+      feedbacks: 1,
+      adminLogs: 1
     };
+    
+    // Create an admin account if none exists
+    this.initializeAdminUser();
+  }
+  
+  private async initializeAdminUser() {
+    const adminUser = await this.getUserByUsername('admin');
+    if (!adminUser) {
+      // Create default admin user with username 'admin' and password 'admin1234'
+      const adminPassword = '$2a$10$2R9tW8PUo1W/jnJm/JgHMuc6MLVYXEyfrwWwZ38iGhMk9nqo3KX5u'; // Hashed 'admin1234'
+      const now = new Date();
+      
+      const id = this.currentIds.users++;
+      const user: User = {
+        id,
+        username: 'admin',
+        password: adminPassword,
+        email: 'admin@digitamenumate.com',
+        fullName: 'Admin User',
+        isAdmin: true,
+        isActive: true,
+        lastLogin: now,
+        createdAt: now,
+        subscriptionTier: 'premium',
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        telebirrCustomerId: null,
+        subscriptionExpiry: null,
+        resetPasswordToken: null,
+        resetPasswordExpires: null
+      };
+      
+      this.users.set(id, user);
+      console.log('Initialized admin user with ID:', id);
+    }
   }
 
   // User operations
@@ -161,6 +212,7 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentIds.users++;
+    const now = new Date();
     const user: User = { 
       ...insertUser, 
       id,
@@ -170,7 +222,11 @@ export class MemStorage implements IStorage {
       telebirrCustomerId: null,
       subscriptionExpiry: null,
       resetPasswordToken: null,
-      resetPasswordExpires: null
+      resetPasswordExpires: null,
+      isAdmin: insertUser.isAdmin || false,
+      isActive: insertUser.isActive || true,
+      lastLogin: now,
+      createdAt: now
     };
     this.users.set(id, user);
     return user;
@@ -504,6 +560,155 @@ export class MemStorage implements IStorage {
   
   async deleteDietaryPreference(id: number): Promise<boolean> {
     return this.dietaryPreferences.delete(id);
+  }
+  
+  // Admin methods
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+  
+  async countUsers(): Promise<number> {
+    return this.users.size;
+  }
+  
+  async countActiveUsers(): Promise<number> {
+    return Array.from(this.users.values()).filter(user => user.isActive).length;
+  }
+  
+  async countUsersBySubscriptionTier(tier: string): Promise<number> {
+    return Array.from(this.users.values()).filter(user => user.subscriptionTier === tier).length;
+  }
+  
+  async getRecentUsers(limit: number): Promise<User[]> {
+    return Array.from(this.users.values())
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      })
+      .slice(0, limit);
+  }
+  
+  async toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    user.isActive = isActive;
+    this.users.set(id, user);
+    return user;
+  }
+  
+  async upgradeUserSubscription(id: number, tier: string): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+    
+    user.subscriptionTier = tier;
+    this.users.set(id, user);
+    return user;
+  }
+  
+  async getAllRestaurants(): Promise<Restaurant[]> {
+    return Array.from(this.restaurants.values());
+  }
+  
+  // Admin log operations
+  async createAdminLog(log: InsertAdminLog): Promise<AdminLog> {
+    const id = this.currentIds.adminLogs++;
+    const createdAt = new Date();
+    const adminLog: AdminLog = {
+      ...log,
+      id,
+      createdAt,
+    };
+    this.adminLogs.set(id, adminLog);
+    return adminLog;
+  }
+  
+  async getAdminLogs(limit?: number): Promise<AdminLog[]> {
+    const logs = Array.from(this.adminLogs.values())
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+    
+    return limit ? logs.slice(0, limit) : logs;
+  }
+  
+  async getAdminLogsByAdminId(adminId: number, limit?: number): Promise<AdminLog[]> {
+    const logs = Array.from(this.adminLogs.values())
+      .filter(log => log.adminId === adminId)
+      .sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+    
+    return limit ? logs.slice(0, limit) : logs;
+  }
+  
+  // Feedback operations
+  async getFeedback(id: number): Promise<Feedback | undefined> {
+    return this.feedbacks.get(id);
+  }
+  
+  async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
+    return Array.from(this.feedbacks.values())
+      .filter(feedback => feedback.restaurantId === restaurantId);
+  }
+  
+  async getFeedbacksByMenuItemId(menuItemId: number): Promise<Feedback[]> {
+    return Array.from(this.feedbacks.values())
+      .filter(feedback => feedback.menuItemId === menuItemId);
+  }
+  
+  async createFeedback(feedback: InsertFeedback): Promise<Feedback> {
+    const id = this.currentIds.feedbacks++;
+    const createdAt = new Date();
+    const newFeedback: Feedback = {
+      ...feedback,
+      id,
+      createdAt,
+      status: feedback.status || 'pending',
+      menuItemId: feedback.menuItemId || null,
+      comment: feedback.comment || null,
+      customerName: feedback.customerName || null,
+      customerEmail: feedback.customerEmail || null
+    };
+    this.feedbacks.set(id, newFeedback);
+    return newFeedback;
+  }
+  
+  async updateFeedback(id: number, update: Partial<Feedback>): Promise<Feedback | undefined> {
+    const feedback = this.feedbacks.get(id);
+    if (!feedback) return undefined;
+    
+    const updatedFeedback = { ...feedback, ...update };
+    this.feedbacks.set(id, updatedFeedback);
+    return updatedFeedback;
+  }
+  
+  async approveFeedback(id: number): Promise<Feedback | undefined> {
+    const feedback = this.feedbacks.get(id);
+    if (!feedback) return undefined;
+    
+    feedback.status = 'approved';
+    this.feedbacks.set(id, feedback);
+    return feedback;
+  }
+  
+  async rejectFeedback(id: number): Promise<Feedback | undefined> {
+    const feedback = this.feedbacks.get(id);
+    if (!feedback) return undefined;
+    
+    feedback.status = 'rejected';
+    this.feedbacks.set(id, feedback);
+    return feedback;
+  }
+  
+  // Subscription operations
+  async getAllSubscriptions(): Promise<Subscription[]> {
+    return Array.from(this.subscriptions.values());
   }
 }
 
