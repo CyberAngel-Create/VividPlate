@@ -1648,8 +1648,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAdminLog({
         adminId: (req.user as any).id,
         action: 'update_user_status',
-        details: `Set user ${updatedUser.username} (ID: ${updatedUser.id}) status to ${isActive ? 'active' : 'inactive'}`,
-        ipAddress: req.ip,
+        entityType: 'user',
+        entityId: updatedUser.id,
+        details: `Set user ${updatedUser.username} status to ${isActive ? 'active' : 'inactive'} from IP ${req.ip}`,
       });
       
       // Exclude sensitive data
@@ -1681,8 +1682,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await storage.createAdminLog({
         adminId: (req.user as any).id,
         action: 'update_subscription',
-        details: `Changed user ${updatedUser.username} (ID: ${updatedUser.id}) subscription to ${subscriptionTier}`,
-        ipAddress: req.ip,
+        entityType: 'user',
+        entityId: updatedUser.id,
+        details: `Changed user ${updatedUser.username} subscription to ${subscriptionTier} from IP ${req.ip}`,
       });
       
       // Exclude sensitive data
@@ -1732,8 +1734,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.createAdminLog({
           adminId: user.id,
           action: 'admin_login',
-          details: `Admin logged in: ${user.username}`,
-          ipAddress: req.ip,
+          entityType: 'user',
+          details: `Admin logged in: ${user.username} from IP ${req.ip}`,
         }).catch(console.error);
         
         const { password, ...sanitizedUser } = user;

@@ -1,48 +1,44 @@
-import { scrypt, randomBytes } from "crypto";
-import { promisify } from "util";
-import { and, eq } from "drizzle-orm";
-import { users } from "../shared/schema";
-import { pool, db } from "../server/db";
-
-const scryptAsync = promisify(scrypt);
-
-async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
-  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
-}
+// This script creates an admin user for testing purposes
+import { storage } from '../server/storage';
+import * as bcrypt from 'bcryptjs';
 
 async function createAdminUser() {
   try {
-    console.log("Creating admin user...");
+    // Check if admin already exists
+    const existingAdmin = await storage.getUserByUsername('admin');
     
-    // Check if admin user already exists
-    const existingAdmin = await db.select().from(users).where(eq(users.username, "admin"));
-    
-    if (existingAdmin.length > 0) {
-      console.log("Admin user already exists");
-      await pool.end();
+    if (existingAdmin) {
+      console.log('Admin user already exists with ID:', existingAdmin.id);
       return;
     }
     
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash('admin1234', salt);
+    
     // Create admin user
-    const hashedPassword = await hashPassword("admin1234");
-    
-    const [adminUser] = await db.insert(users).values({
-      username: "admin",
+    const admin = await storage.createUser({
+      username: 'admin',
       password: hashedPassword,
-      email: "admin@digitamenumate.com",
-      fullName: "System Administrator",
+      email: 'admin@digitamenumate.com',
+      fullName: 'Admin User',
       isAdmin: true,
-      isActive: true,
-    }).returning();
+      isActive: true
+    });
     
-    console.log("Admin user created successfully:", adminUser);
+    console.log('Admin user created successfully with ID:', admin.id);
+    console.log('Username: admin');
+    console.log('Password: admin1234');
   } catch (error) {
-    console.error("Error creating admin user:", error);
-  } finally {
-    await pool.end();
+    console.error('Error creating admin user:', error);
   }
 }
 
-createAdminUser();
+// Run the function
+createAdminUser().then(() => {
+  console.log('Script completed');
+  process.exit(0);
+}).catch(err => {
+  console.error('Script failed:', err);
+  process.exit(1);
+});
