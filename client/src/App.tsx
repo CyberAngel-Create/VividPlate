@@ -20,6 +20,7 @@ import Subscribe from "./pages/subscribe";
 import PaymentSuccess from "./pages/payment-success";
 import AdminDashboard from "./pages/admin-dashboard";
 import AdminLogin from "./pages/admin-login";
+import AdminUsers from "./pages/admin-users";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -127,6 +128,7 @@ function Router() {
 
           {/* Admin Routes */}
           <AdminRoute path="/admin" component={AdminDashboard} />
+          <AdminRoute path="/admin/users" component={AdminUsers} />
 
           <Route component={NotFound} />
         </Switch>
