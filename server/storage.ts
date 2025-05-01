@@ -125,8 +125,8 @@ export class MemStorage implements IStorage {
   private payments: Map<number, Payment>;
   private feedbacks: Map<number, Feedback>;
   private adminLogs: Map<number, AdminLog>;
-  private pricingPlans: Map<number, any>;
-  private contactInfo: any;
+  private pricingPlans: Map<number, PricingPlan>;
+  private contactInfo: ContactInfo;
   
   private currentIds: {
     users: number;
@@ -155,9 +155,11 @@ export class MemStorage implements IStorage {
     this.adminLogs = new Map();
     this.pricingPlans = new Map();
     this.contactInfo = {
+      id: 1,
       address: 'Ethiopia, Addis Abeba',
       email: 'menumate.spp@gmail.com',
-      phone: '+251-913-690-687'
+      phone: '+251-913-690-687',
+      updatedAt: new Date()
     };
     
     this.currentIds = {
@@ -732,6 +734,74 @@ export class MemStorage implements IStorage {
   // Subscription operations
   async getAllSubscriptions(): Promise<Subscription[]> {
     return Array.from(this.subscriptions.values());
+  }
+  
+  // Pricing plan operations
+  async getAllPricingPlans(): Promise<PricingPlan[]> {
+    return Array.from(this.pricingPlans.values());
+  }
+  
+  async getPricingPlan(id: number): Promise<PricingPlan | undefined> {
+    return this.pricingPlans.get(id);
+  }
+  
+  async createPricingPlan(plan: InsertPricingPlan): Promise<PricingPlan> {
+    const id = this.currentIds.pricingPlans++;
+    const newPlan: PricingPlan = { ...plan, id };
+    this.pricingPlans.set(id, newPlan);
+    return newPlan;
+  }
+  
+  async updatePricingPlan(id: number, plan: Partial<PricingPlan>): Promise<PricingPlan | undefined> {
+    const existingPlan = this.pricingPlans.get(id);
+    if (!existingPlan) return undefined;
+    
+    const updatedPlan = { ...existingPlan, ...plan };
+    this.pricingPlans.set(id, updatedPlan);
+    return updatedPlan;
+  }
+  
+  async deletePricingPlan(id: number): Promise<boolean> {
+    return this.pricingPlans.delete(id);
+  }
+  
+  // Contact info operations
+  async getContactInfo(): Promise<ContactInfo | undefined> {
+    return this.contactInfo;
+  }
+  
+  async updateContactInfo(info: Partial<ContactInfo>): Promise<ContactInfo> {
+    this.contactInfo = { ...this.contactInfo, ...info };
+    return this.contactInfo;
+  }
+  
+  // Stripe methods (stubs)
+  async updateStripeCustomerId(userId: number, customerId: string): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    user.stripeCustomerId = customerId;
+    this.users.set(userId, user);
+    return user;
+  }
+  
+  async updateStripeSubscriptionId(userId: number, subscriptionId: string): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    user.stripeSubscriptionId = subscriptionId;
+    this.users.set(userId, user);
+    return user;
+  }
+  
+  async updateUserStripeInfo(userId: number, info: { customerId: string, subscriptionId: string }): Promise<User | undefined> {
+    const user = await this.getUser(userId);
+    if (!user) return undefined;
+    
+    user.stripeCustomerId = info.customerId;
+    user.stripeSubscriptionId = info.subscriptionId;
+    this.users.set(userId, user);
+    return user;
   }
 }
 

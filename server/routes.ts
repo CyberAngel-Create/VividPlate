@@ -1750,7 +1750,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Pricing plans management
+  // Public pricing plans endpoint
+  app.get('/api/pricing', async (req, res) => {
+    try {
+      const plans = await storage.getAllPricingPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching pricing plans:', error);
+      res.status(500).json({ message: 'Error loading pricing data' });
+    }
+  });
+  
+  // Public contact info endpoint
+  app.get('/api/contact-info', async (req, res) => {
+    try {
+      const contactInfo = await storage.getContactInfo();
+      res.json(contactInfo || {
+        address: 'Ethiopia, Addis Abeba',
+        email: 'menumate.spp@gmail.com',
+        phone: '+251-913-690-687'
+      });
+    } catch (error) {
+      console.error('Error fetching contact info:', error);
+      res.status(500).json({ message: 'Failed to load contact information' });
+    }
+  });
+  
+  // Pricing plans management (admin)
   app.get('/api/admin/pricing', isAdmin, async (req, res) => {
     try {
       // Get all pricing plans from storage
