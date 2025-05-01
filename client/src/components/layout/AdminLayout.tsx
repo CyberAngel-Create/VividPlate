@@ -233,7 +233,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center">
-                      <UserCircle className="h-4 w-4 mr-1" />
                       <span className="mr-1">{user.username}</span>
                       <ChevronDown className="h-3 w-3" />
                     </Button>
@@ -281,20 +280,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 });
               }}
             >
-              <div className="flex flex-col items-center justify-center space-y-2">
-                <div className="relative">
-                  <UserCircle className="h-20 w-20 text-gray-400" />
-                  <Button 
-                    type="button"
-                    size="sm" 
-                    variant="outline" 
-                    className="absolute bottom-0 right-0 rounded-full p-1"
-                  >
-                    <span className="sr-only">Change picture</span>
-                    Upload
-                  </Button>
-                </div>
-              </div>
+              {/* Admin profile info */}
               
               <div className="grid gap-4">
                 <div className="grid gap-2">
