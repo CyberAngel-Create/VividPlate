@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
+import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -113,9 +114,13 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
         {previewUrl ? (
           <div className="relative w-32 h-32 mb-4">
             <img 
-              src={previewUrl}
+              src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)}
               alt="Restaurant logo preview" 
               className="w-full h-full object-cover rounded-md"
+              onError={(e) => {
+                console.error("Failed to load logo image:", previewUrl);
+                e.currentTarget.src = getFallbackImage('logo');
+              }}
             />
             <button
               type="button"

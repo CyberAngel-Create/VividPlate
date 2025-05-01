@@ -2,6 +2,7 @@ import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
 import { Facebook, Instagram, Globe, MessageSquare } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import { useState, useMemo } from "react";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
@@ -46,12 +47,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           <div className="h-40 bg-gray-300 relative">
             {restaurant.bannerUrl ? (
               <img 
-                src={restaurant.bannerUrl.startsWith('/') ? restaurant.bannerUrl : `/${restaurant.bannerUrl}`}
+                src={normalizeImageUrl(restaurant.bannerUrl)}
                 alt={`${restaurant.name} banner`}
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   console.error("Failed to load banner image:", restaurant.bannerUrl);
-                  e.currentTarget.src = "/placeholder-banner.jpg";
+                  e.currentTarget.src = getFallbackImage('banner');
                 }}
               />
             ) : null}
@@ -126,17 +127,17 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                         {item.imageUrl ? (
                           <div className="w-1/3 pr-4">
                             <ImageViewDialog 
-                              imageSrc={item.imageUrl?.startsWith('/') ? item.imageUrl : `/${item.imageUrl}`} 
+                              imageSrc={normalizeImageUrl(item.imageUrl)} 
                               imageAlt={item.name}
                             >
                               <div className="w-full h-24 sm:h-28 bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                                 <img 
-                                  src={item.imageUrl?.startsWith('/') ? item.imageUrl : `/${item.imageUrl}`} 
+                                  src={normalizeImageUrl(item.imageUrl)} 
                                   alt={item.name} 
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
                                     console.error("Failed to load menu item image:", item.imageUrl);
-                                    e.currentTarget.src = "/placeholder-food.jpg";
+                                    e.currentTarget.src = getFallbackImage('menu');
                                   }}
                                 />
                               </div>
