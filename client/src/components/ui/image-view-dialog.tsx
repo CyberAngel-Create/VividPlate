@@ -25,9 +25,13 @@ const ImageViewDialog = ({ imageSrc, imageAlt, children }: ImageViewDialogProps)
             <X className="h-5 w-5" />
           </button>
           <img 
-            src={imageSrc} 
+            src={imageSrc?.startsWith('/') ? imageSrc : `/${imageSrc}`} 
             alt={imageAlt} 
             className="w-full h-auto rounded-lg max-h-[80vh] object-contain"
+            onError={(e) => {
+              console.error("Failed to load image in dialog:", imageSrc);
+              e.currentTarget.src = "/placeholder-food.jpg";
+            }}
           />
         </div>
       </DialogContent>

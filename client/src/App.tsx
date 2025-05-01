@@ -32,6 +32,7 @@ import { apiRequest } from "./lib/queryClient";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
+import AdSense from "@/components/ads/AdSense";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
