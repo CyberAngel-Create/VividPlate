@@ -23,6 +23,8 @@ import AdminLogin from "./pages/admin-login";
 import AdminUsers from "./pages/admin-users";
 import AdminRestaurants from "./pages/admin-restaurants";
 import AdminLogs from "./pages/admin-logs";
+import AdminPricing from "./pages/admin-pricing";
+import AdminContactInfo from "./pages/admin-contact-info";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";

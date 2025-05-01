@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { 
   Users, Settings, LayoutDashboard, LogOut, 
   Menu, X, ChevronDown, Building, FileText,
-  UserCircle, User
+  UserCircle, User, Crown, Mail
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +82,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <Building className="h-5 w-5" />,
     },
     {
+      title: "Pricing",
+      href: "/admin/pricing",
+      icon: <Crown className="h-5 w-5" />,
+    },
+    {
       title: "Logs",
       href: "/admin/logs",
       icon: <FileText className="h-5 w-5" />,
@@ -95,6 +100,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       title: "Settings",
       href: "/admin/settings",
       icon: <Settings className="h-5 w-5" />,
+    },
+    {
+      title: "Contact Info",
+      href: "/admin/contact-info",
+      icon: <Mail className="h-5 w-5" />,
     },
   ];
 
