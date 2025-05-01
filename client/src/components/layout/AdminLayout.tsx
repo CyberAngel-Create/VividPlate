@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { 
   Users, Settings, LayoutDashboard, LogOut, 
   Menu, X, ChevronDown, Building, FileText,
-  UserCircle
+  UserCircle, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { 
@@ -46,7 +46,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         title: "Logged out",
         description: "You have been logged out successfully",
       });
-      setLocation("/admin-login");
+      setLocation("/login");
     } catch (error) {
       toast({
         title: "Error",
@@ -92,8 +92,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
       {/* Sidebar for desktop */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed h-full">
-        <div className="flex flex-col flex-grow pt-5 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+      <div className="hidden md:flex md:w-52 md:flex-col md:fixed h-full">
+        <div className="flex flex-col flex-grow pt-3 overflow-y-auto bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between px-4">
             <Link href="/admin">
               <div className="flex items-center">
@@ -102,20 +102,20 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               </div>
             </Link>
           </div>
-          <nav className="flex-1 px-2 pb-4 space-y-1 mt-5">
+          <nav className="flex-1 px-2 pb-4 space-y-1 mt-3">
             {navItems.map((item) => {
               const isActive = location === item.href;
               return (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center px-2 py-2 text-sm font-medium rounded-md group ${
+                  className={`flex items-center px-2 py-1.5 text-xs font-medium rounded-md group ${
                     isActive
                       ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-300"
                       : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
                   }`}
                 >
-                  <div className="mr-3">{item.icon}</div>
+                  <div className="mr-2">{item.icon}</div>
                   {item.title}
                 </Link>
               );
@@ -182,21 +182,27 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       </Sheet>
 
       {/* Main content */}
-      <div className="flex flex-col flex-1 overflow-hidden md:ml-64">
+      <div className="flex flex-col flex-1 overflow-hidden md:ml-52">
         {/* Topbar */}
         <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
-          <div className="px-4 h-16 flex items-center justify-between">
-            <div className="ml-10 md:ml-0"></div>
+          <div className="px-4 h-12 flex items-center justify-end">
             <div className="flex items-center">
               {user && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="flex items-center">
-                      <span className="mr-2">{user.username}</span>
-                      <ChevronDown className="h-4 w-4" />
+                      <UserCircle className="h-4 w-4 mr-1" />
+                      <span className="mr-1">{user.username}</span>
+                      <ChevronDown className="h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/profile" className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                      </Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Logout</span>
