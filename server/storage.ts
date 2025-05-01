@@ -36,6 +36,17 @@ export interface IStorage {
   createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
   getAdminLogs(limit?: number): Promise<AdminLog[]>;
   getAdminLogsByAdminId(adminId: number, limit?: number): Promise<AdminLog[]>;
+  
+  // Pricing plan operations
+  getAllPricingPlans(): Promise<any[]>;
+  getPricingPlan(id: number): Promise<any | undefined>;
+  createPricingPlan(plan: any): Promise<any>;
+  updatePricingPlan(id: number, plan: any): Promise<any | undefined>;
+  deletePricingPlan(id: number): Promise<boolean>;
+  
+  // Contact info operations
+  getContactInfo(): Promise<any | undefined>;
+  updateContactInfo(info: {address: string, email: string, phone: string}): Promise<any>;
 
   // Restaurant operations
   getRestaurant(id: number): Promise<Restaurant | undefined>;
@@ -112,6 +123,8 @@ export class MemStorage implements IStorage {
   private payments: Map<number, Payment>;
   private feedbacks: Map<number, Feedback>;
   private adminLogs: Map<number, AdminLog>;
+  private pricingPlans: Map<number, any>;
+  private contactInfo: any;
   
   private currentIds: {
     users: number;
@@ -124,6 +137,7 @@ export class MemStorage implements IStorage {
     payments: number;
     feedbacks: number;
     adminLogs: number;
+    pricingPlans: number;
   };
 
   constructor() {
@@ -137,6 +151,12 @@ export class MemStorage implements IStorage {
     this.payments = new Map();
     this.feedbacks = new Map();
     this.adminLogs = new Map();
+    this.pricingPlans = new Map();
+    this.contactInfo = {
+      address: 'Ethiopia, Addis Abeba',
+      email: 'menumate.spp@gmail.com',
+      phone: '+251-913-690-687'
+    };
     
     this.currentIds = {
       users: 1,
@@ -148,7 +168,8 @@ export class MemStorage implements IStorage {
       subscriptions: 1,
       payments: 1,
       feedbacks: 1,
-      adminLogs: 1
+      adminLogs: 1,
+      pricingPlans: 1
     };
     
     // Create an admin account if none exists

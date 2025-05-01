@@ -1749,6 +1749,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  
+  // Pricing plans management
+  app.get('/api/admin/pricing', isAdmin, async (req, res) => {
+    try {
+      // Get all pricing plans from storage
+      const plans = await storage.getAllPricingPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching pricing plans:', error);
+      res.status(500).json({ message: 'Error loading pricing data' });
+    }
+  });
+
+  app.post('/api/admin/pricing', isAdmin, async (req, res) => {
+    try {
+      // Validate and create a new pricing plan
+      const plan = await storage.createPricingPlan(req.body);
+      res.status(201).json(plan);
+    } catch (error) {
+      console.error('Error creating pricing plan:', error);
+      res.status(500).json({ message: 'Failed to create pricing plan' });
+    }
+  });
+
+  app.put('/api/admin/pricing/:id', isAdmin, async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const plan = await storage.updatePricingPlan(planId, req.body);
+      
+      if (!plan) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error updating pricing plan:', error);
+      res.status(500).json({ message: 'Failed to update pricing plan' });
+    }
+  });
+
+  app.delete('/api/admin/pricing/:id', isAdmin, async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const result = await storage.deletePricingPlan(planId);
+      
+      if (!result) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting pricing plan:', error);
+      res.status(500).json({ message: 'Failed to delete pricing plan' });
+    }
+  });
+  
+  // Contact information management
+  app.get('/api/admin/contact-info', isAdmin, async (req, res) => {
+    try {
+      const contactInfo = await storage.getContactInfo();
+      res.json(contactInfo || {
+        address: 'Ethiopia, Addis Abeba',
+        email: 'menumate.spp@gmail.com',
+        phone: '+251-913-690-687'
+      });
+    } catch (error) {
+      console.error('Error fetching contact info:', error);
+      res.status(500).json({ message: 'Failed to load contact information' });
+    }
+  });
+
+  app.patch('/api/admin/contact-info', isAdmin, async (req, res) => {
+    try {
+      const { address, email, phone } = req.body;
+      const updatedInfo = await storage.updateContactInfo({ address, email, phone });
+      res.json(updatedInfo);
+    } catch (error) {
+      console.error('Error updating contact info:', error);
+      res.status(500).json({ message: 'Failed to update contact information' });
+    }
+  });
 
   // Admin login
   app.post('/api/auth/admin-login', (req, res, next) => {
