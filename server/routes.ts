@@ -64,17 +64,6 @@ const configurePassport = (app: Express) => {
     passwordField: 'password'
   }, async (identifier, password, done) => {
     try {
-      // Special case for admin login
-      if (identifier === 'Admin' && password === 'Admin@123') {
-        return done(null, {
-          id: 0, // Special admin ID
-          username: 'Admin',
-          email: 'admin@menumate.com',
-          fullName: 'System Administrator',
-          isAdmin: true,
-        });
-      }
-
       // Check if identifier is username or email
       let user = await storage.getUserByUsername(identifier);
       
@@ -87,13 +76,15 @@ const configurePassport = (app: Express) => {
         return done(null, false, { message: 'Incorrect username or email.' });
       }
 
-      // In a real app, we would hash the password, but for simplicity we'll just compare directly
-      if (user.password !== password) {
+      // Verify password with hashed version from database
+      const isPasswordValid = await comparePasswords(password, user.password);
+      
+      if (!isPasswordValid) {
         return done(null, false, { message: 'Incorrect password.' });
       }
 
-      // Add isAdmin flag for regular users (false)
-      return done(null, { ...user, isAdmin: false });
+      // User is properly authenticated
+      return done(null, user);
     } catch (err) {
       return done(err);
     }
@@ -1698,7 +1689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin login
-  app.post('/api/admin/login', (req, res, next) => {
+  app.post('/api/auth/admin-login', (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {
       if (err) {
         return next(err);
