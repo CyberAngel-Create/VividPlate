@@ -68,7 +68,15 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              {/* Desktop logout button removed as requested */}
+              <Button 
+                variant="outline" 
+                size="sm"
+                className="flex items-center gap-1" 
+                onClick={handleLogout}
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </Button>
             </>
           ) : (
             <>

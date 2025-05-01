@@ -7,6 +7,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import AdBanner from "@/components/ads/AdBanner";
 import DietaryRecommendationsOverlay from "@/components/dietary/DietaryRecommendationsOverlay";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -21,6 +23,39 @@ const ViewMenu = () => {
   const { restaurantId } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await apiRequest("GET", "/api/auth/me");
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      setIsAuthenticated(false);
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Get source parameter from URL (e.g., qr or link)
   const source = new URLSearchParams(window.location.search).get("source") || "link";
@@ -76,9 +111,22 @@ const ViewMenu = () => {
       {/* Top ad banner for free users */}
       <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
       
-      {/* Dietary Recommendations Button */}
-      <div className="w-full max-w-screen-md flex justify-end mb-2 px-4">
-        <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+      {/* Header with Logout and Dietary Recommendations */}
+      <div className="w-full max-w-screen-md flex justify-between items-center mb-2 px-4">
+        {isAuthenticated && (
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="flex items-center gap-1" 
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </Button>
+        )}
+        <div className="ml-auto">
+          <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+        </div>
       </div>
       
       <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
