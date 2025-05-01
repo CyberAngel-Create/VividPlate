@@ -21,6 +21,8 @@ import PaymentSuccess from "./pages/payment-success";
 import AdminDashboard from "./pages/admin-dashboard";
 import AdminLogin from "./pages/admin-login";
 import AdminUsers from "./pages/admin-users";
+import AdminRestaurants from "./pages/admin-restaurants";
+import AdminLogs from "./pages/admin-logs";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -115,8 +117,8 @@ function Router() {
           {/* Admin Routes */}
           <AdminRoute path="/admin" component={AdminDashboard} />
           <AdminRoute path="/admin/users" component={AdminUsers} />
-          <AdminRoute path="/admin/restaurants" component={AdminDashboard} />
-          <AdminRoute path="/admin/logs" component={AdminDashboard} />
+          <AdminRoute path="/admin/restaurants" component={AdminRestaurants} />
+          <AdminRoute path="/admin/logs" component={AdminLogs} />
 
           <Route component={NotFound} />
         </Switch>

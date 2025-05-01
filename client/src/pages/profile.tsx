@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Redirect } from "wouter";
-import { Loader2, KeyRound, User, Mail, Save } from "lucide-react";
+import { Loader2, KeyRound, User, Mail, Save, Star } from "lucide-react";
+import { useSubscription } from "@/hooks/use-subscription";
 import { 
   Card, 
   CardContent, 
@@ -41,6 +42,7 @@ const ProfilePage = () => {
   const { user, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { subscription, isPaid } = useSubscription();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   
@@ -165,7 +167,21 @@ const ProfilePage = () => {
   
   return (
     <div className="container max-w-4xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-8">{t("Profile Management")}</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">{t("Profile Management")}</h1>
+        
+        {isPaid && (
+          <div className="flex items-center rounded-xl bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-4 py-2">
+            <div className="relative">
+              <Star className="h-5 w-5 text-white" fill="white" />
+              <Star className="h-5 w-5 text-white absolute -top-1 -right-1 rotate-45" fill="white" />
+              <Star className="h-5 w-5 text-white absolute -bottom-1 -right-1 rotate-90" fill="white" />
+              <Star className="h-5 w-5 text-white absolute -bottom-1 -left-1 rotate-180" fill="white" />
+            </div>
+            <span className="ml-6 font-bold">{t("Premium Member")}</span>
+          </div>
+        )}
+      </div>
       
       <div className="grid gap-8">
         {/* Personal Information Card */}
