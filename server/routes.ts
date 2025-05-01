@@ -302,8 +302,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Email already exists' });
       }
 
-      // In a real app, we would hash the password here
-      // userData.password = await bcrypt.hash(userData.password, 10);
+      // Hash the password using bcrypt before storing it
+      userData.password = await bcrypt.hash(userData.password, 10);
       
       const user = await storage.createUser(userData);
       
@@ -422,11 +422,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Current password and new password are required' });
       }
       
+      // Get user to verify current password
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Verify current password
+      const isValidPassword = await comparePasswords(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(400).json({ message: 'Current password is incorrect' });
+      }
+      
+      // Hash the new password with bcrypt
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
       // Use storage operation to change password
-      const passwordChanged = await storage.changePassword(userId, currentPassword, newPassword);
+      const passwordChanged = await storage.changePassword(userId, currentPassword, hashedPassword);
       
       if (!passwordChanged) {
-        return res.status(400).json({ message: 'Current password is incorrect' });
+        return res.status(400).json({ message: 'Failed to update password' });
       }
       
       res.json({ success: true, message: 'Password changed successfully' });
