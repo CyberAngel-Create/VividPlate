@@ -8,7 +8,9 @@ import {
   payments, Payment, InsertPayment,
   feedbacks, Feedback, InsertFeedback,
   dietaryPreferences, DietaryPreference, InsertDietaryPreference,
-  adminLogs, AdminLog, InsertAdminLog
+  adminLogs, AdminLog, InsertAdminLog,
+  pricingPlans, PricingPlan, InsertPricingPlan,
+  contactInfo, ContactInfo, InsertContactInfo
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc } from "drizzle-orm";
@@ -38,15 +40,15 @@ export interface IStorage {
   getAdminLogsByAdminId(adminId: number, limit?: number): Promise<AdminLog[]>;
   
   // Pricing plan operations
-  getAllPricingPlans(): Promise<any[]>;
-  getPricingPlan(id: number): Promise<any | undefined>;
-  createPricingPlan(plan: any): Promise<any>;
-  updatePricingPlan(id: number, plan: any): Promise<any | undefined>;
+  getAllPricingPlans(): Promise<PricingPlan[]>;
+  getPricingPlan(id: number): Promise<PricingPlan | undefined>;
+  createPricingPlan(plan: InsertPricingPlan): Promise<PricingPlan>;
+  updatePricingPlan(id: number, plan: Partial<PricingPlan>): Promise<PricingPlan | undefined>;
   deletePricingPlan(id: number): Promise<boolean>;
   
   // Contact info operations
-  getContactInfo(): Promise<any | undefined>;
-  updateContactInfo(info: {address: string, email: string, phone: string}): Promise<any>;
+  getContactInfo(): Promise<ContactInfo | undefined>;
+  updateContactInfo(info: Partial<ContactInfo>): Promise<ContactInfo>;
 
   // Restaurant operations
   getRestaurant(id: number): Promise<Restaurant | undefined>;
@@ -734,6 +736,70 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Pricing plan operations
+  async getAllPricingPlans(): Promise<PricingPlan[]> {
+    return await db.select().from(pricingPlans);
+  }
+  
+  async getPricingPlan(id: number): Promise<PricingPlan | undefined> {
+    const [plan] = await db.select().from(pricingPlans).where(eq(pricingPlans.id, id));
+    return plan;
+  }
+  
+  async createPricingPlan(plan: InsertPricingPlan): Promise<PricingPlan> {
+    const [newPlan] = await db.insert(pricingPlans).values(plan).returning();
+    return newPlan;
+  }
+  
+  async updatePricingPlan(id: number, plan: Partial<PricingPlan>): Promise<PricingPlan | undefined> {
+    const [updatedPlan] = await db
+      .update(pricingPlans)
+      .set(plan)
+      .where(eq(pricingPlans.id, id))
+      .returning();
+    return updatedPlan;
+  }
+  
+  async deletePricingPlan(id: number): Promise<boolean> {
+    const [deletedPlan] = await db
+      .delete(pricingPlans)
+      .where(eq(pricingPlans.id, id))
+      .returning();
+    return !!deletedPlan;
+  }
+  
+  // Contact info operations
+  async getContactInfo(): Promise<ContactInfo | undefined> {
+    const [info] = await db.select().from(contactInfo).limit(1);
+    return info;
+  }
+  
+  async updateContactInfo(info: Partial<ContactInfo>): Promise<ContactInfo> {
+    // First check if we have any contact info already
+    const existingInfo = await this.getContactInfo();
+    
+    if (existingInfo) {
+      // Update existing record
+      const [updatedInfo] = await db
+        .update(contactInfo)
+        .set({...info, updatedAt: new Date()})
+        .where(eq(contactInfo.id, existingInfo.id))
+        .returning();
+      return updatedInfo;
+    } else {
+      // Create new record
+      const [newInfo] = await db
+        .insert(contactInfo)
+        .values({
+          address: info.address || 'Ethiopia, Addis Abeba',
+          email: info.email || 'menumate.spp@gmail.com',
+          phone: info.phone || '+251-913-690-687'
+        })
+        .returning();
+      return newInfo;
+    }
+  }
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));

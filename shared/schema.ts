@@ -256,3 +256,50 @@ export const insertAdminLogSchema = createInsertSchema(adminLogs).pick({
 
 export type AdminLog = typeof adminLogs.$inferSelect;
 export type InsertAdminLog = z.infer<typeof insertAdminLogSchema>;
+
+// Pricing plans table
+export const pricingPlans = pgTable("pricing_plans", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description").notNull(),
+  price: integer("price").notNull(),
+  currency: text("currency").default("USD"),
+  features: text("features").array().notNull(),
+  tier: text("tier").notNull().default("free"),  // "free" or "premium"
+  billingPeriod: text("billing_period").notNull().default("monthly"), // "monthly" or "yearly"
+  isPopular: boolean("is_popular").default(false),
+  isActive: boolean("is_active").default(true),
+});
+
+export const insertPricingPlanSchema = createInsertSchema(pricingPlans).pick({
+  name: true,
+  description: true,
+  price: true,
+  currency: true,
+  features: true,
+  tier: true,
+  billingPeriod: true,
+  isPopular: true,
+  isActive: true,
+});
+
+export type PricingPlan = typeof pricingPlans.$inferSelect;
+export type InsertPricingPlan = z.infer<typeof insertPricingPlanSchema>;
+
+// Contact info table
+export const contactInfo = pgTable("contact_info", {
+  id: serial("id").primaryKey(),
+  address: text("address").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertContactInfoSchema = createInsertSchema(contactInfo).pick({
+  address: true,
+  email: true,
+  phone: true,
+});
+
+export type ContactInfo = typeof contactInfo.$inferSelect;
+export type InsertContactInfo = z.infer<typeof insertContactInfoSchema>;
