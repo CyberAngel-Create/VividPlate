@@ -72,14 +72,14 @@ const AdminRestaurants = () => {
               <div className="bg-white shadow rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500">Premium Restaurants</div>
                 <div className="text-3xl font-bold">
-                  {restaurants.filter((r: any) => r.subscriptionTier === 'premium').length}
+                  {restaurants.filter((r: any) => r.isPremium).length}
                 </div>
               </div>
               
               <div className="bg-white shadow rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500">Free Restaurants</div>
                 <div className="text-3xl font-bold">
-                  {restaurants.filter((r: any) => r.subscriptionTier !== 'premium').length}
+                  {restaurants.filter((r: any) => !r.isPremium).length}
                 </div>
               </div>
             </div>
@@ -88,14 +88,14 @@ const AdminRestaurants = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Owner</TableHead>
-                    <TableHead>Categories</TableHead>
-                    <TableHead>Menu Items</TableHead>
-                    <TableHead>Views</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Actions</TableHead>
+                    <TableHead className="w-16">ID</TableHead>
+                    <TableHead className="w-52">Name</TableHead>
+                    <TableHead className="w-52">Owner</TableHead>
+                    <TableHead className="w-36">Categories</TableHead>
+                    <TableHead className="w-36">Menu Items</TableHead>
+                    <TableHead className="w-36">Views</TableHead>
+                    <TableHead className="w-24">Status</TableHead>
+                    <TableHead className="w-40">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -105,7 +105,7 @@ const AdminRestaurants = () => {
                         <TableCell>{restaurant.id}</TableCell>
                         <TableCell className="font-medium">
                           {restaurant.name}
-                          {restaurant.subscriptionTier === 'premium' && (
+                          {restaurant.isPremium && (
                             <Badge className="ml-2 bg-orange-500">Premium</Badge>
                           )}
                         </TableCell>
@@ -115,11 +115,8 @@ const AdminRestaurants = () => {
                             {restaurant.userEmail && (
                               <span className="text-xs text-gray-500">{restaurant.userEmail}</span>
                             )}
-                            {restaurant.subscriptionTier === 'premium' && (
-                              <>
-                                <Badge className="mt-1 w-fit bg-orange-500">Premium User</Badge>
-                                {console.log("Subscription tier:", restaurant.subscriptionTier)}
-                              </>
+                            {restaurant.ownerSubscriptionTier === 'premium' && (
+                              <Badge className="mt-1 w-fit bg-orange-500">Premium User</Badge>
                             )}
                           </div>
                         </TableCell>
