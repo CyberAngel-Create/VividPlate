@@ -68,20 +68,7 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           {isAuthenticated ? (
             <>
-              <Link href="/dashboard" className="text-dark hover:text-primary transition-colors font-medium hidden md:block">
-                {t('common.dashboard')}
-              </Link>
-              <Link href="/profile" className="text-dark hover:text-primary transition-colors font-medium hidden md:flex items-center">
-                <UserCog className="h-4 w-4 mr-1" />
-                {t('common.profile') || "Profile"}
-              </Link>
-              <Button 
-                variant="default" 
-                className="bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
-                onClick={handleLogout}
-              >
-                {t('common.logout')}
-              </Button>
+              {/* Navigation items removed as requested */}
             </>
           ) : (
             <>
@@ -115,23 +102,7 @@ const Header = () => {
             
             {isAuthenticated ? (
               <>
-                <Link href="/dashboard" className="text-dark hover:text-primary transition-colors py-2 font-medium">
-                  {t('common.dashboard')}
-                </Link>
-                <Link href="/profile" className="text-dark hover:text-primary transition-colors py-2 font-medium flex items-center">
-                  <UserCog className="h-4 w-4 mr-1" />
-                  {t('common.profile') || "Profile"}
-                </Link>
-                <a 
-                  href="#" 
-                  className="text-dark hover:text-primary transition-colors py-2 font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleLogout();
-                  }}
-                >
-                  {t('common.logout')}
-                </a>
+                {/* Mobile navigation items removed as requested */}
               </>
             ) : (
               <>
