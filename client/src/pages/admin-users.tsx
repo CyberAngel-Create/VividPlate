@@ -12,7 +12,6 @@ import {
   Crown,
   Trash
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -249,10 +248,7 @@ const UsersAdminPage = () => {
                 filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback>{getInitials(user.fullName)}</AvatarFallback>
-                        </Avatar>
+                      <div className="flex items-center">
                         <div>
                           <p className="font-medium">{user.fullName}</p>
                           <p className="text-sm text-muted-foreground">@{user.username}</p>
