@@ -166,15 +166,7 @@ const AdminRestaurants = () => {
                             >
                               View Menu
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                // Implement details view
-                              }}
-                            >
-                              Details
-                            </Button>
+
                           </div>
                         </TableCell>
                       </TableRow>
