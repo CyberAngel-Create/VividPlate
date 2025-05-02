@@ -62,6 +62,11 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                       Dashboard
                     </div>
                   </Link>
+                  <Link href="/profile">
+                    <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                      Profile
+                    </div>
+                  </Link>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -152,6 +157,14 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                             onClick={closeMenu}
                           >
                             Dashboard
+                          </div>
+                        </Link>
+                        <Link href="/profile">
+                          <div
+                            className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                            onClick={closeMenu}
+                          >
+                            Profile
                           </div>
                         </Link>
                         <Button

@@ -6,6 +6,8 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Redirect } from "wouter";
 import { Loader2, KeyRound, User, Mail, Save, Star } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
+import CustomerHeader from "@/components/layout/CustomerHeader";
+import Footer from "@/components/layout/Footer";
 import { 
   Card, 
   CardContent, 
@@ -45,6 +47,7 @@ const ProfilePage = () => {
   const { subscription, isPaid } = useSubscription();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   
   // Define the profile update schema
   const profileUpdateSchema = z.object({
@@ -153,6 +156,13 @@ const ProfilePage = () => {
     }
   };
   
+  // Handle logout
+  const { logoutMutation } = useAuth();
+  
+  const handleLogout = () => {
+    logoutMutation.mutate();
+  };
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -164,206 +174,215 @@ const ProfilePage = () => {
   if (!user) {
     return <Redirect to="/auth" />;
   }
-  
+
   return (
-    <div className="container max-w-4xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold">{t("Profile Management")}</h1>
-        
-        {isPaid && (
-          <div className="flex items-center rounded-xl bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-4 py-2">
-            <div className="relative">
-              <Star className="h-5 w-5 text-white" fill="white" />
-              <Star className="h-5 w-5 text-white absolute -top-1 -right-1 rotate-45" fill="white" />
-              <Star className="h-5 w-5 text-white absolute -bottom-1 -right-1 rotate-90" fill="white" />
-              <Star className="h-5 w-5 text-white absolute -bottom-1 -left-1 rotate-180" fill="white" />
+    <div className="flex flex-col min-h-screen">
+      <CustomerHeader 
+        isAuthenticated={isAuthenticated}
+        onLogout={handleLogout}
+      />
+      
+      <div className="container max-w-4xl mx-auto py-8 px-4 flex-1">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">{t("Profile Management")}</h1>
+          
+          {isPaid && (
+            <div className="flex items-center rounded-xl bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-4 py-2">
+              <div className="relative">
+                <Star className="h-5 w-5 text-white" fill="white" />
+                <Star className="h-5 w-5 text-white absolute -top-1 -right-1 rotate-45" fill="white" />
+                <Star className="h-5 w-5 text-white absolute -bottom-1 -right-1 rotate-90" fill="white" />
+                <Star className="h-5 w-5 text-white absolute -bottom-1 -left-1 rotate-180" fill="white" />
+              </div>
+              <span className="ml-6 font-bold">{t("Premium Member")}</span>
             </div>
-            <span className="ml-6 font-bold">{t("Premium Member")}</span>
-          </div>
-        )}
+          )}
+        </div>
+      
+        <div className="grid gap-8">
+          {/* Personal Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Personal Information")}</CardTitle>
+              <CardDescription>
+                {t("Update your account information")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...profileForm}>
+                <form onSubmit={profileForm.handleSubmit(handleUpdateProfile)} className="space-y-6">
+                  <FormField
+                    control={profileForm.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("Username")}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <div className="absolute left-3 top-3 text-gray-400">
+                              <User className="h-4 w-4" />
+                            </div>
+                            <Input className="pl-10" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={profileForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("Email Address")}</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <div className="absolute left-3 top-3 text-gray-400">
+                              <Mail className="h-4 w-4" />
+                            </div>
+                            <Input className="pl-10" type="email" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={profileForm.control}
+                    name="fullName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>{t("Full Name")}</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <Button 
+                    type="submit" 
+                    className="w-full"
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {t("Updating...")}
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        {t("Save Changes")}
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+          
+          {/* Password Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("Security")}</CardTitle>
+              <CardDescription>
+                {t("Manage your account security settings")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="font-medium mb-1">{t("Password")}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {t("Change your account password")}
+                  </div>
+                </div>
+                <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <KeyRound className="h-4 w-4 mr-2" />
+                      {t("Change Password")}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>{t("Change Password")}</DialogTitle>
+                      <DialogDescription>
+                        {t("Enter your current password and a new password")}
+                      </DialogDescription>
+                    </DialogHeader>
+                    
+                    <Form {...passwordForm}>
+                      <form onSubmit={passwordForm.handleSubmit(handleChangePassword)} className="space-y-4">
+                        <FormField
+                          control={passwordForm.control}
+                          name="currentPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Current Password")}</FormLabel>
+                              <FormControl>
+                                <Input type="password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={passwordForm.control}
+                          name="newPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("New Password")}</FormLabel>
+                              <FormControl>
+                                <Input type="password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={passwordForm.control}
+                          name="confirmNewPassword"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>{t("Confirm New Password")}</FormLabel>
+                              <FormControl>
+                                <Input type="password" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <DialogFooter className="mt-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setIsChangePasswordDialogOpen(false)}
+                          >
+                            {t("Cancel")}
+                          </Button>
+                          <Button type="submit">
+                            {t("Change Password")}
+                          </Button>
+                        </DialogFooter>
+                      </form>
+                    </Form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
       
-      <div className="grid gap-8">
-        {/* Personal Information Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("Personal Information")}</CardTitle>
-            <CardDescription>
-              {t("Update your account information")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...profileForm}>
-              <form onSubmit={profileForm.handleSubmit(handleUpdateProfile)} className="space-y-6">
-                <FormField
-                  control={profileForm.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("Username")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <div className="absolute left-3 top-3 text-gray-400">
-                            <User className="h-4 w-4" />
-                          </div>
-                          <Input className="pl-10" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={profileForm.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("Email Address")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <div className="absolute left-3 top-3 text-gray-400">
-                            <Mail className="h-4 w-4" />
-                          </div>
-                          <Input className="pl-10" type="email" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={profileForm.control}
-                  name="fullName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>{t("Full Name")}</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <Button 
-                  type="submit" 
-                  className="w-full"
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      {t("Updating...")}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      {t("Save Changes")}
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-        
-        {/* Password Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t("Security")}</CardTitle>
-            <CardDescription>
-              {t("Manage your account security settings")}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium mb-1">{t("Password")}</div>
-                <div className="text-sm text-muted-foreground">
-                  {t("Change your account password")}
-                </div>
-              </div>
-              <Dialog open={isChangePasswordDialogOpen} onOpenChange={setIsChangePasswordDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <KeyRound className="h-4 w-4 mr-2" />
-                    {t("Change Password")}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>{t("Change Password")}</DialogTitle>
-                    <DialogDescription>
-                      {t("Enter your current password and a new password")}
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  <Form {...passwordForm}>
-                    <form onSubmit={passwordForm.handleSubmit(handleChangePassword)} className="space-y-4">
-                      <FormField
-                        control={passwordForm.control}
-                        name="currentPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Current Password")}</FormLabel>
-                            <FormControl>
-                              <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={passwordForm.control}
-                        name="newPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("New Password")}</FormLabel>
-                            <FormControl>
-                              <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={passwordForm.control}
-                        name="confirmNewPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t("Confirm New Password")}</FormLabel>
-                            <FormControl>
-                              <Input type="password" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <DialogFooter className="mt-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setIsChangePasswordDialogOpen(false)}
-                        >
-                          {t("Cancel")}
-                        </Button>
-                        <Button type="submit">
-                          {t("Change Password")}
-                        </Button>
-                      </DialogFooter>
-                    </form>
-                  </Form>
-                </DialogContent>
-              </Dialog>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Footer />
     </div>
   );
 };
