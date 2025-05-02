@@ -186,18 +186,18 @@ const AdminContactInfoPage = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">Contact Information</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold">Contact Information</h1>
         </div>
 
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle>Update Company Contact Information</CardTitle>
+        <Card className="w-full max-w-3xl mx-auto">
+          <CardHeader className="p-4 sm:p-6">
+            <CardTitle className="text-xl">Update Company Contact Information</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-4 sm:p-6 pt-0">
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
                 <div className="space-y-4">
                   <FormField
                     control={form.control}
@@ -211,14 +211,14 @@ const AdminContactInfoPage = () => {
                           </div>
                         </FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Company address" {...field} />
+                          <Textarea placeholder="Company address" {...field} className="min-h-[60px]" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="email"
@@ -265,14 +265,14 @@ const AdminContactInfoPage = () => {
                       <FormItem>
                         <FormLabel>Opening Hours</FormLabel>
                         <FormControl>
-                          <Textarea placeholder="Monday - Friday: 9:00 AM - 5:00 PM" {...field} />
+                          <Textarea placeholder="Monday - Friday: 9:00 AM - 5:00 PM" {...field} className="min-h-[60px]" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <FormField
                       control={form.control}
                       name="latitude"
@@ -305,53 +305,55 @@ const AdminContactInfoPage = () => {
                   <div>
                     <h3 className="text-lg font-medium mb-2">Social Media (optional)</h3>
                     <div className="space-y-4">
-                      <FormField
-                        control={form.control}
-                        name="facebook"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Facebook Page URL</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://facebook.com/yourpage" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="twitter"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Twitter Profile URL</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://twitter.com/yourhandle" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="instagram"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Instagram Profile URL</FormLabel>
-                            <FormControl>
-                              <Input placeholder="https://instagram.com/yourhandle" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="facebook"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Facebook URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://facebook.com/yourpage" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="twitter"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Twitter URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://twitter.com/yourhandle" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="instagram"
+                          render={({ field }) => (
+                            <FormItem className="sm:col-span-2 md:col-span-1">
+                              <FormLabel>Instagram URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://instagram.com/yourhandle" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex justify-end">
-                  <Button type="submit" disabled={updateContactMutation.isPending}>
+                <div className="flex justify-end pt-2">
+                  <Button type="submit" className="w-full sm:w-auto" disabled={updateContactMutation.isPending}>
                     {updateContactMutation.isPending && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}

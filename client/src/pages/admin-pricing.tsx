@@ -331,7 +331,7 @@ const AdminPricingPage = () => {
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="sm:max-w-[95%] md:max-w-[500px] overflow-y-auto max-h-[90vh]">
+        <DialogContent className="w-[95vw] max-w-[520px] overflow-y-auto max-h-[90vh] p-4 sm:p-6">
           <DialogHeader className="mb-2">
             <DialogTitle>{editingPlan ? "Edit Pricing Plan" : "Add New Pricing Plan"}</DialogTitle>
             <DialogDescription>
@@ -344,7 +344,7 @@ const AdminPricingPage = () => {
           
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3 py-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="name"
@@ -352,7 +352,7 @@ const AdminPricingPage = () => {
                     <FormItem>
                       <FormLabel className="text-xs">Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Plan name" {...field} className="h-8" />
+                        <Input placeholder="Plan name" {...field} className="h-9 text-sm" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -367,7 +367,7 @@ const AdminPricingPage = () => {
                       <FormLabel className="text-xs">Tier</FormLabel>
                       <FormControl>
                         <select 
-                          className="h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           {...field}
                         >
                           <option value="free">Free</option>
@@ -380,7 +380,7 @@ const AdminPricingPage = () => {
                 />
               </div>
               
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <FormField
                   control={form.control}
                   name="price"
@@ -388,7 +388,7 @@ const AdminPricingPage = () => {
                     <FormItem>
                       <FormLabel className="text-xs">Price</FormLabel>
                       <FormControl>
-                        <Input type="number" step="0.01" {...field} className="h-8" />
+                        <Input type="number" step="0.01" {...field} className="h-9 text-sm" />
                       </FormControl>
                       <FormMessage className="text-xs" />
                     </FormItem>
@@ -403,7 +403,7 @@ const AdminPricingPage = () => {
                       <FormLabel className="text-xs">Currency</FormLabel>
                       <FormControl>
                         <select 
-                          className="h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           {...field}
                         >
                           <option value="USD">USD</option>
@@ -425,7 +425,7 @@ const AdminPricingPage = () => {
                   <FormItem>
                     <FormLabel className="text-xs">Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Plan description" {...field} className="min-h-[40px] text-xs" rows={2} />
+                      <Textarea placeholder="Plan description" {...field} className="min-h-[40px] text-sm" rows={2} />
                     </FormControl>
                     <FormMessage className="text-xs" />
                   </FormItem>
@@ -442,7 +442,7 @@ const AdminPricingPage = () => {
                       <Textarea 
                         placeholder="Enter features, one per line" 
                         {...field} 
-                        className="min-h-[60px] text-xs"
+                        className="min-h-[60px] text-sm"
                         rows={3}
                       />
                     </FormControl>
@@ -451,7 +451,7 @@ const AdminPricingPage = () => {
                 )}
               />
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <FormField
                   control={form.control}
                   name="billingPeriod"
@@ -460,7 +460,7 @@ const AdminPricingPage = () => {
                       <FormLabel className="text-xs">Billing</FormLabel>
                       <FormControl>
                         <select 
-                          className="h-8 w-full rounded-md border border-input bg-background px-3 py-1 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                          className="h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           {...field}
                         >
                           <option value="monthly">Monthly</option>
@@ -479,7 +479,7 @@ const AdminPricingPage = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel className="text-xs">Active</FormLabel>
-                      <div className="flex items-center h-8 space-x-2">
+                      <div className="flex items-center h-9 space-x-2">
                         <FormControl>
                           <Switch 
                             checked={field.value} 
@@ -498,7 +498,7 @@ const AdminPricingPage = () => {
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel className="text-xs">Popular</FormLabel>
-                      <div className="flex items-center h-8 space-x-2">
+                      <div className="flex items-center h-9 space-x-2">
                         <FormControl>
                           <Switch 
                             checked={field.value} 
@@ -512,11 +512,12 @@ const AdminPricingPage = () => {
                 />
               </div>
               
-              <DialogFooter className="pt-2">
+              <DialogFooter className="pt-2 flex flex-col sm:flex-row sm:justify-end gap-2">
                 <Button 
                   type="button"
                   variant="outline" 
                   size="sm"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     setIsFormOpen(false);
                     setEditingPlan(null);
@@ -525,7 +526,12 @@ const AdminPricingPage = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" size="sm" disabled={createPlanMutation.isPending || updatePlanMutation.isPending}>
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  className="w-full sm:w-auto"
+                  disabled={createPlanMutation.isPending || updatePlanMutation.isPending}
+                >
                   {(createPlanMutation.isPending || updatePlanMutation.isPending) && (
                     <Loader2 className="mr-1 h-3 w-3 animate-spin" />
                   )}
