@@ -275,7 +275,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
       {/* Profile Drawer */}
       {user && (
-        <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen} side="right">
+        <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen}>
           <SheetContent className="w-[400px] sm:w-[540px] p-6 overflow-y-auto">
             <SheetHeader className="mb-5">
               <SheetTitle>Admin Profile</SheetTitle>
