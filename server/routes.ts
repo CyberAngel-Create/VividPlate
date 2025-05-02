@@ -626,11 +626,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       
       // Check subscription status to enforce restaurant limits
-      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
       const restaurantCount = await storage.countRestaurantsByUserId(userId);
+      const user = await storage.getUser(userId);
       
-      // Determine max restaurants based on subscription tier
-      const maxRestaurants = activeSubscription && activeSubscription.tier === "premium" ? 3 : 1;
+      // Determine max restaurants based on user's subscription tier
+      const maxRestaurants = user && user.subscriptionTier === "premium" ? 3 : 1;
       
       // Check if user has reached their limit
       if (restaurantCount >= maxRestaurants) {

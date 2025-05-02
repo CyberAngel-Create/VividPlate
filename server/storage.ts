@@ -315,6 +315,10 @@ export class MemStorage implements IStorage {
       (restaurant) => restaurant.userId === userId
     );
   }
+  
+  async countRestaurantsByUserId(userId: number): Promise<number> {
+    return (await this.getRestaurantsByUserId(userId)).length;
+  }
 
   async createRestaurant(insertRestaurant: InsertRestaurant): Promise<Restaurant> {
     const id = this.currentIds.restaurants++;
@@ -459,10 +463,7 @@ export class MemStorage implements IStorage {
       .length;
   }
   
-  // Count restaurants by user ID
-  async countRestaurantsByUserId(userId: number): Promise<number> {
-    return (await this.getRestaurantsByUserId(userId)).length;
-  }
+
   
   // Subscription operations
   async getSubscription(id: number): Promise<Subscription | undefined> {
