@@ -26,6 +26,8 @@ import {
   CardTitle 
 } from "../components/ui/card";
 import { Link } from "wouter";
+import CustomerHeader from "../components/layout/CustomerHeader";
+import Footer from "../components/layout/Footer";
 
 const loginSchema = z.object({
   identifier: z.string().min(1, "Username or Email is required"),
@@ -92,88 +94,92 @@ const Login = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12 flex justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-heading text-center">{t('common.login')} - DigitaMenuMate</CardTitle>
-          <CardDescription className="text-center">
-            Enter your credentials to access your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="identifier"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username or Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Enter your username or email..." {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <div className="flex justify-between items-center">
-                      <FormLabel>{t('common.password')}</FormLabel>
-                      <Link 
-                        href="/forgot-password" 
-                        className="text-xs text-primary hover:underline"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <div className="relative">
-                        <Input 
-                          type={showPassword ? "text" : "password"} 
-                          placeholder={`${t('common.password')}...`} 
-                          {...field} 
-                        />
-                        <button 
-                          type="button"
-                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
-                          onClick={() => setShowPassword(!showPassword)}
+    <>
+      <CustomerHeader />
+      <div className="container mx-auto px-4 py-12 flex justify-center min-h-[calc(100vh-64px-380px)]">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-heading text-center">{t('common.login')} - DigitaMenuMate</CardTitle>
+            <CardDescription className="text-center">
+              Enter your credentials to access your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="identifier"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Username or Email</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your username or email..." {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex justify-between items-center">
+                        <FormLabel>{t('common.password')}</FormLabel>
+                        <Link 
+                          href="/forgot-password" 
+                          className="text-xs text-primary hover:underline"
                         >
-                          {showPassword ? (
-                            <EyeOffIcon className="h-5 w-5" />
-                          ) : (
-                            <EyeIcon className="h-5 w-5" />
-                          )}
-                        </button>
+                          Forgot password?
+                        </Link>
                       </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <Button 
-                type="submit" 
-                className="w-full bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
-                disabled={isLoading}
-              >
-                {isLoading ? `${t('common.login')}...` : t('common.login')}
-              </Button>
-            </form>
-          </Form>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2 text-center">
-          <div className="text-sm text-midgray">
-            {t('common.noAccount')}{" "}
-            <Link href="/register" className="text-primary hover:underline">
-              {t('common.register')}
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+                      <FormControl>
+                        <div className="relative">
+                          <Input 
+                            type={showPassword ? "text" : "password"} 
+                            placeholder={`${t('common.password')}...`} 
+                            {...field} 
+                          />
+                          <button 
+                            type="button"
+                            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-500"
+                            onClick={() => setShowPassword(!showPassword)}
+                          >
+                            {showPassword ? (
+                              <EyeOffIcon className="h-5 w-5" />
+                            ) : (
+                              <EyeIcon className="h-5 w-5" />
+                            )}
+                          </button>
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
+                  disabled={isLoading}
+                >
+                  {isLoading ? `${t('common.login')}...` : t('common.login')}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-2 text-center">
+            <div className="text-sm text-midgray">
+              {t('common.noAccount')}{" "}
+              <Link href="/register" className="text-primary hover:underline">
+                {t('common.register')}
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+      <Footer />
+    </>
   );
 };
 
