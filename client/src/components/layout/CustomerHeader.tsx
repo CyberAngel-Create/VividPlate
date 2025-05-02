@@ -6,12 +6,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ReactNode } from "react";
 
 interface CustomerHeaderProps {
-  isAuthenticated: boolean;
-  onLogout: () => void;
+  isAuthenticated?: boolean;
+  onLogout?: () => void;
   children?: ReactNode;
 }
 
-const CustomerHeader = ({ isAuthenticated, onLogout, children }: CustomerHeaderProps) => {
+const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children }: CustomerHeaderProps) => {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -65,7 +65,7 @@ const CustomerHeader = ({ isAuthenticated, onLogout, children }: CustomerHeaderP
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={onLogout}
+                    onClick={() => onLogout && onLogout()}
                     className="text-gray-700 hover:text-primary"
                   >
                     <LogOut className="h-4 w-4 mr-1" />
@@ -158,7 +158,7 @@ const CustomerHeader = ({ isAuthenticated, onLogout, children }: CustomerHeaderP
                           variant="ghost"
                           size="sm"
                           onClick={() => {
-                            onLogout();
+                            if (onLogout) onLogout();
                             closeMenu();
                           }}
                           className="w-full justify-start text-gray-700 hover:text-primary"
