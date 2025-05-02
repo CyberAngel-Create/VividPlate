@@ -1,7 +1,8 @@
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ArrowRight, Utensils, QrCode, Smartphone, Edit } from "lucide-react";
+import { ArrowRight, QrCode, Smartphone, Edit, Facebook, Instagram, Twitter, ArrowUpRight } from "lucide-react";
+import Footer from "@/components/layout/Footer";
 
 const Home = () => {
   const [, setLocation] = useLocation();
@@ -257,6 +258,9 @@ const Home = () => {
           </div>
         </div>
       </section>
+      
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };
