@@ -7,6 +7,7 @@ import { useState, useMemo } from "react";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import CompactSearch from "@/components/ui/compact-search";
+import MenuItemDietaryOverlay from "@/components/dietary/MenuItemDietaryOverlay";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -125,7 +126,10 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                       >
                         {/* Image on left side with click to view */}
                         {item.imageUrl ? (
-                          <div className="w-1/3 pr-4">
+                          <div className="w-1/3 pr-4 relative">
+                            {/* Dietary Overlay positioned on the image */}
+                            <MenuItemDietaryOverlay item={item} />
+                            
                             <ImageViewDialog 
                               imageSrc={normalizeImageUrl(item.imageUrl)} 
                               imageAlt={item.name}
@@ -144,7 +148,10 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                             </ImageViewDialog>
                           </div>
                         ) : (
-                          <div className="w-1/3 pr-4">
+                          <div className="w-1/3 pr-4 relative">
+                            {/* Dietary Overlay positioned even when there's no image */}
+                            <MenuItemDietaryOverlay item={item} />
+                            
                             <div className="w-full h-24 sm:h-28 bg-neutral rounded-md flex items-center justify-center">
                               <span className="text-xs text-gray-500">No image</span>
                             </div>
