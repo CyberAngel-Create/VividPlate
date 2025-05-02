@@ -610,6 +610,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Server error' });
     }
   });
+  
+  // Get current active subscription
+  app.get('/api/subscription/current', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      res.json(activeSubscription || null);
+    } catch (error) {
+      console.error("Error fetching current subscription:", error);
+      res.status(500).json({ error: "Failed to fetch current subscription" });
+    }
+  });
+  
+  // Downgrade to free tier
+  app.post("/api/subscription/downgrade", isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      
+      // Get current subscription
+      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      
+      if (!activeSubscription) {
+        return res.status(400).json({ error: "No active subscription to downgrade" });
+      }
+      
+      if (activeSubscription.tier === 'free') {
+        return res.status(400).json({ error: "Already on free tier" });
+      }
+      
+      // If user has a Stripe subscription, cancel it
+      if (req.user.stripeSubscriptionId) {
+        try {
+          if (stripe) {
+            await stripe.subscriptions.cancel(req.user.stripeSubscriptionId);
+          }
+        } catch (stripeError) {
+          console.error("Error cancelling Stripe subscription:", stripeError);
+          // Continue even if Stripe cancellation fails - we'll still downgrade the user
+        }
+      }
+      
+      // Deactivate the current subscription
+      await storage.updateSubscription(activeSubscription.id, {
+        isActive: false,
+        endDate: new Date()
+      });
+      
+      // Create a new free tier subscription
+      const newSubscription = await storage.createSubscription({
+        userId,
+        tier: 'free',
+        isActive: true,
+        startDate: new Date(),
+        paymentMethod: 'system'
+      });
+      
+      res.json(newSubscription);
+    } catch (error) {
+      console.error("Error downgrading subscription:", error);
+      res.status(500).json({ error: "Failed to downgrade subscription" });
+    }
+  });
 
   // Restaurant routes
   app.get('/api/restaurants', isAuthenticated, async (req, res) => {

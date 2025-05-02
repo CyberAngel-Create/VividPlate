@@ -8,17 +8,18 @@ type UseSubscriptionResult = {
   subscription: Subscription | null;
   isPaid: boolean;
   isLoading: boolean;
+  isSubscriptionLoading: boolean;
   error: Error | null;
 };
 
 const SubscriptionContext = createContext<UseSubscriptionResult | null>(null);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
 
   const {
     data: subscription,
-    isLoading,
+    isLoading: isSubscriptionLoading,
     error,
   } = useQuery<Subscription | null>({
     queryKey: ["/api/subscription/current"],
@@ -39,7 +40,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const value = {
     subscription: subscription || null,
     isPaid,
-    isLoading,
+    isLoading: isAuthLoading || isSubscriptionLoading,
+    isSubscriptionLoading,
     error: error as Error | null,
   };
 
