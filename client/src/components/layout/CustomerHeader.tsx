@@ -39,7 +39,7 @@ export default function CustomerHeader({
             
             {children}
             
-            {isAuthenticated && onLogout && (
+            {isAuthenticated ? (
               <Button 
                 variant="outline" 
                 size="sm"
@@ -49,6 +49,19 @@ export default function CustomerHeader({
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Link href="/login">
+                  <Button variant="outline" size="sm">
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register">
+                  <Button size="sm">
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
             )}
           </nav>
 
@@ -84,7 +97,7 @@ export default function CustomerHeader({
               Contact
             </Link>
             
-            {isAuthenticated && onLogout && (
+            {isAuthenticated ? (
               <Button 
                 variant="outline" 
                 size="sm"
@@ -94,6 +107,26 @@ export default function CustomerHeader({
                 <LogOut className="h-4 w-4" />
                 Logout
               </Button>
+            ) : (
+              <>
+                <Link href="/login" className="block">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="w-full justify-center mt-2"
+                  >
+                    Login
+                  </Button>
+                </Link>
+                <Link href="/register" className="block">
+                  <Button 
+                    size="sm"
+                    className="w-full justify-center mt-2"
+                  >
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
             )}
             
             <div className="px-3 py-2">

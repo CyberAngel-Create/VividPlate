@@ -1,14 +1,57 @@
 import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { ArrowRight, QrCode, Smartphone, Edit, Facebook, Instagram, Twitter, ArrowUpRight } from "lucide-react";
+import { ArrowRight, QrCode, Smartphone, Edit } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import CustomerHeader from "@/components/layout/CustomerHeader";
 import Footer from "@/components/layout/Footer";
 
 const Home = () => {
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await apiRequest("GET", "/api/auth/me");
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      setIsAuthenticated(false);
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen">
+      <CustomerHeader 
+        isAuthenticated={isAuthenticated}
+        onLogout={handleLogout}
+      />
+      
       {/* Hero Section */}
       <section className="py-16 md:py-24 bg-gradient-to-r from-primary/90 to-primary">
         <div className="container mx-auto px-4">

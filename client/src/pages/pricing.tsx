@@ -13,9 +13,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import Header from "@/components/layout/Header";
+import CustomerHeader from "@/components/layout/CustomerHeader";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 interface PricingPlan {
   id: number;
@@ -74,10 +75,31 @@ const PricingPage = () => {
     }
   };
 
+  // Create a logout handler
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+      setLocation("/");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading || isAuthLoading) {
     return (
       <div className="min-h-screen flex flex-col">
-        <Header />
+        <CustomerHeader 
+          isAuthenticated={!!user}
+          onLogout={handleLogout}
+        />
         <main className="flex-1 flex items-center justify-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </main>
@@ -88,7 +110,10 @@ const PricingPage = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header />
+      <CustomerHeader 
+        isAuthenticated={!!user}
+        onLogout={handleLogout}
+      />
       <main className="flex-1 container mx-auto px-4 py-12">
         <section className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Pricing Plans</h1>
