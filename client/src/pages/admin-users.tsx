@@ -10,7 +10,10 @@ import {
   UserCheck,
   UserX,
   Crown,
-  Trash
+  Trash,
+  UserPlus,
+  Eye,
+  EyeOff
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,12 +44,52 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 // Using direct relative path to fix import issue
 import AdminLayout from "../components/layout/AdminLayout";
 import { User } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
+
+// Admin user registration schema
+const adminFormSchema = z.object({
+  username: z.string()
+    .min(3, "Username must be at least 3 characters")
+    .max(50, "Username cannot exceed 50 characters"),
+  email: z.string()
+    .email("Please enter a valid email address"),
+  fullName: z.string()
+    .min(2, "Full name must be at least 2 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number"),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
+type AdminFormData = z.infer<typeof adminFormSchema>;
 
 const UsersAdminPage = () => {
   const [page, setPage] = useState(1);
@@ -55,9 +98,53 @@ const UsersAdminPage = () => {
   const [actionType, setActionType] = useState<"status" | "subscription" | null>(null);
   const [actionValue, setActionValue] = useState<boolean | string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showCreateAdminDialog, setShowCreateAdminDialog] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Create admin form
+  const form = useForm<AdminFormData>({
+    resolver: zodResolver(adminFormSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      fullName: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+  
+  // Create admin mutation
+  const createAdminMutation = useMutation({
+    mutationFn: async (data: Omit<AdminFormData, "confirmPassword">) => {
+      const { confirmPassword, ...adminData } = data;
+      const res = await apiRequest("POST", "/api/admin/users/create-admin", adminData);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Admin created",
+        description: "The new admin user has been created successfully",
+      });
+      setShowCreateAdminDialog(false);
+      form.reset();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create admin user. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const onSubmitAdminForm = (data: AdminFormData) => {
+    const { confirmPassword, ...adminData } = data;
+    createAdminMutation.mutate(adminData);
+  };
 
   const { data: users, isLoading, error } = useQuery<User[]>({
     queryKey: ["/api/admin/users", page],

@@ -107,7 +107,7 @@ const Dashboard = () => {
         {/* Subscription Status Card */}
         {!isLoadingSubscription && subscriptionStatus && (
           <div className={`mb-6 p-4 rounded-lg border ${subscriptionStatus.isPaid ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
               <div className={`p-2 rounded-full ${subscriptionStatus.isPaid ? 'bg-green-100' : 'bg-amber-100'}`}>
                 {subscriptionStatus.isPaid ? (
                   <CreditCard className="h-5 w-5 text-green-600" />
@@ -133,14 +133,24 @@ const Dashboard = () => {
                   )}
                 </div>
               </div>
-              {!subscriptionStatus.isPaid && (
-                <button 
-                  onClick={() => window.location.href = "/subscribe"}
-                  className="ml-auto bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
-                >
-                  Upgrade Now
-                </button>
-              )}
+              <div className="mt-2 sm:mt-0 sm:ml-auto flex flex-col sm:flex-row gap-2">
+                {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && (
+                  <button 
+                    onClick={() => window.location.href = "/edit-restaurant"}
+                    className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
+                  >
+                    Create New Restaurant
+                  </button>
+                )}
+                {!subscriptionStatus.isPaid && (
+                  <button 
+                    onClick={() => window.location.href = "/subscribe"}
+                    className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
+                  >
+                    Upgrade Now
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}
