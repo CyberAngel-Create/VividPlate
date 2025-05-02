@@ -18,7 +18,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -361,7 +361,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   <label htmlFor="username" className="text-sm font-medium">Username</label>
                   <Input 
                     id="username"
+                    name="username"
                     defaultValue={user.username}
+                    required
                   />
                 </div>
                 
@@ -369,8 +371,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   <label htmlFor="email" className="text-sm font-medium">Email</label>
                   <Input 
                     id="email"
+                    name="email"
                     type="email"
                     defaultValue={user.email}
+                    required
                   />
                 </div>
                 
@@ -378,6 +382,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   <label htmlFor="current-password" className="text-sm font-medium">Current Password</label>
                   <Input 
                     id="current-password"
+                    name="current-password"
                     type="password"
                     placeholder="Enter current password to confirm changes"
                   />
@@ -387,6 +392,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   <label htmlFor="new-password" className="text-sm font-medium">New Password (optional)</label>
                   <Input 
                     id="new-password"
+                    name="new-password"
                     type="password"
                     placeholder="Leave blank to keep current password"
                   />
