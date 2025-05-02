@@ -118,7 +118,7 @@ const UsersAdminPage = () => {
   
   // Create admin mutation
   const createAdminMutation = useMutation({
-    mutationFn: async (data: Omit<AdminFormData, "confirmPassword">) => {
+    mutationFn: async (data: AdminFormData) => {
       const { confirmPassword, ...adminData } = data;
       const res = await apiRequest("POST", "/api/admin/users/create-admin", adminData);
       return res.json();
@@ -142,8 +142,7 @@ const UsersAdminPage = () => {
   });
   
   const onSubmitAdminForm = (data: AdminFormData) => {
-    const { confirmPassword, ...adminData } = data;
-    createAdminMutation.mutate(adminData);
+    createAdminMutation.mutate(data);
   };
 
   const { data: users, isLoading, error } = useQuery<User[]>({
@@ -304,7 +303,16 @@ const UsersAdminPage = () => {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Users</h1>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-3">
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="flex items-center gap-1 bg-primary hover:bg-primary/90"
+              onClick={() => setShowCreateAdminDialog(true)}
+            >
+              <UserPlus className="h-4 w-4" />
+              <span>Add Admin</span>
+            </Button>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -450,6 +458,131 @@ const UsersAdminPage = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={showCreateAdminDialog} onOpenChange={setShowCreateAdminDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Create Admin User</DialogTitle>
+            <DialogDescription>
+              Create a new administrator account for the platform
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitAdminForm)} className="space-y-4 py-4">
+              <FormField
+                control={form.control}
+                name="fullName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Full Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John Smith" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="admin_username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="admin@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <Input 
+                          type={showPassword ? "text" : "password"} 
+                          placeholder="Create a secure password" 
+                          {...field} 
+                        />
+                      </FormControl>
+                      <button
+                        type="button"
+                        className="absolute right-2 top-2.5 text-muted-foreground"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Confirm Password</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type={showPassword ? "text" : "password"} 
+                        placeholder="Repeat your password" 
+                        {...field} 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <DialogFooter>
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    form.reset();
+                    setShowCreateAdminDialog(false);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={createAdminMutation.isPending}>
+                  {createAdminMutation.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Create Admin
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

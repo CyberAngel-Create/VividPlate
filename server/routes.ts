@@ -1917,6 +1917,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create admin user
+  app.post('/api/admin/users/create-admin', isAdmin, async (req, res) => {
+    try {
+      const { username, email, fullName, password } = req.body;
+      
+      // Basic validation
+      if (!username || !email || !fullName || !password) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(username);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      
+      // Check if email already exists
+      const existingEmail = await storage.getUserByEmail(email);
+      if (existingEmail) {
+        return res.status(400).json({ message: 'Email already exists' });
+      }
+      
+      // Create the admin user
+      const hashedPassword = await hashPassword(password);
+      const newAdmin = await storage.createUser({
+        username,
+        email,
+        fullName,
+        password: hashedPassword,
+        isAdmin: true,
+        isActive: true,
+        subscriptionTier: 'admin',
+        role: 'admin'
+      });
+      
+      // Log admin creation
+      const adminUser = req.user as User;
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'admin_created',
+        entityType: 'user',
+        entityId: newAdmin.id,
+        details: { createdBy: adminUser.username, newAdminUsername: username }
+      });
+      
+      // Return the new admin without password
+      const { password: _, ...adminWithoutPassword } = newAdmin;
+      res.status(201).json(adminWithoutPassword);
+    } catch (error) {
+      console.error('Error creating admin user:', error);
+      res.status(500).json({ message: 'Failed to create admin user' });
+    }
+  });
+
   // Admin profile update
   app.patch('/api/admin/profile', isAdmin, async (req, res) => {
     try {
