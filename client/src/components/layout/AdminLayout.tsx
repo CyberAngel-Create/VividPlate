@@ -285,14 +285,73 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </SheetHeader>
             <form 
               className="space-y-4 py-4"
-              onSubmit={(e) => {
+              onSubmit={async (e) => {
                 e.preventDefault();
-                // Implement profile update logic here
-                toast({
-                  title: "Profile updated",
-                  description: "Your profile has been updated successfully",
-                });
-                setIsProfileOpen(false);
+                
+                // Get form values
+                const formData = new FormData(e.currentTarget);
+                const username = formData.get('username') as string;
+                const email = formData.get('email') as string;
+                const currentPassword = formData.get('current-password') as string;
+                const newPassword = formData.get('new-password') as string;
+                
+                // Basic validation
+                if (!username || !email) {
+                  toast({
+                    title: "Missing information",
+                    description: "Username and email are required",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                // Different payloads based on whether password is being changed
+                const updateData: any = { username, email };
+                
+                if (newPassword && currentPassword) {
+                  updateData.currentPassword = currentPassword;
+                  updateData.newPassword = newPassword;
+                } else if (newPassword && !currentPassword) {
+                  toast({
+                    title: "Missing current password",
+                    description: "Please enter your current password to change to a new one",
+                    variant: "destructive"
+                  });
+                  return;
+                }
+                
+                try {
+                  // Admin profile update endpoint
+                  const response = await fetch('/api/admin/profile', {
+                    method: 'PATCH',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updateData)
+                  });
+                  
+                  if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to update profile');
+                  }
+                  
+                  // Show success message
+                  toast({
+                    title: "Profile updated",
+                    description: "Your profile has been updated successfully",
+                  });
+                  setIsProfileOpen(false);
+                  
+                  // Force refresh the user data
+                  queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+                } catch (error) {
+                  console.error('Profile update error:', error);
+                  toast({
+                    title: "Update failed",
+                    description: error instanceof Error ? error.message : "Failed to update profile. Please try again.",
+                    variant: "destructive"
+                  });
+                }
               }}
             >
               {/* Admin profile info */}
