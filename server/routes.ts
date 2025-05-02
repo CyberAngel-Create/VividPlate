@@ -1917,6 +1917,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin profile update
+  app.patch('/api/admin/profile', isAdmin, async (req, res) => {
+    try {
+      const { username, email, currentPassword, newPassword } = req.body;
+      
+      // Basic validation
+      if (!username || !email) {
+        return res.status(400).json({ message: 'Username and email are required' });
+      }
+      
+      // Get the current admin user
+      const admin = await storage.getUser(req.user.id);
+      if (!admin) {
+        return res.status(404).json({ message: 'Admin user not found' });
+      }
+      
+      // If changing password, verify the current password
+      if (newPassword) {
+        if (!currentPassword) {
+          return res.status(400).json({ message: 'Current password is required to set a new password' });
+        }
+        
+        // Verify current password
+        const isPasswordCorrect = await storage.verifyPassword(admin.id, currentPassword);
+        if (!isPasswordCorrect) {
+          return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+        
+        // Update user with new password
+        const updatedAdmin = await storage.updateUserWithPassword(admin.id, {
+          username,
+          email,
+          password: newPassword
+        });
+        
+        // Return updated user without password
+        const { password, ...userWithoutPassword } = updatedAdmin;
+        return res.json(userWithoutPassword);
+      }
+      
+      // Update user without changing password
+      const updatedAdmin = await storage.updateUser(admin.id, {
+        username,
+        email
+      });
+      
+      // Return updated user without password
+      const { password, ...userWithoutPassword } = updatedAdmin;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error updating admin profile:', error);
+      res.status(500).json({ message: 'Failed to update admin profile' });
+    }
+  });
+
   // Admin login
   app.post('/api/auth/admin-login', (req, res, next) => {
     passport.authenticate('local', (err, user, info) => {

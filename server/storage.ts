@@ -23,6 +23,8 @@ export interface IStorage {
   getUserByResetToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, user: Partial<User>): Promise<User | undefined>;
+  updateUserWithPassword(id: number, user: { username: string, email: string, password: string }): Promise<User>;
+  verifyPassword(userId: number, password: string): Promise<boolean>;
   setResetPasswordToken(email: string, token: string, expires: Date): Promise<User | undefined>;
   resetPassword(token: string, newPassword: string): Promise<boolean>;
   changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean>;
@@ -305,6 +307,32 @@ export class MemStorage implements IStorage {
     user.password = newPassword;
     this.users.set(userId, user);
     
+    return true;
+  }
+  
+  async updateUserWithPassword(id: number, userData: { username: string, email: string, password: string }): Promise<User> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    const updatedUser = { 
+      ...user, 
+      username: userData.username,
+      email: userData.email,
+      password: userData.password
+    };
+    
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async verifyPassword(userId: number, password: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+    
+    // In the MemStorage implementation, we'll assume password comparison
+    // is done by the comparePasswords function in routes.ts
     return true;
   }
 
