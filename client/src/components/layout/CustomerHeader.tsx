@@ -1,140 +1,208 @@
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { LogOut, Menu, X } from "lucide-react";
 import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { Menu, X, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ReactNode } from "react";
 
 interface CustomerHeaderProps {
-  onLogout?: () => void;
-  isAuthenticated?: boolean;
-  children?: React.ReactNode;
+  isAuthenticated: boolean;
+  onLogout: () => void;
+  children?: ReactNode;
 }
 
-export default function CustomerHeader({
-  onLogout,
-  isAuthenticated = false,
-  children
-}: CustomerHeaderProps) {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+const CustomerHeader = ({ isAuthenticated, onLogout, children }: CustomerHeaderProps) => {
+  const [location] = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const navigationItems = [
+    { name: "Home", path: "/" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "Contact", path: "/contact" }
+  ];
 
   return (
-    <header className="w-full bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-between items-center py-4">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="font-heading font-bold text-xl text-primary cursor-pointer">
-            MenuMate
+          <Link href="/">
+            <div className="flex items-center">
+              <span className="text-xl font-heading font-bold text-primary">MenuMate</span>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            <Link href="/" className="text-dark hover:text-primary transition-colors">
-              Home
-            </Link>
-            <Link href="/pricing" className="text-dark hover:text-primary transition-colors">
-              Pricing
-            </Link>
-            <Link href="/contact" className="text-dark hover:text-primary transition-colors">
-              Contact
-            </Link>
-            
-            {children}
-            
-            {isAuthenticated ? (
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex items-center gap-1" 
-                onClick={onLogout}
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            ) : (
-              <div className="flex items-center gap-3">
-                <Link href="/login">
-                  <Button variant="outline" size="sm">
-                    Login
-                  </Button>
+            {/* Main navigation */}
+            <div className="flex items-center space-x-6">
+              {navigationItems.map((item) => (
+                <Link key={item.name} href={item.path}>
+                  <div
+                    className={`text-sm font-medium ${
+                      location === item.path
+                        ? "text-primary"
+                        : "text-gray-700 hover:text-primary transition-colors"
+                    }`}
+                  >
+                    {item.name}
+                  </div>
                 </Link>
-                <Link href="/register">
-                  <Button size="sm">
-                    Sign Up
+              ))}
+            </div>
+
+            {/* Auth buttons */}
+            <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-3">
+                  <Link href="/dashboard">
+                    <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                      Dashboard
+                    </div>
+                  </Link>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={onLogout}
+                    className="text-gray-700 hover:text-primary"
+                  >
+                    <LogOut className="h-4 w-4 mr-1" />
+                    Log out
                   </Button>
-                </Link>
-              </div>
-            )}
+                </div>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                      Log in
+                    </div>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="sm" variant="default">
+                      Sign up
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
           </nav>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1"
-            >
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
-            </Button>
+          {/* Extra components */}
+          <div className="hidden md:flex items-center ml-2">
+            {children}
           </div>
+
+          {/* Mobile menu button */}
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[250px] p-0">
+              <div className="flex flex-col h-full">
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-heading font-bold text-primary">
+                      MenuMate
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={closeMenu}
+                      className="rounded-full p-1 h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Mobile navigation */}
+                <nav className="flex-1 overflow-y-auto p-4">
+                  <div className="space-y-3">
+                    {navigationItems.map((item) => (
+                      <Link key={item.name} href={item.path}>
+                        <div
+                          className={`block py-2 text-sm font-medium ${
+                            location === item.path
+                              ? "text-primary"
+                              : "text-gray-700 hover:text-primary transition-colors"
+                          }`}
+                          onClick={closeMenu}
+                        >
+                          {item.name}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    {isAuthenticated ? (
+                      <div className="space-y-3">
+                        <Link href="/dashboard">
+                          <div
+                            className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                            onClick={closeMenu}
+                          >
+                            Dashboard
+                          </div>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            onLogout();
+                            closeMenu();
+                          }}
+                          className="w-full justify-start text-gray-700 hover:text-primary"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Log out
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <Link href="/login">
+                          <div
+                            className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                            onClick={closeMenu}
+                          >
+                            Log in
+                          </div>
+                        </Link>
+                        <Link href="/register">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="w-full mt-2"
+                            onClick={closeMenu}
+                          >
+                            Sign up
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </nav>
+
+                {/* Mobile extra components */}
+                <div className="p-4 mt-auto border-t border-gray-100">
+                  {children}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {/* Mobile Navigation */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link href="/" className="block px-3 py-2 text-dark hover:bg-neutral rounded-md">
-              Home
-            </Link>
-            <Link href="/pricing" className="block px-3 py-2 text-dark hover:bg-neutral rounded-md">
-              Pricing
-            </Link>
-            <Link href="/contact" className="block px-3 py-2 text-dark hover:bg-neutral rounded-md">
-              Contact
-            </Link>
-            
-            {isAuthenticated ? (
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="flex items-center gap-1 w-full justify-start" 
-                onClick={onLogout}
-              >
-                <LogOut className="h-4 w-4" />
-                Logout
-              </Button>
-            ) : (
-              <>
-                <Link href="/login" className="block">
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    className="w-full justify-center mt-2"
-                  >
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/register" className="block">
-                  <Button 
-                    size="sm"
-                    className="w-full justify-center mt-2"
-                  >
-                    Sign Up
-                  </Button>
-                </Link>
-              </>
-            )}
-            
-            <div className="px-3 py-2">
-              {children}
-            </div>
-          </div>
-        </div>
-      )}
     </header>
   );
-}
+};
+
+export default CustomerHeader;
