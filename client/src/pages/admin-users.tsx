@@ -460,7 +460,7 @@ const UsersAdminPage = () => {
       </AlertDialog>
 
       <Dialog open={showCreateAdminDialog} onOpenChange={setShowCreateAdminDialog}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] max-w-[90vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Create Admin User</DialogTitle>
             <DialogDescription>
@@ -469,17 +469,18 @@ const UsersAdminPage = () => {
           </DialogHeader>
           
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmitAdminForm)} className="space-y-4 py-4">
+            <form onSubmit={form.handleSubmit(onSubmitAdminForm)} className="space-y-4 py-2">
+              {/* Form fields in a more compact layout */}
               <FormField
                 control={form.control}
                 name="fullName"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                  <FormItem className="mb-2">
+                    <FormLabel className="text-sm">Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Smith" {...field} />
+                      <Input className="h-9" placeholder="John Smith" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -488,12 +489,12 @@ const UsersAdminPage = () => {
                 control={form.control}
                 name="username"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
+                  <FormItem className="mb-2">
+                    <FormLabel className="text-sm">Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="admin_username" {...field} />
+                      <Input className="h-9" placeholder="admin_username" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -502,12 +503,12 @@ const UsersAdminPage = () => {
                 control={form.control}
                 name="email"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
+                  <FormItem className="mb-2">
+                    <FormLabel className="text-sm">Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="admin@example.com" {...field} />
+                      <Input className="h-9" type="email" placeholder="admin@example.com" {...field} />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -516,11 +517,12 @@ const UsersAdminPage = () => {
                 control={form.control}
                 name="password"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
+                  <FormItem className="mb-2">
+                    <FormLabel className="text-sm">Password</FormLabel>
                     <div className="relative">
                       <FormControl>
                         <Input 
+                          className="h-9"
                           type={showPassword ? "text" : "password"} 
                           placeholder="Create a secure password" 
                           {...field} 
@@ -528,7 +530,7 @@ const UsersAdminPage = () => {
                       </FormControl>
                       <button
                         type="button"
-                        className="absolute right-2 top-2.5 text-muted-foreground"
+                        className="absolute right-2 top-1.5 text-muted-foreground"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -538,7 +540,7 @@ const UsersAdminPage = () => {
                         )}
                       </button>
                     </div>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
@@ -547,24 +549,26 @@ const UsersAdminPage = () => {
                 control={form.control}
                 name="confirmPassword"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                  <FormItem className="mb-2">
+                    <FormLabel className="text-sm">Confirm Password</FormLabel>
                     <FormControl>
                       <Input 
+                        className="h-9"
                         type={showPassword ? "text" : "password"} 
                         placeholder="Repeat your password" 
                         {...field} 
                       />
                     </FormControl>
-                    <FormMessage />
+                    <FormMessage className="text-xs" />
                   </FormItem>
                 )}
               />
               
-              <DialogFooter>
+              <DialogFooter className="flex-col space-y-2 sm:space-y-0 sm:flex-row mt-4">
                 <Button 
                   type="button" 
                   variant="outline" 
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     form.reset();
                     setShowCreateAdminDialog(false);
@@ -572,7 +576,7 @@ const UsersAdminPage = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createAdminMutation.isPending}>
+                <Button type="submit" disabled={createAdminMutation.isPending} className="w-full sm:w-auto">
                   {createAdminMutation.isPending && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
