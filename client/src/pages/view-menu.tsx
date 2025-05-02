@@ -9,6 +9,8 @@ import AdBanner from "@/components/ads/AdBanner";
 import DietaryRecommendationsOverlay from "@/components/dietary/DietaryRecommendationsOverlay";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import CustomerHeader from "@/components/layout/CustomerHeader";
+import Footer from "@/components/layout/Footer";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -107,37 +109,30 @@ const ViewMenu = () => {
   const { restaurant, menu } = data;
   
   return (
-    <div className="flex flex-col items-center w-full">
-      {/* Top ad banner for free users */}
-      <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+    <div className="flex flex-col min-h-screen w-full">
+      <CustomerHeader 
+        isAuthenticated={isAuthenticated}
+        onLogout={handleLogout}
+      >
+        <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+      </CustomerHeader>
       
-      {/* Header with Logout and Dietary Recommendations */}
-      <div className="w-full max-w-screen-md flex justify-between items-center mb-2 px-4">
-        {isAuthenticated && (
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="flex items-center gap-1" 
-            onClick={handleLogout}
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </Button>
-        )}
-        <div className="ml-auto">
-          <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+      <div className="flex flex-col items-center flex-grow">
+        {/* Top ad banner for free users */}
+        <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+        
+        <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
+          <CustomerMenuPreview 
+            restaurant={restaurant}
+            menuData={menu}
+          />
         </div>
+        
+        {/* Bottom ad banner for free users */}
+        <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
       </div>
       
-      <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
-        <CustomerMenuPreview 
-          restaurant={restaurant}
-          menuData={menu}
-        />
-      </div>
-      
-      {/* Bottom ad banner for free users */}
-      <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
+      <Footer />
     </div>
   );
 };

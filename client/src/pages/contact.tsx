@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import TabNavigation from "@/components/layout/TabNavigation";
+import CustomerHeader from "@/components/layout/CustomerHeader";
+import Footer from "@/components/layout/Footer";
+import { apiRequest } from "@/lib/queryClient";
 import { 
   Form, 
   FormControl, 
@@ -31,6 +33,39 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 const Contact = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Check if user is authenticated
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        await apiRequest("GET", "/api/auth/me");
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+  
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      setIsAuthenticated(false);
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
   
   // Initialize form
   const form = useForm<ContactFormValues>({
@@ -70,9 +105,12 @@ const Contact = () => {
   
   return (
     <div className="flex flex-col min-h-screen">
-      <TabNavigation />
+      <CustomerHeader 
+        isAuthenticated={isAuthenticated}
+        onLogout={handleLogout}
+      />
       
-      <section className="container px-4 py-12 mx-auto">
+      <section className="container px-4 py-12 mx-auto flex-grow">
         <div className="max-w-3xl mx-auto mb-12 text-center">
           <h1 className="text-3xl md:text-4xl font-heading font-bold mb-4">
             Get in Touch
@@ -234,6 +272,8 @@ const Contact = () => {
           </div>
         </div>
       </section>
+      
+      <Footer />
     </div>
   );
 };
