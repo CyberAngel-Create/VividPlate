@@ -29,8 +29,6 @@ import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/reset-password";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
@@ -91,43 +89,39 @@ function Router() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header />
-      <main className="flex-grow">
-        <Switch>
-          <PublicRoute path="/" component={Home} />
-          <PublicRoute path="/login" component={Login} />
-          <PublicRoute path="/admin-login" component={AdminLogin} />
-          <PublicRoute path="/register" component={Register} />
-          <PublicRoute path="/forgot-password" component={ForgotPassword} />
-          <PublicRoute path="/reset-password" component={ResetPassword} />
-          <PublicRoute path="/pricing" component={Pricing} />
-          <PublicRoute path="/contact" component={Contact} />
-          <PublicRoute path="/menu/:restaurantId" component={ViewMenu} />
-          <PublicRoute path="/view-menu/:restaurantId" component={ViewMenu} />
+      <Switch>
+        <PublicRoute path="/" component={Home} />
+        <PublicRoute path="/login" component={Login} />
+        <PublicRoute path="/admin-login" component={AdminLogin} />
+        <PublicRoute path="/register" component={Register} />
+        <PublicRoute path="/forgot-password" component={ForgotPassword} />
+        <PublicRoute path="/reset-password" component={ResetPassword} />
+        <PublicRoute path="/pricing" component={Pricing} />
+        <PublicRoute path="/contact" component={Contact} />
+        <PublicRoute path="/menu/:restaurantId" component={ViewMenu} />
+        <PublicRoute path="/view-menu/:restaurantId" component={ViewMenu} />
 
-          <AuthenticatedRoute path="/dashboard" component={Dashboard} />
-          <AuthenticatedRoute path="/profile" component={Profile} />
-          <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
-          <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
-          <AuthenticatedRoute path="/menu-preview" component={MenuPreview} />
-          <AuthenticatedRoute path="/share-menu" component={ShareMenu} />
-          <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
-          <AuthenticatedRoute path="/subscribe" component={Subscribe} />
-          <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
+        <AuthenticatedRoute path="/dashboard" component={Dashboard} />
+        <AuthenticatedRoute path="/profile" component={Profile} />
+        <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
+        <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
+        <AuthenticatedRoute path="/menu-preview" component={MenuPreview} />
+        <AuthenticatedRoute path="/share-menu" component={ShareMenu} />
+        <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
+        <AuthenticatedRoute path="/subscribe" component={Subscribe} />
+        <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
 
-          {/* Admin Routes */}
-          <AdminRoute path="/admin" component={AdminDashboard} />
-          <AdminRoute path="/admin/users" component={AdminUsers} />
-          <AdminRoute path="/admin/restaurants" component={AdminRestaurants} />
-          <AdminRoute path="/admin/pricing" component={AdminPricing} />
-          <AdminRoute path="/admin/logs" component={AdminLogs} />
-          <AdminRoute path="/admin/profile" component={Profile} />
-          <AdminRoute path="/admin/contact-info" component={AdminContactInfo} />
+        {/* Admin Routes */}
+        <AdminRoute path="/admin" component={AdminDashboard} />
+        <AdminRoute path="/admin/users" component={AdminUsers} />
+        <AdminRoute path="/admin/restaurants" component={AdminRestaurants} />
+        <AdminRoute path="/admin/pricing" component={AdminPricing} />
+        <AdminRoute path="/admin/logs" component={AdminLogs} />
+        <AdminRoute path="/admin/profile" component={Profile} />
+        <AdminRoute path="/admin/contact-info" component={AdminContactInfo} />
 
-          <Route component={NotFound} />
-        </Switch>
-      </main>
-      <Footer />
+        <Route component={NotFound} />
+      </Switch>
     </div>
   );
 }
