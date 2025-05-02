@@ -91,8 +91,7 @@ function Router() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {!isPublicMenuView && <Header />}
-
+      <Header />
       <main className="flex-grow">
         <Switch>
           <PublicRoute path="/" component={Home} />
@@ -128,8 +127,7 @@ function Router() {
           <Route component={NotFound} />
         </Switch>
       </main>
-
-      {!isPublicMenuView && <Footer />}
+      <Footer />
     </div>
   );
 }
