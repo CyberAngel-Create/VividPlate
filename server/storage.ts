@@ -181,6 +181,9 @@ export class MemStorage implements IStorage {
   }
   
   private async initializeAdminUser() {
+    // Initialize default pricing plans
+    this.initializeDefaultPricingPlans();
+    
     const adminUser = await this.getUserByUsername('admin');
     if (!adminUser) {
       // Create default admin user with username 'admin' and password 'admin1234'
@@ -738,6 +741,45 @@ export class MemStorage implements IStorage {
   }
   
   // Pricing plan operations
+  private initializeDefaultPricingPlans() {
+    // Only add default plans if none exist yet
+    if (this.pricingPlans.size === 0) {
+      // Free plan
+      const freePlan: PricingPlan = {
+        id: 1,
+        name: "Free",
+        description: "Basic features for small restaurants",
+        price: 0,
+        currency: "USD",
+        features: ["1 restaurant", "1 menu", "AdSense integration", "QR code generation"],
+        tier: "free",
+        billingPeriod: "monthly",
+        isPopular: false,
+        isActive: true
+      };
+      
+      // Premium plan
+      const premiumPlan: PricingPlan = {
+        id: 2,
+        name: "Premium",
+        description: "Advanced features for growing businesses",
+        price: 19.99,
+        currency: "USD",
+        features: ["Up to 3 restaurants", "Multiple menus per restaurant", "No ads", "Customer feedback", "Analytics dashboard"],
+        tier: "premium",
+        billingPeriod: "monthly",
+        isPopular: true,
+        isActive: true
+      };
+      
+      this.pricingPlans.set(1, freePlan);
+      this.pricingPlans.set(2, premiumPlan);
+      this.currentIds.pricingPlans = 3; // Next ID will be 3
+      
+      console.log('Initialized default pricing plans');
+    }
+  }
+  
   async getAllPricingPlans(): Promise<PricingPlan[]> {
     return Array.from(this.pricingPlans.values());
   }
