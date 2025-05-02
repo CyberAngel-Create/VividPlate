@@ -10,16 +10,11 @@ import { Input } from "@/components/ui/input";
 import { 
   Sheet, 
   SheetContent, 
-  SheetTrigger 
+  SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription 
 } from "@/components/ui/sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
@@ -278,16 +273,16 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </main>
       </div>
 
-      {/* Profile Dialog */}
+      {/* Profile Drawer */}
       {user && (
-        <Dialog open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Admin Profile</DialogTitle>
-              <DialogDescription>
+        <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen} side="right">
+          <SheetContent className="w-[400px] sm:w-[540px] p-6 overflow-y-auto">
+            <SheetHeader className="mb-5">
+              <SheetTitle>Admin Profile</SheetTitle>
+              <SheetDescription>
                 Manage your admin account details
-              </DialogDescription>
-            </DialogHeader>
+              </SheetDescription>
+            </SheetHeader>
             <form 
               className="space-y-4 py-4"
               onSubmit={(e) => {
@@ -297,6 +292,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   title: "Profile updated",
                   description: "Your profile has been updated successfully",
                 });
+                setIsProfileOpen(false);
               }}
             >
               {/* Admin profile info */}
@@ -350,7 +346,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 )}
               </div>
               
-              <DialogFooter>
+              <div className="flex justify-end space-x-2 mt-6">
                 <Button 
                   type="button"
                   variant="outline" 
@@ -361,10 +357,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <Button type="submit">
                   Save Changes
                 </Button>
-              </DialogFooter>
+              </div>
             </form>
-          </DialogContent>
-        </Dialog>
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );
