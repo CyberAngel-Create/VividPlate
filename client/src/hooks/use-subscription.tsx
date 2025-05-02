@@ -1,81 +1,59 @@
+import { createContext, ReactNode, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Subscription } from "@shared/schema";
+import { getQueryFn } from "@/lib/queryClient";
+import { useAuth } from "./use-auth";
 
-import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { apiRequest } from '@/lib/queryClient';
-import { useAuth } from './use-auth';
-
-interface SubscriptionType {
-  tier: string;
+type UseSubscriptionResult = {
+  subscription: Subscription | null;
   isPaid: boolean;
-  maxRestaurants: number;
-  currentRestaurants: number;
-  expiresAt: string | null;
-}
-
-interface SubscriptionContextType {
-  subscription: SubscriptionType | null;
   isLoading: boolean;
   error: Error | null;
-  refreshSubscription: () => Promise<void>;
-  isPaid: boolean;
-}
+};
 
-const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
+const SubscriptionContext = createContext<UseSubscriptionResult | null>(null);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const [subscription, setSubscription] = useState<SubscriptionType | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
-  const refreshSubscription = async () => {
-    if (!isAuthenticated) {
-      setSubscription(null);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await apiRequest('GET', '/api/user/subscription-status');
-      const data = await response.json();
-      setSubscription(data);
-    } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch subscription status'));
-      setSubscription(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      refreshSubscription();
-    } else {
-      setSubscription(null);
-      setIsLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  const contextValue: SubscriptionContextType = {
-    subscription,
+  const {
+    data: subscription,
     isLoading,
     error,
-    refreshSubscription,
-    isPaid: !!subscription?.isPaid
+  } = useQuery<Subscription | null>({
+    queryKey: ["/api/subscription/current"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    // Don't fetch if user is not authenticated
+    enabled: !!user,
+    // Use placeholders if data isn't available yet
+    placeholderData: null,
+  });
+
+  // Determine if user has a paid subscription
+  const isPaid = Boolean(
+    subscription && 
+    subscription.isActive && 
+    subscription.tier !== "free"
+  );
+
+  const value = {
+    subscription: subscription || null,
+    isPaid,
+    isLoading,
+    error: error as Error | null,
   };
 
   return (
-    <SubscriptionContext.Provider value={contextValue}>
+    <SubscriptionContext.Provider value={value}>
       {children}
     </SubscriptionContext.Provider>
   );
 }
 
-export function useSubscription() {
+export function useSubscription(): UseSubscriptionResult {
   const context = useContext(SubscriptionContext);
-  if (context === undefined) {
-    throw new Error('useSubscription must be used within a SubscriptionProvider');
+  if (!context) {
+    throw new Error("useSubscription must be used within a SubscriptionProvider");
   }
   return context;
 }

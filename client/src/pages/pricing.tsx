@@ -37,6 +37,8 @@ const PricingPage = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const { subscription, isPaid, isLoading: isSubscriptionLoading } = useSubscription();
+  const { t } = useTranslation();
 
   const { data: plans, isLoading, error } = useQuery<PricingPlan[]>({
     queryKey: ["/api/pricing"],
@@ -55,25 +57,52 @@ const PricingPage = () => {
     }
   }, [error, toast]);
 
-  const handleSubscribe = (plan: PricingPlan) => {
+  const handleSubscribe = async (plan: PricingPlan) => {
     if (!user) {
       toast({
-        title: "Authentication required",
-        description: "Please log in or register to subscribe to this plan.",
+        title: t("Authentication required"),
+        description: t("Please log in or register to subscribe to this plan."),
       });
       setLocation("/login?redirect=/pricing");
       return;
     }
 
+    // If user is already on a paid plan and tries to select another paid plan
+    if (isPaid && plan.tier !== 'free') {
+      // Check if they're trying to select the same plan they already have
+      if (subscription?.tier === plan.tier) {
+        toast({
+          title: t("Already subscribed"),
+          description: t("You are already subscribed to this plan."),
+        });
+        return;
+      }
+      
+      // If it's a different paid plan, allow the change
+      setLocation(`/subscribe?planId=${plan.id}`);
+      return;
+    }
+
     if (plan.tier === 'free') {
-      // For free plan, just show a success message
-      toast({
-        title: "Free plan activated",
-        description: "You are now on the free plan.",
-      });
+      try {
+        // For downgrading to free plan, make an API call to update the subscription
+        await apiRequest("POST", "/api/subscription/downgrade", {});
+        toast({
+          title: t("Plan changed"),
+          description: t("You have been downgraded to the free plan."),
+        });
+        // Redirect to dashboard after downgrading
+        setLocation("/dashboard");
+      } catch (error) {
+        toast({
+          title: t("Error"),
+          description: t("Failed to change your subscription plan. Please try again."),
+          variant: "destructive",
+        });
+      }
     } else {
-      // For paid plans, go to subscribe page
-      setLocation("/subscribe");
+      // For upgrading to paid plans, go to subscribe page with the plan ID
+      setLocation(`/subscribe?planId=${plan.id}`);
     }
   };
 
@@ -154,8 +183,22 @@ const PricingPage = () => {
                       className="w-full" 
                       variant={plan.isPopular ? "default" : "outline"}
                       onClick={() => handleSubscribe(plan)}
+                      disabled={isSubscriptionLoading}
                     >
-                      {plan.tier === 'free' ? 'Get Started' : 'Subscribe Now'}
+                      {(() => {
+                        // Already subscribed to this specific plan
+                        if (subscription?.tier === plan.tier) {
+                          return t("Current Plan");
+                        }
+                        
+                        // Free plan options
+                        if (plan.tier === 'free') {
+                          return isPaid ? t("Downgrade to Free") : t("Get Started");
+                        }
+                        
+                        // Paid plan options
+                        return isPaid ? t("Switch Plan") : t("Subscribe Now");
+                      })()}
                     </Button>
                   </CardFooter>
                 </Card>
