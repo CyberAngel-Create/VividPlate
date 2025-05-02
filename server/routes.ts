@@ -1859,7 +1859,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put('/api/admin/pricing/:id', isAdmin, async (req, res) => {
+  app.patch('/api/admin/pricing/:id', isAdmin, async (req, res) => {
     try {
       const planId = parseInt(req.params.id);
       const plan = await storage.updatePricingPlan(planId, req.body);
@@ -1939,21 +1939,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Email already exists' });
       }
       
-      // Create the admin user
-      const hashedPassword = await hashPassword(password);
+      // Create the admin user with bcrypt-hashed password
+      // We can pass the plain password since our storage layer handles hashing
       const newAdmin = await storage.createUser({
         username,
         email,
         fullName,
-        password: hashedPassword,
+        password, // Password hashing is handled inside storage implementation
         isAdmin: true,
-        isActive: true,
-        subscriptionTier: 'admin',
-        role: 'admin'
+        isActive: true
       });
       
       // Log admin creation
-      const adminUser = req.user as User;
+      const adminUser = req.user;
+      if (!adminUser) {
+        return res.status(401).json({ message: 'Authentication required' });
+      }
+      
       await storage.createAdminLog({
         adminId: adminUser.id,
         action: 'admin_created',
