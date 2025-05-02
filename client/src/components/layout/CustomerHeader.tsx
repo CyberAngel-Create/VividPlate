@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, User, Star, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ReactNode } from "react";
+import { useSubscription } from "@/hooks/use-subscription";
+import { useTranslation } from "react-i18next";
 
 interface CustomerHeaderProps {
   isAuthenticated?: boolean;
@@ -14,6 +16,8 @@ interface CustomerHeaderProps {
 const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children }: CustomerHeaderProps) => {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { subscription, isPaid } = useSubscription();
+  const { t } = useTranslation();
 
   const closeMenu = () => setIsMenuOpen(false);
 
@@ -67,6 +71,21 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                       Profile
                     </div>
                   </Link>
+                  {isPaid ? (
+                    <div className="flex items-center">
+                      <div className="mr-2 text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md flex items-center">
+                        <Star className="h-3 w-3 mr-1" fill="white" />
+                        <span>{t("Premium")}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <Link href="/pricing">
+                      <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
+                        <CreditCard className="h-3 w-3 mr-1" />
+                        {t("Upgrade")}
+                      </div>
+                    </Link>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
@@ -74,19 +93,19 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                     className="text-gray-700 hover:text-primary"
                   >
                     <LogOut className="h-4 w-4 mr-1" />
-                    Log out
+                    {t("Log out")}
                   </Button>
                 </div>
               ) : (
                 <>
                   <Link href="/login">
                     <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
-                      Log in
+                      {t("Log in")}
                     </div>
                   </Link>
                   <Link href="/register">
                     <Button size="sm" variant="default">
-                      Sign up
+                      {t("Sign up")}
                     </Button>
                   </Link>
                 </>
@@ -156,7 +175,8 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                             className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
                             onClick={closeMenu}
                           >
-                            Dashboard
+                            <User className="h-4 w-4 mr-2 inline-block" />
+                            {t("Dashboard")}
                           </div>
                         </Link>
                         <Link href="/profile">
@@ -164,9 +184,30 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                             className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
                             onClick={closeMenu}
                           >
-                            Profile
+                            <User className="h-4 w-4 mr-2 inline-block" />
+                            {t("Profile")}
                           </div>
                         </Link>
+                        
+                        {isPaid ? (
+                          <div className="py-2">
+                            <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md inline-flex items-center">
+                              <Star className="h-3 w-3 mr-1" fill="white" />
+                              <span>{t("Premium")}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link href="/pricing">
+                            <div
+                              className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                              onClick={closeMenu}
+                            >
+                              <CreditCard className="h-4 w-4 mr-2 inline-block" />
+                              {t("Upgrade to Premium")}
+                            </div>
+                          </Link>
+                        )}
+                        
                         <Button
                           variant="ghost"
                           size="sm"
@@ -177,7 +218,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                           className="w-full justify-start text-gray-700 hover:text-primary"
                         >
                           <LogOut className="h-4 w-4 mr-2" />
-                          Log out
+                          {t("Log out")}
                         </Button>
                       </div>
                     ) : (
@@ -187,7 +228,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                             className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
                             onClick={closeMenu}
                           >
-                            Log in
+                            {t("Log in")}
                           </div>
                         </Link>
                         <Link href="/register">
@@ -197,7 +238,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                             className="w-full mt-2"
                             onClick={closeMenu}
                           >
-                            Sign up
+                            {t("Sign up")}
                           </Button>
                         </Link>
                       </div>
