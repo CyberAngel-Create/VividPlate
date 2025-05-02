@@ -1814,7 +1814,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/pricing', async (req, res) => {
     try {
       const plans = await storage.getAllPricingPlans();
-      res.json(plans);
+      // Only return active plans to the public endpoint
+      const activePlans = plans.filter(plan => plan.isActive);
+      res.json(activePlans);
     } catch (error) {
       console.error('Error fetching pricing plans:', error);
       res.status(500).json({ message: 'Error loading pricing data' });
