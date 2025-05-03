@@ -1,5 +1,8 @@
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import TabNavigation from "@/components/layout/TabNavigation";
+import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
+import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
 import QRCodeGenerator from "@/components/share/QRCodeGenerator";
 import ShareOptions from "@/components/share/ShareOptions";
 import { useRestaurant } from "@/hooks/use-restaurant";
@@ -21,9 +24,27 @@ const ShareMenu = () => {
   // Check if there are menu items
   const hasMenuItems = menuItems && menuItems.length > 0;
   
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
+  
   if (!activeRestaurant) {
     return (
       <div className="flex flex-col min-h-screen">
+        <RestaurantOwnerHeader onLogout={handleLogout} />
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -37,6 +58,7 @@ const ShareMenu = () => {
             </button>
           </div>
         </div>
+        <RestaurantOwnerFooter />
       </div>
     );
   }
@@ -44,6 +66,7 @@ const ShareMenu = () => {
   if (!hasMenuItems) {
     return (
       <div className="flex flex-col min-h-screen">
+        <RestaurantOwnerHeader onLogout={handleLogout} />
         <TabNavigation />
         <section className="container mx-auto px-4 py-6">
           <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
@@ -58,12 +81,14 @@ const ShareMenu = () => {
             </button>
           </div>
         </section>
+        <RestaurantOwnerFooter />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col min-h-screen">
+      <RestaurantOwnerHeader onLogout={handleLogout} />
       <TabNavigation />
       
       <section className="container mx-auto px-4 py-6">
@@ -80,6 +105,7 @@ const ShareMenu = () => {
           />
         </div>
       </section>
+      <RestaurantOwnerFooter />
     </div>
   );
 };

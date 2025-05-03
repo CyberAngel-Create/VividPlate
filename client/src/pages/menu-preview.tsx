@@ -3,7 +3,10 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import TabNavigation from "@/components/layout/TabNavigation";
+import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
+import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
 import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { MenuCategory, MenuItem } from "@shared/schema";
 import { Edit, Eye } from "lucide-react";
@@ -44,9 +47,27 @@ const MenuPreview = () => {
     setLocation("/create-menu");
   };
   
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
+  
   if (!activeRestaurant) {
     return (
       <div className="flex flex-col min-h-screen">
+        <RestaurantOwnerHeader onLogout={handleLogout} />
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-2xl font-heading font-bold mb-6">Menu Preview</h1>
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
@@ -60,6 +81,7 @@ const MenuPreview = () => {
             </button>
           </div>
         </div>
+        <RestaurantOwnerFooter />
       </div>
     );
   }
@@ -67,6 +89,7 @@ const MenuPreview = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen">
+        <RestaurantOwnerHeader onLogout={handleLogout} />
         <TabNavigation />
         <section className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
           <h1 className="text-2xl font-heading font-bold mb-4 sm:mb-6">Menu Preview</h1>
@@ -74,12 +97,14 @@ const MenuPreview = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
         </section>
+        <RestaurantOwnerFooter />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col min-h-screen">
+      <RestaurantOwnerHeader onLogout={handleLogout} />
       <TabNavigation />
       
       <section className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
@@ -124,6 +149,8 @@ const MenuPreview = () => {
           </>
         )}
       </section>
+      
+      <RestaurantOwnerFooter />
     </div>
   );
 };
