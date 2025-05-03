@@ -274,7 +274,7 @@ const RestaurantsPage = () => {
           </div>
         )}
         
-        {restaurants && subscription && (
+        {restaurants && subscription && subscription.maxRestaurants !== null && (
           <div className="mt-6 text-sm text-gray-500 text-center">
             Using {restaurants.length} of {subscription.maxRestaurants} available restaurant slots in your subscription.
           </div>

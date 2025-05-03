@@ -110,12 +110,7 @@ const ViewMenu = () => {
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <CustomerHeader 
-        isAuthenticated={isAuthenticated}
-        onLogout={handleLogout}
-      >
-        <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
-      </CustomerHeader>
+      <CustomerHeader restaurant={restaurant} />
       
       <div className="flex flex-col items-center flex-grow">
         {/* Top ad banner for free users */}
@@ -132,7 +127,8 @@ const ViewMenu = () => {
         <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
       </div>
       
-      {/* Footer removed from customer view as requested */}
+      {/* Only show dietary recommendations overlay but no footer */}
+      <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
     </div>
   );
 };
