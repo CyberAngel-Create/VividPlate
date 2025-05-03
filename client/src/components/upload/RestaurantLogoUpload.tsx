@@ -126,17 +126,36 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
             <img 
               src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)}
               alt="Restaurant logo preview" 
-              className="w-full h-full object-cover rounded-md"
+              className={`w-full h-full object-cover rounded-md ${isUploading ? 'opacity-50' : ''}`}
               onError={(e) => {
                 console.error("Failed to load logo image:", previewUrl);
                 e.currentTarget.src = getFallbackImage('logo');
               }}
             />
+            {isUploading && uploadProgress > 0 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 rounded-md">
+                <div className="w-3/4 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all duration-300 ease-in-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs mt-2 font-medium text-white bg-black/30 px-2 py-1 rounded">
+                  {uploadProgress}%
+                </p>
+              </div>
+            )}
+            {isUploading && uploadProgress === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-md">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
             <button
               type="button"
               onClick={handleRemoveLogo}
               className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
               aria-label="Remove logo"
+              disabled={isUploading}
             >
               <X className="h-4 w-4" />
             </button>
@@ -155,8 +174,17 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
             disabled={isUploading}
             className="flex items-center gap-2"
           >
-            <Upload className="h-4 w-4" />
-            {isUploading ? 'Uploading...' : 'Upload Logo'}
+            {isUploading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Uploading... {uploadProgress > 0 && `${uploadProgress}%`}
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                Upload Logo
+              </>
+            )}
           </Button>
           <input
             type="file"

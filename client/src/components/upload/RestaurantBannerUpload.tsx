@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Image, Upload, CheckCircle, AlertCircle } from 'lucide-react';
+import { Image, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from '@/lib/queryClient';
 import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
+import { useFileUpload } from '@/lib/upload-utils';
 
 interface RestaurantBannerUploadProps {
   restaurantId: number;
@@ -19,10 +20,12 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
   onSuccess 
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentBannerUrl || null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation();
+  const { uploadFile } = useFileUpload();
   
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -61,53 +64,23 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
     setPreviewUrl(objectUrl);
     console.log("Created local preview blob URL:", objectUrl);
     
-    // Upload to server
-    const formData = new FormData();
-    formData.append('image', file);
-    
     setIsUploading(true);
+    setUploadProgress(0);
     setError(null);
     
-    let uploadAttempts = 0;
-    const maxAttempts = 2;
-    
-    while (uploadAttempts < maxAttempts) {
-      uploadAttempts++;
-      try {
-        console.log(`Banner upload attempt ${uploadAttempts} of ${maxAttempts} for restaurant ${restaurantId}`);
-        
-        const response = await apiRequest(
-          'POST', 
-          `/api/restaurants/${restaurantId}/upload-banner`, 
-          formData,
-          true // Use FormData
-        );
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Server responded with status ${response.status}: ${errorText}`);
-          throw new Error(`Server error: ${response.status}`);
+    try {
+      // Use enhanced upload utility
+      const result = await uploadFile(file, `/api/restaurants/${restaurantId}/upload-banner`, {
+        maxRetries: 2,
+        verifyUrl: true,
+        showToasts: false, // We'll handle our own toast notifications
+        onProgress: (progress) => {
+          setUploadProgress(progress);
         }
-        
-        const data = await response.json();
-        console.log("Banner upload successful, received:", data);
-        
-        if (!data.bannerUrl) {
-          console.error("Server response missing bannerUrl");
-          throw new Error("Invalid server response");
-        }
-        
-        // Verify the uploaded image is accessible
-        try {
-          const verifyResponse = await fetch(data.bannerUrl, { method: 'HEAD' });
-          if (!verifyResponse.ok) {
-            console.warn(`Uploaded banner at ${data.bannerUrl} not immediately accessible (status: ${verifyResponse.status})`);
-          } else {
-            console.log(`Verified banner is accessible at ${data.bannerUrl}`);
-          }
-        } catch (verifyError) {
-          console.warn(`Could not verify banner accessibility: ${verifyError}`);
-        }
+      });
+      
+      if (result.success && result.url) {
+        console.log("Banner upload successful:", result.url);
         
         toast({
           title: 'Success',
@@ -115,35 +88,37 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
         });
         
         if (onSuccess) {
-          onSuccess(data.bannerUrl);
+          onSuccess(result.url);
         }
+      } else {
+        console.error("Banner upload failed:", result.message);
         
-        return; // Exit the retry loop if successful
-      } catch (error) {
-        console.error(`Banner upload attempt ${uploadAttempts} failed:`, error);
+        setError(result.message);
+        toast({
+          title: 'Error',
+          description: result.message,
+          variant: 'destructive',
+        });
         
-        // If we've exhausted our retry attempts, show error and reset
-        if (uploadAttempts >= maxAttempts) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to upload banner';
-          console.error(`All banner upload attempts failed: ${errorMessage}`);
-          
-          setError(errorMessage);
-          toast({
-            title: 'Error',
-            description: errorMessage,
-            variant: 'destructive',
-          });
-          
-          // Revert to previous image if upload failed
-          setPreviewUrl(currentBannerUrl || null);
-        } else {
-          console.log(`Retrying banner upload in 1 second...`);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
-        }
+        // Revert to previous image if upload failed
+        setPreviewUrl(currentBannerUrl || null);
       }
+    } catch (error) {
+      console.error("Banner upload error:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload banner';
+      
+      setError(errorMessage);
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      
+      // Revert to previous image if upload failed
+      setPreviewUrl(currentBannerUrl || null);
+    } finally {
+      setIsUploading(false);
     }
-    
-    setIsUploading(false);
   };
   
   return (
@@ -160,35 +135,76 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
               <img 
                 src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)} 
                 alt="Restaurant banner preview" 
-                className="object-cover w-full h-full"
+                className={`object-cover w-full h-full ${isUploading ? 'opacity-60' : ''}`}
                 onError={(e) => {
                   console.error("Failed to load banner image:", previewUrl);
                   e.currentTarget.src = getFallbackImage('banner');
                 }}
               />
+              {isUploading && uploadProgress > 0 && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <div className="w-3/4 h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-primary rounded-full transition-all duration-300 ease-in-out"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-sm mt-3 font-medium text-white bg-black/50 px-3 py-1 rounded">
+                    Uploading... {uploadProgress}%
+                  </p>
+                </div>
+              )}
+              {isUploading && uploadProgress === 0 && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                  <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                </div>
+              )}
               <div className="absolute inset-0 flex items-end justify-end p-2">
                 <label 
                   htmlFor="bannerImage" 
-                  className="bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md text-sm cursor-pointer transition-colors"
+                  className={`bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md text-sm transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  tabIndex={isUploading ? -1 : 0}
                 >
-                  Change Banner
+                  {isUploading ? 'Uploading...' : 'Change Banner'}
                 </label>
               </div>
             </div>
           ) : (
             <label
               htmlFor="bannerImage"
-              className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md border-muted-foreground/20 hover:border-muted-foreground/40 cursor-pointer transition-colors"
+              className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md border-muted-foreground/20 ${isUploading ? '' : 'hover:border-muted-foreground/40 cursor-pointer'} transition-colors`}
             >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
-                <p className="mb-1 text-sm">
-                  <span className="font-medium">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  JPEG, PNG, GIF, WEBP (MAX 3MB)
-                </p>
-              </div>
+              {isUploading ? (
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Loader2 className="w-8 h-8 mb-2 text-primary animate-spin" />
+                  <p className="mb-1 text-sm">
+                    <span className="font-medium">Uploading banner...</span>
+                  </p>
+                  {uploadProgress > 0 && (
+                    <>
+                      <div className="w-40 h-2 bg-gray-200 rounded-full overflow-hidden my-2">
+                        <div 
+                          className="h-full bg-primary rounded-full transition-all duration-300 ease-in-out"
+                          style={{ width: `${uploadProgress}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {uploadProgress}% complete
+                      </p>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                  <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
+                  <p className="mb-1 text-sm">
+                    <span className="font-medium">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    JPEG, PNG, GIF, WEBP (MAX 3MB)
+                  </p>
+                </div>
+              )}
             </label>
           )}
           
@@ -205,7 +221,15 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
         {isUploading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
-            <span>Uploading banner...</span>
+            <span>Uploading banner{uploadProgress > 0 ? ` (${uploadProgress}%)` : '...'}</span>
+            {uploadProgress > 0 && (
+              <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden ml-2">
+                <div 
+                  className="h-full bg-primary rounded-full transition-all duration-300 ease-in-out"
+                  style={{ width: `${uploadProgress}%` }}
+                />
+              </div>
+            )}
           </div>
         )}
         
