@@ -1542,8 +1542,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/admin/restaurants', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const restaurants = await storage.getAllRestaurants();
-      res.json(restaurants);
+      
+      // Enhanced restaurants with additional data
+      const enhancedRestaurants = await Promise.all(restaurants.map(async (restaurant) => {
+        // Get restaurant owner info
+        const owner = await storage.getUser(restaurant.userId);
+        
+        // Get category and menu item counts
+        const categories = await storage.getMenuCategoriesByRestaurantId(restaurant.id);
+        const menuItems = await storage.getMenuItemsByRestaurantId(restaurant.id);
+        const viewCount = await storage.countMenuViewsByRestaurantId(restaurant.id);
+        
+        // Get most recent visits
+        const recentViews = await storage.getMenuViewsByRestaurantId(restaurant.id);
+        const lastVisitDate = recentViews.length > 0 ? recentViews[0].viewedAt : null;
+        
+        // Get owner's subscription tier
+        const ownerSubscriptionTier = owner?.subscriptionTier || 'free';
+        
+        return {
+          ...restaurant,
+          ownerName: owner ? owner.fullName || owner.username : 'N/A',
+          userEmail: owner ? owner.email : null,
+          categoryCount: categories.length,
+          menuItemCount: menuItems.length,
+          viewCount: viewCount,
+          lastVisitDate: lastVisitDate,
+          ownerSubscriptionTier: ownerSubscriptionTier
+        };
+      }));
+      
+      res.json(enhancedRestaurants);
     } catch (error) {
+      console.error("Error fetching restaurants:", error);
       res.status(500).json({ message: 'Server error' });
     }
   });
