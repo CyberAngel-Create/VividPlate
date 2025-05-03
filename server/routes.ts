@@ -1034,16 +1034,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // General menu item image upload route - for new items
   app.post('/api/upload/menuitem', isAuthenticated, upload.single('image'), async (req, res) => {
     try {
+      const userId = (req.user as any).id;
+      console.log(`Processing general image upload request from user ID: ${userId}`);
+      
       if (!req.file) {
+        console.warn('General upload attempt with no file included');
         return res.status(400).json({ message: 'No file uploaded' });
       }
+      
+      console.log(`File uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
       // Simply return the URL to the uploaded file
       const imageUrl = `/uploads/${req.file.filename}`;
       
+      // Test file access immediately after upload to verify it exists
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        console.log(`Confirmed file exists at: ${filePath}`);
+        
+        // Log file stats for debugging
+        try {
+          const stats = fs.statSync(filePath);
+          console.log(`File stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
+        } catch (statErr) {
+          console.error(`Error getting file stats: ${statErr}`);
+        }
+      } else {
+        console.error(`WARNING: File should exist but was not found at: ${filePath}`);
+      }
+      
       res.json({ 
         imageUrl, 
-        success: true 
+        success: true,
+        fileDetails: {
+          name: req.file.filename,
+          size: req.file.size,
+          type: req.file.mimetype
+        }
       });
     } catch (error) {
       console.error('Error uploading menu item image:', error);
@@ -1055,37 +1082,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Menu item image upload route - for existing items
   app.post('/api/items/:itemId/upload-image', isAuthenticated, upload.single('image'), async (req, res) => {
     try {
+      const userId = (req.user as any).id;
+      
       if (!req.file) {
+        console.warn(`Upload attempt with no file included for menu item by user ${userId}`);
         return res.status(400).json({ message: 'No file uploaded' });
       }
       
       const itemId = parseInt(req.params.itemId);
+      console.log(`Processing image upload for menu item ID: ${itemId}, File: ${req.file.filename}, Size: ${req.file.size} bytes, User: ${userId}`);
+      
       const item = await storage.getMenuItem(itemId);
       
       if (!item) {
+        console.warn(`Upload rejected - menu item not found with ID: ${itemId}`);
         return res.status(404).json({ message: 'Item not found' });
       }
       
       const category = await storage.getMenuCategory(item.categoryId);
       if (!category) {
+        console.warn(`Upload rejected - category not found for menu item ID: ${itemId}, Category ID: ${item.categoryId}`);
         return res.status(404).json({ message: 'Category not found' });
       }
       
       // Check if user owns the restaurant
       const restaurant = await storage.getRestaurant(category.restaurantId);
-      if (!restaurant || restaurant.userId !== (req.user as any).id) {
+      if (!restaurant || restaurant.userId !== userId) {
+        console.warn(`Upload rejected - access denied for user ID: ${userId}, Restaurant ID: ${category.restaurantId}`);
         return res.status(403).json({ message: 'Access denied' });
       }
       
       const imageUrl = `/uploads/${req.file.filename}`;
+      console.log(`File uploaded successfully, setting image URL: ${imageUrl}`);
+      
+      // Test file access immediately after upload to verify it exists
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        console.log(`Confirmed file exists at: ${filePath}`);
+        
+        // Log file stats for debugging
+        try {
+          const stats = fs.statSync(filePath);
+          console.log(`File stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
+        } catch (statErr) {
+          console.error(`Error getting file stats: ${statErr}`);
+        }
+      } else {
+        console.error(`WARNING: File should exist but was not found at: ${filePath}`);
+      }
+      
+      // If item has an existing image, make note for debugging
+      if (item.imageUrl) {
+        console.log(`Menu item ${itemId} already had image: ${item.imageUrl}, replacing with: ${imageUrl}`);
+      }
       
       // Update menu item with new image URL
       const updatedItem = await storage.updateMenuItem(itemId, { imageUrl });
       if (!updatedItem) {
-        return res.status(404).json({ message: 'Item not found' });
+        console.error(`Failed to update menu item ${itemId} with new image URL`);
+        return res.status(404).json({ message: 'Item not found after upload' });
       }
       
-      res.json({ imageUrl, success: true });
+      console.log(`Menu item ${itemId} successfully updated with new image URL: ${imageUrl}`);
+      res.json({ 
+        imageUrl, 
+        success: true,
+        fileDetails: {
+          name: req.file.filename,
+          size: req.file.size,
+          type: req.file.mimetype
+        }
+      });
     } catch (error) {
       console.error('Error uploading menu item image:', error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
