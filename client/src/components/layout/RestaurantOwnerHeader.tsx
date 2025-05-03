@@ -47,10 +47,10 @@ const RestaurantOwnerHeader: React.FC<RestaurantOwnerHeaderProps> = ({ onLogout 
           {/* Logo and branding */}
           <div className="flex items-center">
             <Link href="/dashboard">
-              <a className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2">
                 <Utensils className="h-6 w-6 text-primary" />
                 <span className="text-xl font-bold">MenuMate</span>
-              </a>
+              </div>
             </Link>
           </div>
 
@@ -129,20 +129,16 @@ const RestaurantOwnerHeader: React.FC<RestaurantOwnerHeaderProps> = ({ onLogout 
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuItem asChild>
-                    <Link href="/profile">
-                      <a className="flex items-center cursor-pointer">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
-                      </a>
-                    </Link>
+                    <div className="flex items-center cursor-pointer" onClick={() => window.location.href = "/profile"}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href="/subscription">
-                      <a className="flex items-center cursor-pointer">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>Subscription</span>
-                      </a>
-                    </Link>
+                    <div className="flex items-center cursor-pointer" onClick={() => window.location.href = "/subscription"}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Subscription</span>
+                    </div>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={onLogout} className="text-red-500 cursor-pointer">
                     <LogOut className="mr-2 h-4 w-4" />
