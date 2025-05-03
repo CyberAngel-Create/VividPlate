@@ -105,8 +105,12 @@ function Router() {
         <AuthenticatedRoute path="/profile" component={Profile} />
         <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
         <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
+        <AuthenticatedRoute path="/edit-restaurant/:restaurantId" component={EditRestaurant} />
         <AuthenticatedRoute path="/menu-preview" component={MenuPreview} />
+        <AuthenticatedRoute path="/menu-preview/:restaurantId" component={MenuPreview} />
         <AuthenticatedRoute path="/share-menu" component={ShareMenu} />
+        <AuthenticatedRoute path="/share-menu/:restaurantId" component={ShareMenu} />
+        <AuthenticatedRoute path="/create-menu/:restaurantId" component={CreateMenu} />
         <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
         <AuthenticatedRoute path="/subscribe" component={Subscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
