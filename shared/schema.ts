@@ -45,7 +45,6 @@ export const restaurants = pgTable("restaurants", {
   address: text("address"),
   hoursOfOperation: jsonb("hours_of_operation"),
   tags: text("tags").array(),
-  isActive: boolean("is_active").default(false), // Whether this is the active restaurant for the user
 });
 
 export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
@@ -60,7 +59,6 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   address: true,
   hoursOfOperation: true,
   tags: true,
-  isActive: true,
 });
 
 // Menu categories
@@ -134,7 +132,6 @@ export const subscriptions = pgTable("subscriptions", {
   endDate: timestamp("end_date"),
   paymentMethod: text("payment_method"), // "stripe", "telebirr", etc.
   isActive: boolean("is_active").default(true),
-  maxRestaurants: integer("max_restaurants").default(1), // Max number of restaurants user can create
 });
 
 export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
@@ -143,7 +140,6 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).pick({
   endDate: true,
   paymentMethod: true,
   isActive: true,
-  maxRestaurants: true,
 });
 
 // Payments table

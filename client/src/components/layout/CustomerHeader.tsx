@@ -1,117 +1,258 @@
-import { Link } from "wouter";
-import { Menu, Utensils, X } from "lucide-react";
 import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { Menu, X, LogOut, User, Star, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Restaurant } from "@shared/schema";
+import { ReactNode } from "react";
+import { useSubscription } from "@/hooks/use-subscription";
+import { useTranslation } from "react-i18next";
 
 interface CustomerHeaderProps {
-  restaurant: Restaurant | null;
+  isAuthenticated?: boolean;
+  onLogout?: () => void;
+  children?: ReactNode;
 }
 
-const CustomerHeader = ({ restaurant }: CustomerHeaderProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  
+const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children }: CustomerHeaderProps) => {
+  const [location] = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { subscription, isPaid } = useSubscription();
+  const { t } = useTranslation();
+
+  const closeMenu = () => setIsMenuOpen(false);
+
+  const navigationItems = [
+    { name: "Home", path: "/" },
+    { name: "Pricing", path: "/pricing" },
+    { name: "Contact", path: "/contact" }
+  ];
+
   return (
-    <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200">
-      <div className="container mx-auto px-4 py-3">
+    <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
+      <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            {restaurant?.logoUrl ? (
-              <img 
-                src={restaurant.logoUrl} 
-                alt={`${restaurant.name} logo`} 
-                className="h-10 w-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary">
-                <Utensils className="h-5 w-5" />
-              </div>
-            )}
-            <div>
-              <h1 className="font-bold text-lg leading-tight">{restaurant?.name || 'Restaurant Menu'}</h1>
-              {restaurant?.cuisine && (
-                <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
-              )}
+          {/* Logo */}
+          <Link href="/">
+            <div className="flex items-center">
+              <span className="text-xl font-heading font-bold text-primary">MenuMate</span>
             </div>
-          </div>
-          
-          {/* Mobile menu */}
-          <div className="md:hidden">
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[80%] sm:w-[350px]">
-                <div className="flex flex-col h-full">
-                  <div className="flex justify-between items-center py-4 border-b">
-                    <div className="flex items-center space-x-3">
-                      {restaurant?.logoUrl ? (
-                        <img 
-                          src={restaurant.logoUrl} 
-                          alt={`${restaurant.name} logo`} 
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-10 w-10 rounded-full bg-primary/10 text-primary">
-                          <Utensils className="h-5 w-5" />
-                        </div>
-                      )}
-                      <div>
-                        <h2 className="font-bold text-lg">{restaurant?.name || 'Restaurant Menu'}</h2>
-                        {restaurant?.cuisine && (
-                          <p className="text-xs text-gray-500">{restaurant.cuisine}</p>
-                        )}
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-6">
+            {/* Main navigation */}
+            <div className="flex items-center space-x-6">
+              {navigationItems.map((item) => (
+                <Link key={item.name} href={item.path}>
+                  <div
+                    className={`text-sm font-medium ${
+                      location === item.path
+                        ? "text-primary"
+                        : "text-gray-700 hover:text-primary transition-colors"
+                    }`}
+                  >
+                    {item.name}
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Auth buttons */}
+            <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-3">
+                  <Link href="/dashboard">
+                    <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                      Dashboard
+                    </div>
+                  </Link>
+                  <Link href="/profile">
+                    <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                      Profile
+                    </div>
+                  </Link>
+                  {isPaid ? (
+                    <div className="flex items-center">
+                      <div className="mr-2 text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md flex items-center">
+                        <Star className="h-3 w-3 mr-1" fill="white" />
+                        <span>{t("Premium")}</span>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex-1 py-6">
-                    <nav className="flex flex-col space-y-4">
-                      <a href="#menu" className="py-2 px-3 hover:bg-gray-100 rounded-md" onClick={() => setIsOpen(false)}>
-                        Menu
-                      </a>
-                      {restaurant?.description && (
-                        <a href="#about" className="py-2 px-3 hover:bg-gray-100 rounded-md" onClick={() => setIsOpen(false)}>
-                          About
-                        </a>
-                      )}
-                      {restaurant?.address && (
-                        <a href="#location" className="py-2 px-3 hover:bg-gray-100 rounded-md" onClick={() => setIsOpen(false)}>
-                          Location
-                        </a>
-                      )}
-                    </nav>
-                  </div>
-                  
-                  <div className="border-t border-gray-200 py-4">
-                    <p className="text-xs text-gray-500 text-center">
-                      Powered by <span className="font-medium">MenuMate</span>
-                    </p>
+                  ) : (
+                    <Link href="/pricing">
+                      <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
+                        <CreditCard className="h-3 w-3 mr-1" />
+                        {t("Upgrade")}
+                      </div>
+                    </Link>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onLogout && onLogout()}
+                    className="text-gray-700 hover:text-primary"
+                  >
+                    <LogOut className="h-4 w-4 mr-1" />
+                    {t("Log out")}
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                      {t("Log in")}
+                    </div>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="sm" variant="default">
+                      {t("Sign up")}
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          </nav>
+
+          {/* Extra components */}
+          <div className="hidden md:flex items-center ml-2">
+            {children}
+          </div>
+
+          {/* Mobile menu button */}
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[250px] p-0">
+              <div className="flex flex-col h-full">
+                <div className="p-4 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-heading font-bold text-primary">
+                      MenuMate
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={closeMenu}
+                      className="rounded-full p-1 h-8 w-8"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-          
-          {/* Desktop links */}
-          <nav className="hidden md:flex md:items-center md:space-x-6">
-            <a href="#menu" className="text-sm font-medium text-gray-600 hover:text-primary">
-              Menu
-            </a>
-            {restaurant?.description && (
-              <a href="#about" className="text-sm font-medium text-gray-600 hover:text-primary">
-                About
-              </a>
-            )}
-            {restaurant?.address && (
-              <a href="#location" className="text-sm font-medium text-gray-600 hover:text-primary">
-                Location
-              </a>
-            )}
-          </nav>
+
+                {/* Mobile navigation */}
+                <nav className="flex-1 overflow-y-auto p-4">
+                  <div className="space-y-3">
+                    {navigationItems.map((item) => (
+                      <Link key={item.name} href={item.path}>
+                        <div
+                          className={`block py-2 text-sm font-medium ${
+                            location === item.path
+                              ? "text-primary"
+                              : "text-gray-700 hover:text-primary transition-colors"
+                          }`}
+                          onClick={closeMenu}
+                        >
+                          {item.name}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+
+                  <div className="mt-6 pt-6 border-t border-gray-100">
+                    {isAuthenticated ? (
+                      <div className="space-y-3">
+                        <Link href="/dashboard">
+                          <div
+                            className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                            onClick={closeMenu}
+                          >
+                            <User className="h-4 w-4 mr-2 inline-block" />
+                            {t("Dashboard")}
+                          </div>
+                        </Link>
+                        <Link href="/profile">
+                          <div
+                            className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                            onClick={closeMenu}
+                          >
+                            <User className="h-4 w-4 mr-2 inline-block" />
+                            {t("Profile")}
+                          </div>
+                        </Link>
+                        
+                        {isPaid ? (
+                          <div className="py-2">
+                            <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md inline-flex items-center">
+                              <Star className="h-3 w-3 mr-1" fill="white" />
+                              <span>{t("Premium")}</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <Link href="/pricing">
+                            <div
+                              className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                              onClick={closeMenu}
+                            >
+                              <CreditCard className="h-4 w-4 mr-2 inline-block" />
+                              {t("Upgrade to Premium")}
+                            </div>
+                          </Link>
+                        )}
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            if (onLogout) onLogout();
+                            closeMenu();
+                          }}
+                          className="w-full justify-start text-gray-700 hover:text-primary"
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          {t("Log out")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <Link href="/login">
+                          <div
+                            className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                            onClick={closeMenu}
+                          >
+                            {t("Log in")}
+                          </div>
+                        </Link>
+                        <Link href="/register">
+                          <Button
+                            size="sm"
+                            variant="default"
+                            className="w-full mt-2"
+                            onClick={closeMenu}
+                          >
+                            {t("Sign up")}
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </nav>
+
+                {/* Mobile extra components */}
+                <div className="p-4 mt-auto border-t border-gray-100">
+                  {children}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>

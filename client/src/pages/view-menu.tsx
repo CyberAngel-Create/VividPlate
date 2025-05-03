@@ -9,9 +9,8 @@ import AdBanner from "@/components/ads/AdBanner";
 import DietaryRecommendationsOverlay from "@/components/dietary/DietaryRecommendationsOverlay";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
-// Remove imports that don't exist
-//import CustomerHeader from "@/components/layout/CustomerHeader";
-//import Footer from "@/components/layout/Footer";
+import CustomerHeader from "@/components/layout/CustomerHeader";
+import Footer from "@/components/layout/Footer";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -111,38 +110,12 @@ const ViewMenu = () => {
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <header className="sticky top-0 z-40 w-full bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              {restaurant?.logoUrl ? (
-                <img 
-                  src={restaurant.logoUrl} 
-                  alt={`${restaurant.name} logo`} 
-                  className="h-10 w-10 rounded-full object-cover"
-                />
-              ) : (
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <span className="text-primary font-bold">{restaurant.name.charAt(0)}</span>
-                </div>
-              )}
-              <h1 className="font-heading font-bold text-lg">{restaurant.name}</h1>
-            </div>
-            
-            {isAuthenticated && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-sm flex items-center"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Logout</span>
-              </Button>
-            )}
-          </div>
-        </div>
-      </header>
+      <CustomerHeader 
+        isAuthenticated={isAuthenticated}
+        onLogout={handleLogout}
+      >
+        <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+      </CustomerHeader>
       
       <div className="flex flex-col items-center flex-grow">
         {/* Top ad banner for free users */}
@@ -159,8 +132,7 @@ const ViewMenu = () => {
         <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
       </div>
       
-      {/* Only show dietary recommendations overlay but no footer */}
-      <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+      {/* Footer removed from customer view as requested */}
     </div>
   );
 };
