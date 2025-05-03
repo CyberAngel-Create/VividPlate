@@ -1323,16 +1323,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'User already has an active subscription' });
       }
       
-      // Set subscription amount based on plan
-      const amount = planId === "yearly" ? 9999 : 999; // In cents
+      // Get the pricing plan from database
+      const pricingPlan = await storage.getPricingPlan(planId);
+      if (!pricingPlan) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
       
-      // Create a payment intent
+      if (!pricingPlan.isActive) {
+        return res.status(400).json({ message: 'Selected pricing plan is not currently available' });
+      }
+      
+      // Calculate price in cents
+      const priceInCents = Math.round(parseFloat(pricingPlan.price) * 100);
+      
+      // Create a payment intent with actual plan price from database
       const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency: 'usd',
+        amount: priceInCents,
+        currency: pricingPlan.currency?.toLowerCase() || 'usd',
         metadata: {
           userId: userId.toString(),
-          planId,
+          planId: pricingPlan.id.toString(),
+          planName: pricingPlan.name,
+          planTier: pricingPlan.tier,
           userEmail: user.email,
         },
         automatic_payment_methods: {
@@ -1379,24 +1391,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Payment successful, create subscription
-      const planId = paymentIntent.metadata.planId;
-      const oneYearFromNow = new Date();
-      oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+      const planId = parseInt(paymentIntent.metadata.planId);
+      const planTier = paymentIntent.metadata.planTier;
+      
+      // Get plan details to set proper subscription duration
+      const pricingPlan = await storage.getPricingPlan(planId);
+      if (!pricingPlan) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
+      
+      // Calculate end date based on plan billing interval
+      let endDate = new Date();
+      if (pricingPlan.billingInterval === 'yearly') {
+        endDate.setFullYear(endDate.getFullYear() + 1);
+      } else if (pricingPlan.billingInterval === 'monthly') {
+        endDate.setMonth(endDate.getMonth() + 1);
+      } else {
+        // Default to monthly if not specified
+        endDate.setMonth(endDate.getMonth() + 1);
+      }
       
       const newSubscription = await storage.createSubscription({
         userId,
-        tier: "premium",
-        endDate: oneYearFromNow,
+        tier: planTier || "premium",
+        endDate,
         paymentMethod: "stripe",
         isActive: true
       });
       
-      // Create payment record
+      // Create payment record with accurate amount from payment intent
       await storage.createPayment({
         userId,
         subscriptionId: newSubscription.id,
-        amount: planId === "yearly" ? "99.99" : "9.99",
-        currency: "USD",
+        amount: (paymentIntent.amount / 100).toFixed(2), // Convert cents to dollars
+        currency: paymentIntent.currency.toUpperCase(),
         paymentMethod: "stripe",
         paymentId: paymentIntentId,
         status: "completed"
@@ -2061,6 +2089,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(activePlans);
     } catch (error) {
       console.error('Error fetching pricing plans:', error);
+      res.status(500).json({ message: 'Error loading pricing data' });
+    }
+  });
+  
+  // Get specific pricing plan by ID
+  app.get('/api/pricing/:id', async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id, 10);
+      if (isNaN(planId)) {
+        return res.status(400).json({ message: 'Invalid plan ID' });
+      }
+      
+      const plan = await storage.getPricingPlan(planId);
+      if (!plan) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
+      
+      // Only return active plans to public
+      if (!plan.isActive) {
+        return res.status(404).json({ message: 'Pricing plan not available' });
+      }
+      
+      res.json(plan);
+    } catch (error) {
+      console.error('Error fetching pricing plan:', error);
       res.status(500).json({ message: 'Error loading pricing data' });
     }
   });
