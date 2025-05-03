@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface TabItem {
   id: string;
   label: string;
   path: string;
+  showFor?: "all" | "free" | "premium";
 }
 
 interface TabNavigationProps {
@@ -14,14 +16,26 @@ interface TabNavigationProps {
 const TabNavigation = ({ onTabChange }: TabNavigationProps) => {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const { isPaid } = useSubscription();
 
-  const tabs: TabItem[] = [
+  // Define all tabs with visibility conditions
+  const allTabs: TabItem[] = [
     { id: 'dashboard', label: 'Dashboard', path: '/dashboard' },
+    { id: 'restaurants', label: 'My Restaurants', path: '/restaurants', showFor: "premium" },
     { id: 'create-menu', label: 'Create Menu', path: '/create-menu' },
     { id: 'edit-restaurant', label: 'Restaurant Profile', path: '/edit-restaurant' },
     { id: 'menu-preview', label: 'Menu Preview', path: '/menu-preview' },
     { id: 'share', label: 'Share Menu', path: '/share-menu' },
+    { id: 'pricing', label: 'Upgrade Plan', path: '/pricing', showFor: "free" },
   ];
+
+  // Filter tabs based on subscription status
+  const tabs = allTabs.filter(tab => {
+    if (!tab.showFor || tab.showFor === "all") return true;
+    if (tab.showFor === "premium" && isPaid) return true;
+    if (tab.showFor === "free" && !isPaid) return true;
+    return false;
+  });
 
   useEffect(() => {
     // Determine active tab based on current location
