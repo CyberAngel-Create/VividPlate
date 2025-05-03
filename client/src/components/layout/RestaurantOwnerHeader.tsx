@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, User, Star, CreditCard, Mail, PlusCircle } from "lucide-react";
+import { Menu, X, LogOut, User, CreditCard, Mail, PlusCircle, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ReactNode } from "react";
@@ -27,29 +27,29 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link href="/dashboard">
             <div className="flex items-center">
               <span className="text-xl font-heading font-bold text-primary">MenuMate</span>
-              <span className="ml-2 text-sm font-medium bg-gray-100 text-gray-700 px-2 py-1 rounded-md">Owner</span>
+              <span className="ml-2 text-sm font-medium text-gray-600">Owner</span>
             </div>
           </Link>
 
           {/* Desktop Navigation - Main Menu */}
-          <nav className="hidden md:flex items-center space-x-4">
-            {/* Main Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-6">
+            {/* Navigation Links */}
             <Link href="/pricing">
-              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
-                <CreditCard className="h-4 w-4 mr-1 inline-block" />
+              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
+                <CreditCard className="h-4 w-4 mr-2" />
                 {t("Pricing")}
               </div>
             </Link>
             
             <Link href="/contact">
-              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
-                <Mail className="h-4 w-4 mr-1 inline-block" />
+              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
+                <Mail className="h-4 w-4 mr-2" />
                 {t("Contact")}
               </div>
             </Link>
@@ -57,42 +57,31 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
             {/* Add Restaurant button for premium users with less than 3 restaurants */}
             {canAddRestaurant && (
               <Link href="/edit-restaurant">
-                <div className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
-                  <PlusCircle className="h-4 w-4 mr-1 inline-block" />
+                <Button variant="outline" size="sm" className="flex items-center">
                   {t("Add Restaurant")}
-                </div>
+                </Button>
               </Link>
             )}
 
-            {/* Premium badge for paid users */}
-            {isPaid && (
-              <div className="flex items-center">
-                <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md flex items-center">
-                  <Star className="h-3 w-3 mr-1" fill="white" />
-                  <span>{t("Premium")}</span>
-                </div>
-              </div>
-            )}
-          </nav>
-
-          {/* Right-side User Menu */}
-          <div className="hidden md:flex items-center space-x-3">
+            {/* User Profile */}
             <Link href="/profile">
-              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
-                <User className="h-4 w-4 mr-1 inline-block" />
+              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
+                <User className="h-4 w-4 mr-2" />
                 {t("Profile")}
               </div>
             </Link>
+
+            {/* Logout Button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onLogout && onLogout()}
-              className="text-gray-700 hover:text-primary"
+              className="text-gray-700 hover:text-primary flex items-center"
             >
-              <LogOut className="h-4 w-4 mr-1" />
+              <LogOut className="h-4 w-4 mr-2" />
               {t("Log out")}
             </Button>
-          </div>
+          </nav>
 
           {/* Extra components */}
           <div className="hidden md:flex items-center ml-2">
@@ -119,7 +108,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                       <span className="text-lg font-heading font-bold text-primary">
                         MenuMate
                       </span>
-                      <span className="ml-2 text-xs font-medium bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded-md">Owner</span>
+                      <span className="ml-2 text-sm font-medium text-gray-600">Owner</span>
                     </div>
                     <Button
                       variant="ghost"
@@ -138,7 +127,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                     {/* Premium badge for paid users */}
                     {isPaid && (
                       <div className="py-2">
-                        <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md inline-flex items-center">
+                        <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded inline-flex items-center">
                           <Star className="h-3 w-3 mr-1" fill="white" />
                           <span>{t("Premium")}</span>
                         </div>
