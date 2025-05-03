@@ -130,9 +130,9 @@ const Contact = () => {
                     <div className="flex-shrink-0 p-2 bg-primary/10 rounded-full mr-3">
                       <MapPin className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-sm font-medium">Location</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 break-words">
                         Ethiopia, Addis Abeba
                       </p>
                     </div>
@@ -142,9 +142,9 @@ const Contact = () => {
                     <div className="flex-shrink-0 p-2 bg-primary/10 rounded-full mr-3">
                       <Mail className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-sm font-medium">Email</h3>
-                      <p className="text-sm text-gray-600">menumate.spp@gmail.com</p>
+                      <p className="text-sm text-gray-600 break-words">menumate.spp@gmail.com</p>
                     </div>
                   </div>
                   
@@ -152,9 +152,9 @@ const Contact = () => {
                     <div className="flex-shrink-0 p-2 bg-primary/10 rounded-full mr-3">
                       <Phone className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-sm font-medium">Phone</h3>
-                      <p className="text-sm text-gray-600">+251-913-690-687</p>
+                      <p className="text-sm text-gray-600 break-words">+251-913-690-687</p>
                     </div>
                   </div>
                   
@@ -162,9 +162,9 @@ const Contact = () => {
                     <div className="flex-shrink-0 p-2 bg-primary/10 rounded-full mr-3">
                       <MessageSquare className="h-5 w-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="text-sm font-medium">Business Hours</h3>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 break-words">
                         Monday-Friday: 9:00 AM - 6:00 PM<br />
                         Saturday: 9:00 AM - 1:00 PM
                       </p>

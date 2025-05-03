@@ -24,6 +24,8 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
   
   // Check if the user can add more restaurants (premium users can add up to 3)
   const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
+  // Check if we're on pricing or profile page to hide the upgrade button
+  const isOnPricingOrProfile = location === "/pricing" || location === "/profile";
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -55,7 +57,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
             </Link>
 
             {/* Add Restaurant button for premium users with less than 3 restaurants */}
-            {canAddRestaurant && (
+            {canAddRestaurant && !isOnPricingOrProfile && (
               <Link href="/edit-restaurant">
                 <Button variant="outline" size="sm" className="flex items-center">
                   {t("Add Restaurant")}
@@ -155,7 +157,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                     </Link>
 
                     {/* Add Restaurant button for premium users with less than 3 restaurants */}
-                    {canAddRestaurant && (
+                    {canAddRestaurant && !isOnPricingOrProfile && (
                       <Link href="/edit-restaurant">
                         <div
                           className="block py-2 text-sm font-medium text-primary hover:text-primary-dark transition-colors"
