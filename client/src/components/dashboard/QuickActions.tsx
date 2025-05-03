@@ -1,19 +1,34 @@
 import { useLocation } from "wouter";
 import { PlusCircle, Share, Eye } from "lucide-react";
+import { useRestaurant } from "@/hooks/use-restaurant";
 
 const QuickActions = () => {
   const [, setLocation] = useLocation();
+  const { activeRestaurant } = useRestaurant();
+  const restaurantId = activeRestaurant?.id;
 
   const handleAddMenuItem = () => {
-    setLocation("/create-menu");
+    if (restaurantId) {
+      setLocation(`/create-menu/${restaurantId}`);
+    } else {
+      setLocation("/create-menu");
+    }
   };
 
   const handleShareMenu = () => {
-    setLocation("/share-menu");
+    if (restaurantId) {
+      setLocation(`/share-menu/${restaurantId}`);
+    } else {
+      setLocation("/share-menu");
+    }
   };
 
   const handlePreviewMenu = () => {
-    setLocation("/menu-preview");
+    if (restaurantId) {
+      setLocation(`/menu-preview/${restaurantId}`);
+    } else {
+      setLocation("/menu-preview");
+    }
   };
 
   return (

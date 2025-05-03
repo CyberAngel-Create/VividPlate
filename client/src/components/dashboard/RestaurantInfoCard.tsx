@@ -14,7 +14,7 @@ const RestaurantInfoCard = ({ restaurant }: RestaurantInfoCardProps) => {
   const [, setLocation] = useLocation();
 
   const handleEdit = () => {
-    setLocation("/edit-restaurant");
+    setLocation(`/edit-restaurant/${restaurant.id}`);
   };
 
   return (
