@@ -232,31 +232,49 @@ const configureFileUpload = () => {
   const uploadDir = path.join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
+    console.log(`Created uploads directory at ${uploadDir}`);
+  } else {
+    console.log(`Using existing uploads directory at ${uploadDir}`);
   }
 
-  // Configure storage
+  // Configure storage with additional logging
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
+      // Re-check if directory exists and create if needed (for more resilience)
+      if (!fs.existsSync(uploadDir)) {
+        try {
+          fs.mkdirSync(uploadDir, { recursive: true });
+          console.log(`Recreated uploads directory at ${uploadDir}`);
+        } catch (err) {
+          console.error(`Failed to create uploads directory: ${err}`);
+          return cb(new Error('Failed to create uploads directory'), uploadDir);
+        }
+      }
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      // Create a unique filename with original extension
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      // Create a unique filename with original extension and include user ID for better organization
+      const userId = req.user ? (req.user as any).id : 'anonymous';
+      const uniqueSuffix = `${userId}-${Date.now()}-${Math.round(Math.random() * 1E9)}`;
       const ext = path.extname(file.originalname);
-      cb(null, uniqueSuffix + ext);
+      const filename = uniqueSuffix + ext;
+      console.log(`Generating filename for upload: ${filename}`);
+      cb(null, filename);
     }
   });
 
   // File size limit (3MB)
   const fileSizeLimit = 3 * 1024 * 1024;
 
-  // File filter to only allow image files
+  // File filter to only allow image files with additional logging
   const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     
     if (allowedMimeTypes.includes(file.mimetype)) {
+      console.log(`Upload file type accepted: ${file.mimetype}, size: ${file.size || 'unknown'}`);
       cb(null, true);
     } else {
+      console.error(`Upload rejected - invalid file type: ${file.mimetype}`);
       cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'));
     }
   };
@@ -287,29 +305,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.sendFile(path.join(process.cwd(), 'client/public/ads.txt'));
   });
   
-  // Serve static files from the uploads directory
+  // Serve static files from the uploads directory with improved error handling
   app.use('/uploads', (req, res, next) => {
+    const uploadDir = path.join(process.cwd(), 'uploads');
+    
+    // Check if uploads directory exists, create if it doesn't
+    if (!fs.existsSync(uploadDir)) {
+      try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+        console.log(`Recreated missing uploads directory at ${uploadDir}`);
+      } catch (error) {
+        console.error(`Failed to create uploads directory: ${error}`);
+      }
+    }
+    
     const options = {
-      root: path.join(process.cwd(), 'uploads'),
+      root: uploadDir,
       dotfiles: 'deny' as const,
       headers: {
         'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        'X-Content-Type-Options': 'nosniff', // Security header
       }
     };
     
     const fileName = req.path.substring(1); // Remove leading slash
     
-    if (!fileName || fileName.includes('..')) {
+    if (!fileName || fileName.includes('..') || fileName.includes('/')) {
+      console.warn(`Suspicious file path requested: ${fileName}`);
       return res.status(403).send('Forbidden');
     }
+    
+    // Log file access for debugging
+    console.log(`Serving file: ${fileName} from ${uploadDir}`);
     
     res.sendFile(fileName, options, (err) => {
       if (err) {
         if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
+          console.warn(`File not found: ${fileName}`);
           return res.status(404).send('File not found');
         }
+        console.error(`Error serving file ${fileName}:`, err);
         return next(err);
       }
+      console.log(`Successfully served file: ${fileName}`);
     });
   });
 
