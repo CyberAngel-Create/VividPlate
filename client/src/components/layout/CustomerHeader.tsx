@@ -99,9 +99,9 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
               ) : (
                 <>
                   <Link href="/login">
-                    <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                    <Button variant="outline" size="sm" className="text-sm font-medium">
                       {t("Log in")}
-                    </div>
+                    </Button>
                   </Link>
                   <Link href="/register">
                     <Button size="sm" variant="default">
@@ -224,12 +224,14 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                     ) : (
                       <div className="space-y-3">
                         <Link href="/login">
-                          <div
-                            className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full justify-center text-sm font-medium"
                             onClick={closeMenu}
                           >
                             {t("Log in")}
-                          </div>
+                          </Button>
                         </Link>
                         <Link href="/register">
                           <Button

@@ -108,8 +108,8 @@ export default function Subscribe() {
   useEffect(() => {
     const fetchPlanAndSetupPayment = async () => {
       if (!planId) {
-        setError("No plan selected. Please select a plan from the pricing page.");
-        setLoading(false);
+        // Redirect to pricing page instead of showing error
+        window.location.href = '/pricing';
         return;
       }
 

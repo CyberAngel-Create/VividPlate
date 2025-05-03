@@ -186,7 +186,7 @@ const ProfilePage = () => {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold">{t("Profile Management")}</h1>
           
-          {isPaid ? (
+          {isPaid && (
             <div className="flex items-center rounded-xl bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-4 py-2">
               <div className="relative">
                 <Star className="h-5 w-5 text-white" fill="white" />
@@ -196,15 +196,6 @@ const ProfilePage = () => {
               </div>
               <span className="ml-6 font-bold">{t("Premium Member")}</span>
             </div>
-          ) : (
-            <Button 
-              variant="default" 
-              size="sm"
-              className="bg-gradient-to-r from-primary to-primary/90 font-medium"
-              onClick={() => window.location.href = "/pricing"}
-            >
-              {t("Upgrade to Premium")}
-            </Button>
           )}
         </div>
       
