@@ -7,6 +7,8 @@ import RestaurantInfoCard from "@/components/dashboard/RestaurantInfoCard";
 import QuickActions from "@/components/dashboard/QuickActions";
 import FeedbackSummary from "@/components/dashboard/FeedbackSummary";
 import TabNavigation from "@/components/layout/TabNavigation";
+import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
+import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
 import { Eye, QrCode, Utensils, Calendar, CreditCard, Check, AlertCircle } from "lucide-react";
 import { Restaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
@@ -92,14 +94,34 @@ const Dashboard = () => {
     );
   }
 
+    const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col min-h-screen">
+      <RestaurantOwnerHeader onLogout={handleLogout} />
       <TabNavigation />
       
-      {/* Top ad banner for free users */}
-      <div className="w-full flex justify-center">
-        <AdBanner position="top" className="w-full max-w-screen-lg my-3" />
-      </div>
+      {/* Top ad banner for free users - only show for non-premium users */}
+      {(!subscriptionStatus?.isPaid) && (
+        <div className="w-full flex justify-center">
+          <AdBanner position="top" className="w-full max-w-screen-lg my-3" />
+        </div>
+      )}
       
       <section className="container mx-auto px-4 py-6">
         <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
@@ -189,6 +211,8 @@ const Dashboard = () => {
           <AdBanner position="bottom" className="w-full max-w-screen-lg my-3" />
         </div>
       </section>
+      
+      <RestaurantOwnerFooter />
     </div>
   );
 };

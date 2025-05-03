@@ -9,10 +9,11 @@ declare global {
 
 interface AdBannerProps {
   format?: 'horizontal' | 'vertical' | 'rectangle';
+  position?: 'top' | 'bottom' | 'sidebar';
   className?: string;
 }
 
-const AdBanner: React.FC<AdBannerProps> = ({ format = 'horizontal', className = '' }) => {
+const AdBanner: React.FC<AdBannerProps> = ({ format = 'horizontal', position, className = '' }) => {
   const { isPaid } = useSubscription();
   
   // Skip rendering for paid users

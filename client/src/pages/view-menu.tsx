@@ -132,7 +132,7 @@ const ViewMenu = () => {
         <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
       </div>
       
-      <Footer />
+      {/* Footer removed from customer view as requested */}
     </div>
   );
 };
