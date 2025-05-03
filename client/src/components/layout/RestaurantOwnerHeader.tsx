@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, User, Star } from "lucide-react";
+import { Menu, X, LogOut, User, Star, CreditCard, Mail, PlusCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ReactNode } from "react";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
+import { useRestaurant } from "@/hooks/use-restaurant";
 
 interface RestaurantOwnerHeaderProps {
   onLogout?: () => void;
@@ -16,9 +17,13 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { subscription, isPaid } = useSubscription();
+  const { restaurants } = useRestaurant();
   const { t } = useTranslation();
 
   const closeMenu = () => setIsMenuOpen(false);
+  
+  // Check if the user can add more restaurants (premium users can add up to 3)
+  const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
@@ -32,8 +37,33 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
             </div>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-6">
+          {/* Desktop Navigation - Main Menu */}
+          <nav className="hidden md:flex items-center space-x-4">
+            {/* Main Navigation Links */}
+            <Link href="/pricing">
+              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                <CreditCard className="h-4 w-4 mr-1 inline-block" />
+                {t("Pricing")}
+              </div>
+            </Link>
+            
+            <Link href="/contact">
+              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                <Mail className="h-4 w-4 mr-1 inline-block" />
+                {t("Contact")}
+              </div>
+            </Link>
+
+            {/* Add Restaurant button for premium users with less than 3 restaurants */}
+            {canAddRestaurant && (
+              <Link href="/edit-restaurant">
+                <div className="text-sm font-medium text-primary hover:text-primary-dark transition-colors">
+                  <PlusCircle className="h-4 w-4 mr-1 inline-block" />
+                  {t("Add Restaurant")}
+                </div>
+              </Link>
+            )}
+
             {/* Premium badge for paid users */}
             {isPaid && (
               <div className="flex items-center">
@@ -43,26 +73,26 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                 </div>
               </div>
             )}
-
-            {/* User profile and logout */}
-            <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-gray-200">
-              <Link href="/profile">
-                <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
-                  <User className="h-4 w-4 mr-1 inline-block" />
-                  {t("Profile")}
-                </div>
-              </Link>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onLogout && onLogout()}
-                className="text-gray-700 hover:text-primary"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                {t("Log out")}
-              </Button>
-            </div>
           </nav>
+
+          {/* Right-side User Menu */}
+          <div className="hidden md:flex items-center space-x-3">
+            <Link href="/profile">
+              <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors">
+                <User className="h-4 w-4 mr-1 inline-block" />
+                {t("Profile")}
+              </div>
+            </Link>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onLogout && onLogout()}
+              className="text-gray-700 hover:text-primary"
+            >
+              <LogOut className="h-4 w-4 mr-1" />
+              {t("Log out")}
+            </Button>
+          </div>
 
           {/* Extra components */}
           <div className="hidden md:flex items-center ml-2">
@@ -113,6 +143,39 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                           <span>{t("Premium")}</span>
                         </div>
                       </div>
+                    )}
+                    
+                    <Link href="/pricing">
+                      <div
+                        className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                        onClick={closeMenu}
+                      >
+                        <CreditCard className="h-4 w-4 mr-2 inline-block" />
+                        {t("Pricing")}
+                      </div>
+                    </Link>
+                    
+                    <Link href="/contact">
+                      <div
+                        className="block py-2 text-sm font-medium text-gray-700 hover:text-primary transition-colors"
+                        onClick={closeMenu}
+                      >
+                        <Mail className="h-4 w-4 mr-2 inline-block" />
+                        {t("Contact")}
+                      </div>
+                    </Link>
+
+                    {/* Add Restaurant button for premium users with less than 3 restaurants */}
+                    {canAddRestaurant && (
+                      <Link href="/edit-restaurant">
+                        <div
+                          className="block py-2 text-sm font-medium text-primary hover:text-primary-dark transition-colors"
+                          onClick={closeMenu}
+                        >
+                          <PlusCircle className="h-4 w-4 mr-2 inline-block" />
+                          {t("Add Restaurant")}
+                        </div>
+                      </Link>
                     )}
                     
                     <Link href="/profile">
