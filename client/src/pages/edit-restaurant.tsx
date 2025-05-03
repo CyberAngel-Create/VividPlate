@@ -4,6 +4,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import TabNavigation from "@/components/layout/TabNavigation";
+import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
+import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
 import RestaurantProfileForm from "@/components/restaurant/RestaurantProfileForm";
 import { Restaurant, InsertRestaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
@@ -80,8 +82,26 @@ const EditRestaurant = () => {
     }
   };
   
+  const handleLogout = async () => {
+    try {
+      await apiRequest("POST", "/api/auth/logout");
+      toast({
+        title: "Success",
+        description: "Logged out successfully",
+      });
+      window.location.href = "/";
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out",
+        variant: "destructive",
+      });
+    }
+  };
+  
   return (
     <div className="flex flex-col min-h-screen">
+      <RestaurantOwnerHeader onLogout={handleLogout} />
       {activeRestaurant && <TabNavigation />}
       
       <section className="container mx-auto px-4 py-6">
@@ -146,6 +166,8 @@ const EditRestaurant = () => {
           </div>
         )}
       </section>
+      
+      <RestaurantOwnerFooter />
     </div>
   );
 };
