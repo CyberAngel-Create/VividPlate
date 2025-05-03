@@ -110,8 +110,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           <div className="flex items-center justify-between px-4">
             <Link href="/admin">
               <div className="flex items-center">
-                <img src="/logo.svg" alt="DigitaMenuMate" className="h-8 w-8" />
-                <span className="ml-2 text-xl font-semibold text-gray-800 dark:text-white">Admin</span>
+                <span className="text-xl font-semibold text-gray-800 dark:text-white">Admin</span>
               </div>
             </Link>
           </div>
@@ -183,8 +182,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <div className="flex items-center justify-between">
                 <Link href="/admin" onClick={() => setIsOpen(false)}>
                   <div className="flex items-center">
-                    <img src="/logo.svg" alt="DigitaMenuMate" className="h-8 w-8" />
-                    <span className="ml-2 text-xl font-semibold">Admin</span>
+                    <span className="text-xl font-semibold">Admin</span>
                   </div>
                 </Link>
                 <Button

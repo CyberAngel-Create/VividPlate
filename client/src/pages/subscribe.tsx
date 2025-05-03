@@ -96,33 +96,46 @@ const SubscribeForm = ({ planName, planPrice }: { planName: string, planPrice: s
 export default function Subscribe() {
   const [clientSecret, setClientSecret] = useState("");
   const [loading, setLoading] = useState(true);
-  const [planId, setPlanId] = useState<string>("yearly");
+  const [planData, setPlanData] = useState<{ name: string; price: string; description: string; id: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [location] = useLocation();
   
-  // Plan details
-  const plans = {
-    yearly: { 
-      name: "Premium Yearly", 
-      price: "99.99", 
-      description: "Ad-free menus, up to 3 restaurants, unlimited menu items"
-    }
-  };
+  // Extract planId from URL query parameters
+  const queryParams = new URLSearchParams(location.split('?')[1]);
+  const planId = queryParams.get('planId');
 
   useEffect(() => {
-    const fetchPaymentIntent = async () => {
+    const fetchPlanAndSetupPayment = async () => {
+      if (!planId) {
+        setError("No plan selected. Please select a plan from the pricing page.");
+        setLoading(false);
+        return;
+      }
+
       try {
         setLoading(true);
-        const response = await apiRequest("POST", "/api/create-subscription", { 
-          planId
+        
+        // First, fetch the plan details
+        const planResponse = await apiRequest("GET", `/api/pricing/${planId}`);
+        if (!planResponse.ok) {
+          throw new Error("Selected plan not found");
+        }
+        
+        const planDetails = await planResponse.json();
+        setPlanData(planDetails);
+        
+        // Then create the subscription with the plan ID
+        const subscriptionResponse = await apiRequest("POST", "/api/create-subscription", { 
+          planId: parseInt(planId, 10)
         });
         
-        if (!response.ok) {
-          const errorData = await response.json();
+        if (!subscriptionResponse.ok) {
+          const errorData = await subscriptionResponse.json();
           throw new Error(errorData.message || "Error creating subscription");
         }
 
-        const data = await response.json();
+        const data = await subscriptionResponse.json();
         setClientSecret(data.clientSecret);
       } catch (err) {
         console.error("Subscription error:", err);
@@ -137,7 +150,7 @@ export default function Subscribe() {
       }
     };
 
-    fetchPaymentIntent();
+    fetchPlanAndSetupPayment();
   }, [planId, toast]);
 
   if (loading) {
@@ -166,8 +179,6 @@ export default function Subscribe() {
     );
   }
 
-  const selectedPlan = plans[planId as keyof typeof plans];
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <Card className="max-w-md w-full">
@@ -178,7 +189,7 @@ export default function Subscribe() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {clientSecret ? (
+          {clientSecret && planData ? (
             <Elements 
               stripe={stripePromise} 
               options={{ 
@@ -192,8 +203,8 @@ export default function Subscribe() {
               }}
             >
               <SubscribeForm 
-                planName={selectedPlan.name} 
-                planPrice={selectedPlan.price} 
+                planName={planData.name} 
+                planPrice={planData.price} 
               />
             </Elements>
           ) : (
