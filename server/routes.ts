@@ -788,20 +788,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Restaurant logo upload route
   app.post('/api/restaurants/:restaurantId/upload-logo', isAuthenticated, isRestaurantOwner, upload.single('logo'), async (req, res) => {
     try {
+      const userId = (req.user as any).id;
+      console.log(`Processing logo upload for restaurant ID: ${req.params.restaurantId}, User ID: ${userId}`);
+      
       if (!req.file) {
+        console.warn(`Logo upload attempt with no file for restaurant ${req.params.restaurantId}`);
         return res.status(400).json({ message: 'No file uploaded' });
       }
+      
+      console.log(`Logo uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
       const restaurantId = parseInt(req.params.restaurantId);
       const logoUrl = `/uploads/${req.file.filename}`;
       
+      // Test file access immediately after upload to verify it exists
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        console.log(`Confirmed logo file exists at: ${filePath}`);
+        
+        // Log file stats for debugging
+        try {
+          const stats = fs.statSync(filePath);
+          console.log(`Logo file stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
+        } catch (statErr) {
+          console.error(`Error getting logo file stats: ${statErr}`);
+        }
+      } else {
+        console.error(`WARNING: Logo file should exist but was not found at: ${filePath}`);
+      }
+      
       // Update restaurant with new logo URL
-      const restaurant = await storage.updateRestaurant(restaurantId, { logoUrl });
-      if (!restaurant) {
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (restaurant?.logoUrl) {
+        console.log(`Restaurant ${restaurantId} already had logo: ${restaurant.logoUrl}, replacing with: ${logoUrl}`);
+      }
+      
+      const updatedRestaurant = await storage.updateRestaurant(restaurantId, { logoUrl });
+      if (!updatedRestaurant) {
+        console.error(`Failed to update restaurant ${restaurantId} with new logo URL`);
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
-      res.json({ logoUrl, success: true });
+      console.log(`Restaurant ${restaurantId} logo successfully updated to: ${logoUrl}`);
+      res.json({ 
+        logoUrl, 
+        success: true,
+        fileDetails: {
+          name: req.file.filename,
+          size: req.file.size,
+          type: req.file.mimetype
+        }
+      });
     } catch (error) {
       console.error('Error uploading logo:', error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
@@ -812,20 +849,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Restaurant banner upload route
   app.post('/api/restaurants/:restaurantId/upload-banner', isAuthenticated, isRestaurantOwner, upload.single('image'), async (req, res) => {
     try {
+      const userId = (req.user as any).id;
+      console.log(`Processing banner upload for restaurant ID: ${req.params.restaurantId}, User ID: ${userId}`);
+      
       if (!req.file) {
+        console.warn(`Banner upload attempt with no file for restaurant ${req.params.restaurantId}`);
         return res.status(400).json({ message: 'No file uploaded' });
       }
+      
+      console.log(`Banner uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
       const restaurantId = parseInt(req.params.restaurantId);
       const bannerUrl = `/uploads/${req.file.filename}`;
       
+      // Test file access immediately after upload to verify it exists
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      if (fs.existsSync(filePath)) {
+        console.log(`Confirmed banner file exists at: ${filePath}`);
+        
+        // Log file stats for debugging
+        try {
+          const stats = fs.statSync(filePath);
+          console.log(`Banner file stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
+        } catch (statErr) {
+          console.error(`Error getting banner file stats: ${statErr}`);
+        }
+      } else {
+        console.error(`WARNING: Banner file should exist but was not found at: ${filePath}`);
+      }
+      
       // Update restaurant with new banner URL
-      const restaurant = await storage.updateRestaurant(restaurantId, { bannerUrl });
-      if (!restaurant) {
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (restaurant?.bannerUrl) {
+        console.log(`Restaurant ${restaurantId} already had banner: ${restaurant.bannerUrl}, replacing with: ${bannerUrl}`);
+      }
+      
+      const updatedRestaurant = await storage.updateRestaurant(restaurantId, { bannerUrl });
+      if (!updatedRestaurant) {
+        console.error(`Failed to update restaurant ${restaurantId} with new banner URL`);
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
-      res.json({ bannerUrl, success: true });
+      console.log(`Restaurant ${restaurantId} banner successfully updated to: ${bannerUrl}`);
+      res.json({ 
+        bannerUrl, 
+        success: true,
+        fileDetails: {
+          name: req.file.filename,
+          size: req.file.size,
+          type: req.file.mimetype
+        }
+      });
     } catch (error) {
       console.error('Error uploading banner:', error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';

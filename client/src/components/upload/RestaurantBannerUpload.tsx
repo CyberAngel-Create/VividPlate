@@ -28,9 +28,12 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
     
+    console.log(`Starting banner upload process for restaurant ID: ${restaurantId}, File: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`);
+    
     // Check file size (max 3MB)
     const maxSize = 3 * 1024 * 1024; // 3MB in bytes
     if (file.size > maxSize) {
+      console.warn(`Banner too large: ${file.size} bytes`);
       setError(`File size exceeds the limit of 3MB.`);
       toast({
         title: 'Error',
@@ -43,6 +46,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
     // Check file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
+      console.warn(`Invalid banner file type: ${file.type}`);
       setError('Only JPEG, PNG, GIF, and WebP images are allowed.');
       toast({
         title: 'Error',
@@ -55,6 +59,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
     // Create local preview
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    console.log("Created local preview blob URL:", objectUrl);
     
     // Upload to server
     const formData = new FormData();
@@ -63,42 +68,82 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
     setIsUploading(true);
     setError(null);
     
-    try {
-      const response = await apiRequest(
-        'POST', 
-        `/api/restaurants/${restaurantId}/upload-banner`, 
-        formData,
-        true // Use FormData
-      );
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upload banner');
+    let uploadAttempts = 0;
+    const maxAttempts = 2;
+    
+    while (uploadAttempts < maxAttempts) {
+      uploadAttempts++;
+      try {
+        console.log(`Banner upload attempt ${uploadAttempts} of ${maxAttempts} for restaurant ${restaurantId}`);
+        
+        const response = await apiRequest(
+          'POST', 
+          `/api/restaurants/${restaurantId}/upload-banner`, 
+          formData,
+          true // Use FormData
+        );
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Server responded with status ${response.status}: ${errorText}`);
+          throw new Error(`Server error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log("Banner upload successful, received:", data);
+        
+        if (!data.bannerUrl) {
+          console.error("Server response missing bannerUrl");
+          throw new Error("Invalid server response");
+        }
+        
+        // Verify the uploaded image is accessible
+        try {
+          const verifyResponse = await fetch(data.bannerUrl, { method: 'HEAD' });
+          if (!verifyResponse.ok) {
+            console.warn(`Uploaded banner at ${data.bannerUrl} not immediately accessible (status: ${verifyResponse.status})`);
+          } else {
+            console.log(`Verified banner is accessible at ${data.bannerUrl}`);
+          }
+        } catch (verifyError) {
+          console.warn(`Could not verify banner accessibility: ${verifyError}`);
+        }
+        
+        toast({
+          title: 'Success',
+          description: 'Banner uploaded successfully.',
+        });
+        
+        if (onSuccess) {
+          onSuccess(data.bannerUrl);
+        }
+        
+        return; // Exit the retry loop if successful
+      } catch (error) {
+        console.error(`Banner upload attempt ${uploadAttempts} failed:`, error);
+        
+        // If we've exhausted our retry attempts, show error and reset
+        if (uploadAttempts >= maxAttempts) {
+          const errorMessage = error instanceof Error ? error.message : 'Failed to upload banner';
+          console.error(`All banner upload attempts failed: ${errorMessage}`);
+          
+          setError(errorMessage);
+          toast({
+            title: 'Error',
+            description: errorMessage,
+            variant: 'destructive',
+          });
+          
+          // Revert to previous image if upload failed
+          setPreviewUrl(currentBannerUrl || null);
+        } else {
+          console.log(`Retrying banner upload in 1 second...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
+        }
       }
-      
-      const data = await response.json();
-      
-      toast({
-        title: 'Success',
-        description: 'Banner uploaded successfully.',
-      });
-      
-      if (onSuccess) {
-        onSuccess(data.bannerUrl);
-      }
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to upload banner');
-      toast({
-        title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to upload banner',
-        variant: 'destructive',
-      });
-      
-      // Revert to previous image if upload failed
-      setPreviewUrl(currentBannerUrl || null);
-    } finally {
-      setIsUploading(false);
     }
+    
+    setIsUploading(false);
   };
   
   return (

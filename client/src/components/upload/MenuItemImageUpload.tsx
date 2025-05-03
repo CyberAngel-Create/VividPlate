@@ -24,8 +24,11 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
     const file = e.target.files?.[0];
     if (!file) return;
 
+    console.log(`Starting upload process for file: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`);
+
     // Validate file size (max 3MB)
     if (file.size > 3 * 1024 * 1024) {
+      console.warn(`File too large: ${file.size} bytes`);
       toast({
         title: "File too large",
         description: "Image must be less than 3MB in size.",
@@ -37,6 +40,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
     // Validate file type
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!validTypes.includes(file.type)) {
+      console.warn(`Invalid file type: ${file.type}`);
       toast({
         title: "Invalid file type",
         description: "Please upload a JPEG, PNG, WebP, or GIF image.",
@@ -48,41 +52,81 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
     // Generate a preview URL
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
+    console.log("Created local preview blob URL:", objectUrl);
 
     // Create form data for upload
     const formData = new FormData();
     formData.append("image", file);
     
     setIsUploading(true);
+    console.log("Starting upload to server...");
 
-    try {
-      const response = await fetch("/api/upload/menuitem", {
-        method: "POST",
-        body: formData,
-      });
+    let uploadAttempts = 0;
+    const maxAttempts = 2;
+    
+    while (uploadAttempts < maxAttempts) {
+      uploadAttempts++;
+      try {
+        console.log(`Upload attempt ${uploadAttempts} of ${maxAttempts}`);
+        
+        const response = await fetch("/api/upload/menuitem", {
+          method: "POST",
+          body: formData,
+        });
 
-      if (!response.ok) {
-        throw new Error("Failed to upload image");
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Server responded with status ${response.status}: ${errorText}`);
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Upload successful, received:", data);
+        
+        if (!data.imageUrl) {
+          console.error("Server response missing imageUrl");
+          throw new Error("Invalid server response");
+        }
+        
+        // Verify the uploaded image is accessible
+        try {
+          const verifyResponse = await fetch(data.imageUrl, { method: 'HEAD' });
+          if (!verifyResponse.ok) {
+            console.warn(`Uploaded image at ${data.imageUrl} not immediately accessible (status: ${verifyResponse.status})`);
+          } else {
+            console.log(`Verified image is accessible at ${data.imageUrl}`);
+          }
+        } catch (verifyError) {
+          console.warn(`Could not verify image accessibility: ${verifyError}`);
+        }
+        
+        onImageUploaded(data.imageUrl);
+
+        toast({
+          title: "Success",
+          description: "Image uploaded successfully",
+        });
+        
+        return; // Exit the retry loop if successful
+      } catch (error) {
+        console.error(`Upload attempt ${uploadAttempts} failed:`, error);
+        
+        // If we've exhausted our retry attempts, show error and reset
+        if (uploadAttempts >= maxAttempts) {
+          toast({
+            title: "Upload failed",
+            description: "Failed to upload image after multiple attempts. Please try again.",
+            variant: "destructive",
+          });
+          setPreviewUrl(existingImageUrl || null);
+        } else {
+          console.log(`Retrying upload in 1 second...`);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
+        }
       }
-
-      const data = await response.json();
-      onImageUploaded(data.imageUrl);
-
-      toast({
-        title: "Success",
-        description: "Image uploaded successfully",
-      });
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload image. Please try again.",
-        variant: "destructive",
-      });
-      setPreviewUrl(existingImageUrl || null);
-    } finally {
-      setIsUploading(false);
     }
+    
+    setIsUploading(false);
   };
 
   const handleRemoveImage = () => {
