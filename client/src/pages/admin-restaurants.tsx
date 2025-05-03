@@ -122,32 +122,29 @@ const AdminRestaurants = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
-                            <span className="font-medium">{restaurant.categoryCount || 0}</span>
-                            {restaurant.categoryCount > 0 && (
-                              <Badge variant="outline" className="ml-2 text-xs">
-                                {restaurant.categoryCount === 1 ? "1 category" : `${restaurant.categoryCount} categories`}
-                              </Badge>
-                            )}
+                            <Badge variant={restaurant.categoryCount > 0 ? "outline" : "secondary"} className="text-xs">
+                              {restaurant.categoryCount === 0 ? "No categories" : 
+                               restaurant.categoryCount === 1 ? "1 category" : 
+                               `${restaurant.categoryCount} categories`}
+                            </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
-                            <span className="font-medium">{restaurant.menuItemCount || 0}</span>
-                            {restaurant.menuItemCount > 0 && (
-                              <Badge variant="outline" className="ml-2 text-xs">
-                                {restaurant.menuItemCount === 1 ? "1 item" : `${restaurant.menuItemCount} items`}
-                              </Badge>
-                            )}
+                            <Badge variant={restaurant.menuItemCount > 0 ? "outline" : "secondary"} className="text-xs">
+                              {restaurant.menuItemCount === 0 ? "No items" : 
+                               restaurant.menuItemCount === 1 ? "1 item" : 
+                               `${restaurant.menuItemCount} items`}
+                            </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center">
-                            <span className="font-medium">{restaurant.viewCount || 0}</span>
-                            {restaurant.viewCount > 0 && (
-                              <Badge variant="outline" className="ml-2 text-xs">
-                                {restaurant.viewCount === 1 ? "1 view" : `${restaurant.viewCount} views`}
-                              </Badge>
-                            )}
+                            <Badge variant={restaurant.viewCount > 0 ? "outline" : "secondary"} className="text-xs">
+                              {restaurant.viewCount === 0 ? "No views" : 
+                               restaurant.viewCount === 1 ? "1 view" : 
+                               `${restaurant.viewCount} views`}
+                            </Badge>
                           </div>
                         </TableCell>
                         <TableCell>
