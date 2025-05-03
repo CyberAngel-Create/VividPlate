@@ -15,6 +15,7 @@ import EditRestaurant from "./pages/edit-restaurant";
 import MenuPreview from "./pages/menu-preview";
 import ShareMenu from "./pages/share-menu";
 import ViewMenu from "./pages/view-menu";
+import RestaurantsPage from "./pages/restaurants";
 import SubscriptionPage from "./pages/subscription";
 import Subscribe from "./pages/subscribe";
 import PaymentSuccess from "./pages/payment-success";
@@ -103,6 +104,7 @@ function Router() {
 
         <AuthenticatedRoute path="/dashboard" component={Dashboard} />
         <AuthenticatedRoute path="/profile" component={Profile} />
+        <AuthenticatedRoute path="/restaurants" component={RestaurantsPage} />
         <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
         <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
         <AuthenticatedRoute path="/menu-preview" component={MenuPreview} />
