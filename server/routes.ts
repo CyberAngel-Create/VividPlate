@@ -2305,6 +2305,119 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     })(req, res, next);
   });
+  
+  // Diagnostic endpoint to check file uploads directory
+  app.get('/api/system/uploads-diagnostic', async (req, res) => {
+    console.log('Running uploads directory diagnostic check');
+    try {
+      const results = {
+        uploadsDirectory: {
+          exists: false,
+          isDirectory: false,
+          writeable: false,
+          stats: null as any,
+          files: [] as string[],
+          recentFiles: [] as any[],
+        },
+        serverInfo: {
+          cwd: process.cwd(),
+          tmpdir: require('os').tmpdir(),
+          platform: process.platform,
+          nodeVersion: process.version,
+        }
+      };
+      
+      const uploadsDir = path.join(process.cwd(), 'uploads');
+      console.log(`Checking uploads directory at: ${uploadsDir}`);
+      
+      // Check if directory exists
+      if (fs.existsSync(uploadsDir)) {
+        results.uploadsDirectory.exists = true;
+        
+        try {
+          const stats = fs.statSync(uploadsDir);
+          results.uploadsDirectory.isDirectory = stats.isDirectory();
+          results.uploadsDirectory.stats = {
+            size: stats.size,
+            created: stats.birthtime,
+            modified: stats.mtime,
+            permissions: stats.mode.toString(8),
+          };
+          
+          // Test write permission
+          try {
+            const testFile = path.join(uploadsDir, `test-${Date.now()}.txt`);
+            fs.writeFileSync(testFile, 'Test write permission');
+            fs.unlinkSync(testFile); // Clean up test file
+            results.uploadsDirectory.writeable = true;
+          } catch (writeErr) {
+            console.error('Write permission test failed:', writeErr);
+            results.uploadsDirectory.writeable = false;
+          }
+          
+          // List files in directory
+          const files = fs.readdirSync(uploadsDir);
+          results.uploadsDirectory.files = files;
+          
+          // Get details of most recent files (up to 5)
+          const fileDetails = files
+            .map(file => {
+              const filePath = path.join(uploadsDir, file);
+              try {
+                const fileStats = fs.statSync(filePath);
+                return {
+                  name: file,
+                  size: fileStats.size,
+                  created: fileStats.birthtime,
+                  accessTime: fileStats.atime,
+                  exists: true,
+                  accessible: true,
+                  path: filePath
+                };
+              } catch (err) {
+                return {
+                  name: file,
+                  exists: false,
+                  error: err instanceof Error ? err.message : 'Unknown error'
+                };
+              }
+            })
+            .sort((a, b) => {
+              if (a.created && b.created) {
+                return b.created.getTime() - a.created.getTime();
+              }
+              return 0;
+            })
+            .slice(0, 5);
+            
+          results.uploadsDirectory.recentFiles = fileDetails;
+        } catch (statErr) {
+          console.error('Error getting uploads directory stats:', statErr);
+        }
+      } else {
+        console.log('Uploads directory does not exist');
+        
+        // Try to create it
+        try {
+          fs.mkdirSync(uploadsDir, { recursive: true });
+          console.log(`Created uploads directory at: ${uploadsDir}`);
+          results.uploadsDirectory.exists = true;
+          results.uploadsDirectory.isDirectory = true;
+          results.uploadsDirectory.writeable = true;
+        } catch (mkdirErr) {
+          console.error('Failed to create uploads directory:', mkdirErr);
+        }
+      }
+      
+      res.json(results);
+    } catch (error) {
+      console.error('Error during upload diagnostic:', error);
+      res.status(500).json({ 
+        message: 'Error performing uploads diagnostic',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
