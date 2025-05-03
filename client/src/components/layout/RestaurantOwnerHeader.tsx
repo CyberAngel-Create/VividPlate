@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, User, Star, CreditCard, Store } from "lucide-react";
+import { Menu, X, LogOut, User, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ReactNode } from "react";
@@ -34,16 +34,6 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
-            {/* Show pricing option only for free users */}
-            {!isPaid && (
-              <Link href="/pricing">
-                <div className="text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white px-3 py-1.5 rounded-md flex items-center">
-                  <CreditCard className="h-4 w-4 mr-1" />
-                  {t("Upgrade to Premium")}
-                </div>
-              </Link>
-            )}
-
             {/* Premium badge for paid users */}
             {isPaid && (
               <div className="flex items-center">
@@ -115,19 +105,6 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                 {/* Mobile navigation */}
                 <nav className="flex-1 overflow-y-auto p-4">
                   <div className="space-y-3">
-                    {/* Show pricing option only for free users */}
-                    {!isPaid && (
-                      <Link href="/pricing">
-                        <div
-                          className="block py-2 text-sm font-medium bg-gradient-to-r from-primary to-primary-dark text-white px-3 py-1.5 rounded-md flex items-center"
-                          onClick={closeMenu}
-                        >
-                          <CreditCard className="h-4 w-4 mr-2" />
-                          {t("Upgrade to Premium")}
-                        </div>
-                      </Link>
-                    )}
-
                     {/* Premium badge for paid users */}
                     {isPaid && (
                       <div className="py-2">
