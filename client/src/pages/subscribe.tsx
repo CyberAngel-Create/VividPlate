@@ -68,7 +68,7 @@ const SubscribeForm = ({ planName, planPrice }: { planName: string, planPrice: s
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="bg-muted p-6 rounded-lg mb-6">
         <h3 className="font-semibold text-lg mb-2">{planName}</h3>
-        <p className="text-2xl font-bold">${planPrice} <span className="text-sm font-normal text-muted-foreground">/ year</span></p>
+        <p className="text-2xl font-bold">${planPrice}</p>
       </div>
       
       <div className="space-y-4">

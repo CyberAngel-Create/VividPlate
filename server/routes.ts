@@ -1400,11 +1400,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Pricing plan not found' });
       }
       
-      // Calculate end date based on plan billing interval
+      // Calculate end date based on billing period
       let endDate = new Date();
-      if (pricingPlan.billingInterval === 'yearly') {
+      if (pricingPlan.billingPeriod === 'yearly') {
         endDate.setFullYear(endDate.getFullYear() + 1);
-      } else if (pricingPlan.billingInterval === 'monthly') {
+      } else if (pricingPlan.billingPeriod === 'monthly') {
         endDate.setMonth(endDate.getMonth() + 1);
       } else {
         // Default to monthly if not specified
