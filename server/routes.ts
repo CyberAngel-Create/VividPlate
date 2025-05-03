@@ -18,9 +18,10 @@ import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import memorystore from 'memorystore';
-import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
+import multer from 'multer';
 import Stripe from "stripe";
 import { promisify } from "util";
 import { scrypt, timingSafeEqual } from "crypto";
@@ -2321,9 +2322,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
         serverInfo: {
           cwd: process.cwd(),
-          tmpdir: require('os').tmpdir(),
+          tmpdir: os.tmpdir(),
           platform: process.platform,
           nodeVersion: process.version,
+          requestUrl: req.protocol + '://' + req.get('host')
         }
       };
       
@@ -2365,15 +2367,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const filePath = path.join(uploadsDir, file);
               try {
                 const fileStats = fs.statSync(filePath);
-                return {
+                // Create an HTTP accessible URL for this file
+                const httpUrl = `/uploads/${file}`;
+                const fileInfo = {
                   name: file,
                   size: fileStats.size,
                   created: fileStats.birthtime,
                   accessTime: fileStats.atime,
                   exists: true,
                   accessible: true,
-                  path: filePath
+                  path: filePath,
+                  url: httpUrl,
+                  fullUrl: req.protocol + '://' + req.get('host') + httpUrl
                 };
+                return fileInfo;
               } catch (err) {
                 return {
                   name: file,
@@ -2391,6 +2398,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
             .slice(0, 5);
             
           results.uploadsDirectory.recentFiles = fileDetails;
+          
+          // Add diagnostics on HTTP access
+          const baseUrl = req.protocol + '://' + req.get('host');
+          results.uploadsDirectory.httpAccessTest = {
+            baseUrl,
+            testUrl: baseUrl + '/uploads',
+            testedAt: new Date().toISOString()
+          };
+          
+          // Create a test file to verify HTTP access
+          const testFileName = `http-test-${Date.now()}.txt`;
+          const testFilePath = path.join(uploadsDir, testFileName);
+          try {
+            fs.writeFileSync(testFilePath, 'Diagnostic HTTP test file');
+            results.uploadsDirectory.httpAccessTest.testFile = {
+              path: testFilePath,
+              url: `/uploads/${testFileName}`,
+              fullUrl: baseUrl + `/uploads/${testFileName}`,
+              created: new Date().toISOString()
+            };
+            // File will be automatically accessible via the /uploads route
+          } catch (testErr) {
+            console.error('Failed to create HTTP test file:', testErr);
+            results.uploadsDirectory.httpAccessTest.testFileError = 
+              testErr instanceof Error ? testErr.message : 'Unknown error';
+          }
         } catch (statErr) {
           console.error('Error getting uploads directory stats:', statErr);
         }
@@ -2410,6 +2443,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json(results);
+      
+      // Clean up the test file after response is sent
+      setTimeout(() => {
+        const testFilePath = path.join(uploadsDir, `http-test-${Date.now()}.txt`);
+        if (fs.existsSync(testFilePath)) {
+          try {
+            fs.unlinkSync(testFilePath);
+            console.log(`Removed HTTP test file: ${testFilePath}`);
+          } catch (err) {
+            console.error(`Failed to remove HTTP test file: ${err}`);
+          }
+        }
+      }, 60000); // Keep the file around for a minute for testing
     } catch (error) {
       console.error('Error during upload diagnostic:', error);
       res.status(500).json({ 
