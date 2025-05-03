@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2 } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
+import { useFileUpload } from '@/lib/upload-utils';
 
 interface RestaurantLogoUploadProps {
   restaurantId: number;
@@ -15,10 +16,12 @@ interface RestaurantLogoUploadProps {
 
 const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: RestaurantLogoUploadProps) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentLogoUrl || null);
   const { toast } = useToast();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { uploadFile } = useFileUpload();
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -56,93 +59,54 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
     
     // Upload file
     setIsUploading(true);
+    setUploadProgress(0);
     
-    let uploadAttempts = 0;
-    const maxAttempts = 2;
-    
-    while (uploadAttempts < maxAttempts) {
-      uploadAttempts++;
-      try {
-        console.log(`Logo upload attempt ${uploadAttempts} of ${maxAttempts} for restaurant ${restaurantId}`);
-        
-        const formData = new FormData();
-        formData.append('logo', file);
-        
-        const response = await apiRequest(
-          'POST', 
-          `/api/restaurants/${restaurantId}/upload-logo`, 
-          formData,
-          true // Use FormData
-        );
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Server responded with status ${response.status}: ${errorText}`);
-          throw new Error(`Server error: ${response.status}`);
+    try {
+      // Use enhanced upload utility
+      const result = await uploadFile(file, `/api/restaurants/${restaurantId}/upload-logo`, {
+        maxRetries: 2,
+        verifyUrl: true,
+        showToasts: true,
+        onProgress: (progress) => {
+          setUploadProgress(progress);
         }
-        
-        const data = await response.json();
-        console.log("Logo upload successful, received:", data);
-        
-        if (!data.logoUrl) {
-          console.error("Server response missing logoUrl");
-          throw new Error("Invalid server response");
-        }
-        
-        // Verify the uploaded image is accessible
-        try {
-          const verifyResponse = await fetch(data.logoUrl, { method: 'HEAD' });
-          if (!verifyResponse.ok) {
-            console.warn(`Uploaded logo at ${data.logoUrl} not immediately accessible (status: ${verifyResponse.status})`);
-          } else {
-            console.log(`Verified logo is accessible at ${data.logoUrl}`);
-          }
-        } catch (verifyError) {
-          console.warn(`Could not verify logo accessibility: ${verifyError}`);
-        }
-        
-        toast({
-          title: 'Logo uploaded',
-          description: 'Restaurant logo has been updated',
-        });
+      });
+      
+      if (result.success && result.url) {
+        console.log("Logo upload successful:", result.url);
         
         // Invalidate restaurant cache to update logo
         queryClient.invalidateQueries({ queryKey: [`/api/restaurants/${restaurantId}`] });
         queryClient.invalidateQueries({ queryKey: ['/api/restaurants'] });
         
         if (onSuccess) {
-          onSuccess(data.logoUrl);
+          onSuccess(result.url);
         }
+      } else {
+        console.error("Logo upload failed:", result.message);
         
-        return; // Exit the retry loop if successful
-      } catch (error) {
-        console.error(`Logo upload attempt ${uploadAttempts} failed:`, error);
-        
-        // If we've exhausted our retry attempts, show error and reset
-        if (uploadAttempts >= maxAttempts) {
-          const errorMessage = error instanceof Error ? error.message : 'Failed to upload logo';
-          console.error(`All logo upload attempts failed: ${errorMessage}`);
-          
-          toast({
-            title: 'Upload failed',
-            description: errorMessage,
-            variant: 'destructive',
-          });
-          
-          // Reset preview if upload failed
-          if (currentLogoUrl) {
-            setPreviewUrl(currentLogoUrl);
-          } else {
-            setPreviewUrl(null);
-          }
+        // Reset preview if upload failed
+        if (currentLogoUrl) {
+          setPreviewUrl(currentLogoUrl);
         } else {
-          console.log(`Retrying logo upload in 1 second...`);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
+          setPreviewUrl(null);
         }
       }
+    } catch (error) {
+      console.error("Logo upload error:", error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload logo';
+      
+      toast({
+        title: 'Upload failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      
+      // Reset preview if upload failed
+      setPreviewUrl(currentLogoUrl || null);
+    } finally {
+      setIsUploading(false);
     }
-    
-    setIsUploading(false);
   };
   
   const handleRemoveLogo = () => {

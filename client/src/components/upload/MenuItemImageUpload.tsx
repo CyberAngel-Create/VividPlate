@@ -1,8 +1,9 @@
 import { useState, useRef, ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
+import { useFileUpload } from "@/lib/upload-utils";
 
 interface MenuItemImageUploadProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -10,7 +11,10 @@ interface MenuItemImageUploadProps {
 }
 
 const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImageUploadProps) => {
+  const { toast } = useToast();
+  const { uploadFile } = useFileUpload();
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,80 +57,40 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
     const objectUrl = URL.createObjectURL(file);
     setPreviewUrl(objectUrl);
     console.log("Created local preview blob URL:", objectUrl);
-
-    // Create form data for upload
-    const formData = new FormData();
-    formData.append("image", file);
     
     setIsUploading(true);
-    console.log("Starting upload to server...");
-
-    let uploadAttempts = 0;
-    const maxAttempts = 2;
+    setUploadProgress(0);
     
-    while (uploadAttempts < maxAttempts) {
-      uploadAttempts++;
-      try {
-        console.log(`Upload attempt ${uploadAttempts} of ${maxAttempts}`);
-        
-        const response = await fetch("/api/upload/menuitem", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Server responded with status ${response.status}: ${errorText}`);
-          throw new Error(`Server error: ${response.status}`);
+    try {
+      // Use the enhanced upload utility with progress tracking
+      const result = await uploadFile(file, "/api/upload/menuitem", {
+        maxRetries: 2,
+        verifyUrl: true,
+        showToasts: true,
+        onProgress: (progress) => {
+          setUploadProgress(progress);
         }
-
-        const data = await response.json();
-        console.log("Upload successful, received:", data);
-        
-        if (!data.imageUrl) {
-          console.error("Server response missing imageUrl");
-          throw new Error("Invalid server response");
-        }
-        
-        // Verify the uploaded image is accessible
-        try {
-          const verifyResponse = await fetch(data.imageUrl, { method: 'HEAD' });
-          if (!verifyResponse.ok) {
-            console.warn(`Uploaded image at ${data.imageUrl} not immediately accessible (status: ${verifyResponse.status})`);
-          } else {
-            console.log(`Verified image is accessible at ${data.imageUrl}`);
-          }
-        } catch (verifyError) {
-          console.warn(`Could not verify image accessibility: ${verifyError}`);
-        }
-        
-        onImageUploaded(data.imageUrl);
-
-        toast({
-          title: "Success",
-          description: "Image uploaded successfully",
-        });
-        
-        return; // Exit the retry loop if successful
-      } catch (error) {
-        console.error(`Upload attempt ${uploadAttempts} failed:`, error);
-        
-        // If we've exhausted our retry attempts, show error and reset
-        if (uploadAttempts >= maxAttempts) {
-          toast({
-            title: "Upload failed",
-            description: "Failed to upload image after multiple attempts. Please try again.",
-            variant: "destructive",
-          });
-          setPreviewUrl(existingImageUrl || null);
-        } else {
-          console.log(`Retrying upload in 1 second...`);
-          await new Promise(resolve => setTimeout(resolve, 1000)); // Wait before retry
-        }
+      });
+      
+      if (result.success && result.url) {
+        console.log("Upload successful:", result.url);
+        onImageUploaded(result.url);
+      } else {
+        console.error("Upload failed:", result.message);
+        setPreviewUrl(existingImageUrl || null);
       }
+    } catch (error) {
+      console.error("Upload error:", error);
+      setPreviewUrl(existingImageUrl || null);
+      
+      toast({
+        title: "Upload failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
     }
-    
-    setIsUploading(false);
   };
 
   const handleRemoveImage = () => {
@@ -145,12 +109,30 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
             <img
               src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)}
               alt="Menu item"
-              className="w-full h-48 object-cover rounded-md"
+              className={`w-full h-48 object-cover rounded-md ${isUploading ? 'opacity-50' : ''}`}
               onError={(e) => {
                 console.error("Failed to load menu item image:", previewUrl);
                 e.currentTarget.src = getFallbackImage('menu');
               }}
             />
+            {isUploading && uploadProgress > 0 && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/10 rounded-md">
+                <div className="w-3/4 h-2 bg-gray-200 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all duration-300 ease-in-out"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs mt-2 font-medium text-white bg-black/30 px-2 py-1 rounded">
+                  {uploadProgress}% uploaded
+                </p>
+              </div>
+            )}
+            {isUploading && uploadProgress === 0 && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-md">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            )}
             <button
               type="button"
               onClick={handleRemoveImage}
@@ -184,7 +166,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
           {isUploading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Uploading...
+              Uploading... {uploadProgress > 0 && `${uploadProgress}%`}
             </>
           ) : (
             <>
