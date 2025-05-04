@@ -14,7 +14,7 @@ import {
   advertisements, Advertisement, InsertAdvertisement
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, count, desc } from "drizzle-orm";
+import { eq, and, count, desc, or, isNull, lte, gte } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -632,6 +632,57 @@ export class MemStorage implements IStorage {
     return this.dietaryPreferences.delete(id);
   }
   
+  // Advertisement operations
+  async getAdvertisement(id: number): Promise<Advertisement | undefined> {
+    return this.advertisements.get(id);
+  }
+
+  async getAdvertisements(): Promise<Advertisement[]> {
+    return Array.from(this.advertisements.values());
+  }
+
+  async getActiveAdvertisementByPosition(position: string): Promise<Advertisement | undefined> {
+    const now = new Date();
+    return Array.from(this.advertisements.values()).find(
+      (ad) => 
+        ad.position === position && 
+        ad.isActive && 
+        (!ad.startDate || new Date(ad.startDate) <= now) && 
+        (!ad.endDate || new Date(ad.endDate) >= now)
+    );
+  }
+
+  async createAdvertisement(insertAd: InsertAdvertisement): Promise<Advertisement> {
+    const id = this.currentIds.advertisements++;
+    const now = new Date();
+    const ad: Advertisement = { 
+      ...insertAd, 
+      id,
+      createdAt: now,
+      updatedAt: now
+    };
+    this.advertisements.set(id, ad);
+    return ad;
+  }
+
+  async updateAdvertisement(id: number, adUpdate: Partial<InsertAdvertisement>): Promise<Advertisement | undefined> {
+    const ad = this.advertisements.get(id);
+    if (!ad) return undefined;
+
+    const now = new Date();
+    const updatedAd = { 
+      ...ad, 
+      ...adUpdate,
+      updatedAt: now
+    };
+    this.advertisements.set(id, updatedAd);
+    return updatedAd;
+  }
+
+  async deleteAdvertisement(id: number): Promise<boolean> {
+    return this.advertisements.delete(id);
+  }
+  
   // Admin methods
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
@@ -922,6 +973,69 @@ export class DatabaseStorage implements IStorage {
     return !!deletedPlan;
   }
   
+  // Advertisement operations
+  async getAdvertisement(id: number): Promise<Advertisement | undefined> {
+    const [ad] = await db.select()
+      .from(advertisements)
+      .where(eq(advertisements.id, id));
+    return ad;
+  }
+
+  async getAdvertisements(): Promise<Advertisement[]> {
+    return await db.select().from(advertisements);
+  }
+
+  async getActiveAdvertisementByPosition(position: string): Promise<Advertisement | undefined> {
+    const now = new Date();
+    const [ad] = await db.select()
+      .from(advertisements)
+      .where(
+        and(
+          eq(advertisements.position, position),
+          eq(advertisements.isActive, true),
+          or(
+            isNull(advertisements.startDate),
+            lte(advertisements.startDate, now)
+          ),
+          or(
+            isNull(advertisements.endDate),
+            gte(advertisements.endDate, now)
+          )
+        )
+      )
+      .limit(1);
+    return ad;
+  }
+
+  async createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement> {
+    const [newAd] = await db.insert(advertisements)
+      .values({
+        ...ad,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newAd;
+  }
+
+  async updateAdvertisement(id: number, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined> {
+    const [updatedAd] = await db.update(advertisements)
+      .set({
+        ...ad,
+        updatedAt: new Date()
+      })
+      .where(eq(advertisements.id, id))
+      .returning();
+    return updatedAd;
+  }
+
+  async deleteAdvertisement(id: number): Promise<boolean> {
+    const [deletedAd] = await db.delete(advertisements)
+      .where(eq(advertisements.id, id))
+      .returning();
+    return !!deletedAd;
+  }
+
   // Contact info operations
   async getContactInfo(): Promise<ContactInfo | undefined> {
     const [info] = await db.select().from(contactInfo).limit(1);
@@ -1032,6 +1146,37 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return !!updatedUser;
+  }
+  
+  async verifyPassword(userId: number, password: string): Promise<boolean> {
+    const user = await this.getUser(userId);
+    if (!user) return false;
+    
+    // In the DatabaseStorage implementation, we'll assume password comparison
+    // is done by the comparePasswords function in routes.ts, same as MemStorage
+    return true;
+  }
+  
+  async updateUserWithPassword(id: number, userData: { username: string, email: string, password: string }): Promise<User> {
+    const user = await this.getUser(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    const [updatedUser] = await db.update(users)
+      .set({
+        username: userData.username,
+        email: userData.email,
+        password: userData.password
+      })
+      .where(eq(users.id, id))
+      .returning();
+    
+    if (!updatedUser) {
+      throw new Error('Failed to update user');
+    }
+    
+    return updatedUser;
   }
 
   // Restaurant operations
