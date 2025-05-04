@@ -81,3 +81,8 @@
 .menu-preview-shadow {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
+
+/* Dark mode shadow */
+.dark .menu-preview-shadow {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+}

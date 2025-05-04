@@ -109,7 +109,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         </div>
         
         {/* Menu Categories Tabs and Search */}
-        <div className="border-b" style={headerContainerStyle}>
+        <div className="border-b dark:border-gray-700" style={headerContainerStyle}>
           <div className="flex justify-between items-center px-4">
             <div className="flex overflow-x-auto py-2 space-x-4 flex-grow">
               <button 
@@ -174,7 +174,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                     {category.items.map((item) => (
                       <div 
                         key={item.id}
-                        className="flex flex-row border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0 rounded-md p-2 -m-2"
+                        className="flex flex-row border-b dark:border-gray-700 pb-4 mb-4 last:border-0 last:pb-0 last:mb-0 rounded-md p-2 -m-2"
                       >
                         {/* Image on left side with click to view */}
                         {item.imageUrl ? (
@@ -204,8 +204,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                             {/* Dietary Overlay positioned even when there's no image */}
                             <MenuItemDietaryOverlay item={item} />
                             
-                            <div className="w-full h-24 sm:h-28 bg-neutral rounded-md flex items-center justify-center">
-                              <span className="text-xs text-gray-500">No image</span>
+                            <div className="w-full h-24 sm:h-28 bg-neutral dark:bg-gray-800 rounded-md flex items-center justify-center">
+                              <span className="text-xs text-gray-500 dark:text-gray-400">No image</span>
                             </div>
                           </div>
                         )}
@@ -233,7 +233,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                       <Badge 
                                         key={index} 
                                         variant="outline" 
-                                        className="inline-block mr-1 mb-1 px-2 py-0.5 bg-neutral text-xs text-midgray"
+                                        className="inline-block mr-1 mb-1 px-2 py-0.5 bg-neutral dark:bg-gray-800 text-xs text-midgray dark:text-gray-300"
                                       >
                                         {tag}
                                       </Badge>
@@ -262,7 +262,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           )}
           
           {/* Restaurant info footer */}
-          <div className="mt-8 pt-4 border-t border-gray-200">
+          <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="text-center">
               <h3 className="font-heading font-medium" style={menuItemNameStyle}>{restaurant.name}</h3>
               {restaurant.address && (
