@@ -45,7 +45,10 @@ export function ThemeToggle({
         onClick={toggleTheme}
         aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
       >
-        {isDark ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
+        <div className="relative w-[1.2rem] h-[1.2rem]">
+          <Sun className={`absolute h-[1.2rem] w-[1.2rem] transition-all ${isDark ? 'scale-100 rotate-0' : 'scale-0 -rotate-90'}`} />
+          <Moon className={`absolute h-[1.2rem] w-[1.2rem] transition-all ${isDark ? 'scale-0 rotate-90' : 'scale-100 rotate-0'}`} />
+        </div>
       </Button>
     );
   }
@@ -62,8 +65,11 @@ export function ThemeToggle({
             aria-label={`Switch to ${isDark ? "light" : "dark"} mode`}
             className="gap-2"
           >
-            {isDark ? <Sun className="h-[1.2rem] w-[1.2rem]" /> : <Moon className="h-[1.2rem] w-[1.2rem]" />}
-            {showLabel && (isDark ? "Light Mode" : "Dark Mode")}
+            <div className="relative w-[1.2rem] h-[1.2rem]">
+              <Sun className={`absolute h-[1.2rem] w-[1.2rem] transition-all ${isDark ? 'scale-100 rotate-0' : 'scale-0 -rotate-90'}`} />
+              <Moon className={`absolute h-[1.2rem] w-[1.2rem] transition-all ${isDark ? 'scale-0 rotate-90' : 'scale-100 rotate-0'}`} />
+            </div>
+            {showLabel && <span>{isDark ? "Light Mode" : "Dark Mode"}</span>}
           </Button>
         </TooltipTrigger>
         <TooltipContent side={tooltipPosition}>
