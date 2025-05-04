@@ -134,7 +134,7 @@ const AdminAdvertisementsPage = () => {
       isActive: true,
       position: "bottom",
       startDate: new Date(),
-      endDate: null,
+      endDate: undefined,
     },
   });
 
@@ -205,10 +205,10 @@ const AdminAdvertisementsPage = () => {
         description: adToModify.description || "",
         imageUrl: adToModify.imageUrl || "",
         linkUrl: adToModify.linkUrl || "",
-        isActive: adToModify.isActive,
+        isActive: Boolean(adToModify.isActive),
         position: adToModify.position as "top" | "bottom" | "sidebar",
         startDate: adToModify.startDate ? new Date(adToModify.startDate) : new Date(),
-        endDate: adToModify.endDate ? new Date(adToModify.endDate) : null,
+        endDate: adToModify.endDate ? new Date(adToModify.endDate) : undefined,
       });
     }
   }, [adToModify, isEditing, form]);
@@ -277,7 +277,7 @@ const AdminAdvertisementsPage = () => {
       isActive: true,
       position: "bottom",
       startDate: new Date(),
-      endDate: null,
+      endDate: undefined,
     });
     setShowCreateDialog(true);
   };
