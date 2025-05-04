@@ -303,3 +303,33 @@ export const insertContactInfoSchema = createInsertSchema(contactInfo).pick({
 
 export type ContactInfo = typeof contactInfo.$inferSelect;
 export type InsertContactInfo = z.infer<typeof insertContactInfoSchema>;
+
+// Advertisements for customer menu view
+export const advertisements = pgTable("advertisements", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description"),
+  imageUrl: text("image_url"),
+  linkUrl: text("link_url"),
+  isActive: boolean("is_active").default(true),
+  position: text("position").default("bottom"),
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  createdBy: integer("created_by").notNull(),
+});
+
+export const insertAdvertisementSchema = createInsertSchema(advertisements).pick({
+  title: true,
+  description: true,
+  imageUrl: true,
+  linkUrl: true,
+  isActive: true,
+  position: true,
+  startDate: true,
+  endDate: true,
+  createdBy: true,
+});
+
+export type Advertisement = typeof advertisements.$inferSelect;
+export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;

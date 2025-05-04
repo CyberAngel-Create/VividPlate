@@ -13,7 +13,9 @@ import {
   Trash,
   UserPlus,
   Eye,
-  EyeOff
+  EyeOff,
+  Clock,
+  CircleDot
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -333,8 +335,10 @@ const UsersAdminPage = () => {
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Online</TableHead>
                 <TableHead>Subscription</TableHead>
                 <TableHead>Joined</TableHead>
+                <TableHead>Last Login</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -357,6 +361,20 @@ const UsersAdminPage = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      {/* Check if user is online - using a 5 minute threshold */}
+                      {user.lastLogin && (new Date().getTime() - new Date(user.lastLogin).getTime() < 5 * 60 * 1000) ? (
+                        <div className="flex items-center space-x-1">
+                          <CircleDot className="h-3 w-3 text-green-500 fill-green-500" />
+                          <span className="text-sm text-muted-foreground">Online</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center space-x-1">
+                          <CircleDot className="h-3 w-3 text-gray-300 fill-gray-300" />
+                          <span className="text-sm text-muted-foreground">Offline</span>
+                        </div>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Badge 
                         className={user.subscriptionTier === 'premium' ? 'bg-purple-500' : undefined}
                       >
@@ -367,6 +385,16 @@ const UsersAdminPage = () => {
                       {user.createdAt
                         ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true })
                         : "Unknown"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-1">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground">
+                          {user.lastLogin
+                            ? formatDistanceToNow(new Date(user.lastLogin), { addSuffix: true })
+                            : "Never logged in"}
+                        </span>
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <DropdownMenu>
@@ -408,7 +436,7 @@ const UsersAdminPage = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
+                  <TableCell colSpan={8} className="text-center py-8">
                     {searchTerm ? "No users found matching your search" : "No users found"}
                   </TableCell>
                 </TableRow>
