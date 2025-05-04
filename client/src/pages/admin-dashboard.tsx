@@ -1,10 +1,19 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Users, DollarSign, Award, Activity, Calendar } from "lucide-react";
+import { 
+  Loader2, Users, DollarSign, Award, Activity, Calendar, 
+  BarChart3, LineChart, UsersRound, Eye, Timer
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useLocation } from "wouter";
+import { 
+  Tabs, 
+  TabsContent, 
+  TabsList, 
+  TabsTrigger 
+} from "@/components/ui/tabs";
 // Using direct relative path to fix import issue
 import AdminLayout from "../components/layout/AdminLayout";
 import { User } from "@shared/schema";
@@ -17,6 +26,18 @@ type UserData = {
   freeUsers: number;
   paidUsers: number;
   recentUsers: User[];
+  registrationStats: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+  };
+  viewStats: {
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+  };
 };
 
 type StatCard = {
@@ -143,6 +164,188 @@ const AdminDashboard = () => {
             </Card>
           ))}
         </div>
+
+        {/* Analytics Tabs */}
+        <Tabs defaultValue="registration" className="mb-8">
+          <CardHeader className="px-0 pt-0">
+            <div className="flex items-center justify-between">
+              <CardTitle>Analytics Dashboard</CardTitle>
+              <TabsList>
+                <TabsTrigger value="registration" className="flex items-center">
+                  <UsersRound className="h-4 w-4 mr-2" />
+                  Registration Analytics
+                </TabsTrigger>
+                <TabsTrigger value="views" className="flex items-center">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Views Analytics
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <CardDescription>
+              User registration and website traffic analytics
+            </CardDescription>
+          </CardHeader>
+
+          <TabsContent value="registration" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Daily New Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.registrationStats?.daily || 0}</div>
+                    <div className="p-2 rounded-full bg-blue-500 text-white">
+                      <UsersRound className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    New registrations in the last 24 hours
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Weekly New Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.registrationStats?.weekly || 0}</div>
+                    <div className="p-2 rounded-full bg-green-500 text-white">
+                      <LineChart className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    New registrations in the last 7 days
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Monthly New Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.registrationStats?.monthly || 0}</div>
+                    <div className="p-2 rounded-full bg-purple-500 text-white">
+                      <BarChart3 className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    New registrations in the last 30 days
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Yearly New Users
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.registrationStats?.yearly || 0}</div>
+                    <div className="p-2 rounded-full bg-orange-500 text-white">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    New registrations in the last 365 days
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="views" className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Daily Views
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.viewStats?.daily || 0}</div>
+                    <div className="p-2 rounded-full bg-blue-500 text-white">
+                      <Eye className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Website views in the last 24 hours
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Weekly Views
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.viewStats?.weekly || 0}</div>
+                    <div className="p-2 rounded-full bg-green-500 text-white">
+                      <LineChart className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Website views in the last 7 days
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Monthly Views
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.viewStats?.monthly || 0}</div>
+                    <div className="p-2 rounded-full bg-purple-500 text-white">
+                      <BarChart3 className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Website views in the last 30 days
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    Yearly Views
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-2xl font-bold">{data?.viewStats?.yearly || 0}</div>
+                    <div className="p-2 rounded-full bg-orange-500 text-white">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Website views in the last 365 days
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* Recent Users Section */}
         <div className="space-y-6">

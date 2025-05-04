@@ -110,16 +110,16 @@ const ViewMenu = () => {
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      <CustomerHeader 
-        isAuthenticated={isAuthenticated}
-        onLogout={handleLogout}
-      >
-        <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
-      </CustomerHeader>
+      {/* Header removed as requested */}
       
-      <div className="flex flex-col items-center flex-grow">
+      <div className="flex flex-col items-center flex-grow pt-4">
         {/* Top ad banner for free users */}
         <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+        
+        {/* Dietary Recommendations without header */}
+        <div className="w-full max-w-screen-md px-4">
+          <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
+        </div>
         
         <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
           <CustomerMenuPreview 

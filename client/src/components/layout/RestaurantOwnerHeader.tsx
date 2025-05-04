@@ -41,6 +41,14 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
 
           {/* Desktop Navigation - Main Menu */}
           <nav className="hidden md:flex items-center space-x-6">
+            {/* Premium badge for paid users in desktop view */}
+            {isPaid && (
+              <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded inline-flex items-center">
+                <Star className="h-3 w-3 mr-1" fill="white" />
+                <span>{t("Premium")}</span>
+              </div>
+            )}
+            
             {/* Navigation Links */}
             <Link href="/pricing">
               <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
