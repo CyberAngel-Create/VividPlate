@@ -129,9 +129,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                   key={category.id}
                   className={`px-1 py-2 font-medium whitespace-nowrap ${
                     activeCategory === category.id.toString() 
-                      ? "text-primary border-b-2 border-primary" 
-                      : "text-dark hover:text-primary"
+                      ? `border-b-2 border-[${theme.accentColor}]` 
+                      : ""
                   }`}
+                  style={{ 
+                    color: activeCategory === category.id.toString() 
+                      ? theme.accentColor 
+                      : theme.menuItemColor 
+                  }}
                   onClick={() => handleCategoryClick(category.id.toString())}
                 >
                   {category.name}
@@ -237,7 +242,10 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 )}
                                 
                                 {/* Feedback button indicator - always visible */}
-                                <div className="mt-2 text-xs flex items-center text-primary">
+                                <div 
+                                  className="mt-2 text-xs flex items-center" 
+                                  style={{ color: theme.accentColor }}
+                                >
                                   <MessageSquare className="h-3 w-3 mr-1" />
                                   <span>Click to leave feedback</span>
                                 </div>
@@ -256,21 +264,33 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           {/* Restaurant info footer */}
           <div className="mt-8 pt-4 border-t border-gray-200">
             <div className="text-center">
-              <h3 className="font-heading font-medium text-dark">{restaurant.name}</h3>
+              <h3 className="font-heading font-medium" style={menuItemNameStyle}>{restaurant.name}</h3>
               {restaurant.address && (
-                <p className="text-sm text-midgray">{restaurant.address}</p>
+                <p className="text-sm" style={menuItemDescriptionStyle}>{restaurant.address}</p>
               )}
               {restaurant.phone && (
-                <p className="text-sm text-midgray">{restaurant.phone}</p>
+                <p className="text-sm" style={menuItemDescriptionStyle}>{restaurant.phone}</p>
               )}
               <div className="flex justify-center space-x-2 mt-2">
-                <a href="#" className="text-primary hover:text-primary/80 transition-colors">
+                <a 
+                  href="#" 
+                  style={{ color: theme.accentColor }}
+                  className="hover:opacity-80 transition-colors"
+                >
                   <Facebook className="h-4 w-4" />
                 </a>
-                <a href="#" className="text-primary hover:text-primary/80 transition-colors">
+                <a 
+                  href="#" 
+                  style={{ color: theme.accentColor }}
+                  className="hover:opacity-80 transition-colors"
+                >
                   <Instagram className="h-4 w-4" />
                 </a>
-                <a href="#" className="text-primary hover:text-primary/80 transition-colors">
+                <a 
+                  href="#" 
+                  style={{ color: theme.accentColor }}
+                  className="hover:opacity-80 transition-colors"
+                >
                   <Globe className="h-4 w-4" />
                 </a>
               </div>
