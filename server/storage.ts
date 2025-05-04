@@ -10,7 +10,8 @@ import {
   dietaryPreferences, DietaryPreference, InsertDietaryPreference,
   adminLogs, AdminLog, InsertAdminLog,
   pricingPlans, PricingPlan, InsertPricingPlan,
-  contactInfo, ContactInfo, InsertContactInfo
+  contactInfo, ContactInfo, InsertContactInfo,
+  advertisements, Advertisement, InsertAdvertisement
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc } from "drizzle-orm";
@@ -114,6 +115,14 @@ export interface IStorage {
   createDietaryPreference(preference: InsertDietaryPreference): Promise<DietaryPreference>;
   updateDietaryPreference(id: number, preference: Partial<InsertDietaryPreference>): Promise<DietaryPreference | undefined>;
   deleteDietaryPreference(id: number): Promise<boolean>;
+  
+  // Advertisement operations
+  getAdvertisement(id: number): Promise<Advertisement | undefined>;
+  getAdvertisements(): Promise<Advertisement[]>;
+  getActiveAdvertisementByPosition(position: string): Promise<Advertisement | undefined>;
+  createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
+  updateAdvertisement(id: number, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined>;
+  deleteAdvertisement(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -129,6 +138,7 @@ export class MemStorage implements IStorage {
   private adminLogs: Map<number, AdminLog>;
   private pricingPlans: Map<number, PricingPlan>;
   private contactInfo: ContactInfo;
+  private advertisements: Map<number, Advertisement>;
   
   private currentIds: {
     users: number;
@@ -142,6 +152,7 @@ export class MemStorage implements IStorage {
     feedbacks: number;
     adminLogs: number;
     pricingPlans: number;
+    advertisements: number;
   };
 
   constructor() {
@@ -156,6 +167,7 @@ export class MemStorage implements IStorage {
     this.feedbacks = new Map();
     this.adminLogs = new Map();
     this.pricingPlans = new Map();
+    this.advertisements = new Map();
     this.contactInfo = {
       id: 1,
       address: 'Ethiopia, Addis Abeba',
@@ -175,7 +187,8 @@ export class MemStorage implements IStorage {
       payments: 1,
       feedbacks: 1,
       adminLogs: 1,
-      pricingPlans: 1
+      pricingPlans: 1,
+      advertisements: 1
     };
     
     // Create an admin account if none exists

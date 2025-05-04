@@ -2273,6 +2273,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Advertisement routes
+  app.get('/api/admin/advertisements', isAdmin, async (req, res) => {
+    try {
+      const advertisements = await storage.getAdvertisements();
+      res.json(advertisements);
+    } catch (error) {
+      console.error('Error fetching advertisements:', error);
+      res.status(500).json({ message: 'Failed to fetch advertisements' });
+    }
+  });
+
+  app.post('/api/admin/advertisements', isAdmin, async (req, res) => {
+    try {
+      const adData = { ...req.body, createdBy: req.user.id };
+      const newAd = await storage.createAdvertisement(adData);
+      res.status(201).json(newAd);
+    } catch (error) {
+      console.error('Error creating advertisement:', error);
+      res.status(500).json({ message: 'Failed to create advertisement' });
+    }
+  });
+
+  app.patch('/api/admin/advertisements/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const adData = req.body;
+      const updatedAd = await storage.updateAdvertisement(parseInt(id), adData);
+      if (!updatedAd) {
+        return res.status(404).json({ message: 'Advertisement not found' });
+      }
+      res.json(updatedAd);
+    } catch (error) {
+      console.error('Error updating advertisement:', error);
+      res.status(500).json({ message: 'Failed to update advertisement' });
+    }
+  });
+
+  app.delete('/api/admin/advertisements/:id', isAdmin, async (req, res) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteAdvertisement(parseInt(id));
+      res.json({ message: 'Advertisement deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting advertisement:', error);
+      res.status(500).json({ message: 'Failed to delete advertisement' });
+    }
+  });
+
+  // Customer-facing advertisement API
+  app.get('/api/advertisements', async (req, res) => {
+    try {
+      const { position } = req.query;
+      if (!position) {
+        return res.status(400).json({ message: 'Position parameter is required' });
+      }
+      
+      // Get a single active advertisement for the specified position
+      const advertisement = await storage.getActiveAdvertisementByPosition(position as string);
+      res.json(advertisement);
+    } catch (error) {
+      console.error('Error fetching advertisement:', error);
+      res.status(500).json({ message: 'Failed to fetch advertisement' });
+    }
+  });
+
   // Create admin user
   app.post('/api/admin/users/create-admin', isAdmin, async (req, res) => {
     try {
