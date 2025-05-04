@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { 
   Users, Settings, LayoutDashboard, LogOut, 
   Menu, X, Building, FileText,
-  UserCircle, User, Crown, Mail
+  UserCircle, User, Crown, Mail, ImageIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +94,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       title: "Contact Info",
       href: "/admin/contact-info",
       icon: <Mail className="h-5 w-5" />,
+    },
+    {
+      title: "Advertisements",
+      href: "/admin/advertisements",
+      icon: <ImageIcon className="h-5 w-5" />,
     },
     {
       title: "Logout",
