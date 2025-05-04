@@ -11,6 +11,7 @@ import { Restaurant, InsertRestaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import RestaurantLogoUpload from "@/components/upload/RestaurantLogoUpload";
 import RestaurantBannerUpload from "@/components/upload/RestaurantBannerUpload";
+import RestaurantThemeEditor from "@/components/restaurant/RestaurantThemeEditor";
 import RestaurantFeedback from "@/components/feedback/RestaurantFeedback";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -119,6 +120,7 @@ const EditRestaurant = () => {
               <TabsTrigger value="profile">Profile</TabsTrigger>
               <TabsTrigger value="logo">Logo</TabsTrigger>
               <TabsTrigger value="banner">Banner</TabsTrigger>
+              <TabsTrigger value="theme">Theme</TabsTrigger>
               <TabsTrigger value="feedback">Customer Feedback</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">

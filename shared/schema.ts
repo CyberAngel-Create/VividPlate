@@ -45,6 +45,17 @@ export const restaurants = pgTable("restaurants", {
   address: text("address"),
   hoursOfOperation: jsonb("hours_of_operation"),
   tags: text("tags").array(),
+  // Theme customization
+  themeSettings: jsonb("theme_settings").default({
+    backgroundColor: "#ffffff",
+    textColor: "#000000",
+    headerColor: "#f5f5f5",
+    accentColor: "#4f46e5",
+    fontFamily: "Inter, sans-serif",
+    menuItemColor: "#333333",
+    menuDescriptionColor: "#666666",
+    menuPriceColor: "#111111"
+  }),
 });
 
 export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
@@ -59,6 +70,7 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   address: true,
   hoursOfOperation: true,
   tags: true,
+  themeSettings: true,
 });
 
 // Menu categories
