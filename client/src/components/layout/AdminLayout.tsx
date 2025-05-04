@@ -183,26 +183,27 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <span className="sr-only">Open sidebar</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="p-0">
+        <SheetContent side="left" className="p-0 bg-white dark:bg-gray-900">
           <div className="flex flex-col h-full">
-            <div className="px-4 py-6 border-b">
+            <div className="px-4 py-6 border-b dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <Link href="/admin" onClick={() => setIsOpen(false)}>
                   <div className="flex items-center">
-                    <span className="text-xl font-semibold">Admin</span>
+                    <span className="text-xl font-semibold dark:text-white">Admin</span>
                   </div>
                 </Link>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => setIsOpen(false)}
+                  className="dark:text-gray-300"
                 >
                   <X className="h-6 w-6" />
                   <span className="sr-only">Close sidebar</span>
                 </Button>
               </div>
             </div>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="flex-1 dark:bg-gray-900">
               <nav className="px-2 pt-4 pb-10">
                 {navItems.map((item) => {
                   const isActive = location === item.href;
@@ -226,18 +227,23 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                   
                   if (item.href === "#logout") {
                     return (
-                      <button
-                        key={item.title}
-                        onClick={() => {
-                          handleLogout();
-                          setIsOpen(false);
-                        }}
-                        className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
-                          text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
-                      >
-                        <div className="mr-3">{item.icon}</div>
-                        {item.title}
-                      </button>
+                      <>
+                        <div className="flex items-center px-2 py-2 mb-1">
+                          <ThemeToggle showLabel={true} />
+                        </div>
+                        <button
+                          key={item.title}
+                          onClick={() => {
+                            handleLogout();
+                            setIsOpen(false);
+                          }}
+                          className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
+                            text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
+                        >
+                          <div className="mr-3">{item.icon}</div>
+                          {item.title}
+                        </button>
+                      </>
                     );
                   }
                   
@@ -282,10 +288,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Profile Drawer */}
       {user && (
         <Sheet open={isProfileOpen} onOpenChange={setIsProfileOpen}>
-          <SheetContent className="w-[400px] sm:w-[540px] p-6 overflow-y-auto">
+          <SheetContent className="w-[400px] sm:w-[540px] p-6 overflow-y-auto bg-white dark:bg-gray-900 dark:text-gray-100">
             <SheetHeader className="mb-5">
-              <SheetTitle>Admin Profile</SheetTitle>
-              <SheetDescription>
+              <SheetTitle className="dark:text-white">Admin Profile</SheetTitle>
+              <SheetDescription className="dark:text-gray-400">
                 Manage your admin account details
               </SheetDescription>
             </SheetHeader>
