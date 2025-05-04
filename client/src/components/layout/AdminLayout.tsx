@@ -3,8 +3,10 @@ import { Link, useLocation } from "wouter";
 import { 
   Users, Settings, LayoutDashboard, LogOut, 
   Menu, X, Building, FileText,
-  UserCircle, User, Crown, Mail, ImageIcon
+  UserCircle, User, Crown, Mail, ImageIcon,
+  Moon, Sun
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -266,7 +268,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         {/* Topbar */}
         <header className="bg-white dark:bg-gray-800 shadow-sm z-10">
           <div className="px-4 h-10 flex items-center justify-end">
-            {/* Header is kept empty as logout is now in the sidebar */}
+            {/* Theme Toggle in header */}
+            <ThemeToggle />
           </div>
         </header>
 
