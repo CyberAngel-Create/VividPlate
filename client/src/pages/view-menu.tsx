@@ -6,7 +6,7 @@ import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { apiRequest } from "@/lib/queryClient";
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import AdBanner from "@/components/ads/AdBanner";
-import DietaryRecommendationsOverlay from "@/components/dietary/DietaryRecommendationsOverlay";
+
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import CustomerHeader from "@/components/layout/CustomerHeader";
@@ -121,11 +121,6 @@ const ViewMenu = () => {
         
         {/* Top ad banner for free users */}
         <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
-        
-        {/* Dietary Recommendations without header */}
-        <div className="w-full max-w-screen-md px-4">
-          <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
-        </div>
         
         <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full max-w-screen-xl">
           <div className="flex flex-col lg:flex-row w-full gap-6">
