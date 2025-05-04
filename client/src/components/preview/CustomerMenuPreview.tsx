@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Facebook, Instagram, Globe, MessageSquare } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
-import { useState, useMemo } from "react";
+import { useState, useMemo, CSSProperties } from "react";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import CompactSearch from "@/components/ui/compact-search";
@@ -29,6 +29,20 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
   };
+  
+  // Get theme settings from restaurant or use defaults
+  const defaultTheme = {
+    backgroundColor: "#ffffff",
+    textColor: "#000000",
+    headerColor: "#f5f5f5",
+    accentColor: "#4f46e5", 
+    fontFamily: "Inter, sans-serif",
+    menuItemColor: "#333333",
+    menuDescriptionColor: "#666666",
+    menuPriceColor: "#111111"
+  };
+  
+  const theme = (restaurant.themeSettings as Record<string, string>) || defaultTheme;
 
   // Collect all menu items for search functionality
   const allMenuItems = useMemo(() => {
@@ -40,9 +54,38 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     ? menuData 
     : menuData.filter(category => category.id.toString() === activeCategory);
 
+  // Create styles based on theme
+  const containerStyle: CSSProperties = {
+    backgroundColor: theme.backgroundColor,
+    color: theme.textColor,
+    fontFamily: theme.fontFamily
+  };
+  
+  const headerContainerStyle: CSSProperties = {
+    backgroundColor: theme.headerColor
+  };
+  
+  const categoryNameStyle: CSSProperties = {
+    color: theme.menuItemColor
+  };
+  
+  const menuItemNameStyle: CSSProperties = {
+    color: theme.menuItemColor
+  };
+  
+  const menuItemDescriptionStyle: CSSProperties = {
+    color: theme.menuDescriptionColor
+  };
+  
+  const menuItemPriceStyle: CSSProperties = {
+    color: theme.menuPriceColor
+  };
+
   return (
     <>
-      <div className="w-full max-w-2xl mx-auto bg-white rounded-xl overflow-hidden menu-preview-shadow">
+      <div 
+        className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden menu-preview-shadow"
+        style={containerStyle}>
         {/* Restaurant header */}
         <div className="relative">
           <div className="h-40 bg-gray-300 relative">
@@ -66,15 +109,16 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         </div>
         
         {/* Menu Categories Tabs and Search */}
-        <div className="border-b">
+        <div className="border-b" style={headerContainerStyle}>
           <div className="flex justify-between items-center px-4">
             <div className="flex overflow-x-auto py-2 space-x-4 flex-grow">
               <button 
                 className={`px-1 py-2 font-medium whitespace-nowrap ${
                   activeCategory === "all" 
-                    ? "text-primary border-b-2 border-primary" 
-                    : "text-dark hover:text-primary"
+                    ? `border-b-2 border-[${theme.accentColor}]` 
+                    : ""
                 }`}
+                style={{ color: activeCategory === "all" ? theme.accentColor : theme.menuItemColor }}
                 onClick={() => handleCategoryClick("all")}
               >
                 All
@@ -111,12 +155,15 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           ) : (
             filteredMenuData.map((category) => (
               <div key={category.id} className="mb-6">
-                <h3 className="text-lg font-heading font-semibold mb-3 text-dark">
+                <h3 
+                  className="text-lg font-heading font-semibold mb-3" 
+                  style={categoryNameStyle}
+                >
                   {category.name}
                 </h3>
                 
                 {category.items.length === 0 ? (
-                  <p className="text-sm text-midgray italic">No items in this category</p>
+                  <p className="text-sm italic" style={menuItemDescriptionStyle}>No items in this category</p>
                 ) : (
                   <div className="space-y-4">
                     {category.items.map((item) => (
@@ -167,12 +214,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                             trigger={
                               <div className="flex flex-col cursor-pointer relative group">
                                 <div className="flex justify-between items-start">
-                                  <h4 className="font-medium text-dark">{item.name}</h4>
-                                  <span className="text-primary font-medium">
+                                  <h4 className="font-medium" style={menuItemNameStyle}>{item.name}</h4>
+                                  <span className="font-medium" style={menuItemPriceStyle}>
                                     {formatCurrency(item.price)}
                                   </span>
                                 </div>
-                                <p className="text-sm text-midgray mt-2">
+                                <p className="text-sm mt-2" style={menuItemDescriptionStyle}>
                                   {item.description || ""}
                                 </p>
                                 {item.tags && item.tags.length > 0 && (

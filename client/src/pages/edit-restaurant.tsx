@@ -153,6 +153,17 @@ const EditRestaurant = () => {
                 />
               </div>
             </TabsContent>
+            <TabsContent value="theme">
+              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+                <RestaurantThemeEditor
+                  restaurantId={activeRestaurant.id}
+                  initialTheme={activeRestaurant.themeSettings as Record<string, any>}
+                  onSuccess={() => {
+                    refetchActiveRestaurant();
+                  }}
+                />
+              </div>
+            </TabsContent>
             <TabsContent value="feedback">
               <div className="bg-white rounded-lg shadow-md p-6 mb-8">
                 <RestaurantFeedback restaurantId={activeRestaurant.id} isOwner={true} />
