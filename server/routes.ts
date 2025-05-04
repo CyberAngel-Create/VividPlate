@@ -232,13 +232,29 @@ const configureFileUpload = () => {
   // Create uploads directory if it doesn't exist
   const uploadDir = path.join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-    console.log(`Created uploads directory at ${uploadDir}`);
+    try {
+      fs.mkdirSync(uploadDir, { recursive: true });
+      console.log(`Created uploads directory at ${uploadDir}`);
+    } catch (err) {
+      console.error(`Failed to create uploads directory: ${err}`);
+      throw new Error('Failed to initialize upload system: could not create directory');
+    }
   } else {
     console.log(`Using existing uploads directory at ${uploadDir}`);
+    
+    // Verify write permissions to the directory
+    try {
+      const testFilePath = path.join(uploadDir, `.test-${Date.now()}`);
+      fs.writeFileSync(testFilePath, 'test');
+      fs.unlinkSync(testFilePath);
+      console.log('Uploads directory is writable');
+    } catch (err) {
+      console.error(`Uploads directory is not writable: ${err}`);
+      throw new Error('Failed to initialize upload system: directory is not writable');
+    }
   }
 
-  // Configure storage with additional logging
+  // Configure storage with additional logging and error handling
   const storage = multer.diskStorage({
     destination: (req, file, cb) => {
       // Re-check if directory exists and create if needed (for more resilience)
@@ -247,20 +263,25 @@ const configureFileUpload = () => {
           fs.mkdirSync(uploadDir, { recursive: true });
           console.log(`Recreated uploads directory at ${uploadDir}`);
         } catch (err) {
-          console.error(`Failed to create uploads directory: ${err}`);
-          return cb(new Error('Failed to create uploads directory'), uploadDir);
+          console.error(`Failed to create uploads directory during upload: ${err}`);
+          return cb(new Error('Failed to access upload directory'), '');
         }
       }
       cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
-      // Create a unique filename with original extension and include user ID for better organization
-      const userId = req.user ? (req.user as any).id : 'anonymous';
-      const uniqueSuffix = `${userId}-${Date.now()}-${Math.round(Math.random() * 1E9)}`;
-      const ext = path.extname(file.originalname);
-      const filename = uniqueSuffix + ext;
-      console.log(`Generating filename for upload: ${filename}`);
-      cb(null, filename);
+      try {
+        // Create a unique filename with original extension and include user ID for better organization
+        const userId = req.user ? (req.user as any).id : 'anonymous';
+        const uniqueSuffix = `${userId}-${Date.now()}-${Math.round(Math.random() * 1E9)}`;
+        const ext = path.extname(file.originalname);
+        const filename = uniqueSuffix + ext;
+        console.log(`Generating filename for upload: ${filename}`);
+        cb(null, filename);
+      } catch (err) {
+        console.error(`Error generating filename: ${err}`);
+        cb(new Error('Failed to generate filename for upload'), '');
+      }
     }
   });
 
@@ -269,14 +290,21 @@ const configureFileUpload = () => {
 
   // File filter to only allow image files with additional logging
   const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    
-    if (allowedMimeTypes.includes(file.mimetype)) {
-      console.log(`Upload file type accepted: ${file.mimetype}, size: ${file.size || 'unknown'}`);
-      cb(null, true);
-    } else {
-      console.error(`Upload rejected - invalid file type: ${file.mimetype}`);
-      cb(new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.'));
+    try {
+      const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      
+      if (allowedMimeTypes.includes(file.mimetype)) {
+        console.log(`Upload file type accepted: ${file.mimetype}, size: ${file.size || 'unknown'}`);
+        cb(null, true);
+      } else {
+        console.error(`Upload rejected - invalid file type: ${file.mimetype}`);
+        cb(null, false);
+        // Note: We don't throw an error here, as that would cause a 500 error
+        // Instead, we return false and the route handler should check if req.file exists
+      }
+    } catch (err) {
+      console.error(`Error in file filter: ${err}`);
+      cb(null, false);
     }
   };
 
