@@ -98,7 +98,7 @@ const advertisementFormSchema = z.object({
   isActive: z.boolean().default(true),
   position: z.enum(["top", "bottom", "sidebar"]).default("bottom"),
   startDate: z.date().optional(),
-  endDate: z.date().optional().nullable(),
+  endDate: z.date().optional().nullish(),
 });
 
 type AdvertisementFormData = z.infer<typeof advertisementFormSchema>;

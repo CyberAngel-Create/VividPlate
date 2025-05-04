@@ -3,17 +3,28 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Advertisement } from "@shared/schema";
 import { ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface MenuAdvertisementProps {
   position: "top" | "bottom" | "sidebar";
 }
 
 const MenuAdvertisement = ({ position }: MenuAdvertisementProps) => {
+  const [imageUrl, setImageUrl] = useState<string>("");
+  const [linkUrl, setLinkUrl] = useState<string>("");
+  
   const { data: advertisement, isLoading } = useQuery<Advertisement>({
     queryKey: ["/api/advertisements", position],
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
   });
+
+  useEffect(() => {
+    if (advertisement) {
+      setImageUrl(advertisement.imageUrl || "");
+      setLinkUrl(advertisement.linkUrl || "");
+    }
+  }, [advertisement]);
 
   // If there's no active advertisement for this position or still loading, return null
   if (isLoading || !advertisement || !advertisement.isActive) {
@@ -29,8 +40,8 @@ const MenuAdvertisement = ({ position }: MenuAdvertisementProps) => {
     return null; // Ad has expired
   }
 
-  const hasLink = advertisement.linkUrl && advertisement.linkUrl.trim() !== "";
-  const hasImage = advertisement.imageUrl && advertisement.imageUrl.trim() !== "";
+  const hasLink = linkUrl && linkUrl.trim() !== "";
+  const hasImage = imageUrl && imageUrl.trim() !== "";
 
   // Different styling based on position
   const getPositionStyles = () => {
@@ -53,7 +64,7 @@ const MenuAdvertisement = ({ position }: MenuAdvertisementProps) => {
           {hasImage && (
             <div className={`${position === "sidebar" ? "w-full" : "w-full sm:w-1/3"} overflow-hidden max-h-[200px]`}>
               <img 
-                src={advertisement.imageUrl} 
+                src={imageUrl} 
                 alt={advertisement.title}
                 className="w-full h-full object-cover" 
               />
@@ -78,7 +89,7 @@ const MenuAdvertisement = ({ position }: MenuAdvertisementProps) => {
                   className="flex items-center gap-1"
                 >
                   <a 
-                    href={advertisement.linkUrl} 
+                    href={linkUrl} 
                     target="_blank" 
                     rel="noopener noreferrer"
                   >

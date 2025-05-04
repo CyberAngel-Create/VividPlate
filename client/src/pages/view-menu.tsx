@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import CustomerHeader from "@/components/layout/CustomerHeader";
 import Footer from "@/components/layout/Footer";
+import MenuAdvertisement from "@/components/menu/MenuAdvertisement";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -113,6 +114,11 @@ const ViewMenu = () => {
       {/* Header removed as requested */}
       
       <div className="flex flex-col items-center flex-grow pt-4">
+        {/* Top advertisement from advertisement management system */}
+        <div className="w-full max-w-screen-md px-4">
+          <MenuAdvertisement position="top" />
+        </div>
+        
         {/* Top ad banner for free users */}
         <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
         
@@ -121,11 +127,26 @@ const ViewMenu = () => {
           <DietaryRecommendationsOverlay restaurantId={parseInt(restaurantId || '0')} />
         </div>
         
-        <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full">
-          <CustomerMenuPreview 
-            restaurant={restaurant}
-            menuData={menu}
-          />
+        <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full max-w-screen-xl">
+          <div className="flex flex-col lg:flex-row w-full gap-6">
+            {/* Sidebar advertisement (left side on larger screens) */}
+            <div className="lg:w-1/4 order-2 lg:order-1">
+              <MenuAdvertisement position="sidebar" />
+            </div>
+            
+            {/* Main menu content */}
+            <div className="lg:w-3/4 order-1 lg:order-2">
+              <CustomerMenuPreview 
+                restaurant={restaurant}
+                menuData={menu}
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Bottom advertisement from advertisement management system */}
+        <div className="w-full max-w-screen-md px-4 mt-6">
+          <MenuAdvertisement position="bottom" />
         </div>
         
         {/* Bottom ad banner for free users */}
