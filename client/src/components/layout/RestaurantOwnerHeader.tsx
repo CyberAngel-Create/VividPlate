@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, User, CreditCard, Mail, PlusCircle, Star } from "lucide-react";
+import { Menu, X, LogOut, User, CreditCard, Mail, PlusCircle, Star, Store, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ReactNode } from "react";
@@ -8,6 +8,14 @@ import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
 
 interface RestaurantOwnerHeaderProps {
   onLogout?: () => void;
@@ -18,7 +26,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { subscription, isPaid } = useSubscription();
-  const { restaurants } = useRestaurant();
+  const { restaurants, activeRestaurant, setActiveRestaurant } = useRestaurant();
   const { t } = useTranslation();
 
   const closeMenu = () => setIsMenuOpen(false);
@@ -65,7 +73,46 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
               </div>
             </Link>
 
-            {/* Restaurant Switcher will be placed here in a follow-up PR */}
+            {/* Restaurant Switcher */}
+            {restaurants && restaurants.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className="text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light flex items-center outline-none">
+                  <Store className="h-4 w-4 mr-2" />
+                  <span className="max-w-[150px] truncate">
+                    {activeRestaurant ? activeRestaurant.name : t("Select Restaurant")}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-1" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="dark:bg-gray-800 dark:border-gray-700">
+                  <DropdownMenuLabel className="dark:text-gray-300">{t("Your Restaurants")}</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="dark:border-gray-700" />
+                  {restaurants.map((restaurant) => (
+                    <DropdownMenuItem 
+                      key={restaurant.id}
+                      onClick={() => setActiveRestaurant(restaurant.id)}
+                      className={`${
+                        activeRestaurant?.id === restaurant.id 
+                          ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
+                          : 'dark:text-gray-200'
+                      } cursor-pointer dark:hover:bg-gray-700`}
+                    >
+                      <span className="truncate max-w-[250px]">{restaurant.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                  {isPaid && restaurants.length < 3 && (
+                    <>
+                      <DropdownMenuSeparator className="dark:border-gray-700" />
+                      <Link href="/create-restaurant">
+                        <DropdownMenuItem className="cursor-pointer text-primary dark:text-primary-light font-medium">
+                          <PlusCircle className="h-4 w-4 mr-2" />
+                          {t("Create Restaurant")}
+                        </DropdownMenuItem>
+                      </Link>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
             {/* User Profile */}
             <Link href="/profile">
@@ -161,7 +208,48 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                       </div>
                     </Link>
 
-                    {/* Restaurant Switcher will be placed here in a follow-up PR */}
+                    {/* Restaurant Switcher (Mobile) */}
+                    {restaurants && restaurants.length > 0 && (
+                      <div className="py-2 border-b dark:border-gray-700">
+                        <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {t("Your Restaurants")}
+                        </div>
+                        <div className="space-y-2">
+                          {restaurants.map((restaurant) => (
+                            <button
+                              key={restaurant.id}
+                              onClick={() => {
+                                setActiveRestaurant(restaurant.id);
+                                closeMenu();
+                              }}
+                              className={`block w-full text-left px-2 py-1.5 text-sm rounded-md ${
+                                activeRestaurant?.id === restaurant.id 
+                                  ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
+                                  : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+                              } text-gray-700 dark:text-gray-300`}
+                            >
+                              <div className="flex items-center">
+                                <Store className="h-4 w-4 mr-2" />
+                                <span className="truncate">{restaurant.name}</span>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                        {isPaid && restaurants.length < 3 && (
+                          <Link href="/create-restaurant">
+                            <div 
+                              className="block mt-2 px-2 py-1.5 text-sm rounded-md text-primary dark:text-primary-light hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
+                              onClick={closeMenu}
+                            >
+                              <div className="flex items-center">
+                                <PlusCircle className="h-4 w-4 mr-2" />
+                                <span>{t("Create Restaurant")}</span>
+                              </div>
+                            </div>
+                          </Link>
+                        )}
+                      </div>
+                    )}
                     
                     <Link href="/profile">
                       <div
