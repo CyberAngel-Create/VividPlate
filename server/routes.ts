@@ -743,10 +743,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Restaurant routes
   app.get('/api/restaurants', isAuthenticated, async (req, res) => {
     try {
+      console.log("Fetching restaurants for user ID:", (req.user as any).id);
       const restaurants = await storage.getRestaurantsByUserId((req.user as any).id);
+      console.log("Restaurants fetched successfully:", restaurants);
       res.json(restaurants);
     } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+      console.error("Error fetching restaurants:", error);
+      res.status(500).json({ message: 'Server error', details: String(error) });
     }
   });
 
