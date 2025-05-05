@@ -50,17 +50,49 @@ export const uploadFileWithVerification = async (
           xhr.addEventListener('load', () => {
             if (xhr.status >= 200 && xhr.status < 300) {
               try {
-                const response = JSON.parse(xhr.responseText);
+                // Check for empty or non-JSON response
+                const responseText = xhr.responseText.trim();
+                if (!responseText) {
+                  reject(new Error('Empty response received from server'));
+                  return;
+                }
+                
+                // Check if the response starts with HTML or XML tags (not JSON)
+                if (responseText.startsWith('<!') || responseText.startsWith('<?xml')) {
+                  console.error('Received HTML/XML instead of JSON:', responseText.substring(0, 100));
+                  reject(new Error('Server returned HTML/XML instead of JSON'));
+                  return;
+                }
+                
+                const response = JSON.parse(responseText);
+                if (!response.url) {
+                  reject(new Error('Server response missing URL field'));
+                  return;
+                }
+                
                 resolve({
                   success: true,
                   url: response.url,
                   message: 'Upload successful'
                 });
               } catch (error) {
-                reject(new Error('Invalid response format'));
+                console.error('JSON parse error:', error);
+                console.error('Response text:', xhr.responseText.substring(0, 200));
+                reject(new Error('Invalid JSON response from server'));
               }
             } else {
-              reject(new Error(`HTTP error ${xhr.status}: ${xhr.statusText}`));
+              let errorMessage = `HTTP error ${xhr.status}`;
+              try {
+                // Try to parse error response as JSON
+                const errorResponse = JSON.parse(xhr.responseText);
+                if (errorResponse.message) {
+                  errorMessage += `: ${errorResponse.message}`;
+                }
+              } catch (e) {
+                // If parsing fails, use status text
+                errorMessage += `: ${xhr.statusText}`;
+              }
+              reject(new Error(errorMessage));
             }
           });
           

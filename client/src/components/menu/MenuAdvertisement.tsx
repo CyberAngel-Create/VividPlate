@@ -28,16 +28,30 @@ const MenuAdvertisement = ({ position, restaurantId }: MenuAdvertisementProps) =
         if (restId) {
           url.searchParams.append("restaurantId", restId as string);
         }
+        
         const response = await fetch(url.toString());
         
         // If the response is not OK, return null instead of throwing an error
-        // This prevents error toasts from appearing in the UI
         if (!response.ok) {
           console.log(`Advertisement not available for ${position} position (status: ${response.status})`);
           return null;
         }
         
-        return response.json();
+        // Check if response is empty
+        const text = await response.text();
+        if (!text || text.trim() === '') {
+          console.log('Empty advertisement response');
+          return null;
+        }
+        
+        // Try to parse the JSON
+        try {
+          return JSON.parse(text);
+        } catch (parseError) {
+          console.log(`Invalid JSON in advertisement response: ${parseError}`);
+          console.log(`Response text: ${text.substring(0, 100)}...`);
+          return null;
+        }
       } catch (error) {
         console.log(`Error fetching advertisement: ${error}`);
         return null;
@@ -45,6 +59,7 @@ const MenuAdvertisement = ({ position, restaurantId }: MenuAdvertisementProps) =
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
+    retry: false, // Don't retry on failure
   });
 
   useEffect(() => {
