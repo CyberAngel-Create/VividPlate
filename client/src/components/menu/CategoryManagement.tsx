@@ -282,11 +282,11 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+    <Card className="w-full dark:bg-gray-800 dark:border-gray-700">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 dark:border-gray-700">
         <div>
-          <CardTitle>{t("Menu Categories")}</CardTitle>
-          <CardDescription>
+          <CardTitle className="dark:text-gray-100">{t("Menu Categories")}</CardTitle>
+          <CardDescription className="dark:text-gray-300">
             {t("Manage your restaurant's menu categories")}
           </CardDescription>
         </div>
@@ -301,7 +301,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
             <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
         ) : categories.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
+          <div className="text-center py-8 text-muted-foreground dark:text-gray-400">
             <p>{t("No categories found")}</p>
             <p>{t("Add a category to get started")}</p>
           </div>
@@ -372,8 +372,8 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogContent className="dark:bg-gray-800 dark:text-gray-100">
             <DialogHeader>
-              <DialogTitle>{t("Add New Category")}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="dark:text-gray-100">{t("Add New Category")}</DialogTitle>
+              <DialogDescription className="dark:text-gray-300">
                 {t("Create a new menu category for your restaurant")}
               </DialogDescription>
             </DialogHeader>
@@ -431,10 +431,10 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
 
         {/* Edit Category Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent>
+          <DialogContent className="dark:bg-gray-800 dark:text-gray-100">
             <DialogHeader>
-              <DialogTitle>{t("Edit Category")}</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="dark:text-gray-100">{t("Edit Category")}</DialogTitle>
+              <DialogDescription className="dark:text-gray-300">
                 {t("Update the details of this menu category")}
               </DialogDescription>
             </DialogHeader>
@@ -492,10 +492,10 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
 
         {/* Delete Category Confirmation */}
         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <AlertDialogContent>
+          <AlertDialogContent className="dark:bg-gray-800 dark:text-gray-100">
             <AlertDialogHeader>
-              <AlertDialogTitle>{t("Are you sure?")}</AlertDialogTitle>
-              <AlertDialogDescription>
+              <AlertDialogTitle className="dark:text-gray-100">{t("Are you sure?")}</AlertDialogTitle>
+              <AlertDialogDescription className="dark:text-gray-300">
                 {t(
                   "This will permanently delete the category and all associated menu items. This action cannot be undone."
                 )}
