@@ -39,7 +39,8 @@ export const restaurants = pgTable("restaurants", {
   description: text("description"),
   cuisine: text("cuisine"),
   logoUrl: text("logo_url"),
-  bannerUrl: text("banner_url"),
+  bannerUrl: text("banner_url"), // Kept for backward compatibility
+  bannerUrls: jsonb("banner_urls").default([]).notNull(), // Array of banner image URLs for slideshow
   phone: text("phone"),
   email: text("email"),
   address: text("address"),

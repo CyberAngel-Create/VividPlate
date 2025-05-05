@@ -155,11 +155,29 @@ const RestaurantProfileForm = ({ restaurant, onSubmit }: RestaurantProfileFormPr
 
   const handleSubmit = async (data: FormValues) => {
     const { tagInput, ...rest } = data;
+    
+    // Submit the form data
     await onSubmit({
       ...rest,
       tags,
       hoursOfOperation: hours,
     });
+    
+    // Reset form if this is a new restaurant (creation mode)
+    if (!restaurant) {
+      form.reset({
+        name: "",
+        description: "",
+        cuisine: "",
+        logoUrl: "",
+        phone: "",
+        email: "",
+        address: "",
+        tagInput: "",
+      });
+      setTags([]);
+      setHours(defaultHours);
+    }
   };
 
   return (
