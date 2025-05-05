@@ -28,6 +28,7 @@ import { formatCurrency } from "@/lib/utils";
 interface MenuItemsListProps {
   category: MenuCategory | null;
   items: MenuItem[];
+  selectedItemId?: number | null;
   onAddItem: (item: Omit<MenuItem, "id">) => Promise<void>;
   onEditItem: (id: number, item: Partial<MenuItem>) => Promise<void>;
   onDeleteItem: (id: number) => Promise<void>;
@@ -36,6 +37,7 @@ interface MenuItemsListProps {
 const MenuItemsList = ({
   category,
   items,
+  selectedItemId,
   onAddItem,
   onEditItem,
   onDeleteItem,
@@ -46,6 +48,17 @@ const MenuItemsList = ({
   const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  
+  // Auto-open the edit dialog if a specific item ID is passed
+  useEffect(() => {
+    if (selectedItemId && items.length > 0) {
+      const itemToEdit = items.find(item => item.id === selectedItemId);
+      if (itemToEdit) {
+        setEditingItem(itemToEdit);
+        setIsEditDialogOpen(true);
+      }
+    }
+  }, [selectedItemId, items]);
 
   const handleAddItem = async (newItem: Omit<MenuItem, "id">) => {
     await onAddItem(newItem);
