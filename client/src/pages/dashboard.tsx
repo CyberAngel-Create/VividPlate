@@ -6,13 +6,16 @@ import StatCard from "@/components/dashboard/StatCard";
 import RestaurantInfoCard from "@/components/dashboard/RestaurantInfoCard";
 import QuickActions from "@/components/dashboard/QuickActions";
 import FeedbackSummary from "@/components/dashboard/FeedbackSummary";
+import GlobalMenuSearch from "@/components/ui/global-menu-search";
 import TabNavigation from "@/components/layout/TabNavigation";
 import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
 import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
 import { Eye, QrCode, Utensils, Calendar, CreditCard, Check, AlertCircle } from "lucide-react";
 import { Restaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
+import { useMenu } from "@/hooks/use-menu";
 import AdBanner from "@/components/ads/AdBanner";
+import { useLocation } from "wouter";
 
 interface Stats {
   viewCount: number;
@@ -40,8 +43,12 @@ interface SubscriptionStatus {
 
 const Dashboard = () => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   // Get restaurant data
   const { activeRestaurant, restaurants, isLoading: isLoadingRestaurants, refetchActiveRestaurant } = useRestaurant();
+  
+  // Get menu data using our hook
+  const { categories, menuItems, isLoading: isLoadingMenu } = useMenu();
   
   // Stats query
   const { data: stats, isLoading: isLoadingStats } = useQuery<Stats>({
@@ -203,6 +210,29 @@ const Dashboard = () => {
         <RestaurantInfoCard restaurant={activeRestaurant} />
         
         <QuickActions />
+        
+        {/* Menu Search - Only show if there are menu items */}
+        {!isLoadingMenu && menuItems && menuItems.length > 0 && categories && categories.length > 0 && (
+          <GlobalMenuSearch 
+            categories={categories} 
+            menuItems={menuItems}
+            onEditItem={(id) => {
+              // Find the menu item to get its category ID
+              const menuItem = menuItems.find(item => item.id === id);
+              if (menuItem) {
+                setLocation(`/create-menu?category=${menuItem.categoryId}&item=${id}`);
+              }
+            }}
+            onDeleteItem={(id) => {
+              // We'll navigate to the create-menu page where the user can delete the item
+              // This avoids having to implement deletion logic here too
+              const menuItem = menuItems.find(item => item.id === id);
+              if (menuItem) {
+                setLocation(`/create-menu?category=${menuItem.categoryId}`);
+              }
+            }}
+          />
+        )}
         
         <FeedbackSummary />
         

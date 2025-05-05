@@ -15,6 +15,22 @@ const CreateMenu = () => {
   const { toast } = useToast();
   const { activeRestaurant } = useRestaurant();
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  
+  // Parse URL parameters for category and item IDs
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const categoryId = params.get('category');
+    const itemId = params.get('item');
+    
+    if (categoryId) {
+      setSelectedCategoryId(parseInt(categoryId, 10));
+    }
+    
+    if (itemId) {
+      setSelectedItemId(parseInt(itemId, 10));
+    }
+  }, []);
   
   // Query for menu categories
   const { 
@@ -257,6 +273,7 @@ const CreateMenu = () => {
             <MenuItemsList 
               category={selectedCategory}
               items={menuItems}
+              selectedItemId={selectedItemId}
               onAddItem={handleAddItem}
               onEditItem={handleEditItem}
               onDeleteItem={handleDeleteItem}
