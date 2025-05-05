@@ -306,23 +306,23 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
             <p>{t("Add a category to get started")}</p>
           </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>{t("Name")}</TableHead>
-                <TableHead className="hidden md:table-cell">{t("Description")}</TableHead>
-                <TableHead>{t("Order")}</TableHead>
-                <TableHead className="text-right">{t("Actions")}</TableHead>
+          <Table className="dark:bg-gray-800 dark:border-gray-700">
+            <TableHeader className="dark:bg-gray-800">
+              <TableRow className="dark:border-gray-700">
+                <TableHead className="dark:text-gray-300">{t("Name")}</TableHead>
+                <TableHead className="hidden md:table-cell dark:text-gray-300">{t("Description")}</TableHead>
+                <TableHead className="dark:text-gray-300">{t("Order")}</TableHead>
+                <TableHead className="text-right dark:text-gray-300">{t("Actions")}</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody className="dark:bg-gray-800">
               {categories.map((category) => (
-                <TableRow key={category.id}>
-                  <TableCell className="font-medium">{category.name}</TableCell>
-                  <TableCell className="hidden md:table-cell">
+                <TableRow key={category.id} className="dark:border-gray-700 dark:hover:bg-gray-700">
+                  <TableCell className="font-medium dark:text-gray-200">{category.name}</TableCell>
+                  <TableCell className="hidden md:table-cell dark:text-gray-300">
                     {category.description || t("No description")}
                   </TableCell>
-                  <TableCell>{category.displayOrder}</TableCell>
+                  <TableCell className="dark:text-gray-300">{category.displayOrder}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
                       <div className="flex space-x-1 mr-2">
@@ -370,7 +370,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
 
         {/* Add Category Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent>
+          <DialogContent className="dark:bg-gray-800 dark:text-gray-100">
             <DialogHeader>
               <DialogTitle>{t("Add New Category")}</DialogTitle>
               <DialogDescription>
