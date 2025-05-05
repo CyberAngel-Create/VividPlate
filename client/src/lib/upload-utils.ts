@@ -65,14 +65,17 @@ export const uploadFileWithVerification = async (
                 }
                 
                 const response = JSON.parse(responseText);
-                if (!response.url) {
+                if (!response.url && !response.bannerUrl) {
                   reject(new Error('Server response missing URL field'));
                   return;
                 }
                 
+                // Use either url or bannerUrl field from response
+                const finalUrl = response.url || response.bannerUrl;
+                
                 resolve({
                   success: true,
-                  url: response.url,
+                  url: finalUrl,
                   message: 'Upload successful'
                 });
               } catch (error) {
@@ -119,14 +122,17 @@ export const uploadFileWithVerification = async (
       const data = await response.json();
       console.log('Upload successful:', data);
       
-      if (!data.url) {
+      if (!data.url && !data.bannerUrl) {
         throw new Error('Upload response missing URL');
       }
       
+      // Use either url or bannerUrl field from response
+      const finalUrl = data.url || data.bannerUrl;
+      
       // Verify the uploaded file is accessible
       if (verifyUrl) {
-        console.log(`Verifying file accessibility at: ${data.url}`);
-        const verifyResult = await verifyFileAccessibility(data.url);
+        console.log(`Verifying file accessibility at: ${finalUrl}`);
+        const verifyResult = await verifyFileAccessibility(finalUrl);
         
         if (!verifyResult.accessible) {
           console.error('File verification failed:', verifyResult.message);
@@ -138,7 +144,7 @@ export const uploadFileWithVerification = async (
       
       return {
         success: true,
-        url: data.url,
+        url: finalUrl,
         message: 'Upload and verification successful'
       };
     } catch (error) {
