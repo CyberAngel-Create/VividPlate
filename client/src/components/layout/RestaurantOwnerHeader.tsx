@@ -65,14 +65,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
               </div>
             </Link>
 
-            {/* Add Restaurant button for premium users with less than 3 restaurants */}
-            {canAddRestaurant && !isOnPricingOrProfile && (
-              <Link href="/edit-restaurant">
-                <Button variant="outline" size="sm" className="flex items-center">
-                  {t("Add Restaurant")}
-                </Button>
-              </Link>
-            )}
+            {/* Restaurant Switcher will be placed here in a follow-up PR */}
 
             {/* User Profile */}
             <Link href="/profile">
@@ -168,18 +161,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                       </div>
                     </Link>
 
-                    {/* Add Restaurant button for premium users with less than 3 restaurants */}
-                    {canAddRestaurant && !isOnPricingOrProfile && (
-                      <Link href="/edit-restaurant">
-                        <div
-                          className="block py-2 text-sm font-medium text-primary hover:text-primary-dark dark:text-primary-light dark:hover:text-primary transition-colors"
-                          onClick={closeMenu}
-                        >
-                          <PlusCircle className="h-4 w-4 mr-2 inline-block" />
-                          {t("Add Restaurant")}
-                        </div>
-                      </Link>
-                    )}
+                    {/* Restaurant Switcher will be placed here in a follow-up PR */}
                     
                     <Link href="/profile">
                       <div
