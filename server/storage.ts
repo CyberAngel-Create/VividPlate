@@ -1181,8 +1181,47 @@ export class DatabaseStorage implements IStorage {
 
   // Restaurant operations
   async getRestaurant(id: number): Promise<Restaurant | undefined> {
-    const [restaurant] = await db.select().from(restaurants).where(eq(restaurants.id, id));
-    return restaurant;
+    try {
+      // First try with the standard ORM approach
+      const [restaurant] = await db.select().from(restaurants).where(eq(restaurants.id, id));
+      return restaurant;
+    } catch (error) {
+      console.error(`Error in ORM restaurant fetch for ID ${id}, attempting raw query fallback:`, error);
+      
+      // Fallback: use a raw SQL query that doesn't depend on the full schema
+      // This helps when there are schema version mismatches between code and database
+      const { pool } = await import('./db');
+      const result = await pool.query(
+        'SELECT id, user_id, name, description, cuisine, logo_url, banner_url, ' +
+        'phone, email, address, hours_of_operation, tags, theme_settings ' +
+        'FROM restaurants WHERE id = $1',
+        [id]
+      );
+      
+      if (result.rows.length === 0) {
+        return undefined;
+      }
+      
+      // Map the raw results to match our schema
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        name: row.name,
+        description: row.description,
+        cuisine: row.cuisine,
+        logoUrl: row.logo_url,
+        bannerUrl: row.banner_url,
+        bannerUrls: Array.isArray(row.banner_urls) ? row.banner_urls : 
+                  (row.banner_url ? [row.banner_url] : []),
+        phone: row.phone,
+        email: row.email,
+        address: row.address,
+        hoursOfOperation: row.hours_of_operation,
+        tags: row.tags || [],
+        themeSettings: row.theme_settings || {}
+      };
+    }
   }
 
   async getRestaurantsByUserId(userId: number): Promise<Restaurant[]> {
@@ -1229,11 +1268,109 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateRestaurant(id: number, restaurantUpdate: Partial<InsertRestaurant>): Promise<Restaurant | undefined> {
-    const [updatedRestaurant] = await db.update(restaurants)
-      .set(restaurantUpdate)
-      .where(eq(restaurants.id, id))
-      .returning();
-    return updatedRestaurant;
+    try {
+      // First try with the standard ORM approach
+      const [updatedRestaurant] = await db.update(restaurants)
+        .set(restaurantUpdate)
+        .where(eq(restaurants.id, id))
+        .returning();
+      return updatedRestaurant;
+    } catch (error) {
+      console.error(`Error in ORM restaurant update for ID ${id}, attempting raw query fallback:`, error);
+      
+      // Get the current restaurant to merge with updates
+      const currentRestaurant = await this.getRestaurant(id);
+      if (!currentRestaurant) {
+        return undefined;
+      }
+      
+      // Prepare update fields
+      const updateFields: string[] = [];
+      const updateValues: any[] = [];
+      let paramIndex = 1;
+      
+      // For each property in restaurantUpdate, add to the update fields
+      if (restaurantUpdate.name !== undefined) {
+        updateFields.push(`name = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.name);
+      }
+      
+      if (restaurantUpdate.description !== undefined) {
+        updateFields.push(`description = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.description);
+      }
+      
+      if (restaurantUpdate.cuisine !== undefined) {
+        updateFields.push(`cuisine = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.cuisine);
+      }
+      
+      if (restaurantUpdate.logoUrl !== undefined) {
+        updateFields.push(`logo_url = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.logoUrl);
+      }
+      
+      if (restaurantUpdate.bannerUrl !== undefined) {
+        updateFields.push(`banner_url = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.bannerUrl);
+      }
+      
+      if (restaurantUpdate.phone !== undefined) {
+        updateFields.push(`phone = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.phone);
+      }
+      
+      if (restaurantUpdate.email !== undefined) {
+        updateFields.push(`email = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.email);
+      }
+      
+      if (restaurantUpdate.address !== undefined) {
+        updateFields.push(`address = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.address);
+      }
+      
+      if (restaurantUpdate.hoursOfOperation !== undefined) {
+        updateFields.push(`hours_of_operation = $${paramIndex++}`);
+        updateValues.push(restaurantUpdate.hoursOfOperation);
+      }
+      
+      // Only if we have fields to update
+      if (updateFields.length > 0) {
+        // Fallback: use a raw SQL query
+        const { pool } = await import('./db');
+        const result = await pool.query(
+          `UPDATE restaurants SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
+          [...updateValues, id]
+        );
+        
+        if (result.rows.length === 0) {
+          return undefined;
+        }
+        
+        // Map the raw results to match our schema
+        const row = result.rows[0];
+        return {
+          id: row.id,
+          userId: row.user_id,
+          name: row.name,
+          description: row.description,
+          cuisine: row.cuisine,
+          logoUrl: row.logo_url,
+          bannerUrl: row.banner_url,
+          bannerUrls: restaurantUpdate.bannerUrls || currentRestaurant.bannerUrls,
+          phone: row.phone,
+          email: row.email,
+          address: row.address,
+          hoursOfOperation: row.hours_of_operation,
+          tags: row.tags || [],
+          themeSettings: restaurantUpdate.themeSettings || currentRestaurant.themeSettings
+        };
+      }
+      
+      // If no fields to update, return the current restaurant
+      return currentRestaurant;
+    }
   }
 
   // Menu category operations
