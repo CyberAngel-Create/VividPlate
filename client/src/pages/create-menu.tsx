@@ -115,6 +115,50 @@ const CreateMenu = () => {
     }
   });
   
+  const editCategoryMutation = useMutation({
+    mutationFn: async ({ id, category }: { id: number; category: Partial<MenuCategory> }) => {
+      return apiRequest("PUT", `/api/categories/${id}`, category);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/restaurants/${activeRestaurant?.id}/categories`] });
+      toast({
+        title: "Success",
+        description: "Category updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update category",
+        variant: "destructive",
+      });
+    }
+  });
+  
+  const deleteCategoryMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest("DELETE", `/api/categories/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/restaurants/${activeRestaurant?.id}/categories`] });
+      // If the deleted category was selected, clear the selection
+      if (selectedCategoryId && categories.find(c => c.id === selectedCategoryId) === undefined) {
+        setSelectedCategoryId(null);
+      }
+      toast({
+        title: "Success",
+        description: "Category deleted successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete category",
+        variant: "destructive",
+      });
+    }
+  });
+  
   const addItemMutation = useMutation({
     mutationFn: async (newItem: Omit<InsertMenuItem, "categoryId">) => {
       if (!selectedCategoryId) {
@@ -195,6 +239,14 @@ const CreateMenu = () => {
     await addCategoryMutation.mutateAsync(category);
   };
   
+  const handleEditCategory = async (id: number, category: Partial<MenuCategory>) => {
+    await editCategoryMutation.mutateAsync({ id, category });
+  };
+  
+  const handleDeleteCategory = async (id: number) => {
+    await deleteCategoryMutation.mutateAsync(id);
+  };
+  
   const handleSelectCategory = (categoryId: number) => {
     setSelectedCategoryId(categoryId);
   };
@@ -266,6 +318,8 @@ const CreateMenu = () => {
               selectedCategoryId={selectedCategoryId}
               onSelectCategory={handleSelectCategory}
               onAddCategory={handleAddCategory}
+              onEditCategory={handleEditCategory}
+              onDeleteCategory={handleDeleteCategory}
             />
           </div>
           
