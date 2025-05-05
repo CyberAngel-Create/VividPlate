@@ -907,21 +907,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error(`WARNING: Banner file should exist but was not found at: ${filePath}`);
       }
       
-      // Update restaurant with new banner URL
+      // Get the restaurant and its current banner URLs
       const restaurant = await storage.getRestaurant(restaurantId);
-      if (restaurant?.bannerUrl) {
-        console.log(`Restaurant ${restaurantId} already had banner: ${restaurant.bannerUrl}, replacing with: ${bannerUrl}`);
-      }
-      
-      const updatedRestaurant = await storage.updateRestaurant(restaurantId, { bannerUrl });
-      if (!updatedRestaurant) {
-        console.error(`Failed to update restaurant ${restaurantId} with new banner URL`);
+      if (!restaurant) {
+        console.error(`Restaurant ${restaurantId} not found`);
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
-      console.log(`Restaurant ${restaurantId} banner successfully updated to: ${bannerUrl}`);
+      // Initialize bannerUrls array from existing data or create new
+      let bannerUrls: string[] = [];
+      
+      // If restaurant has bannerUrls property and it's an array, use it
+      if (restaurant.bannerUrls && Array.isArray(restaurant.bannerUrls)) {
+        bannerUrls = [...restaurant.bannerUrls];
+      } 
+      // Otherwise, if there's a legacy single bannerUrl, use that as the first item
+      else if (restaurant.bannerUrl) {
+        bannerUrls = [restaurant.bannerUrl];
+      }
+      
+      // Add the new banner URL to the array
+      bannerUrls.push(bannerUrl);
+      
+      console.log(`Updating restaurant ${restaurantId} with banner URLs:`, bannerUrls);
+      
+      // Update restaurant with both single bannerUrl (for backward compatibility) 
+      // and the array of bannerUrls
+      const updatedRestaurant = await storage.updateRestaurant(restaurantId, { 
+        bannerUrl,  // Keep the legacy field updated with the newest image
+        bannerUrls  // Update the array of all banner URLs
+      });
+      
+      if (!updatedRestaurant) {
+        console.error(`Failed to update restaurant ${restaurantId} with new banner URLs`);
+        return res.status(404).json({ message: 'Failed to update restaurant' });
+      }
+      
+      console.log(`Restaurant ${restaurantId} banners successfully updated, latest: ${bannerUrl}`);
+      
       res.json({ 
-        bannerUrl, 
+        bannerUrl,         // Return the single URL for backward compatibility
+        bannerUrls,        // Return the full array of banner URLs
         success: true,
         fileDetails: {
           name: req.file.filename,

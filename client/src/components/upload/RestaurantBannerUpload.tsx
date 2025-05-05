@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Image, Upload, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { Image, Upload, CheckCircle, AlertCircle, Loader2, X, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from '@/lib/queryClient';
@@ -11,22 +11,70 @@ import { useFileUpload } from '@/lib/upload-utils';
 interface RestaurantBannerUploadProps {
   restaurantId: number;
   currentBannerUrl?: string;
-  onSuccess?: (bannerUrl: string) => void;
+  currentBannerUrls?: string[];
+  onSuccess?: (bannerUrl: string, bannerUrls: string[]) => void;
 }
 
 const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({ 
   restaurantId, 
   currentBannerUrl, 
+  currentBannerUrls, 
   onSuccess 
 }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(currentBannerUrl || null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [bannerUrls, setBannerUrls] = useState<string[]>(currentBannerUrls || []);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { t } = useTranslation();
   const { uploadFile } = useFileUpload();
   
+  // Initialize bannerUrls with currentBannerUrl if it exists and bannerUrls is empty
+  useEffect(() => {
+    if (currentBannerUrl && bannerUrls.length === 0) {
+      setBannerUrls([currentBannerUrl]);
+    }
+  }, [currentBannerUrl]);
+  
+  // Go to the previous banner image in the carousel
+  const previousImage = () => {
+    if (bannerUrls.length <= 1) return;
+    setActiveIndex((prev) => (prev === 0 ? bannerUrls.length - 1 : prev - 1));
+  };
+
+  // Go to the next banner image in the carousel
+  const nextImage = () => {
+    if (bannerUrls.length <= 1) return;
+    setActiveIndex((prev) => (prev === bannerUrls.length - 1 ? 0 : prev + 1));
+  };
+
+  // Remove the current banner image
+  const removeImage = () => {
+    if (bannerUrls.length <= 1) {
+      toast({
+        title: 'Cannot Remove',
+        description: 'You need to have at least one banner image.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const newBannerUrls = [...bannerUrls];
+    newBannerUrls.splice(activeIndex, 1);
+    setBannerUrls(newBannerUrls);
+    
+    // Adjust the active index if necessary
+    if (activeIndex >= newBannerUrls.length) {
+      setActiveIndex(newBannerUrls.length - 1);
+    }
+
+    // Update parent component
+    if (onSuccess && newBannerUrls.length > 0) {
+      onSuccess(newBannerUrls[0], newBannerUrls);
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -59,11 +107,6 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
       return;
     }
     
-    // Create local preview
-    const objectUrl = URL.createObjectURL(file);
-    setPreviewUrl(objectUrl);
-    console.log("Created local preview blob URL:", objectUrl);
-    
     setIsUploading(true);
     setUploadProgress(0);
     setError(null);
@@ -82,13 +125,21 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
       if (result.success && result.url) {
         console.log("Banner upload successful:", result.url);
         
+        // Add the new banner to the list
+        const newBannerUrls = [...bannerUrls, result.url];
+        setBannerUrls(newBannerUrls);
+        
+        // Set the newly uploaded image as active
+        setActiveIndex(newBannerUrls.length - 1);
+        
         toast({
           title: 'Success',
           description: 'Banner uploaded successfully.',
         });
         
+        // Update parent component with the first image as the main banner and the full array
         if (onSuccess) {
-          onSuccess(result.url);
+          onSuccess(newBannerUrls[0], newBannerUrls);
         }
       } else {
         console.error("Banner upload failed:", result.message);
@@ -99,9 +150,6 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
           description: result.message,
           variant: 'destructive',
         });
-        
-        // Revert to previous image if upload failed
-        setPreviewUrl(currentBannerUrl || null);
       }
     } catch (error) {
       console.error("Banner upload error:", error);
@@ -113,9 +161,6 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
         description: errorMessage,
         variant: 'destructive',
       });
-      
-      // Revert to previous image if upload failed
-      setPreviewUrl(currentBannerUrl || null);
     } finally {
       setIsUploading(false);
     }
@@ -130,17 +175,20 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
             <p className="text-xs text-muted-foreground">{t('restaurant.bannerSize')}</p>
           </div>
           
-          {previewUrl ? (
+          {bannerUrls.length > 0 ? (
             <div className="relative aspect-[3/1] w-full rounded-md overflow-hidden bg-muted">
+              {/* Banner image carousel */}
               <img 
-                src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)} 
+                src={normalizeImageUrl(bannerUrls[activeIndex])} 
                 alt="Restaurant banner preview" 
                 className={`object-cover w-full h-full ${isUploading ? 'opacity-60' : ''}`}
                 onError={(e) => {
-                  console.error("Failed to load banner image:", previewUrl);
+                  console.error("Failed to load banner image:", bannerUrls[activeIndex]);
                   e.currentTarget.src = getFallbackImage('banner');
                 }}
               />
+              
+              {/* Upload progress indicator */}
               {isUploading && uploadProgress > 0 && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <div className="w-3/4 h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -154,22 +202,75 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
                   </p>
                 </div>
               )}
+              
+              {/* Spinner for loading state */}
               {isUploading && uploadProgress === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/10">
                   <Loader2 className="h-10 w-10 animate-spin text-primary" />
                 </div>
               )}
-              <div className="absolute inset-0 flex items-end justify-end p-2">
-                <label 
-                  htmlFor="bannerImage" 
-                  className={`bg-primary hover:bg-primary/90 text-white px-3 py-1.5 rounded-md text-sm transition-colors ${isUploading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                  tabIndex={isUploading ? -1 : 0}
-                >
-                  {isUploading ? 'Uploading...' : 'Change Banner'}
-                </label>
+              
+              {/* Navigation controls for carousel */}
+              {bannerUrls.length > 1 && !isUploading && (
+                <>
+                  <Button 
+                    variant="secondary" 
+                    size="icon" 
+                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white dark:bg-black/50 dark:hover:bg-black/70 h-8 w-8 rounded-full"
+                    onClick={previousImage}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    variant="secondary" 
+                    size="icon" 
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white dark:bg-black/50 dark:hover:bg-black/70 h-8 w-8 rounded-full"
+                    onClick={nextImage}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                </>
+              )}
+              
+              {/* Indicators showing position in carousel */}
+              {bannerUrls.length > 1 && (
+                <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex space-x-1.5">
+                  {bannerUrls.map((_, index) => (
+                    <button
+                      key={index}
+                      className={`h-2 rounded-full transition-all ${
+                        activeIndex === index ? 'w-4 bg-primary' : 'w-2 bg-white/70 dark:bg-gray-500'
+                      }`}
+                      onClick={() => setActiveIndex(index)}
+                    />
+                  ))}
+                </div>
+              )}
+              
+              {/* Banner controls */}
+              <div className="absolute top-2 right-2 flex space-x-2">
+                {!isUploading && (
+                  <>
+                    <Button 
+                      variant="destructive" 
+                      size="icon"
+                      className="h-8 w-8 rounded-full bg-white/50 hover:bg-red-600 hover:text-white text-red-600 dark:bg-black/30"
+                      onClick={removeImage}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                    <label 
+                      htmlFor="bannerImage" 
+                      className="flex items-center justify-center h-8 w-8 rounded-full bg-white/50 hover:bg-primary hover:text-white text-primary cursor-pointer dark:bg-black/30"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </label>
+                  </>
+                )}
               </div>
             </div>
           ) : (
+            // Empty state - no banner uploaded yet
             <label
               htmlFor="bannerImage"
               className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-md border-muted-foreground/20 ${isUploading ? '' : 'hover:border-muted-foreground/40 cursor-pointer'} transition-colors`}
@@ -198,7 +299,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                   <Upload className="w-8 h-8 mb-2 text-muted-foreground" />
                   <p className="mb-1 text-sm">
-                    <span className="font-medium">Click to upload</span> or drag and drop
+                    <span className="font-medium">Click to upload banner</span> or drag and drop
                   </p>
                   <p className="text-xs text-muted-foreground">
                     JPEG, PNG, GIF, WEBP (MAX 3MB)
@@ -208,6 +309,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
             </label>
           )}
           
+          {/* Hidden file input */}
           <input
             id="bannerImage"
             type="file"
@@ -218,6 +320,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
           />
         </div>
         
+        {/* Upload progress indicator outside of image */}
         {isUploading && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
@@ -233,6 +336,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
           </div>
         )}
         
+        {/* Error message */}
         {error && (
           <div className="flex items-center gap-2 text-sm text-destructive">
             <AlertCircle className="w-4 h-4" />
@@ -240,10 +344,18 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
           </div>
         )}
         
-        {!error && previewUrl && !isUploading && (
-          <div className="flex items-center gap-2 text-sm text-green-600">
-            <CheckCircle className="w-4 h-4" />
-            <span>Banner ready</span>
+        {/* Banner upload summary */}
+        {!error && bannerUrls.length > 0 && !isUploading && (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-green-600">
+              <CheckCircle className="w-4 h-4" />
+              <span>{bannerUrls.length > 1 ? `${bannerUrls.length} banners uploaded` : 'Banner ready'}</span>
+            </div>
+            {bannerUrls.length > 1 && (
+              <p className="text-xs text-muted-foreground">
+                Showing image {activeIndex + 1} of {bannerUrls.length}
+              </p>
+            )}
           </div>
         )}
       </CardContent>

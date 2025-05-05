@@ -1,13 +1,98 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, MessageSquare } from "lucide-react";
+import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
-import { useState, useMemo, CSSProperties } from "react";
+import { useState, useMemo, useEffect, CSSProperties } from "react";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import CompactSearch from "@/components/ui/compact-search";
 import MenuItemDietaryOverlay from "@/components/dietary/MenuItemDietaryOverlay";
+
+// Banner slideshow component
+interface BannerSlideshowProps {
+  bannerUrls: string[];
+  restaurantName: string;
+  interval?: number; // milliseconds
+}
+
+const BannerSlideshow: React.FC<BannerSlideshowProps> = ({ 
+  bannerUrls, 
+  restaurantName,
+  interval = 5000 // default to 5 seconds
+}) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  
+  // Automatic slideshow
+  useEffect(() => {
+    if (bannerUrls.length <= 1) return;
+    
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev === bannerUrls.length - 1 ? 0 : prev + 1));
+    }, interval);
+    
+    return () => clearInterval(timer);
+  }, [bannerUrls.length, interval]);
+  
+  const prevSlide = () => {
+    setActiveIndex((prev) => (prev === 0 ? bannerUrls.length - 1 : prev - 1));
+  };
+  
+  const nextSlide = () => {
+    setActiveIndex((prev) => (prev === bannerUrls.length - 1 ? 0 : prev + 1));
+  };
+  
+  return (
+    <div className="relative w-full h-full">
+      {bannerUrls.map((url, index) => (
+        <img
+          key={index}
+          src={normalizeImageUrl(url)}
+          alt={`${restaurantName} banner ${index + 1}`}
+          className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ${
+            index === activeIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+          onError={(e) => {
+            console.error("Failed to load banner image:", url);
+            e.currentTarget.src = getFallbackImage('banner');
+          }}
+        />
+      ))}
+      
+      {bannerUrls.length > 1 && (
+        <>
+          <button 
+            onClick={prevSlide}
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/25 text-white p-1 rounded-full hover:bg-black/40 z-10"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <button 
+            onClick={nextSlide}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/25 text-white p-1 rounded-full hover:bg-black/40 z-10"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+          
+          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
+            {bannerUrls.map((_, index) => (
+              <button 
+                key={index}
+                className={`w-2 h-2 rounded-full bg-white ${
+                  index === activeIndex ? 'opacity-100' : 'opacity-50'
+                }`}
+                onClick={() => setActiveIndex(index)}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -86,10 +171,16 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       <div 
         className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden menu-preview-shadow"
         style={containerStyle}>
-        {/* Restaurant header */}
+        {/* Restaurant header with banner slideshow */}
         <div className="relative">
           <div className="h-40 bg-gray-300 relative">
-            {restaurant.bannerUrl ? (
+            {restaurant.bannerUrls && restaurant.bannerUrls.length > 0 ? (
+              <BannerSlideshow 
+                bannerUrls={restaurant.bannerUrls as string[]} 
+                restaurantName={restaurant.name} 
+              />
+            ) : restaurant.bannerUrl ? (
+              // Fallback to legacy single banner image
               <img 
                 src={normalizeImageUrl(restaurant.bannerUrl)}
                 alt={`${restaurant.name} banner`}
