@@ -26,23 +26,30 @@ const EditRestaurant = () => {
   // Mutation to create/update restaurant
   const createRestaurantMutation = useMutation({
     mutationFn: async (restaurant: InsertRestaurant) => {
-      return apiRequest("POST", "/api/restaurants", restaurant);
+      const response = await apiRequest("POST", "/api/restaurants", restaurant);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/restaurants"] });
-      refetchActiveRestaurant();
+      
+      // After successful creation, show toast and navigate to edit page for the new restaurant
       toast({
         title: "Success",
         description: "Restaurant created successfully",
       });
       
-      // Force reload the page to ensure form is cleared and new restaurant is loaded
+      // Set a flag in session storage to indicate form should be reset
+      sessionStorage.setItem("resetRestaurantForm", "true");
+      
+      // Force reload to ensure the new restaurant is loaded
+      // This will trigger the form reset in the component
       window.location.reload();
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Restaurant creation error:", error);
       toast({
         title: "Error",
-        description: "Failed to create restaurant",
+        description: "Failed to create restaurant. Please try again.",
         variant: "destructive",
       });
     }

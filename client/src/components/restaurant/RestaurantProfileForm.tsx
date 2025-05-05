@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -123,6 +123,35 @@ const RestaurantProfileForm = ({ restaurant, onSubmit }: RestaurantProfileFormPr
       tagInput: "",
     },
   });
+  
+  // Check if form should be reset (for secondary restaurant creation)
+  useEffect(() => {
+    // Check if the resetRestaurantForm flag was set in session storage
+    const shouldResetForm = sessionStorage.getItem("resetRestaurantForm");
+    
+    if (shouldResetForm === "true" && !restaurant) {
+      console.log("Resetting restaurant form due to session storage flag");
+      
+      // Reset the form
+      form.reset({
+        name: "",
+        description: "",
+        cuisine: "",
+        logoUrl: "",
+        phone: "",
+        email: "",
+        address: "",
+        tagInput: "",
+      });
+      
+      // Reset other state
+      setTags([]);
+      setHours(defaultHours);
+      
+      // Clear the flag
+      sessionStorage.removeItem("resetRestaurantForm");
+    }
+  }, [form, restaurant]);
 
   const addTag = () => {
     const tagInput = form.getValues("tagInput");
