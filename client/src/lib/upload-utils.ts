@@ -22,12 +22,16 @@ export const uploadFileWithVerification = async (
   const upload = async (): Promise<{ success: boolean; url: string | null; message: string }> => {
     try {
       const formData = new FormData();
-      formData.append('image', file);  // Changed from 'file' to 'image' to match server-side expectations
+      // The field name expected by the server is 'image' 
+      formData.append('image', file);
       
       // Add any additional form data
       if (options?.additionalFormData) {
         Object.entries(options.additionalFormData).forEach(([key, value]) => {
-          formData.append(key, value);
+          // Skip the fieldName entry, it's just for documentation
+          if (key !== 'fieldName') {
+            formData.append(key, value);
+          }
         });
       }
 

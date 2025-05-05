@@ -16,6 +16,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUploadClick = () => {
@@ -29,10 +30,12 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
     if (!file) return;
 
     console.log(`Starting upload process for file: ${file.name}, Size: ${file.size} bytes, Type: ${file.type}`);
+    setError(null);
 
     // Validate file size (max 3MB)
     if (file.size > 3 * 1024 * 1024) {
       console.warn(`File too large: ${file.size} bytes`);
+      setError("Image must be less than 3MB in size.");
       toast({
         title: "File too large",
         description: "Image must be less than 3MB in size.",
@@ -45,6 +48,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/gif"];
     if (!validTypes.includes(file.type)) {
       console.warn(`Invalid file type: ${file.type}`);
+      setError("Please upload a JPEG, PNG, WebP, or GIF image.");
       toast({
         title: "Invalid file type",
         description: "Please upload a JPEG, PNG, WebP, or GIF image.",
@@ -66,26 +70,42 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
       const result = await uploadFile(file, "/api/upload/menuitem", {
         maxRetries: 2,
         verifyUrl: true,
-        showToasts: true,
+        showToasts: false, // We'll handle toasts ourselves
         onProgress: (progress) => {
           setUploadProgress(progress);
+        },
+        // Make sure we're sending the expected field name 'image'
+        additionalFormData: {
+          fieldName: "image"
         }
       });
       
       if (result.success && result.url) {
         console.log("Upload successful:", result.url);
         onImageUploaded(result.url);
+        toast({
+          title: "Upload successful",
+          description: "The image has been uploaded successfully.",
+        });
       } else {
         console.error("Upload failed:", result.message);
+        setError(result.message);
         setPreviewUrl(existingImageUrl || null);
+        toast({
+          title: "Upload failed",
+          description: result.message,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Upload error:", error);
+      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      setError(errorMessage);
       setPreviewUrl(existingImageUrl || null);
       
       toast({
         title: "Upload failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -145,11 +165,11 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
         ) : (
           <div
             onClick={handleUploadClick}
-            className="w-full h-48 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors"
+            className="w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors bg-white dark:bg-gray-700"
           >
-            <ImageIcon className="h-10 w-10 text-gray-400 mb-2" />
-            <p className="text-gray-500 text-sm">Click to upload menu item image</p>
-            <p className="text-gray-400 text-xs mt-1">(Max size: 3MB)</p>
+            <ImageIcon className="h-10 w-10 text-gray-400 dark:text-gray-300 mb-2" />
+            <p className="text-gray-500 dark:text-gray-300 text-sm">Click to upload menu item image</p>
+            <p className="text-gray-400 dark:text-gray-400 text-xs mt-1">(Max size: 3MB)</p>
           </div>
         )}
       </div>

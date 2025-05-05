@@ -35,6 +35,9 @@ const EditRestaurant = () => {
         title: "Success",
         description: "Restaurant created successfully",
       });
+      
+      // Force reload the page to ensure form is cleared and new restaurant is loaded
+      window.location.reload();
     },
     onError: () => {
       toast({
