@@ -22,7 +22,7 @@ export const uploadFileWithVerification = async (
   const upload = async (): Promise<{ success: boolean; url: string | null; message: string }> => {
     try {
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('image', file);  // Changed from 'file' to 'image' to match server-side expectations
       
       // Add any additional form data
       if (options?.additionalFormData) {
