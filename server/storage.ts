@@ -1588,7 +1588,39 @@ export class DatabaseStorage implements IStorage {
   
   // Admin methods
   async getAllRestaurants(): Promise<Restaurant[]> {
-    return db.select().from(restaurants);
+    try {
+      // First try with the standard ORM approach
+      return await db.select().from(restaurants);
+    } catch (error) {
+      console.error("Error in getAllRestaurants ORM fetch, attempting raw query fallback:", error);
+      
+      // Fallback: use a raw SQL query that doesn't depend on the full schema
+      const { pool } = await import('./db');
+      const result = await pool.query(
+        'SELECT id, user_id, name, description, cuisine, logo_url, banner_url, ' +
+        'phone, email, address, hours_of_operation, tags, theme_settings ' +
+        'FROM restaurants ORDER BY id'
+      );
+      
+      // Map the raw results to match our schema
+      return result.rows.map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        name: row.name,
+        description: row.description,
+        cuisine: row.cuisine,
+        logoUrl: row.logo_url,
+        bannerUrl: row.banner_url,
+        bannerUrls: Array.isArray(row.banner_urls) ? row.banner_urls : 
+                  (row.banner_url ? [row.banner_url] : []),
+        phone: row.phone,
+        email: row.email,
+        address: row.address,
+        hoursOfOperation: row.hours_of_operation,
+        tags: row.tags || [],
+        themeSettings: row.theme_settings || {}
+      }));
+    }
   }
   
   async getAllSubscriptions(): Promise<Subscription[]> {
