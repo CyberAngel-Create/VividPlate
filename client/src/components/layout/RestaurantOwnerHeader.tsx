@@ -101,7 +101,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                   {isPaid && restaurants.length < 3 && (
                     <>
                       <DropdownMenuSeparator className="dark:border-gray-700" />
-                      <Link href="/create-restaurant">
+                      <Link href="/edit-restaurant">
                         <DropdownMenuItem className="cursor-pointer text-primary dark:text-primary-light font-medium">
                           <PlusCircle className="h-4 w-4 mr-2" />
                           {t("Create Restaurant")}
@@ -234,7 +234,7 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                           ))}
                         </div>
                         {isPaid && restaurants.length < 3 && (
-                          <Link href="/create-restaurant">
+                          <Link href="/edit-restaurant">
                             <div 
                               className="block mt-2 px-2 py-1.5 text-sm rounded-md text-primary dark:text-primary-light hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
                               onClick={closeMenu}

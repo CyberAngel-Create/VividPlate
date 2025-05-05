@@ -22,8 +22,10 @@ export const uploadFileWithVerification = async (
   const upload = async (): Promise<{ success: boolean; url: string | null; message: string }> => {
     try {
       const formData = new FormData();
-      // The field name expected by the server is 'image' 
-      formData.append('image', file);
+      // Add file with the appropriate field name based on the endpoint
+      // For logo upload, the server expects 'logo', for others it expects 'image'
+      const fieldName = url.includes('upload-logo') ? 'logo' : 'image';
+      formData.append(fieldName, file);
       
       // Add any additional form data
       if (options?.additionalFormData) {
@@ -65,13 +67,13 @@ export const uploadFileWithVerification = async (
                 }
                 
                 const response = JSON.parse(responseText);
-                if (!response.url && !response.bannerUrl) {
+                if (!response.url && !response.bannerUrl && !response.logoUrl) {
                   reject(new Error('Server response missing URL field'));
                   return;
                 }
                 
-                // Use either url or bannerUrl field from response
-                const finalUrl = response.url || response.bannerUrl;
+                // Use either url, logoUrl, or bannerUrl field from response
+                const finalUrl = response.url || response.logoUrl || response.bannerUrl;
                 
                 resolve({
                   success: true,
@@ -122,12 +124,12 @@ export const uploadFileWithVerification = async (
       const data = await response.json();
       console.log('Upload successful:', data);
       
-      if (!data.url && !data.bannerUrl) {
+      if (!data.url && !data.bannerUrl && !data.logoUrl) {
         throw new Error('Upload response missing URL');
       }
       
-      // Use either url or bannerUrl field from response
-      const finalUrl = data.url || data.bannerUrl;
+      // Use either url, logoUrl, or bannerUrl field from response
+      const finalUrl = data.url || data.logoUrl || data.bannerUrl;
       
       // Verify the uploaded file is accessible
       if (verifyUrl) {
