@@ -1011,8 +1011,8 @@ export class DatabaseStorage implements IStorage {
     const [newAd] = await db.insert(advertisements)
       .values({
         ...ad,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: new Date()
+        // Removed updatedAt as it's not in the schema
       })
       .returning();
     return newAd;
@@ -1021,8 +1021,8 @@ export class DatabaseStorage implements IStorage {
   async updateAdvertisement(id: number, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined> {
     const [updatedAd] = await db.update(advertisements)
       .set({
-        ...ad,
-        updatedAt: new Date()
+        ...ad
+        // Removed updatedAt as it's not in the schema
       })
       .where(eq(advertisements.id, id))
       .returning();
