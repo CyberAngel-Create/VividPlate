@@ -45,19 +45,24 @@ const ShareMenu = () => {
     return (
       <div className="flex flex-col min-h-screen">
         <RestaurantOwnerHeader onLogout={handleLogout} />
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
-            <p className="mb-6">Create your restaurant profile first before sharing your menu.</p>
-            <button 
-              onClick={() => setLocation("/edit-restaurant")}
-              className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
-            >
-              Create Restaurant
-            </button>
+        
+        {/* Main content with padding for fixed header */}
+        <div className="pt-16 flex-grow">
+          <div className="container mx-auto px-4 py-6">
+            <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center dark:border dark:border-gray-700">
+              <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
+              <p className="mb-6">Create your restaurant profile first before sharing your menu.</p>
+              <button 
+                onClick={() => setLocation("/edit-restaurant")}
+                className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
+              >
+                Create Restaurant
+              </button>
+            </div>
           </div>
         </div>
+        
         <RestaurantOwnerFooter />
       </div>
     );
@@ -68,19 +73,24 @@ const ShareMenu = () => {
       <div className="flex flex-col min-h-screen">
         <RestaurantOwnerHeader onLogout={handleLogout} />
         <TabNavigation />
-        <section className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-lg mb-4">You haven't created any menu items yet.</p>
-            <p className="mb-6">Create your menu first before sharing it with customers.</p>
-            <button 
-              onClick={() => setLocation("/create-menu")}
-              className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
-            >
-              Create Menu
-            </button>
+        
+        {/* Main content with padding for fixed header */}
+        <div className="pt-16 flex-grow">
+          <div className="container mx-auto px-4 py-6">
+            <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center dark:border dark:border-gray-700">
+              <p className="text-lg mb-4">You haven't created any menu items yet.</p>
+              <p className="mb-6">Create your menu first before sharing it with customers.</p>
+              <button 
+                onClick={() => setLocation("/create-menu")}
+                className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
+              >
+                Create Menu
+              </button>
+            </div>
           </div>
-        </section>
+        </div>
+        
         <RestaurantOwnerFooter />
       </div>
     );
@@ -91,20 +101,24 @@ const ShareMenu = () => {
       <RestaurantOwnerHeader onLogout={handleLogout} />
       <TabNavigation />
       
-      <section className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-heading font-bold mb-6">Share Your Menu</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <QRCodeGenerator 
-            restaurant={activeRestaurant}
-            menuUrl={menuUrl}
-          />
+      {/* Main content with padding for fixed header */}
+      <div className="pt-16 flex-grow">
+        <div className="container mx-auto px-4 py-6">
+          <h1 className="text-2xl font-heading font-bold mb-6">Share Your Menu</h1>
           
-          <ShareOptions 
-            menuUrl={menuUrl}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <QRCodeGenerator 
+              restaurant={activeRestaurant}
+              menuUrl={menuUrl}
+            />
+            
+            <ShareOptions 
+              menuUrl={menuUrl}
+            />
+          </div>
         </div>
-      </section>
+      </div>
+      
       <RestaurantOwnerFooter />
     </div>
   );
