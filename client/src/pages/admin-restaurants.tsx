@@ -64,27 +64,27 @@ const AdminRestaurants = () => {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white shadow rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Total Restaurants</div>
-                <div className="text-3xl font-bold">{restaurants.length}</div>
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 dark:border dark:border-gray-700">
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Restaurants</div>
+                <div className="text-3xl font-bold dark:text-white">{restaurants.length}</div>
               </div>
               
-              <div className="bg-white shadow rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Premium Users' Restaurants</div>
-                <div className="text-3xl font-bold">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 dark:border dark:border-gray-700">
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Premium Users' Restaurants</div>
+                <div className="text-3xl font-bold dark:text-white">
                   {restaurants.filter((r: any) => r.ownerSubscriptionTier === 'premium').length}
                 </div>
               </div>
               
-              <div className="bg-white shadow rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500">Free Users' Restaurants</div>
-                <div className="text-3xl font-bold">
+              <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 dark:border dark:border-gray-700">
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Free Users' Restaurants</div>
+                <div className="text-3xl font-bold dark:text-white">
                   {restaurants.filter((r: any) => r.ownerSubscriptionTier === 'free').length}
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden dark:border dark:border-gray-700">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -101,7 +101,7 @@ const AdminRestaurants = () => {
                 <TableBody>
                   {filteredRestaurants.length > 0 ? (
                     filteredRestaurants.map((restaurant: any) => (
-                      <TableRow key={restaurant.id} className="hover:bg-gray-50">
+                      <TableRow key={restaurant.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                         <TableCell>{restaurant.id}</TableCell>
                         <TableCell className="font-medium">
                           {restaurant.name}
@@ -113,7 +113,7 @@ const AdminRestaurants = () => {
                           <div className="flex flex-col">
                             <span className="font-medium">{restaurant.ownerName || "N/A"}</span>
                             {restaurant.userEmail && (
-                              <span className="text-xs text-gray-500">{restaurant.userEmail}</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{restaurant.userEmail}</span>
                             )}
                             {restaurant.ownerSubscriptionTier === 'premium' && (
                               <Badge className="mt-1 w-fit bg-orange-500">Premium User</Badge>
