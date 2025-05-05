@@ -118,8 +118,11 @@ const ViewMenu = () => {
   const { isPaid: isCurrentUserPaid } = useSubscription();
   
   // Check if the restaurant owner has a premium subscription
-  const isRestaurantPremium = restaurant.userId && 
-    restaurant.subscriptionTier === "premium";
+  // If the server explicitly tells us the restaurant is premium, use that value
+  // Otherwise fall back to checking if the restaurant's owner subscription tier is premium
+  const isRestaurantPremium = restaurant.isPremium !== undefined 
+    ? restaurant.isPremium 
+    : (restaurant.userId && restaurant.subscriptionTier === "premium");
     
   // Show ads only if the restaurant owner doesn't have a premium subscription
   const showAds = !isRestaurantPremium;
@@ -129,6 +132,7 @@ const ViewMenu = () => {
     restaurantUserId: restaurant.userId,
     restaurantSubscriptionTier: restaurant.subscriptionTier,
     isRestaurantPremium,
+    isPremiumFromServer: restaurant.isPremium,
     showAds
   });
 

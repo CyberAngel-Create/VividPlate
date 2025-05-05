@@ -1694,22 +1694,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the restaurant owner's subscription tier
       let subscriptionTier = "free"; // Default tier
+      let isPremiumRestaurant = false; // Track premium status separately
+      
       try {
         // Fetch user to get their subscription tier
-        const restaurantOwner = await storage.getUser(restaurant.userId);
-        
-        if (restaurantOwner) {
-          // Try to get the active subscription
-          const ownerSubscription = await storage.getActiveSubscriptionByUserId(restaurant.userId);
+        if (restaurant.userId) {
+          const restaurantOwner = await storage.getUser(restaurant.userId);
           
-          if (ownerSubscription && ownerSubscription.tier) {
-            subscriptionTier = ownerSubscription.tier;
-          } else if (restaurantOwner.subscriptionTier) {
-            // Fallback to user's subscription tier if stored there
-            subscriptionTier = restaurantOwner.subscriptionTier;
+          if (restaurantOwner) {
+            // Try to get the active subscription
+            const ownerSubscription = await storage.getActiveSubscriptionByUserId(restaurant.userId);
+            
+            if (ownerSubscription && ownerSubscription.tier) {
+              subscriptionTier = ownerSubscription.tier;
+              isPremiumRestaurant = subscriptionTier === "premium";
+            } else if (restaurantOwner.subscriptionTier) {
+              // Fallback to user's subscription tier if stored there
+              subscriptionTier = restaurantOwner.subscriptionTier;
+              isPremiumRestaurant = subscriptionTier === "premium";
+            }
+            
+            console.log(`Restaurant ${restaurantId} owner subscription status:`, {
+              tier: subscriptionTier,
+              isPremium: isPremiumRestaurant
+            });
           }
-          
-          console.log(`Restaurant ${restaurantId} owner subscription tier: ${subscriptionTier}`);
         }
       } catch (subError) {
         console.error("Error fetching restaurant owner subscription:", subError);
@@ -1719,7 +1728,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add subscription tier to the restaurant object
       const restaurantWithSub = {
         ...restaurant,
-        subscriptionTier
+        subscriptionTier,
+        isPremium: isPremiumRestaurant
       };
       
       const categories = await storage.getMenuCategoriesByRestaurantId(restaurantId);
