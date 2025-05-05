@@ -1623,6 +1623,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
+      // Get the restaurant owner's subscription tier
+      let subscriptionTier = "free"; // Default tier
+      try {
+        // Fetch user to get their subscription tier
+        const restaurantOwner = await storage.getUser(restaurant.userId);
+        
+        if (restaurantOwner) {
+          // Try to get the active subscription
+          const ownerSubscription = await storage.getActiveSubscriptionByUserId(restaurant.userId);
+          
+          if (ownerSubscription && ownerSubscription.tier) {
+            subscriptionTier = ownerSubscription.tier;
+          } else if (restaurantOwner.subscriptionTier) {
+            // Fallback to user's subscription tier if stored there
+            subscriptionTier = restaurantOwner.subscriptionTier;
+          }
+          
+          console.log(`Restaurant ${restaurantId} owner subscription tier: ${subscriptionTier}`);
+        }
+      } catch (subError) {
+        console.error("Error fetching restaurant owner subscription:", subError);
+        // Continue with default free tier if there's an error
+      }
+      
+      // Add subscription tier to the restaurant object
+      const restaurantWithSub = {
+        ...restaurant,
+        subscriptionTier
+      };
+      
       const categories = await storage.getMenuCategoriesByRestaurantId(restaurantId);
       
       const menu = await Promise.all(categories.map(async (category) => {
@@ -1640,11 +1670,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json({
-        restaurant,
+        restaurant: restaurantWithSub,
         menu
       });
     } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+      console.error("Error fetching restaurant menu:", error);
+      res.status(500).json({ message: 'Server error', details: String(error) });
     }
   });
   
@@ -2443,9 +2474,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Customer-facing advertisement API
   app.get('/api/advertisements', async (req, res) => {
     try {
-      const { position } = req.query;
+      const { position, restaurantId } = req.query;
       if (!position) {
         return res.status(400).json({ message: 'Position parameter is required' });
+      }
+      
+      // Check if this is for a premium restaurant
+      if (restaurantId) {
+        try {
+          const restaurant = await storage.getRestaurant(parseInt(restaurantId as string));
+          
+          if (restaurant) {
+            // Check restaurant owner's subscription
+            const ownerSubscription = await storage.getActiveSubscriptionByUserId(restaurant.userId);
+            
+            // If owner has premium subscription, don't show ads
+            if (ownerSubscription && ownerSubscription.tier === "premium") {
+              console.log(`Restaurant ${restaurantId} has premium subscription, not serving ads`);
+              return res.json(null);
+            }
+          }
+        } catch (error) {
+          console.error("Error checking restaurant subscription:", error);
+          // Continue to serve ads on error
+        }
       }
       
       // Get a single active advertisement for the specified position

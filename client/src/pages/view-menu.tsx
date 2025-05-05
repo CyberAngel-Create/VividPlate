@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
+import { useSubscription } from "@/hooks/use-subscription";
 import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { apiRequest } from "@/lib/queryClient";
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
@@ -17,8 +18,12 @@ interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
 }
 
+interface RestaurantWithSubscription extends Restaurant {
+  subscriptionTier?: string;
+}
+
 interface MenuData {
-  restaurant: Restaurant;
+  restaurant: RestaurantWithSubscription;
   menu: CategoryWithItems[];
 }
 
@@ -135,7 +140,7 @@ const ViewMenu = () => {
         {/* Top advertisement from advertisement management system - only shown if restaurant is not premium */}
         {showAds && (
           <div className="w-full max-w-screen-md px-4">
-            <MenuAdvertisement position="top" />
+            <MenuAdvertisement position="top" restaurantId={restaurant.id} />
           </div>
         )}
         
@@ -149,7 +154,7 @@ const ViewMenu = () => {
             {/* Sidebar advertisement (left side on larger screens) - only shown if restaurant is not premium */}
             {showAds && (
               <div className="lg:w-1/4 order-2 lg:order-1">
-                <MenuAdvertisement position="sidebar" />
+                <MenuAdvertisement position="sidebar" restaurantId={restaurant.id} />
               </div>
             )}
             
@@ -166,7 +171,7 @@ const ViewMenu = () => {
         {/* Bottom advertisement from advertisement management system - only shown if restaurant is not premium */}
         {showAds && (
           <div className="w-full max-w-screen-md px-4 mt-6">
-            <MenuAdvertisement position="bottom" />
+            <MenuAdvertisement position="bottom" restaurantId={restaurant.id} />
           </div>
         )}
         

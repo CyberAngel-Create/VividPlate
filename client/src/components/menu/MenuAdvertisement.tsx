@@ -4,17 +4,33 @@ import { Button } from "@/components/ui/button";
 import { Advertisement } from "@shared/schema";
 import { ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useParams } from "wouter";
 
 interface MenuAdvertisementProps {
   position: "top" | "bottom" | "sidebar";
+  restaurantId?: string | number;
 }
 
-const MenuAdvertisement = ({ position }: MenuAdvertisementProps) => {
+const MenuAdvertisement = ({ position, restaurantId }: MenuAdvertisementProps) => {
+  const params = useParams();
+  const activeRestaurantId = restaurantId || params.restaurantId;
+  
   const [imageUrl, setImageUrl] = useState<string>("");
   const [linkUrl, setLinkUrl] = useState<string>("");
   
   const { data: advertisement, isLoading } = useQuery<Advertisement>({
-    queryKey: ["/api/advertisements", position],
+    queryKey: ["/api/advertisements", position, activeRestaurantId],
+    queryFn: async ({ queryKey }) => {
+      const [_, pos, restId] = queryKey;
+      const url = new URL("/api/advertisements", window.location.origin);
+      url.searchParams.append("position", pos as string);
+      if (restId) {
+        url.searchParams.append("restaurantId", restId as string);
+      }
+      const response = await fetch(url.toString());
+      if (!response.ok) throw new Error('Failed to fetch advertisement');
+      return response.json();
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
   });
