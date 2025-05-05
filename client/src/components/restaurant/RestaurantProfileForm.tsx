@@ -185,27 +185,39 @@ const RestaurantProfileForm = ({ restaurant, onSubmit }: RestaurantProfileFormPr
   const handleSubmit = async (data: FormValues) => {
     const { tagInput, ...rest } = data;
     
-    // Submit the form data
-    await onSubmit({
-      ...rest,
-      tags,
-      hoursOfOperation: hours,
-    });
-    
-    // Reset form if this is a new restaurant (creation mode)
-    if (!restaurant) {
-      form.reset({
-        name: "",
-        description: "",
-        cuisine: "",
-        logoUrl: "",
-        phone: "",
-        email: "",
-        address: "",
-        tagInput: "",
+    try {
+      // Submit the form data
+      await onSubmit({
+        ...rest,
+        tags,
+        hoursOfOperation: hours,
       });
-      setTags([]);
-      setHours(defaultHours);
+      
+      // Reset form if this is a new restaurant (creation mode)
+      if (!restaurant) {
+        console.log("Creating new restaurant - setting reset flag");
+        
+        // Set the reset flag for when the page reloads
+        // This will be picked up by the useEffect hook to reset the form
+        sessionStorage.setItem("resetRestaurantForm", "true");
+        
+        // Also perform immediate reset
+        form.reset({
+          name: "",
+          description: "",
+          cuisine: "",
+          logoUrl: "",
+          phone: "",
+          email: "",
+          address: "",
+          tagInput: "",
+        });
+        setTags([]);
+        setHours(defaultHours);
+      }
+    } catch (error) {
+      console.error("Error in form submission:", error);
+      // The error will be handled by the mutation in the parent component
     }
   };
 

@@ -1259,9 +1259,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = (req.user as any).id;
       console.log(`Processing general image upload request from user ID: ${userId}`);
       
+      // Check if the user is trying to upload a file
       if (!req.file) {
         console.warn('General upload attempt with no file included');
-        return res.status(400).json({ message: 'No file uploaded' });
+        return res.status(400).json({ 
+          message: 'No file uploaded',
+          success: false,
+          code: 'MISSING_FILE'
+        });
+      }
+      
+      // Validate file type
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validMimeTypes.includes(req.file.mimetype)) {
+        console.warn(`Invalid file type uploaded: ${req.file.mimetype}`);
+        
+        // Try to clean up the invalid file
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log(`Removed invalid file: ${req.file.path}`);
+        } catch (cleanupError) {
+          console.error(`Failed to remove invalid file: ${cleanupError}`);
+        }
+        
+        return res.status(400).json({
+          message: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.',
+          success: false,
+          code: 'INVALID_FILE_TYPE'
+        });
+      }
+      
+      // Validate file size (max 3MB)
+      const maxSize = 3 * 1024 * 1024; // 3MB in bytes
+      if (req.file.size > maxSize) {
+        console.warn(`File too large: ${req.file.size} bytes`);
+        
+        // Try to clean up the oversized file
+        try {
+          fs.unlinkSync(req.file.path);
+          console.log(`Removed oversized file: ${req.file.path}`);
+        } catch (cleanupError) {
+          console.error(`Failed to remove oversized file: ${cleanupError}`);
+        }
+        
+        return res.status(400).json({
+          message: 'File too large. Maximum size is 3MB.',
+          success: false,
+          code: 'FILE_TOO_LARGE'
+        });
       }
       
       console.log(`File uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
@@ -1278,26 +1323,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           const stats = fs.statSync(filePath);
           console.log(`File stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
+          
+          // Verify file size again
+          if (stats.size === 0) {
+            console.error('Uploaded file has zero size');
+            return res.status(500).json({
+              message: 'Uploaded file is empty',
+              success: false,
+              code: 'EMPTY_FILE'
+            });
+          }
+          
         } catch (statErr) {
           console.error(`Error getting file stats: ${statErr}`);
         }
       } else {
         console.error(`WARNING: File should exist but was not found at: ${filePath}`);
+        return res.status(500).json({
+          message: 'File upload was processed but the file could not be found on the server.',
+          success: false,
+          code: 'FILE_NOT_FOUND'
+        });
       }
       
+      // Always return url field for backward compatibility
       res.json({ 
+        url: imageUrl,
         imageUrl, 
         success: true,
         fileDetails: {
           name: req.file.filename,
           size: req.file.size,
-          type: req.file.mimetype
+          type: req.file.mimetype,
+          path: req.file.path
         }
       });
     } catch (error) {
       console.error('Error uploading menu item image:', error);
       const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-      res.status(500).json({ message: 'Error uploading image', error: errorMsg });
+      res.status(500).json({ 
+        message: 'Error uploading image', 
+        error: errorMsg,
+        success: false,
+        code: 'UPLOAD_ERROR'
+      });
     }
   });
 
