@@ -174,7 +174,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         {/* Restaurant header with banner slideshow */}
         <div className="relative">
           <div className="h-40 bg-gray-300 relative">
-            {restaurant.bannerUrls && restaurant.bannerUrls.length > 0 ? (
+            {restaurant.bannerUrls && Array.isArray(restaurant.bannerUrls) && restaurant.bannerUrls.length > 0 ? (
               <BannerSlideshow 
                 bannerUrls={restaurant.bannerUrls as string[]} 
                 restaurantName={restaurant.name} 

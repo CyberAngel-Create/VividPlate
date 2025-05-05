@@ -147,7 +147,9 @@ const EditRestaurant = () => {
                 <RestaurantBannerUpload
                   restaurantId={activeRestaurant.id}
                   currentBannerUrl={activeRestaurant.bannerUrl || undefined}
-                  onSuccess={() => {
+                  currentBannerUrls={activeRestaurant.bannerUrls as string[] || undefined}
+                  onSuccess={(bannerUrl, bannerUrls) => {
+                    console.log("Banner upload success:", { bannerUrl, bannerUrls });
                     refetchActiveRestaurant();
                   }}
                 />

@@ -66,6 +66,7 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   cuisine: true,
   logoUrl: true,
   bannerUrl: true,
+  bannerUrls: true,  // Added support for multiple banner URLs
   phone: true,
   email: true,
   address: true,
