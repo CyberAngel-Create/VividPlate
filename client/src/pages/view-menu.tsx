@@ -109,28 +109,52 @@ const ViewMenu = () => {
   
   const { restaurant, menu } = data;
   
+  // Import the useSubscription hook for ad display control
+  const { isPaid: isCurrentUserPaid } = useSubscription();
+  
+  // Check if the restaurant owner has a premium subscription
+  const isRestaurantPremium = restaurant.userId && 
+    restaurant.subscriptionTier === "premium";
+    
+  // Show ads only if the restaurant owner doesn't have a premium subscription
+  const showAds = !isRestaurantPremium;
+  
+  console.log("Restaurant subscription status:", {
+    restaurantId: restaurant.id,
+    restaurantUserId: restaurant.userId,
+    restaurantSubscriptionTier: restaurant.subscriptionTier,
+    isRestaurantPremium,
+    showAds
+  });
+
   return (
     <div className="flex flex-col min-h-screen w-full">
       {/* Header removed as requested */}
       
       <div className="flex flex-col items-center flex-grow pt-4">
-        {/* Top advertisement from advertisement management system */}
-        <div className="w-full max-w-screen-md px-4">
-          <MenuAdvertisement position="top" />
-        </div>
+        {/* Top advertisement from advertisement management system - only shown if restaurant is not premium */}
+        {showAds && (
+          <div className="w-full max-w-screen-md px-4">
+            <MenuAdvertisement position="top" />
+          </div>
+        )}
         
-        {/* Top ad banner for free users */}
-        <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+        {/* Top ad banner for free users - only shown if restaurant is not premium */}
+        {showAds && (
+          <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+        )}
         
         <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full max-w-screen-xl">
           <div className="flex flex-col lg:flex-row w-full gap-6">
-            {/* Sidebar advertisement (left side on larger screens) */}
-            <div className="lg:w-1/4 order-2 lg:order-1">
-              <MenuAdvertisement position="sidebar" />
-            </div>
+            {/* Sidebar advertisement (left side on larger screens) - only shown if restaurant is not premium */}
+            {showAds && (
+              <div className="lg:w-1/4 order-2 lg:order-1">
+                <MenuAdvertisement position="sidebar" />
+              </div>
+            )}
             
-            {/* Main menu content */}
-            <div className="lg:w-3/4 order-1 lg:order-2">
+            {/* Main menu content - takes full width when ads are not shown */}
+            <div className={`${showAds ? 'lg:w-3/4' : 'w-full'} order-1 lg:order-2`}>
               <CustomerMenuPreview 
                 restaurant={restaurant}
                 menuData={menu}
@@ -139,13 +163,17 @@ const ViewMenu = () => {
           </div>
         </div>
         
-        {/* Bottom advertisement from advertisement management system */}
-        <div className="w-full max-w-screen-md px-4 mt-6">
-          <MenuAdvertisement position="bottom" />
-        </div>
+        {/* Bottom advertisement from advertisement management system - only shown if restaurant is not premium */}
+        {showAds && (
+          <div className="w-full max-w-screen-md px-4 mt-6">
+            <MenuAdvertisement position="bottom" />
+          </div>
+        )}
         
-        {/* Bottom ad banner for free users */}
-        <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
+        {/* Bottom ad banner for free users - only shown if restaurant is not premium */}
+        {showAds && (
+          <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
+        )}
       </div>
       
       {/* Footer removed from customer view as requested */}
