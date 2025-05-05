@@ -27,6 +27,13 @@ const EditRestaurant = () => {
   const createRestaurantMutation = useMutation({
     mutationFn: async (restaurant: InsertRestaurant) => {
       const response = await apiRequest("POST", "/api/restaurants", restaurant);
+      
+      // Check if the response is not ok (e.g., we hit the restaurant limit)
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create restaurant");
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
@@ -47,9 +54,17 @@ const EditRestaurant = () => {
     },
     onError: (error) => {
       console.error("Restaurant creation error:", error);
+      
+      // Check if it's a limit error
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Failed to create restaurant. Please try again.";
+      
+      const isLimitError = errorMessage.includes("limit");
+      
       toast({
-        title: "Error",
-        description: "Failed to create restaurant. Please try again.",
+        title: isLimitError ? "Restaurant Limit Reached" : "Error",
+        description: errorMessage,
         variant: "destructive",
       });
     }
