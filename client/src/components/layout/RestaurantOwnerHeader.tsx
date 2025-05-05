@@ -50,11 +50,10 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
 
           {/* Desktop Navigation - Main Menu */}
           <nav className="hidden md:flex items-center space-x-6">
-            {/* Premium badge for paid users in desktop view */}
+            {/* Premium badge for paid users in desktop view (star icon only) */}
             {isPaid && (
               <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded inline-flex items-center">
-                <Star className="h-3 w-3 mr-1" fill="white" />
-                <span>{t("Premium")}</span>
+                <Star className="h-3 w-3" fill="white" />
               </div>
             )}
             
@@ -178,12 +177,11 @@ const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwne
                 {/* Mobile navigation */}
                 <nav className="flex-1 overflow-y-auto p-4 bg-white dark:bg-gray-900">
                   <div className="space-y-3">
-                    {/* Premium badge for paid users */}
+                    {/* Premium badge for paid users (star icon only) */}
                     {isPaid && (
                       <div className="py-2">
                         <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded inline-flex items-center">
-                          <Star className="h-3 w-3 mr-1" fill="white" />
-                          <span>{t("Premium")}</span>
+                          <Star className="h-3 w-3" fill="white" />
                         </div>
                       </div>
                     )}

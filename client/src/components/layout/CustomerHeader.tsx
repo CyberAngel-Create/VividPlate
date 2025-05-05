@@ -74,8 +74,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                   {isPaid ? (
                     <div className="flex items-center">
                       <div className="mr-2 text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md flex items-center">
-                        <Star className="h-3 w-3 mr-1" fill="white" />
-                        <span>{t("Premium")}</span>
+                        <Star className="h-3 w-3" fill="white" />
                       </div>
                     </div>
                   ) : (

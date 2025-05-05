@@ -763,7 +763,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Fallback: Try to execute a direct SQL query to get basic restaurant data
         try {
-          const { pool } = require('./db');
+          const { pool } = await import('./db');
           const result = await pool.query('SELECT id, user_id, name, description, cuisine, logo_url, banner_url FROM restaurants WHERE user_id = $1', [userId]);
           
           // Map results to match our expected schema
@@ -846,7 +846,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Fallback: Try to execute a direct SQL query to get basic restaurant data
         try {
-          const { pool } = require('./db');
+          const { pool } = await import('./db');
           const result = await pool.query('SELECT id, user_id, name, description, cuisine, logo_url, banner_url FROM restaurants WHERE id = $1', [restaurantId]);
           
           if (result.rows.length > 0) {
