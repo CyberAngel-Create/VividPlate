@@ -743,10 +743,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Restaurant routes
   app.get('/api/restaurants', isAuthenticated, async (req, res) => {
     try {
-      console.log("Fetching restaurants for user ID:", (req.user as any).id);
-      const restaurants = await storage.getRestaurantsByUserId((req.user as any).id);
-      console.log("Restaurants fetched successfully:", restaurants);
-      res.json(restaurants);
+      const userId = (req.user as any).id;
+      console.log("Fetching restaurants for user ID:", userId);
+      
+      // Check if user exists in the database
+      const user = await storage.getUser(userId);
+      if (!user) {
+        console.log(`User ${userId} not found in database`);
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Attempt to fetch restaurants with error handling for schema issues
+      let restaurants;
+      try {
+        restaurants = await storage.getRestaurantsByUserId(userId);
+        console.log("Restaurants fetched successfully:", restaurants);
+      } catch (fetchError) {
+        console.error("Error in first restaurant fetch attempt:", fetchError);
+        
+        // Fallback: Try to execute a direct SQL query to get basic restaurant data
+        try {
+          const { pool } = require('./db');
+          const result = await pool.query('SELECT id, user_id, name, description, cuisine, logo_url, banner_url FROM restaurants WHERE user_id = $1', [userId]);
+          
+          // Map results to match our expected schema
+          restaurants = result.rows.map(row => ({
+            id: row.id,
+            userId: row.user_id,
+            name: row.name,
+            description: row.description,
+            cuisine: row.cuisine,
+            logoUrl: row.logo_url,
+            bannerUrl: row.banner_url,
+            bannerUrls: [],  // Default empty array since column may be missing
+            themeSettings: {}, // Default empty object for theme settings
+            tags: []  // Default empty array for tags
+          }));
+          
+          console.log("Restaurants fetched with fallback method:", restaurants);
+        } catch (fallbackError) {
+          console.error("Error in fallback restaurant fetch:", fallbackError);
+          throw fallbackError; // Re-throw to be caught by outer catch
+        }
+      }
+      
+      // Return the restaurant data to the client
+      res.json(restaurants || []);
     } catch (error) {
       console.error("Error fetching restaurants:", error);
       res.status(500).json({ message: 'Server error', details: String(error) });
@@ -791,13 +833,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/restaurants/:restaurantId', async (req, res) => {
     try {
-      const restaurant = await storage.getRestaurant(parseInt(req.params.restaurantId));
+      const restaurantId = parseInt(req.params.restaurantId);
+      console.log(`Fetching restaurant with ID: ${restaurantId}`);
+      
+      // Attempt to fetch the restaurant with error handling for schema issues
+      let restaurant;
+      try {
+        restaurant = await storage.getRestaurant(restaurantId);
+        console.log(`Restaurant ${restaurantId} fetched successfully:`, restaurant);
+      } catch (fetchError) {
+        console.error(`Error in first restaurant fetch attempt for ID ${restaurantId}:`, fetchError);
+        
+        // Fallback: Try to execute a direct SQL query to get basic restaurant data
+        try {
+          const { pool } = require('./db');
+          const result = await pool.query('SELECT id, user_id, name, description, cuisine, logo_url, banner_url FROM restaurants WHERE id = $1', [restaurantId]);
+          
+          if (result.rows.length > 0) {
+            const row = result.rows[0];
+            // Map results to match our expected schema
+            restaurant = {
+              id: row.id,
+              userId: row.user_id,
+              name: row.name,
+              description: row.description,
+              cuisine: row.cuisine,
+              logoUrl: row.logo_url,
+              bannerUrl: row.banner_url,
+              bannerUrls: [],  // Default empty array since column may be missing
+              themeSettings: {
+                backgroundColor: "#ffffff",
+                textColor: "#000000",
+                headerColor: "#f5f5f5",
+                accentColor: "#4f46e5",
+                fontFamily: "Inter, sans-serif",
+                menuItemColor: "#333333",
+                menuDescriptionColor: "#666666",
+                menuPriceColor: "#111111"
+              },
+              tags: []  // Default empty array for tags
+            };
+            console.log(`Restaurant ${restaurantId} fetched with fallback method:`, restaurant);
+          }
+        } catch (fallbackError) {
+          console.error(`Error in fallback restaurant fetch for ID ${restaurantId}:`, fallbackError);
+        }
+      }
+      
       if (!restaurant) {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
+      
       res.json(restaurant);
     } catch (error) {
-      res.status(500).json({ message: 'Server error' });
+      console.error("Error fetching restaurant:", error);
+      res.status(500).json({ message: 'Server error', details: String(error) });
     }
   });
 
