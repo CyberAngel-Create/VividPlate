@@ -124,7 +124,7 @@ const EditRestaurant = () => {
               <TabsTrigger value="feedback">Customer Feedback</TabsTrigger>
             </TabsList>
             <TabsContent value="profile">
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
                 <RestaurantProfileForm 
                   restaurant={activeRestaurant}
                   onSubmit={handleSubmit}
@@ -132,7 +132,7 @@ const EditRestaurant = () => {
               </div>
             </TabsContent>
             <TabsContent value="logo">
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
                 <RestaurantLogoUpload
                   restaurantId={activeRestaurant.id}
                   currentLogoUrl={activeRestaurant.logoUrl || undefined}
@@ -143,7 +143,7 @@ const EditRestaurant = () => {
               </div>
             </TabsContent>
             <TabsContent value="banner">
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
                 <RestaurantBannerUpload
                   restaurantId={activeRestaurant.id}
                   currentBannerUrl={activeRestaurant.bannerUrl || undefined}
@@ -154,7 +154,7 @@ const EditRestaurant = () => {
               </div>
             </TabsContent>
             <TabsContent value="theme">
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
                 <RestaurantThemeEditor
                   restaurantId={activeRestaurant.id}
                   initialTheme={activeRestaurant.themeSettings as Record<string, any>}
@@ -165,13 +165,13 @@ const EditRestaurant = () => {
               </div>
             </TabsContent>
             <TabsContent value="feedback">
-              <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
                 <RestaurantFeedback restaurantId={activeRestaurant.id} isOwner={true} />
               </div>
             </TabsContent>
           </Tabs>
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
             <RestaurantProfileForm 
               restaurant={undefined}
               onSubmit={handleSubmit}
