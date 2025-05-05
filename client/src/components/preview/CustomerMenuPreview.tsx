@@ -171,8 +171,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       <div 
         className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden menu-preview-shadow"
         style={containerStyle}>
-        {/* Restaurant header with banner slideshow - fixed at the top */}
-        <div className="sticky top-0 z-10">
+        {/* Restaurant header with banner slideshow */}
+        <div className="relative">
           <div className="h-40 bg-gray-300 relative">
             {restaurant.bannerUrls && Array.isArray(restaurant.bannerUrls) && restaurant.bannerUrls.length > 0 ? (
               <BannerSlideshow 
@@ -199,8 +199,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           </div>
         </div>
         
-        {/* Menu Categories Tabs and Search - sticky under the banner */}
-        <div className="border-b dark:border-gray-700 sticky top-40 z-10 bg-white dark:bg-gray-900" style={headerContainerStyle}>
+        {/* Menu Categories Tabs and Search */}
+        <div className="border-b dark:border-gray-700" style={headerContainerStyle}>
           <div className="flex justify-between items-center px-4">
             <div className="flex overflow-x-auto py-2 space-x-4 flex-grow">
               <button 
