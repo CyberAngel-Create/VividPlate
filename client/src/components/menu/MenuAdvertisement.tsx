@@ -21,15 +21,27 @@ const MenuAdvertisement = ({ position, restaurantId }: MenuAdvertisementProps) =
   const { data: advertisement, isLoading } = useQuery<Advertisement>({
     queryKey: ["/api/advertisements", position, activeRestaurantId],
     queryFn: async ({ queryKey }) => {
-      const [_, pos, restId] = queryKey;
-      const url = new URL("/api/advertisements", window.location.origin);
-      url.searchParams.append("position", pos as string);
-      if (restId) {
-        url.searchParams.append("restaurantId", restId as string);
+      try {
+        const [_, pos, restId] = queryKey;
+        const url = new URL("/api/advertisements", window.location.origin);
+        url.searchParams.append("position", pos as string);
+        if (restId) {
+          url.searchParams.append("restaurantId", restId as string);
+        }
+        const response = await fetch(url.toString());
+        
+        // If the response is not OK, return null instead of throwing an error
+        // This prevents error toasts from appearing in the UI
+        if (!response.ok) {
+          console.log(`Advertisement not available for ${position} position (status: ${response.status})`);
+          return null;
+        }
+        
+        return response.json();
+      } catch (error) {
+        console.log(`Error fetching advertisement: ${error}`);
+        return null;
       }
-      const response = await fetch(url.toString());
-      if (!response.ok) throw new Error('Failed to fetch advertisement');
-      return response.json();
     },
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes

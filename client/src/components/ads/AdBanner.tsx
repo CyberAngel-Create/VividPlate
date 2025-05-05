@@ -22,24 +22,40 @@ const AdBanner: React.FC<AdBannerProps> = ({ format = 'horizontal', position, cl
   }
 
   useEffect(() => {
+    // Skip for paid users (double-check)
+    if (isPaid) return;
+    
+    let retryCount = 0;
+    const maxRetries = 5;
+    
     try {
       // Push ad to adsbygoogle when component mounts
       // Make sure we wait for the adsbygoogle array to be defined
       const pushAd = () => {
-        if (window.adsbygoogle) {
-          window.adsbygoogle.push({});
-        } else {
-          // If adsbygoogle is not available yet, retry after a delay
-          setTimeout(pushAd, 200);
+        try {
+          if (window.adsbygoogle) {
+            window.adsbygoogle.push({});
+          } else {
+            // If adsbygoogle is not available yet, retry after a delay with a limit
+            if (retryCount < maxRetries) {
+              retryCount++;
+              setTimeout(pushAd, 500);
+            } else {
+              console.log('AdSense not available after maximum retries');
+            }
+          }
+        } catch (innerError) {
+          console.log('AdSense push error (handled):', innerError);
         }
       };
       
       // Start the process
       pushAd();
     } catch (error) {
-      console.error('AdSense error:', error);
+      // This catch covers any errors in the outer scope
+      console.log('AdSense initialization error (handled):', error);
     }
-  }, []);
+  }, [isPaid]);
 
   // Determine ad dimensions based on format
   let adStyle: React.CSSProperties = {};

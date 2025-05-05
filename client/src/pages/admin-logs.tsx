@@ -84,7 +84,7 @@ const AdminLogs = () => {
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
           </div>
         ) : (
-          <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden dark:border dark:border-gray-700">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -100,14 +100,14 @@ const AdminLogs = () => {
               <TableBody>
                 {filteredLogs.length > 0 ? (
                   filteredLogs.map((log: any) => (
-                    <TableRow key={log.id}>
+                    <TableRow key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                       <TableCell>{log.id}</TableCell>
                       <TableCell>{log.createdAt ? format(new Date(log.createdAt), 'MMM dd, yyyy HH:mm:ss') : 'N/A'}</TableCell>
                       <TableCell>{log.adminUsername || log.adminId || 'N/A'}</TableCell>
                       <TableCell className="font-medium">{log.action}</TableCell>
                       <TableCell>{log.entityType}</TableCell>
                       <TableCell>{log.entityId || 'N/A'}</TableCell>
-                      <TableCell className="max-w-xs truncate">
+                      <TableCell className="max-w-xs truncate dark:text-gray-300">
                         {log.details ? JSON.stringify(log.details) : 'None'}
                       </TableCell>
                     </TableRow>

@@ -30,12 +30,23 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     placeholderData: null,
   });
 
-  // Determine if user has a paid subscription
-  const isPaid = Boolean(
-    subscription && 
-    subscription.isActive && 
-    subscription.tier !== "free"
-  );
+  // Determine if user has a paid subscription with multiple fallback checks
+  const isPaid = (() => {
+    // First check: If no user, definitely not paid
+    if (!user) return false;
+    
+    // Second check: If user object has subscription tier info directly
+    if (user.subscriptionTier && user.subscriptionTier !== "free") {
+      return true;
+    }
+    
+    // Third check: If we have subscription data from the API
+    return Boolean(
+      subscription && 
+      subscription.isActive && 
+      subscription.tier !== "free"
+    );
+  })();
 
   const value = {
     subscription: subscription || null,
