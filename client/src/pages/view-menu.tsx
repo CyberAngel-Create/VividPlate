@@ -111,11 +111,9 @@ const ViewMenu = () => {
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Customer header is now fixed at the top */}
-      <CustomerHeader isAuthenticated={isAuthenticated} onLogout={handleLogout} />
+      {/* Header removed as requested */}
       
-      {/* Main content with padding for fixed header */}
-      <div className="flex flex-col items-center flex-grow pt-16">
+      <div className="flex flex-col items-center flex-grow pt-4">
         {/* Top advertisement from advertisement management system */}
         <div className="w-full max-w-screen-md px-4">
           <MenuAdvertisement position="top" />

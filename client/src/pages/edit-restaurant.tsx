@@ -105,85 +105,82 @@ const EditRestaurant = () => {
       <RestaurantOwnerHeader onLogout={handleLogout} />
       {activeRestaurant && <TabNavigation />}
       
-      {/* Main content with padding for fixed header */}
-      <div className="pt-16 flex-grow">
-        <section className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">
-            {activeRestaurant ? "Restaurant Profile" : "Create Restaurant"}
-          </h1>
-          
-          {isLoadingRestaurant ? (
-            <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            </div>
-          ) : activeRestaurant ? (
-            <Tabs defaultValue="profile" className="w-full">
-              <TabsList>
-                <TabsTrigger value="profile">Profile</TabsTrigger>
-                <TabsTrigger value="logo">Logo</TabsTrigger>
-                <TabsTrigger value="banner">Banner</TabsTrigger>
-                <TabsTrigger value="theme">Theme</TabsTrigger>
-                <TabsTrigger value="feedback">Customer Feedback</TabsTrigger>
-              </TabsList>
-              <TabsContent value="profile">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
-                  <RestaurantProfileForm 
-                    restaurant={activeRestaurant}
-                    onSubmit={handleSubmit}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="logo">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
-                  <RestaurantLogoUpload
-                    restaurantId={activeRestaurant.id}
-                    currentLogoUrl={activeRestaurant.logoUrl || undefined}
-                    onSuccess={() => {
-                      refetchActiveRestaurant();
-                    }}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="banner">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
-                  <RestaurantBannerUpload
-                    restaurantId={activeRestaurant.id}
-                    currentBannerUrl={activeRestaurant.bannerUrl || undefined}
-                    currentBannerUrls={activeRestaurant.bannerUrls as string[] || undefined}
-                    onSuccess={(bannerUrl, bannerUrls) => {
-                      console.log("Banner upload success:", { bannerUrl, bannerUrls });
-                      refetchActiveRestaurant();
-                    }}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="theme">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
-                  <RestaurantThemeEditor
-                    restaurantId={activeRestaurant.id}
-                    initialTheme={activeRestaurant.themeSettings as Record<string, any>}
-                    onSuccess={() => {
-                      refetchActiveRestaurant();
-                    }}
-                  />
-                </div>
-              </TabsContent>
-              <TabsContent value="feedback">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
-                  <RestaurantFeedback restaurantId={activeRestaurant.id} isOwner={true} />
-                </div>
-              </TabsContent>
-            </Tabs>
-          ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
-              <RestaurantProfileForm 
-                restaurant={undefined}
-                onSubmit={handleSubmit}
-              />
-            </div>
-          )}
-        </section>
-      </div>
+      <section className="container mx-auto px-4 py-6">
+        <h1 className="text-2xl font-heading font-bold mb-6">
+          {activeRestaurant ? "Restaurant Profile" : "Create Restaurant"}
+        </h1>
+        
+        {isLoadingRestaurant ? (
+          <div className="flex justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : activeRestaurant ? (
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList>
+              <TabsTrigger value="profile">Profile</TabsTrigger>
+              <TabsTrigger value="logo">Logo</TabsTrigger>
+              <TabsTrigger value="banner">Banner</TabsTrigger>
+              <TabsTrigger value="theme">Theme</TabsTrigger>
+              <TabsTrigger value="feedback">Customer Feedback</TabsTrigger>
+            </TabsList>
+            <TabsContent value="profile">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
+                <RestaurantProfileForm 
+                  restaurant={activeRestaurant}
+                  onSubmit={handleSubmit}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="logo">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
+                <RestaurantLogoUpload
+                  restaurantId={activeRestaurant.id}
+                  currentLogoUrl={activeRestaurant.logoUrl || undefined}
+                  onSuccess={() => {
+                    refetchActiveRestaurant();
+                  }}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="banner">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
+                <RestaurantBannerUpload
+                  restaurantId={activeRestaurant.id}
+                  currentBannerUrl={activeRestaurant.bannerUrl || undefined}
+                  currentBannerUrls={activeRestaurant.bannerUrls as string[] || undefined}
+                  onSuccess={(bannerUrl, bannerUrls) => {
+                    console.log("Banner upload success:", { bannerUrl, bannerUrls });
+                    refetchActiveRestaurant();
+                  }}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="theme">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
+                <RestaurantThemeEditor
+                  restaurantId={activeRestaurant.id}
+                  initialTheme={activeRestaurant.themeSettings as Record<string, any>}
+                  onSuccess={() => {
+                    refetchActiveRestaurant();
+                  }}
+                />
+              </div>
+            </TabsContent>
+            <TabsContent value="feedback">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
+                <RestaurantFeedback restaurantId={activeRestaurant.id} isOwner={true} />
+              </div>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 dark:border dark:border-gray-700">
+            <RestaurantProfileForm 
+              restaurant={undefined}
+              onSubmit={handleSubmit}
+            />
+          </div>
+        )}
+      </section>
       
       <RestaurantOwnerFooter />
     </div>

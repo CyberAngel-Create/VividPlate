@@ -239,34 +239,31 @@ const CreateMenu = () => {
       <RestaurantOwnerHeader onLogout={handleLogout} />
       <TabNavigation />
       
-      {/* Main content area with padding for fixed header */}
-      <div className="pt-16 flex-grow">
-        <section className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Create Your Menu</h1>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <div className="lg:col-span-1">
-              <MenuCategoriesList 
-                categories={categories}
-                menuItemCounts={menuItemCounts}
-                selectedCategoryId={selectedCategoryId}
-                onSelectCategory={handleSelectCategory}
-                onAddCategory={handleAddCategory}
-              />
-            </div>
-            
-            <div className="lg:col-span-3">
-              <MenuItemsList 
-                category={selectedCategory}
-                items={menuItems}
-                onAddItem={handleAddItem}
-                onEditItem={handleEditItem}
-                onDeleteItem={handleDeleteItem}
-              />
-            </div>
+      <section className="container mx-auto px-4 py-6">
+        <h1 className="text-2xl font-heading font-bold mb-6">Create Your Menu</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-1">
+            <MenuCategoriesList 
+              categories={categories}
+              menuItemCounts={menuItemCounts}
+              selectedCategoryId={selectedCategoryId}
+              onSelectCategory={handleSelectCategory}
+              onAddCategory={handleAddCategory}
+            />
           </div>
-        </section>
-      </div>
+          
+          <div className="lg:col-span-3">
+            <MenuItemsList 
+              category={selectedCategory}
+              items={menuItems}
+              onAddItem={handleAddItem}
+              onEditItem={handleEditItem}
+              onDeleteItem={handleDeleteItem}
+            />
+          </div>
+        </div>
+      </section>
       
       <RestaurantOwnerFooter />
     </div>
