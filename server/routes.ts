@@ -2228,33 +2228,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get source filter if provided
       const source = req.query.source as string | undefined;
       
-      // Get counts
-      const totalRegistrationsInRange = await storage.countRegistrationsInDateRange(startDate, endDateWithTime);
-      
-      // Get counts by source if no specific source filter
-      let registrationsBySource = {};
-      if (!source) {
-        const websiteCount = await storage.countRegistrationsBySource('website');
-        const mobileCount = await storage.countRegistrationsBySource('mobile');
-        const referralCount = await storage.countRegistrationsBySource('referral');
-        const otherCount = await storage.countRegistrationsBySource('other');
+      try {
+        // Get counts
+        const totalRegistrationsInRange = await storage.countRegistrationsInDateRange(startDate, endDateWithTime);
         
-        registrationsBySource = {
-          website: websiteCount,
-          mobile: mobileCount,
-          referral: referralCount,
-          other: otherCount
-        };
-      }
-      
-      res.json({
-        totalRegistrationsInRange,
-        registrationsBySource: source ? { [source]: await storage.countRegistrationsBySource(source) } : registrationsBySource,
-        dateRange: {
-          startDate: startDate.toISOString(),
-          endDate: endDateWithTime.toISOString()
+        // Get counts by source if no specific source filter
+        let registrationsBySource = {};
+        if (!source) {
+          const websiteCount = await storage.countRegistrationsBySource('website');
+          const mobileCount = await storage.countRegistrationsBySource('mobile');
+          const referralCount = await storage.countRegistrationsBySource('referral');
+          const otherCount = await storage.countRegistrationsBySource('other');
+          
+          registrationsBySource = {
+            website: websiteCount,
+            mobile: mobileCount,
+            referral: referralCount,
+            other: otherCount
+          };
         }
-      });
+        
+        res.json({
+          totalRegistrationsInRange,
+          registrationsBySource: source ? { [source]: await storage.countRegistrationsBySource(source) } : registrationsBySource,
+          dateRange: {
+            startDate: startDate.toISOString(),
+            endDate: endDateWithTime.toISOString()
+          }
+        });
+      } catch (analyticsError) {
+        console.error('Error running analytics queries:', analyticsError);
+        
+        // Handle the specific case of missing tables with a more user-friendly message
+        if (analyticsError.message && analyticsError.message.includes('relation "registration_analytics" does not exist')) {
+          return res.status(503).json({ 
+            message: 'Registration analytics are being set up. Please try again later or run database migrations.',
+            error: 'TABLE_NOT_CREATED_YET',
+            analytics: {
+              totalRegistrationsInRange: 0,
+              registrationsBySource: {
+                website: 0,
+                mobile: 0,
+                referral: 0,
+                other: 0
+              },
+              dateRange: {
+                startDate: startDate.toISOString(),
+                endDate: endDateWithTime.toISOString()
+              }
+            }
+          });
+        }
+        
+        // For other errors, return a generic error
+        return res.status(500).json({ message: 'Error processing analytics data' });
+      }
     } catch (error) {
       console.error('Error fetching registration analytics:', error);
       res.status(500).json({ message: 'Failed to fetch registration analytics' });
@@ -2281,7 +2309,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 7);
       
-      const recentRegistrations = await storage.countRegistrationsInDateRange(startDate, endDate);
+      let recentRegistrations = 0;
+      try {
+        recentRegistrations = await storage.countRegistrationsInDateRange(startDate, endDate);
+      } catch (analyticsError) {
+        console.error('Error fetching registration analytics (table may not exist yet):', analyticsError);
+        // Continue without analytics data if the table doesn't exist yet
+      }
       
       res.json({
         totalUsers,
