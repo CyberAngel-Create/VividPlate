@@ -2208,7 +2208,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin routes
+  // Registration analytics routes
+  app.get('/api/admin/registration-analytics', isAdmin, async (req, res) => {
+    try {
+      // Get date range from query parameters or default to last 30 days
+      const endDate = new Date();
+      const defaultStartDate = new Date();
+      defaultStartDate.setDate(defaultStartDate.getDate() - 30);
+      
+      const startDateParam = req.query.startDate ? new Date(req.query.startDate as string) : defaultStartDate;
+      const endDateParam = req.query.endDate ? new Date(req.query.endDate as string) : endDate;
+      
+      // Ensure valid dates
+      const startDate = !isNaN(startDateParam.getTime()) ? startDateParam : defaultStartDate;
+      const endDateWithTime = !isNaN(endDateParam.getTime()) ? endDateParam : endDate;
+      // Set end date to end of day
+      endDateWithTime.setHours(23, 59, 59, 999);
+      
+      // Get source filter if provided
+      const source = req.query.source as string | undefined;
+      
+      // Get counts
+      const totalRegistrationsInRange = await storage.countRegistrationsInDateRange(startDate, endDateWithTime);
+      
+      // Get counts by source if no specific source filter
+      let registrationsBySource = {};
+      if (!source) {
+        const websiteCount = await storage.countRegistrationsBySource('website');
+        const mobileCount = await storage.countRegistrationsBySource('mobile');
+        const referralCount = await storage.countRegistrationsBySource('referral');
+        const otherCount = await storage.countRegistrationsBySource('other');
+        
+        registrationsBySource = {
+          website: websiteCount,
+          mobile: mobileCount,
+          referral: referralCount,
+          other: otherCount
+        };
+      }
+      
+      res.json({
+        totalRegistrationsInRange,
+        registrationsBySource: source ? { [source]: await storage.countRegistrationsBySource(source) } : registrationsBySource,
+        dateRange: {
+          startDate: startDate.toISOString(),
+          endDate: endDateWithTime.toISOString()
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching registration analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch registration analytics' });
+    }
+  });
+
+// Admin routes
   app.get('/api/admin/dashboard', isAdmin, async (req, res) => {
     try {
       const totalUsers = await storage.countUsers();
@@ -2223,12 +2276,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return rest;
       });
 
+      // Get registration analytics data for the last 7 days
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 7);
+      
+      const recentRegistrations = await storage.countRegistrationsInDateRange(startDate, endDate);
+      
       res.json({
         totalUsers,
         activeUsers,
         freeUsers,
         paidUsers,
-        recentUsers: sanitizedUsers
+        recentUsers: sanitizedUsers,
+        recentRegistrations,
+        registrationPeriod: {
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString()
+        }
       });
     } catch (error) {
       console.error('Error fetching admin dashboard data:', error);
