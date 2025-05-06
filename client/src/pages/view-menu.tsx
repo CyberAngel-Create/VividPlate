@@ -20,6 +20,7 @@ interface CategoryWithItems extends MenuCategory {
 
 interface RestaurantWithSubscription extends Restaurant {
   subscriptionTier?: string;
+  isPremium?: boolean;
 }
 
 interface MenuData {
@@ -73,9 +74,11 @@ const ViewMenu = () => {
     if (restaurantId) {
       const recordView = async () => {
         try {
-          await apiRequest("POST", `/api/restaurants/${restaurantId}/views`, { source });
+          console.log(`Recording view for restaurant ${restaurantId} from source ${source}`);
+          const response = await apiRequest("POST", `/api/restaurants/${restaurantId}/views`, { source });
+          console.log("View recorded successfully:", response);
         } catch (error) {
-          console.error("Failed to record menu view", error);
+          console.error("Failed to record menu view:", error);
         }
       };
       

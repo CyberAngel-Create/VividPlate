@@ -1483,18 +1483,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Menu view routes (for tracking)
   app.post('/api/restaurants/:restaurantId/views', async (req, res) => {
     try {
+      console.log(`Recording view for restaurant ID: ${req.params.restaurantId}, source: ${req.body.source}`);
+      
+      // Ensure restaurantId is a valid number
+      const restaurantId = parseInt(req.params.restaurantId);
+      if (isNaN(restaurantId)) {
+        return res.status(400).json({ message: 'Invalid restaurant ID' });
+      }
+      
+      // Check if restaurant exists
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
       const viewData = insertMenuViewSchema.parse({
         ...req.body,
-        restaurantId: parseInt(req.params.restaurantId)
+        restaurantId: restaurantId
       });
       
       const view = await storage.createMenuView(viewData);
+      console.log(`View recorded successfully for restaurant ${restaurantId}`);
       res.status(201).json(view);
     } catch (error) {
+      console.error('Error recording menu view:', error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: 'Validation error', errors: error.errors });
       } else {
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Server error', error: error.message });
       }
     }
   });
