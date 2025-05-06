@@ -137,6 +137,33 @@ export const insertMenuViewSchema = createInsertSchema(menuViews).pick({
   source: true,
 });
 
+// Registration analytics tracking
+export const registrationAnalytics = pgTable("registration_analytics", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  registeredAt: timestamp("registered_at").defaultNow(),
+  source: text("source"), // e.g., "website", "app", "referral"
+  utmSource: text("utm_source"), // Marketing source
+  utmMedium: text("utm_medium"), // Marketing medium
+  utmCampaign: text("utm_campaign"), // Marketing campaign
+  referralCode: text("referral_code"),
+  device: text("device"), // e.g., "mobile", "desktop", "tablet"
+  browser: text("browser"), // Browser information
+  country: text("country"), // Country based on IP
+});
+
+export const insertRegistrationAnalyticsSchema = createInsertSchema(registrationAnalytics).pick({
+  userId: true,
+  source: true,
+  utmSource: true,
+  utmMedium: true,
+  utmCampaign: true,
+  referralCode: true,
+  device: true,
+  browser: true,
+  country: true,
+});
+
 // Subscriptions table
 export const subscriptions = pgTable("subscriptions", {
   id: serial("id").primaryKey(),
@@ -239,6 +266,9 @@ export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 
 export type MenuView = typeof menuViews.$inferSelect;
 export type InsertMenuView = z.infer<typeof insertMenuViewSchema>;
+
+export type RegistrationAnalytics = typeof registrationAnalytics.$inferSelect;
+export type InsertRegistrationAnalytics = z.infer<typeof insertRegistrationAnalyticsSchema>;
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;

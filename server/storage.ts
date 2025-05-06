@@ -4,6 +4,7 @@ import {
   menuCategories, MenuCategory, InsertMenuCategory,
   menuItems, MenuItem, InsertMenuItem,
   menuViews, MenuView, InsertMenuView,
+  registrationAnalytics, RegistrationAnalytics, InsertRegistrationAnalytics,
   subscriptions, Subscription, InsertSubscription,
   payments, Payment, InsertPayment,
   feedbacks, Feedback, InsertFeedback,
@@ -80,6 +81,12 @@ export interface IStorage {
   getMenuViewsByRestaurantId(restaurantId: number): Promise<MenuView[]>;
   countMenuViewsByRestaurantId(restaurantId: number): Promise<number>;
   createMenuView(view: InsertMenuView): Promise<MenuView>;
+  
+  // Registration analytics operations
+  createRegistrationAnalytics(analytics: InsertRegistrationAnalytics): Promise<RegistrationAnalytics>;
+  getRegistrationAnalyticsByUserId(userId: number): Promise<RegistrationAnalytics | undefined>;
+  countRegistrationsInDateRange(startDate: Date, endDate: Date): Promise<number>;
+  countRegistrationsBySource(source: string): Promise<number>;
 
   // Stats operations
   getMenuItemCountByRestaurantId(restaurantId: number): Promise<number>;
@@ -131,6 +138,7 @@ export class MemStorage implements IStorage {
   private menuCategories: Map<number, MenuCategory>;
   private menuItems: Map<number, MenuItem>;
   private menuViews: Map<number, MenuView>;
+  private registrationAnalytics: Map<number, RegistrationAnalytics>;
   private dietaryPreferences: Map<number, DietaryPreference>;
   private subscriptions: Map<number, Subscription>;
   private payments: Map<number, Payment>;
@@ -146,6 +154,7 @@ export class MemStorage implements IStorage {
     menuCategories: number;
     menuItems: number;
     menuViews: number;
+    registrationAnalytics: number;
     dietaryPreferences: number;
     subscriptions: number;
     payments: number;
