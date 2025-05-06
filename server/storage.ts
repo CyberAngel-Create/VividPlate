@@ -170,6 +170,7 @@ export class MemStorage implements IStorage {
     this.menuCategories = new Map();
     this.menuItems = new Map();
     this.menuViews = new Map();
+    this.registrationAnalytics = new Map();
     this.dietaryPreferences = new Map();
     this.subscriptions = new Map();
     this.payments = new Map();
@@ -191,6 +192,7 @@ export class MemStorage implements IStorage {
       menuCategories: 1,
       menuItems: 1,
       menuViews: 1,
+      registrationAnalytics: 1,
       dietaryPreferences: 1,
       subscriptions: 1,
       payments: 1,
@@ -503,6 +505,40 @@ export class MemStorage implements IStorage {
     const view: MenuView = { ...insertView, id, viewedAt };
     this.menuViews.set(id, view);
     return view;
+  }
+
+  // Registration analytics operations
+  async createRegistrationAnalytics(insertAnalytics: InsertRegistrationAnalytics): Promise<RegistrationAnalytics> {
+    const id = this.currentIds.registrationAnalytics++;
+    const registeredAt = new Date();
+    const analytics: RegistrationAnalytics = { 
+      ...insertAnalytics, 
+      id, 
+      registeredAt 
+    };
+    this.registrationAnalytics.set(id, analytics);
+    return analytics;
+  }
+
+  async getRegistrationAnalyticsByUserId(userId: number): Promise<RegistrationAnalytics | undefined> {
+    return Array.from(this.registrationAnalytics.values()).find(
+      (analytics) => analytics.userId === userId
+    );
+  }
+
+  async countRegistrationsInDateRange(startDate: Date, endDate: Date): Promise<number> {
+    return Array.from(this.registrationAnalytics.values()).filter(
+      (analytics) => {
+        const registeredAt = new Date(analytics.registeredAt);
+        return registeredAt >= startDate && registeredAt <= endDate;
+      }
+    ).length;
+  }
+
+  async countRegistrationsBySource(source: string): Promise<number> {
+    return Array.from(this.registrationAnalytics.values()).filter(
+      (analytics) => analytics.source === source
+    ).length;
   }
 
   // Stats operations
@@ -950,6 +986,44 @@ export class MemStorage implements IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Registration analytics operations
+  async createRegistrationAnalytics(analytics: InsertRegistrationAnalytics): Promise<RegistrationAnalytics> {
+    const [result] = await db
+      .insert(registrationAnalytics)
+      .values(analytics)
+      .returning();
+    return result;
+  }
+
+  async getRegistrationAnalyticsByUserId(userId: number): Promise<RegistrationAnalytics | undefined> {
+    const [result] = await db
+      .select()
+      .from(registrationAnalytics)
+      .where(eq(registrationAnalytics.userId, userId));
+    return result;
+  }
+
+  async countRegistrationsInDateRange(startDate: Date, endDate: Date): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(registrationAnalytics)
+      .where(
+        and(
+          gte(registrationAnalytics.registeredAt, startDate),
+          lte(registrationAnalytics.registeredAt, endDate)
+        )
+      );
+    return result[0]?.count || 0;
+  }
+
+  async countRegistrationsBySource(source: string): Promise<number> {
+    const result = await db
+      .select({ count: count() })
+      .from(registrationAnalytics)
+      .where(eq(registrationAnalytics.source, source));
+    return result[0]?.count || 0;
+  }
+  
   // Pricing plan operations
   async getAllPricingPlans(): Promise<PricingPlan[]> {
     return await db.select().from(pricingPlans);

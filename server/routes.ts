@@ -399,7 +399,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Hash the password using bcrypt before storing it
       userData.password = await bcrypt.hash(userData.password, 10);
       
+      // Create the user
       const user = await storage.createUser(userData);
+      
+      // Track registration analytics
+      try {
+        const userAgent = req.headers['user-agent'] || '';
+        let device = 'unknown';
+        if (/mobile/i.test(userAgent)) device = 'mobile';
+        else if (/tablet/i.test(userAgent)) device = 'tablet';
+        else if (/windows|macintosh|linux/i.test(userAgent)) device = 'desktop';
+        
+        let browser = 'unknown';
+        if (/firefox/i.test(userAgent)) browser = 'firefox';
+        else if (/chrome/i.test(userAgent)) browser = 'chrome';
+        else if (/safari/i.test(userAgent)) browser = 'safari';
+        else if (/edge/i.test(userAgent)) browser = 'edge';
+        else if (/opera/i.test(userAgent)) browser = 'opera';
+        
+        // Get UTM parameters if provided in the request
+        const { utmSource, utmMedium, utmCampaign, referralCode, source } = req.body;
+        
+        await storage.createRegistrationAnalytics({
+          userId: user.id,
+          source: source || 'website',
+          utmSource: utmSource || null,
+          utmMedium: utmMedium || null,
+          utmCampaign: utmCampaign || null,
+          referralCode: referralCode || null,
+          device,
+          browser,
+          country: req.ip ? req.ip.split(':').pop() || 'unknown' : 'unknown'
+        });
+        
+        console.log(`Registration analytics tracked for user ID: ${user.id}`);
+      } catch (analyticsError) {
+        // Log but don't fail the registration if analytics tracking fails
+        console.error('Failed to track registration analytics:', analyticsError);
+      }
       
       // Don't return the password
       const { password, ...userWithoutPassword } = user;
@@ -409,6 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (error instanceof z.ZodError) {
         res.status(400).json({ message: 'Validation error', errors: error.errors });
       } else {
+        console.error('Registration error:', error);
         res.status(500).json({ message: 'Server error' });
       }
     }
