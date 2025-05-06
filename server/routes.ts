@@ -2668,12 +2668,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/admin/advertisements', isAdmin, async (req, res) => {
     try {
-      const adData = { ...req.body, createdBy: req.user.id };
+      // Add additional server-side validation for required fields
+      if (!req.body.title) {
+        return res.status(400).json({ message: 'Title is required' });
+      }
+      
+      // Log for debugging
+      console.log('Creating advertisement with data:', {
+        requestBody: req.body,
+        user: req.user
+      });
+      
+      // Ensure createdBy is set
+      const adData = { 
+        ...req.body, 
+        createdBy: (req.user as any).id,
+        createdAt: new Date()
+      };
+      
       const newAd = await storage.createAdvertisement(adData);
+      console.log('Advertisement created successfully:', newAd);
       res.status(201).json(newAd);
     } catch (error) {
       console.error('Error creating advertisement:', error);
-      res.status(500).json({ message: 'Failed to create advertisement' });
+      res.status(500).json({ message: 'Failed to create advertisement', error: String(error) });
     }
   });
 

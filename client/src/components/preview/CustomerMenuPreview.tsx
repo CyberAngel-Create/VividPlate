@@ -127,7 +127,21 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     menuPriceColor: "#111111"
   };
   
-  const theme = (restaurant.themeSettings as Record<string, string>) || defaultTheme;
+  // Parse theme settings from JSON string if necessary or use the provided object
+  let themeSettings = defaultTheme;
+  try {
+    if (restaurant.themeSettings) {
+      if (typeof restaurant.themeSettings === 'string') {
+        themeSettings = JSON.parse(restaurant.themeSettings);
+      } else if (typeof restaurant.themeSettings === 'object') {
+        themeSettings = restaurant.themeSettings as Record<string, string>;
+      }
+    }
+  } catch (e) {
+    console.error('Error parsing theme settings:', e);
+  }
+  
+  const theme = themeSettings;
 
   // Collect all menu items for search functionality
   const allMenuItems = useMemo(() => {
