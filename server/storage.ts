@@ -80,6 +80,7 @@ export interface IStorage {
   // Menu view operations
   getMenuViewsByRestaurantId(restaurantId: number): Promise<MenuView[]>;
   countMenuViewsByRestaurantId(restaurantId: number): Promise<number>;
+  countMenuViewsInDateRange(startDate: Date, endDate: Date): Promise<number>;
   createMenuView(view: InsertMenuView): Promise<MenuView>;
   
   // Registration analytics operations
@@ -497,6 +498,14 @@ export class MemStorage implements IStorage {
 
   async countMenuViewsByRestaurantId(restaurantId: number): Promise<number> {
     return (await this.getMenuViewsByRestaurantId(restaurantId)).length;
+  }
+  
+  async countMenuViewsInDateRange(startDate: Date, endDate: Date): Promise<number> {
+    return Array.from(this.menuViews.values())
+      .filter(view => {
+        const viewDate = new Date(view.viewedAt);
+        return viewDate >= startDate && viewDate <= endDate;
+      }).length;
   }
 
   async createMenuView(insertView: InsertMenuView): Promise<MenuView> {
@@ -1553,6 +1562,23 @@ export class DatabaseStorage implements IStorage {
       .from(menuViews)
       .where(eq(menuViews.restaurantId, restaurantId));
     return result.count;
+  }
+  
+  async countMenuViewsInDateRange(startDate: Date, endDate: Date): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() })
+        .from(menuViews)
+        .where(
+          and(
+            gte(menuViews.viewedAt, startDate),
+            lte(menuViews.viewedAt, endDate)
+          )
+        );
+      return result.count || 0;
+    } catch (error) {
+      console.error('Error counting menu views in date range:', error);
+      return 0;
+    }
   }
 
   async createMenuView(insertView: InsertMenuView): Promise<MenuView> {
