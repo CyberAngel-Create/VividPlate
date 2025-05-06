@@ -8,6 +8,8 @@ import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import CompactSearch from "@/components/ui/compact-search";
 import MenuItemDietaryOverlay from "@/components/dietary/MenuItemDietaryOverlay";
+import PersonalizedDietaryOverlay from "@/components/dietary/PersonalizedDietaryOverlay";
+import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 
 // Banner slideshow component
 interface BannerSlideshowProps {
@@ -181,7 +183,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   };
 
   return (
-    <>
+    <DietaryPreferencesProvider>
       <div 
         className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden menu-preview-shadow"
         style={containerStyle}>
@@ -250,6 +252,16 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             </div>
           </div>
         </div>
+        
+        {/* Personalized Dietary Overlay */}
+        {!previewMode && allMenuItems.length > 0 && (
+          <div className="p-4 pb-0">
+            <PersonalizedDietaryOverlay 
+              restaurantId={restaurant.id} 
+              menuItems={allMenuItems}
+            />
+          </div>
+        )}
         
         {/* Compact Search Component */}
         {allMenuItems.length > 0 && (
@@ -409,7 +421,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           </div>
         )}
       </div>
-    </>
+    </DietaryPreferencesProvider>
   );
 };
 
