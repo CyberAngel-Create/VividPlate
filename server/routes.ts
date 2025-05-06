@@ -2715,12 +2715,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: req.user
       });
       
-      // Ensure createdBy is set
-      const adData = { 
+      // Process dates correctly
+      let adData = { 
         ...req.body, 
-        createdBy: (req.user as any).id,
-        createdAt: new Date()
+        createdBy: (req.user as any).id
       };
+      
+      // Convert date strings to Date objects
+      if (adData.startDate && typeof adData.startDate === 'string') {
+        adData.startDate = new Date(adData.startDate);
+      }
+      
+      if (adData.endDate && typeof adData.endDate === 'string') {
+        adData.endDate = new Date(adData.endDate);
+      }
       
       const newAd = await storage.createAdvertisement(adData);
       console.log('Advertisement created successfully:', newAd);
@@ -2734,7 +2742,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.patch('/api/admin/advertisements/:id', isAdmin, async (req, res) => {
     try {
       const { id } = req.params;
-      const adData = req.body;
+      let adData = { ...req.body };
+      
+      // Process dates correctly
+      if (adData.startDate && typeof adData.startDate === 'string') {
+        adData.startDate = new Date(adData.startDate);
+      }
+      
+      if (adData.endDate && typeof adData.endDate === 'string') {
+        adData.endDate = new Date(adData.endDate);
+      }
+      
       const updatedAd = await storage.updateAdvertisement(parseInt(id), adData);
       if (!updatedAd) {
         return res.status(404).json({ message: 'Advertisement not found' });

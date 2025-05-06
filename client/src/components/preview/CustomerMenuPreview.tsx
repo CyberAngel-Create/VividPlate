@@ -132,9 +132,9 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   try {
     if (restaurant.themeSettings) {
       if (typeof restaurant.themeSettings === 'string') {
-        themeSettings = JSON.parse(restaurant.themeSettings);
+        themeSettings = { ...defaultTheme, ...JSON.parse(restaurant.themeSettings) };
       } else if (typeof restaurant.themeSettings === 'object') {
-        themeSettings = restaurant.themeSettings as Record<string, string>;
+        themeSettings = { ...defaultTheme, ...restaurant.themeSettings as Record<string, string> };
       }
     }
   } catch (e) {
