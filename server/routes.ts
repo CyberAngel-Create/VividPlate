@@ -2304,16 +2304,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return rest;
       });
 
-      // Get registration analytics data for the last 7 days
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7);
+      // Get registration analytics data for different time periods
+      const now = new Date();
       
-      let recentRegistrations = 0;
+      // Time periods
+      const oneDayAgo = new Date(now);
+      oneDayAgo.setDate(now.getDate() - 1);
+      
+      const oneWeekAgo = new Date(now);
+      oneWeekAgo.setDate(now.getDate() - 7);
+      
+      const oneMonthAgo = new Date(now);
+      oneMonthAgo.setDate(now.getDate() - 30);
+      
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setDate(now.getDate() - 365);
+      
+      // Initialize registration stats
+      const registrationStats = {
+        daily: 0,
+        weekly: 0,
+        monthly: 0,
+        yearly: 0
+      };
+      
+      const viewStats = {
+        daily: 0,
+        weekly: 0,
+        monthly: 0,
+        yearly: 0
+      };
+      
       try {
-        recentRegistrations = await storage.countRegistrationsInDateRange(startDate, endDate);
+        // Get registration analytics
+        registrationStats.daily = await storage.countRegistrationsInDateRange(oneDayAgo, now);
+        registrationStats.weekly = await storage.countRegistrationsInDateRange(oneWeekAgo, now);
+        registrationStats.monthly = await storage.countRegistrationsInDateRange(oneMonthAgo, now);
+        registrationStats.yearly = await storage.countRegistrationsInDateRange(oneYearAgo, now);
+        
+        // Get view analytics
+        viewStats.daily = await storage.countMenuViewsInDateRange(oneDayAgo, now);
+        viewStats.weekly = await storage.countMenuViewsInDateRange(oneWeekAgo, now);
+        viewStats.monthly = await storage.countMenuViewsInDateRange(oneMonthAgo, now);
+        viewStats.yearly = await storage.countMenuViewsInDateRange(oneYearAgo, now);
       } catch (analyticsError) {
-        console.error('Error fetching registration analytics (table may not exist yet):', analyticsError);
+        console.error('Error fetching analytics data (table may not exist yet):', analyticsError);
         // Continue without analytics data if the table doesn't exist yet
       }
       
@@ -2323,10 +2358,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         freeUsers,
         paidUsers,
         recentUsers: sanitizedUsers,
-        recentRegistrations,
+        registrationStats,
+        viewStats,
         registrationPeriod: {
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString()
+          startDate: oneWeekAgo.toISOString(),
+          endDate: now.toISOString()
         }
       });
     } catch (error) {
