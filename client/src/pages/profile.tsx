@@ -41,13 +41,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 const ProfilePage = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, logoutMutation } = useAuth();
   const { toast } = useToast();
   const { t } = useTranslation();
   const { subscription, isPaid } = useSubscription();
   const [isUpdating, setIsUpdating] = useState(false);
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
   
   // Define the profile update schema
   const profileUpdateSchema = z.object({
@@ -157,8 +156,6 @@ const ProfilePage = () => {
   };
   
   // Handle logout
-  const { logoutMutation } = useAuth();
-  
   const handleLogout = () => {
     logoutMutation.mutate();
   };
@@ -176,26 +173,13 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <CustomerHeader 
-        isAuthenticated={isAuthenticated}
-        onLogout={handleLogout}
-      />
-      
-      <div className="container max-w-4xl mx-auto py-8 px-4 flex-1">
+    <RestaurantOwnerLayout>
+      <div className="px-4 py-6">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold">{t("Profile Management")}</h1>
+          <h1 className="text-2xl font-heading font-bold">{t("Profile Management")}</h1>
           
           {isPaid && (
-            <div className="flex items-center rounded-xl bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-4 py-2">
-              <div className="relative">
-                <Star className="h-5 w-5 text-white" fill="white" />
-                <Star className="h-5 w-5 text-white absolute -top-1 -right-1 rotate-45" fill="white" />
-                <Star className="h-5 w-5 text-white absolute -bottom-1 -right-1 rotate-90" fill="white" />
-                <Star className="h-5 w-5 text-white absolute -bottom-1 -left-1 rotate-180" fill="white" />
-              </div>
-              <span className="ml-6 font-bold">{t("Premium Member")}</span>
-            </div>
+            <PremiumBadge size="md" />
           )}
         </div>
       
@@ -381,9 +365,7 @@ const ProfilePage = () => {
           </Card>
         </div>
       </div>
-      
-      <Footer />
-    </div>
+    </RestaurantOwnerLayout>
   );
 };
 

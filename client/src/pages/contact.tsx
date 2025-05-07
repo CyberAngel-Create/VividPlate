@@ -3,8 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useToast } from "@/hooks/use-toast";
-import CustomerHeader from "@/components/layout/CustomerHeader";
-import Footer from "@/components/layout/Footer";
+import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Form, 
@@ -104,18 +103,13 @@ const Contact = () => {
   };
   
   return (
-    <div className="flex flex-col min-h-screen">
-      <CustomerHeader 
-        isAuthenticated={isAuthenticated}
-        onLogout={handleLogout}
-      />
-      
-      <section className="container px-4 py-12 mx-auto flex-grow">
+    <RestaurantOwnerLayout>
+      <section className="px-4 py-6">
         <div className="max-w-3xl mx-auto mb-12 text-center">
-          <h1 className="text-3xl md:text-4xl font-heading font-bold mb-4">
+          <h1 className="text-2xl font-heading font-bold mb-4">
             Get in Touch
           </h1>
-          <p className="text-lg text-gray-600 max-w-xl mx-auto">
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-xl mx-auto">
             Have questions about our platform? Need help with your digital menu? 
             Our team is here to assist you.
           </p>
@@ -132,7 +126,7 @@ const Contact = () => {
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-sm font-medium">Location</h3>
-                      <p className="text-sm text-gray-600 break-words">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
                         Ethiopia, Addis Abeba
                       </p>
                     </div>
@@ -144,7 +138,7 @@ const Contact = () => {
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-sm font-medium">Email</h3>
-                      <p className="text-sm text-gray-600 break-words">menumate.spp@gmail.com</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 break-words">menumate.spp@gmail.com</p>
                     </div>
                   </div>
                   
@@ -154,7 +148,7 @@ const Contact = () => {
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-sm font-medium">Phone</h3>
-                      <p className="text-sm text-gray-600 break-words">+251-913-690-687</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 break-words">+251-913-690-687</p>
                     </div>
                   </div>
                   
@@ -164,7 +158,7 @@ const Contact = () => {
                     </div>
                     <div className="min-w-0">
                       <h3 className="text-sm font-medium">Business Hours</h3>
-                      <p className="text-sm text-gray-600 break-words">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 break-words">
                         Monday-Friday: 9:00 AM - 6:00 PM<br />
                         Saturday: 9:00 AM - 1:00 PM
                       </p>
@@ -272,9 +266,7 @@ const Contact = () => {
           </div>
         </div>
       </section>
-      
-      <Footer />
-    </div>
+    </RestaurantOwnerLayout>
   );
 };
 
