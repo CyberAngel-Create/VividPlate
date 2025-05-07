@@ -222,10 +222,13 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               <button 
                 className={`px-1 py-2 font-medium whitespace-nowrap ${
                   activeCategory === "all" 
-                    ? `border-b-2 border-[${theme.accentColor}]` 
+                    ? "border-b-2" 
                     : ""
                 }`}
-                style={{ color: activeCategory === "all" ? theme.accentColor : theme.menuItemColor }}
+                style={{ 
+                  color: activeCategory === "all" ? theme.accentColor : theme.menuItemColor,
+                  borderColor: activeCategory === "all" ? theme.accentColor : ""
+                }}
                 onClick={() => handleCategoryClick("all")}
               >
                 All
@@ -236,13 +239,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                   key={category.id}
                   className={`px-1 py-2 font-medium whitespace-nowrap ${
                     activeCategory === category.id.toString() 
-                      ? `border-b-2 border-[${theme.accentColor}]` 
+                      ? "border-b-2" 
                       : ""
                   }`}
                   style={{ 
-                    color: activeCategory === category.id.toString() 
-                      ? theme.accentColor 
-                      : theme.menuItemColor 
+                    color: activeCategory === category.id.toString() ? theme.accentColor : theme.menuItemColor,
+                    borderColor: activeCategory === category.id.toString() ? theme.accentColor : ""
                   }}
                   onClick={() => handleCategoryClick(category.id.toString())}
                 >
