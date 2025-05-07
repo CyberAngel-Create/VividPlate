@@ -7,11 +7,8 @@ import RestaurantInfoCard from "@/components/dashboard/RestaurantInfoCard";
 import QuickActions from "@/components/dashboard/QuickActions";
 import FeedbackSummary from "@/components/dashboard/FeedbackSummary";
 import GlobalMenuSearch from "@/components/ui/global-menu-search";
-import TabNavigation from "@/components/layout/TabNavigation";
-import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
-import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
-import { Eye, QrCode, Utensils, Calendar, CreditCard, Check, AlertCircle } from "lucide-react";
-import { Restaurant } from "@shared/schema";
+import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
+import { Eye, QrCode, Utensils, Calendar, CreditCard, AlertCircle } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useMenu } from "@/hooks/use-menu";
 import AdBanner from "@/components/ads/AdBanner";
@@ -44,8 +41,14 @@ interface SubscriptionStatus {
 const Dashboard = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  
   // Get restaurant data
-  const { activeRestaurant, restaurants, isLoading: isLoadingRestaurants, refetchActiveRestaurant } = useRestaurant();
+  const { 
+    activeRestaurant, 
+    restaurants, 
+    isLoading: isLoadingRestaurants, 
+    refetchActiveRestaurant 
+  } = useRestaurant();
   
   // Get menu data using our hook
   const { categories, menuItems, isLoading: isLoadingMenu } = useMenu();
@@ -68,182 +71,168 @@ const Dashboard = () => {
     }
   }, [restaurants, activeRestaurant, refetchActiveRestaurant]);
 
+  // Loading and empty state handlers
   if (isLoadingRestaurants) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
+      <RestaurantOwnerLayout>
+        <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
+        <div className="flex justify-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </div>
+      </RestaurantOwnerLayout>
     );
   }
 
   if (!activeRestaurant) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <div className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
-            <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
-            <p className="mb-6">Create your first restaurant to get started with MenuMate.</p>
-            <button 
-              onClick={() => window.location.href = "/edit-restaurant"}
-              className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
-            >
-              Create Restaurant
-            </button>
-          </div>
+      <RestaurantOwnerLayout>
+        <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
+          <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
+          <p className="mb-6">Create your first restaurant to get started with MenuMate.</p>
+          <button 
+            onClick={() => window.location.href = "/edit-restaurant"}
+            className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
+          >
+            Create Restaurant
+          </button>
         </div>
-      </div>
+      </RestaurantOwnerLayout>
     );
   }
 
-    const handleLogout = async () => {
-    try {
-      await apiRequest("POST", "/api/auth/logout");
-      toast({
-        title: "Success",
-        description: "Logged out successfully",
-      });
-      window.location.href = "/";
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out",
-        variant: "destructive",
-      });
-    }
-  };
-
+  // Main dashboard render
   return (
-    <div className="flex flex-col min-h-screen">
-      <RestaurantOwnerHeader onLogout={handleLogout} />
-      <TabNavigation />
-      
+    <RestaurantOwnerLayout>
       {/* Top ad banner for free users - only show for non-premium users */}
       {(!subscriptionStatus?.isPaid) && (
         <div className="w-full flex justify-center">
-          <AdBanner position="top" className="w-full max-w-screen-lg my-3" />
+          <AdBanner position="top" className="w-full max-w-screen-lg mb-6" />
         </div>
       )}
       
-      <section className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
-        
-        {/* Subscription Status Card */}
-        {!isLoadingSubscription && subscriptionStatus && (
-          <div className={`mb-6 p-4 rounded-lg border ${subscriptionStatus.isPaid ? 'bg-green-50 border-green-200' : 'bg-amber-50 border-amber-200'}`}>
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <div className={`p-2 rounded-full ${subscriptionStatus.isPaid ? 'bg-green-100' : 'bg-amber-100'}`}>
+      <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
+      
+      {/* Subscription Status Card */}
+      {!isLoadingSubscription && subscriptionStatus && (
+        <div className={`mb-6 p-4 rounded-lg border ${
+          subscriptionStatus.isPaid 
+            ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900' 
+            : 'bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-900'
+        }`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <div className={`p-2 rounded-full ${
+              subscriptionStatus.isPaid 
+                ? 'bg-green-100 dark:bg-green-800' 
+                : 'bg-amber-100 dark:bg-amber-800'
+            }`}>
+              {subscriptionStatus.isPaid ? (
+                <CreditCard className="h-5 w-5 text-green-600 dark:text-green-300" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-300" />
+              )}
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">
+                {subscriptionStatus.isPaid ? 'Premium Subscription' : 'Free Plan'}
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">
                 {subscriptionStatus.isPaid ? (
-                  <CreditCard className="h-5 w-5 text-green-600" />
+                  <>You can create up to {subscriptionStatus.maxRestaurants} restaurants with no ads.</>
                 ) : (
-                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                  <>You can create {subscriptionStatus.maxRestaurants} restaurant with the free plan. Upgrade to create more.</>
                 )}
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg">
-                  {subscriptionStatus.isPaid ? 'Premium Subscription' : 'Free Plan'}
-                </h3>
-                <p className="text-sm text-gray-600">
-                  {subscriptionStatus.isPaid ? (
-                    <>You can create up to {subscriptionStatus.maxRestaurants} restaurants with no ads.</>
-                  ) : (
-                    <>You can create {subscriptionStatus.maxRestaurants} restaurant with the free plan. Upgrade to create more.</>
-                  )}
-                </p>
-                <div className="mt-1 flex items-center gap-1 text-sm">
-                  <span>Restaurants: {subscriptionStatus.currentRestaurants}/{subscriptionStatus.maxRestaurants}</span>
-                  {subscriptionStatus.currentRestaurants >= subscriptionStatus.maxRestaurants && (
-                    <span className="text-red-500 font-medium">Limit reached</span>
-                  )}
-                </div>
-              </div>
-              <div className="mt-2 sm:mt-0 sm:ml-auto flex flex-col sm:flex-row gap-2">
-                {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && (
-                  <button 
-                    onClick={() => window.location.href = "/edit-restaurant"}
-                    className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
-                  >
-                    Create New Restaurant
-                  </button>
-                )}
-                {!subscriptionStatus.isPaid && (
-                  <button 
-                    onClick={() => window.location.href = "/subscribe"}
-                    className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
-                  >
-                    Upgrade Now
-                  </button>
+              </p>
+              <div className="mt-1 flex items-center gap-1 text-sm">
+                <span>Restaurants: {subscriptionStatus.currentRestaurants}/{subscriptionStatus.maxRestaurants}</span>
+                {subscriptionStatus.currentRestaurants >= subscriptionStatus.maxRestaurants && (
+                  <span className="text-red-500 dark:text-red-400 font-medium">Limit reached</span>
                 )}
               </div>
             </div>
+            <div className="mt-2 sm:mt-0 sm:ml-auto flex flex-col sm:flex-row gap-2">
+              {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && (
+                <button 
+                  onClick={() => window.location.href = "/edit-restaurant"}
+                  className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
+                >
+                  Create New Restaurant
+                </button>
+              )}
+              {!subscriptionStatus.isPaid && (
+                <button 
+                  onClick={() => window.location.href = "/subscribe"}
+                  className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
+                >
+                  Upgrade Now
+                </button>
+              )}
+            </div>
           </div>
-        )}
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <StatCard 
-            icon={<Eye className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.viewCount ?? defaultStats.viewCount)} 
-            label="Menu Views" 
-          />
-          <StatCard 
-            icon={<QrCode className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.qrScanCount ?? defaultStats.qrScanCount)} 
-            label="QR Scans" 
-          />
-          <StatCard 
-            icon={<Utensils className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.menuItemCount ?? defaultStats.menuItemCount)} 
-            label="Menu Items" 
-          />
-          <StatCard 
-            icon={<Calendar className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.daysActive ?? defaultStats.daysActive)} 
-            label="Days Active" 
-          />
         </div>
-        
-        <RestaurantInfoCard restaurant={activeRestaurant} />
-        
-        <QuickActions />
-        
-        {/* Menu Search - Only show if there are menu items */}
-        {!isLoadingMenu && menuItems && menuItems.length > 0 && categories && categories.length > 0 && (
-          <GlobalMenuSearch 
-            categories={categories} 
-            menuItems={menuItems}
-            onEditItem={(id) => {
-              // Find the menu item to get its category ID
-              const menuItem = menuItems.find(item => item.id === id);
-              if (menuItem) {
-                setLocation(`/create-menu?category=${menuItem.categoryId}&item=${id}`);
-              }
-            }}
-            onDeleteItem={(id) => {
-              // We'll navigate to the create-menu page where the user can delete the item
-              // This avoids having to implement deletion logic here too
-              const menuItem = menuItems.find(item => item.id === id);
-              if (menuItem) {
-                setLocation(`/create-menu?category=${menuItem.categoryId}`);
-              }
-            }}
-          />
-        )}
-        
-        <FeedbackSummary />
-        
-        {/* Bottom ad banner for free users */}
-        <div className="w-full flex justify-center mt-6">
-          <AdBanner position="bottom" className="w-full max-w-screen-lg my-3" />
-        </div>
-      </section>
+      )}
       
-      <RestaurantOwnerFooter />
-    </div>
+      {/* Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard 
+          icon={<Eye className="h-6 w-6" />} 
+          value={isLoadingStats ? "..." : (stats?.viewCount ?? defaultStats.viewCount)} 
+          label="Menu Views" 
+        />
+        <StatCard 
+          icon={<QrCode className="h-6 w-6" />} 
+          value={isLoadingStats ? "..." : (stats?.qrScanCount ?? defaultStats.qrScanCount)} 
+          label="QR Scans" 
+        />
+        <StatCard 
+          icon={<Utensils className="h-6 w-6" />} 
+          value={isLoadingStats ? "..." : (stats?.menuItemCount ?? defaultStats.menuItemCount)} 
+          label="Menu Items" 
+        />
+        <StatCard 
+          icon={<Calendar className="h-6 w-6" />} 
+          value={isLoadingStats ? "..." : (stats?.daysActive ?? defaultStats.daysActive)} 
+          label="Days Active" 
+        />
+      </div>
+      
+      {/* Restaurant Info */}
+      <RestaurantInfoCard restaurant={activeRestaurant} />
+      
+      {/* Quick Actions */}
+      <QuickActions />
+      
+      {/* Menu Search - Only show if there are menu items */}
+      {!isLoadingMenu && menuItems && menuItems.length > 0 && categories && categories.length > 0 && (
+        <GlobalMenuSearch 
+          categories={categories} 
+          menuItems={menuItems}
+          onEditItem={(id) => {
+            // Find the menu item to get its category ID
+            const menuItem = menuItems.find(item => item.id === id);
+            if (menuItem) {
+              setLocation(`/create-menu?category=${menuItem.categoryId}&item=${id}`);
+            }
+          }}
+          onDeleteItem={(id) => {
+            // We'll navigate to the create-menu page where the user can delete the item
+            // This avoids having to implement deletion logic here too
+            const menuItem = menuItems.find(item => item.id === id);
+            if (menuItem) {
+              setLocation(`/create-menu?category=${menuItem.categoryId}`);
+            }
+          }}
+        />
+      )}
+      
+      {/* Feedback Summary */}
+      <FeedbackSummary />
+      
+      {/* Bottom ad banner for free users */}
+      <div className="w-full flex justify-center mt-6">
+        <AdBanner position="bottom" className="w-full max-w-screen-lg my-3" />
+      </div>
+    </RestaurantOwnerLayout>
   );
 };
 
