@@ -1,13 +1,8 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, User, CreditCard, Mail, PlusCircle, Star, Store, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ReactNode } from "react";
+import { Link } from "wouter";
+import { Store, ChevronRight, PlusCircle } from "lucide-react";
+import { useRestaurant } from "@/hooks/use-restaurant";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
-import { useRestaurant } from "@/hooks/use-restaurant";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,278 +12,65 @@ import {
   DropdownMenuSeparator
 } from "@/components/ui/dropdown-menu";
 
-interface RestaurantOwnerHeaderProps {
-  onLogout?: () => void;
-  children?: ReactNode;
-}
-
-const RestaurantOwnerHeader = ({ onLogout = () => {}, children }: RestaurantOwnerHeaderProps) => {
-  const [location] = useLocation();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { subscription, isPaid } = useSubscription();
+const RestaurantOwnerHeader = () => {
   const { restaurants, activeRestaurant, setActiveRestaurant } = useRestaurant();
+  const { isPaid } = useSubscription();
   const { t } = useTranslation();
 
-  const closeMenu = () => setIsMenuOpen(false);
-  
   // Check if the user can add more restaurants (premium users can add up to 3)
   const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
-  // Check if we're on pricing or profile page to hide the upgrade button
-  const isOnPricingOrProfile = location === "/pricing" || location === "/profile";
+
+  if (!restaurants || restaurants.length === 0) {
+    return null;
+  }
 
   return (
-    <header className="bg-white dark:bg-gray-900 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/dashboard">
-            <div className="flex items-center">
-              <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
-              <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
-            </div>
-          </Link>
-
-          {/* Desktop Navigation - Main Menu */}
-          <nav className="hidden md:flex items-center space-x-6">
-            {/* Premium badge for paid users in desktop view (star icon only) */}
-            {isPaid && (
-              <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded inline-flex items-center">
-                <Star className="h-3 w-3" fill="white" />
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+      <div className="mx-auto">
+        <div className="flex flex-col">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Current Restaurant</p>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full md:w-auto md:min-w-[220px]">
+              <div className="flex items-center gap-2 truncate">
+                <Store className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate text-sm">
+                  {activeRestaurant ? activeRestaurant.name : t("Select Restaurant")}
+                </span>
               </div>
-            )}
-            
-            {/* Navigation Links */}
-            <Link href="/pricing">
-              <div className="text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light transition-colors flex items-center">
-                <CreditCard className="h-4 w-4 mr-2" />
-                {t("Pricing")}
-              </div>
-            </Link>
-            
-            <Link href="/contact">
-              <div className="text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light transition-colors flex items-center">
-                <Mail className="h-4 w-4 mr-2" />
-                {t("Contact")}
-              </div>
-            </Link>
-
-            {/* Restaurant Switcher */}
-            {restaurants && restaurants.length > 0 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger className="text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light flex items-center outline-none">
-                  <Store className="h-4 w-4 mr-2" />
-                  <span className="max-w-[150px] truncate">
-                    {activeRestaurant ? activeRestaurant.name : t("Select Restaurant")}
-                  </span>
-                  <ChevronDown className="h-4 w-4 ml-1" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="dark:bg-gray-800 dark:border-gray-700">
-                  <DropdownMenuLabel className="dark:text-gray-300">{t("Your Restaurants")}</DropdownMenuLabel>
+              <ChevronRight className="h-4 w-4 flex-shrink-0" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56 dark:bg-gray-800 dark:border-gray-700">
+              <DropdownMenuLabel className="dark:text-gray-300">{t("Your Restaurants")}</DropdownMenuLabel>
+              <DropdownMenuSeparator className="dark:border-gray-700" />
+              {restaurants.map((restaurant) => (
+                <DropdownMenuItem 
+                  key={restaurant.id}
+                  onClick={() => setActiveRestaurant(restaurant.id)}
+                  className={`cursor-pointer ${
+                    activeRestaurant?.id === restaurant.id 
+                      ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
+                      : 'dark:text-gray-200'
+                  } cursor-pointer dark:hover:bg-gray-700`}
+                >
+                  <span className="truncate max-w-[250px]">{restaurant.name}</span>
+                </DropdownMenuItem>
+              ))}
+              {canAddRestaurant && (
+                <>
                   <DropdownMenuSeparator className="dark:border-gray-700" />
-                  {restaurants.map((restaurant) => (
-                    <DropdownMenuItem 
-                      key={restaurant.id}
-                      onClick={() => setActiveRestaurant(restaurant.id)}
-                      className={`${
-                        activeRestaurant?.id === restaurant.id 
-                          ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
-                          : 'dark:text-gray-200'
-                      } cursor-pointer dark:hover:bg-gray-700`}
-                    >
-                      <span className="truncate max-w-[250px]">{restaurant.name}</span>
+                  <Link href="/edit-restaurant">
+                    <DropdownMenuItem className="cursor-pointer text-primary dark:text-primary-light font-medium">
+                      <PlusCircle className="h-4 w-4 mr-2" />
+                      {t("Create Restaurant")}
                     </DropdownMenuItem>
-                  ))}
-                  {isPaid && restaurants.length < 3 && (
-                    <>
-                      <DropdownMenuSeparator className="dark:border-gray-700" />
-                      <Link href="/edit-restaurant">
-                        <DropdownMenuItem className="cursor-pointer text-primary dark:text-primary-light font-medium">
-                          <PlusCircle className="h-4 w-4 mr-2" />
-                          {t("Create Restaurant")}
-                        </DropdownMenuItem>
-                      </Link>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-
-            {/* User Profile */}
-            <Link href="/profile">
-              <div className="text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light transition-colors flex items-center">
-                <User className="h-4 w-4 mr-2" />
-                {t("Profile")}
-              </div>
-            </Link>
-
-            {/* Theme Toggle */}
-            <ThemeToggle />
-            
-            {/* Logout Button */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onLogout && onLogout()}
-              className="text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light flex items-center"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              {t("Log out")}
-            </Button>
-          </nav>
-
-          {/* Extra components */}
-          <div className="hidden md:flex items-center ml-2">
-            {children}
-          </div>
-
-          {/* Mobile menu button */}
-          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="md:hidden"
-                aria-label="Open menu"
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-[250px] p-0 bg-white dark:bg-gray-900 border-l dark:border-gray-700">
-              <div className="flex flex-col h-full">
-                <div className="p-4 border-b border-gray-100 dark:border-gray-700">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <span className="text-lg font-heading font-bold text-primary dark:text-primary-light">
-                        MenuMate
-                      </span>
-                      <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={closeMenu}
-                      className="rounded-full p-1 h-8 w-8 text-gray-700 dark:text-gray-300"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Mobile navigation */}
-                <nav className="flex-1 overflow-y-auto p-4 bg-white dark:bg-gray-900">
-                  <div className="space-y-3">
-                    {/* Premium badge for paid users (star icon only) */}
-                    {isPaid && (
-                      <div className="py-2">
-                        <div className="text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded inline-flex items-center">
-                          <Star className="h-3 w-3" fill="white" />
-                        </div>
-                      </div>
-                    )}
-                    
-                    <Link href="/pricing">
-                      <div
-                        className="block py-2 text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light transition-colors"
-                        onClick={closeMenu}
-                      >
-                        <CreditCard className="h-4 w-4 mr-2 inline-block" />
-                        {t("Pricing")}
-                      </div>
-                    </Link>
-                    
-                    <Link href="/contact">
-                      <div
-                        className="block py-2 text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light transition-colors"
-                        onClick={closeMenu}
-                      >
-                        <Mail className="h-4 w-4 mr-2 inline-block" />
-                        {t("Contact")}
-                      </div>
-                    </Link>
-
-                    {/* Restaurant Switcher (Mobile) */}
-                    {restaurants && restaurants.length > 0 && (
-                      <div className="py-2 border-b dark:border-gray-700">
-                        <div className="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                          {t("Your Restaurants")}
-                        </div>
-                        <div className="space-y-2">
-                          {restaurants.map((restaurant) => (
-                            <button
-                              key={restaurant.id}
-                              onClick={() => {
-                                setActiveRestaurant(restaurant.id);
-                                closeMenu();
-                              }}
-                              className={`block w-full text-left px-2 py-1.5 text-sm rounded-md ${
-                                activeRestaurant?.id === restaurant.id 
-                                  ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
-                                  : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                              } text-gray-700 dark:text-gray-300`}
-                            >
-                              <div className="flex items-center">
-                                <Store className="h-4 w-4 mr-2" />
-                                <span className="truncate">{restaurant.name}</span>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                        {isPaid && restaurants.length < 3 && (
-                          <Link href="/edit-restaurant">
-                            <div 
-                              className="block mt-2 px-2 py-1.5 text-sm rounded-md text-primary dark:text-primary-light hover:bg-gray-50 dark:hover:bg-gray-700 font-medium"
-                              onClick={closeMenu}
-                            >
-                              <div className="flex items-center">
-                                <PlusCircle className="h-4 w-4 mr-2" />
-                                <span>{t("Create Restaurant")}</span>
-                              </div>
-                            </div>
-                          </Link>
-                        )}
-                      </div>
-                    )}
-                    
-                    <Link href="/profile">
-                      <div
-                        className="block py-2 text-sm font-medium text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light transition-colors"
-                        onClick={closeMenu}
-                      >
-                        <User className="h-4 w-4 mr-2 inline-block" />
-                        {t("Profile")}
-                      </div>
-                    </Link>
-                    
-                    {/* Theme Toggle (Mobile) */}
-                    <div className="flex items-center py-2">
-                      <ThemeToggle showLabel={true} />
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (onLogout) onLogout();
-                        closeMenu();
-                      }}
-                      className="w-full justify-start text-gray-700 hover:text-primary dark:text-gray-300 dark:hover:text-primary-light"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      {t("Log out")}
-                    </Button>
-                  </div>
-                </nav>
-
-                {/* Mobile extra components */}
-                <div className="p-4 mt-auto border-t border-gray-100 dark:border-gray-700">
-                  {children}
-                </div>
-              </div>
-            </SheetContent>
-          </Sheet>
+                  </Link>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-    </header>
+    </div>
   );
 };
 

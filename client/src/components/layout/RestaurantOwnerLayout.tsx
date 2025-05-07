@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import SidebarNavigation from "./SidebarNavigation";
+import RestaurantOwnerHeader from "./RestaurantOwnerHeader";
 
 interface RestaurantOwnerLayoutProps {
   children: ReactNode;
@@ -33,6 +34,12 @@ const RestaurantOwnerLayout = ({ children }: RestaurantOwnerLayoutProps) => {
       
       {/* Main content area */}
       <main className="flex-1 lg:ml-64 min-h-screen">
+        {/* Restaurant Switcher Header */}
+        <div className="lg:pl-6 lg:pr-6">
+          <RestaurantOwnerHeader />
+        </div>
+        
+        {/* Page Content */}
         <div className="container mx-auto py-6 px-4 lg:px-6">
           {children}
         </div>

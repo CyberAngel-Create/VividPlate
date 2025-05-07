@@ -1,20 +1,11 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MenuSquare, User, Store, Eye, Share2, CreditCard, Mail, LogOut, ChevronRight, Menu, X, PlusCircle } from "lucide-react";
+import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/hooks/use-subscription";
-import { useRestaurant } from "@/hooks/use-restaurant";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
-} from "@/components/ui/dropdown-menu";
 
 interface SidebarNavigationProps {
   onLogout?: () => void;
@@ -32,7 +23,6 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   const [location, setLocation] = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { subscription, isPaid } = useSubscription();
-  const { restaurants, activeRestaurant, setActiveRestaurant } = useRestaurant();
   const { t } = useTranslation();
   
   // Define navigation items
@@ -105,9 +95,6 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
     setIsMobileSidebarOpen(false);
   };
 
-  // Check if the user can add more restaurants (premium users can add up to 3)
-  const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
-
   return (
     <>
       {/* Mobile Header with Logo and Menu Toggle */}
@@ -129,54 +116,9 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
             </SheetTrigger>
             <SheetContent side="left" className="w-64 p-0">
               <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-4 border-b dark:border-gray-800">
+                <div className="p-4 border-b dark:border-gray-800">
                   <span className="text-lg font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
-                  <Button variant="ghost" size="icon" onClick={() => setIsMobileSidebarOpen(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
                 </div>
-                
-                {/* Restaurant Selector */}
-                {restaurants && restaurants.length > 0 && (
-                  <div className="p-4 border-b dark:border-gray-800">
-                    <p className="text-sm text-gray-500 mb-2">Current Restaurant</p>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger className="w-full flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800">
-                        <div className="flex items-center gap-2 truncate">
-                          <Store className="h-4 w-4 flex-shrink-0" />
-                          <span className="truncate text-sm">
-                            {activeRestaurant ? activeRestaurant.name : "Select Restaurant"}
-                          </span>
-                        </div>
-                        <ChevronRight className="h-4 w-4 flex-shrink-0" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-56">
-                        <DropdownMenuLabel>Your Restaurants</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {restaurants.map((restaurant) => (
-                          <DropdownMenuItem 
-                            key={restaurant.id}
-                            onClick={() => setActiveRestaurant(restaurant.id)}
-                            className={`cursor-pointer ${activeRestaurant?.id === restaurant.id ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
-                          >
-                            <span className="truncate">{restaurant.name}</span>
-                          </DropdownMenuItem>
-                        ))}
-                        {canAddRestaurant && (
-                          <>
-                            <DropdownMenuSeparator />
-                            <Link href="/edit-restaurant">
-                              <DropdownMenuItem className="cursor-pointer text-primary">
-                                <PlusCircle className="h-4 w-4 mr-2" />
-                                Create Restaurant
-                              </DropdownMenuItem>
-                            </Link>
-                          </>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                )}
                 
                 {/* Navigation Items */}
                 <nav className="flex-1 overflow-y-auto p-4">
@@ -199,8 +141,12 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
                   </ul>
                 </nav>
                 
-                {/* Logout Button */}
+                {/* Theme Toggle and Logout */}
                 <div className="p-4 border-t dark:border-gray-800">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-sm text-gray-500">Theme</span>
+                    <ThemeToggle />
+                  </div>
                   <Button
                     variant="outline"
                     className="w-full flex items-center justify-start gap-3"
@@ -227,48 +173,6 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
             </div>
           </Link>
         </div>
-        
-        {/* Restaurant Selector */}
-        {restaurants && restaurants.length > 0 && (
-          <div className="p-4 border-b dark:border-gray-800">
-            <p className="text-sm text-gray-500 mb-2">Current Restaurant</p>
-            <DropdownMenu>
-              <DropdownMenuTrigger className="w-full flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800">
-                <div className="flex items-center gap-2 truncate">
-                  <Store className="h-4 w-4 flex-shrink-0" />
-                  <span className="truncate text-sm">
-                    {activeRestaurant ? activeRestaurant.name : "Select Restaurant"}
-                  </span>
-                </div>
-                <ChevronRight className="h-4 w-4 flex-shrink-0" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Your Restaurants</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {restaurants.map((restaurant) => (
-                  <DropdownMenuItem 
-                    key={restaurant.id}
-                    onClick={() => setActiveRestaurant(restaurant.id)}
-                    className={`cursor-pointer ${activeRestaurant?.id === restaurant.id ? 'bg-gray-100 dark:bg-gray-700' : ''}`}
-                  >
-                    <span className="truncate">{restaurant.name}</span>
-                  </DropdownMenuItem>
-                ))}
-                {canAddRestaurant && (
-                  <>
-                    <DropdownMenuSeparator />
-                    <Link href="/edit-restaurant">
-                      <DropdownMenuItem className="cursor-pointer text-primary">
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Create Restaurant
-                      </DropdownMenuItem>
-                    </Link>
-                  </>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        )}
         
         {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto p-4">
