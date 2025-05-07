@@ -8,11 +8,14 @@ import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import RestaurantProfileForm from "@/components/restaurant/RestaurantProfileForm";
 import { Restaurant, InsertRestaurant } from "@shared/schema";
 import { useRestaurant } from "@/hooks/use-restaurant";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
 import RestaurantLogoUpload from "@/components/upload/RestaurantLogoUpload";
 import RestaurantBannerUpload from "@/components/upload/RestaurantBannerUpload";
 import RestaurantThemeEditor from "@/components/restaurant/RestaurantThemeEditor";
 import RestaurantFeedback from "@/components/feedback/RestaurantFeedback";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RocketIcon } from "lucide-react";
 
 const EditRestaurant = () => {
   const { toast } = useToast();
@@ -21,6 +24,12 @@ const EditRestaurant = () => {
     isLoading: isLoadingRestaurant,
     refetchActiveRestaurant 
   } = useRestaurant();
+  const { 
+    subscriptionStatus, 
+    isLoading: isLoadingSubscription,
+    canCreateRestaurant,
+    restaurantsRemaining
+  } = useSubscriptionStatus();
   
   // Mutation to create/update restaurant
   const createRestaurantMutation = useMutation({
@@ -102,6 +111,16 @@ const EditRestaurant = () => {
         restaurant: restaurantData
       });
     } else {
+      // Check if user can create a new restaurant
+      if (!canCreateRestaurant) {
+        toast({
+          title: "Restaurant Limit Reached",
+          description: "You have reached your restaurant limit. Upgrade your subscription to create more restaurants.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       // Create new restaurant
       await createRestaurantMutation.mutateAsync(restaurantData as InsertRestaurant);
     }
@@ -115,6 +134,26 @@ const EditRestaurant = () => {
         <h1 className="text-2xl font-heading font-bold my-6">
           {activeRestaurant ? "Restaurant Profile" : "Create Restaurant"}
         </h1>
+        
+        {!activeRestaurant && !isLoadingSubscription && subscriptionStatus && (
+          <Alert className="mb-6 dark:bg-gray-700 dark:border-primary dark:text-white">
+            <RocketIcon className="h-4 w-4" />
+            <AlertTitle>Subscription Status: {subscriptionStatus.tier}</AlertTitle>
+            <AlertDescription>
+              You are using {subscriptionStatus.currentRestaurants} of {subscriptionStatus.maxRestaurants} restaurants.
+              {!canCreateRestaurant && (
+                <div className="mt-2 text-destructive dark:text-red-400">
+                  You have reached your restaurant limit. Upgrade your subscription to create more restaurants.
+                </div>
+              )}
+              {canCreateRestaurant && (
+                <div className="mt-2 text-green-600 dark:text-green-400">
+                  You can create {restaurantsRemaining} more restaurant{restaurantsRemaining !== 1 ? 's' : ''}.
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
         
         {isLoadingRestaurant ? (
           <div className="flex justify-center py-12">

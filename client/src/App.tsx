@@ -140,11 +140,13 @@ function App() {
         <TooltipProvider>
           <AuthProvider>
             <SubscriptionProvider>
-              <DietaryPreferencesProvider>
-                <Toaster />
-                <AdSense />
-                <Router />
-              </DietaryPreferencesProvider>
+              <SubscriptionStatusProvider>
+                <DietaryPreferencesProvider>
+                  <Toaster />
+                  <AdSense />
+                  <Router />
+                </DietaryPreferencesProvider>
+              </SubscriptionStatusProvider>
             </SubscriptionProvider>
           </AuthProvider>
         </TooltipProvider>
