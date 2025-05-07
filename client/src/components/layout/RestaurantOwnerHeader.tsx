@@ -26,11 +26,11 @@ const RestaurantOwnerHeader = () => {
 
   return (
     <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
-      <div className="mx-auto">
+      <div className="pl-0 lg:pl-52">
         <div className="flex flex-col">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Current Restaurant</p>
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full md:w-auto md:min-w-[220px]">
+            <DropdownMenuTrigger className="flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full lg:max-w-[calc(100%-52px)]">
               <div className="flex items-center gap-2 truncate">
                 <Store className="h-4 w-4 flex-shrink-0" />
                 <span className="truncate text-sm">

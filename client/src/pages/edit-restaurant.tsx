@@ -3,7 +3,6 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import TabNavigation from "@/components/layout/TabNavigation";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import RestaurantProfileForm from "@/components/restaurant/RestaurantProfileForm";
 import { Restaurant, InsertRestaurant } from "@shared/schema";
@@ -129,9 +128,7 @@ const EditRestaurant = () => {
   return (
     <RestaurantOwnerLayout>
       <div className="px-4 py-6">
-        {activeRestaurant && <TabNavigation />}
-      
-        <h1 className="text-2xl font-heading font-bold my-6">
+        <h1 className="text-2xl font-heading font-bold mb-6">
           {activeRestaurant ? "Restaurant Profile" : "Create Restaurant"}
         </h1>
         
