@@ -35,6 +35,7 @@ import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
+import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 
