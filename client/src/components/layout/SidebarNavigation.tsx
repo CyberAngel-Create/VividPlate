@@ -208,10 +208,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
         </div>
       </aside>
       
-      {/* Content Wrapper - Pushes content to the right on desktop */}
-      <div className="lg:ml-64 pt-16 lg:pt-0">
-        {/* This wraps around the page content in the component that uses this sidebar */}
-      </div>
+      {/* Mobile padding for content - handled in RestaurantOwnerLayout */}
     </>
   );
 };

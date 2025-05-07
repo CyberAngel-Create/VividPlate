@@ -33,14 +33,14 @@ const RestaurantOwnerLayout = ({ children }: RestaurantOwnerLayoutProps) => {
       <SidebarNavigation onLogout={handleLogout} />
       
       {/* Main content area */}
-      <main className="flex-1 lg:ml-64 min-h-screen">
+      <main className="flex-1 w-full min-h-screen">
         {/* Restaurant Switcher Header */}
-        <div>
+        <div className="sticky top-0 z-10">
           <RestaurantOwnerHeader />
         </div>
         
         {/* Page Content */}
-        <div className="p-0 px-0">
+        <div className="pt-2 lg:pl-64">
           {children}
         </div>
       </main>
