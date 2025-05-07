@@ -4,10 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Redirect } from "wouter";
-import { Loader2, KeyRound, User, Mail, Save, Star } from "lucide-react";
+import { Loader2, KeyRound, User, Mail, Save } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
-import CustomerHeader from "@/components/layout/CustomerHeader";
-import Footer from "@/components/layout/Footer";
+import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
+import { PremiumBadge } from "@/components/ui/premium-badge";
 import { 
   Card, 
   CardContent, 

@@ -4,9 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import TabNavigation from "@/components/layout/TabNavigation";
-import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
-import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
+import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { MenuCategory, MenuItem } from "@shared/schema";
 import { Edit, Eye } from "lucide-react";
@@ -31,13 +29,13 @@ const MenuPreview = () => {
       const data = categories.map(category => {
         const items = menuItems
           .filter(item => item.categoryId === category.id)
-          .sort((a, b) => a.displayOrder - b.displayOrder);
+          .sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
         
         return {
           ...category,
           items
         };
-      }).sort((a, b) => a.displayOrder - b.displayOrder);
+      }).sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
       
       setMenuData(data);
     }
@@ -66,11 +64,10 @@ const MenuPreview = () => {
   
   if (!activeRestaurant) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <RestaurantOwnerHeader onLogout={handleLogout} />
-        <div className="container mx-auto px-4 py-6">
+      <RestaurantOwnerLayout>
+        <div className="px-4 py-6">
           <h1 className="text-2xl font-heading font-bold mb-6">Menu Preview</h1>
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
             <p className="mb-6">Create your restaurant profile first before previewing your menu.</p>
             <button 
@@ -81,44 +78,37 @@ const MenuPreview = () => {
             </button>
           </div>
         </div>
-        <RestaurantOwnerFooter />
-      </div>
+      </RestaurantOwnerLayout>
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <RestaurantOwnerHeader onLogout={handleLogout} />
-        <TabNavigation />
-        <section className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-          <h1 className="text-2xl font-heading font-bold mb-4 sm:mb-6">Menu Preview</h1>
+      <RestaurantOwnerLayout>
+        <div className="px-4 py-6">
+          <h1 className="text-2xl font-heading font-bold mb-6">Menu Preview</h1>
           <div className="flex justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
           </div>
-        </section>
-        <RestaurantOwnerFooter />
-      </div>
+        </div>
+      </RestaurantOwnerLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <RestaurantOwnerHeader onLogout={handleLogout} />
-      <TabNavigation />
-      
-      <section className="container mx-auto px-2 sm:px-4 py-4 sm:py-6">
-        <h1 className="text-2xl font-heading font-bold mb-4 sm:mb-6">Menu Preview</h1>
+    <RestaurantOwnerLayout>
+      <div className="px-4 py-6">
+        <h1 className="text-2xl font-heading font-bold mb-6">Menu Preview</h1>
         
         <div className="flex justify-center mb-8">
-          <div className="inline-block px-3 py-1 rounded-md bg-neutral text-midgray text-sm flex items-center">
+          <div className="inline-block px-3 py-1 rounded-md bg-neutral text-gray-600 dark:text-gray-300 text-sm flex items-center">
             <Eye className="mr-1 h-4 w-4" />
             <span>Preview Mode: This is how customers will see your menu</span>
           </div>
         </div>
         
         {menuData.length === 0 ? (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center mb-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center mb-8">
             <p className="text-lg mb-4">You haven't created any menu items yet.</p>
             <p className="mb-6">Start by adding categories and menu items to your menu.</p>
             <button 
@@ -148,10 +138,8 @@ const MenuPreview = () => {
             </div>
           </>
         )}
-      </section>
-      
-      <RestaurantOwnerFooter />
-    </div>
+      </div>
+    </RestaurantOwnerLayout>
   );
 };
 
