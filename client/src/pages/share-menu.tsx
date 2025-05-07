@@ -1,8 +1,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import TabNavigation from "@/components/layout/TabNavigation";
-import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
-import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
+import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import QRCodeGenerator from "@/components/share/QRCodeGenerator";
 import ShareOptions from "@/components/share/ShareOptions";
 import { useRestaurant } from "@/hooks/use-restaurant";
@@ -24,30 +23,14 @@ const ShareMenu = () => {
   // Check if there are menu items
   const hasMenuItems = menuItems && menuItems.length > 0;
   
-  const handleLogout = async () => {
-    try {
-      await apiRequest("POST", "/api/auth/logout");
-      toast({
-        title: "Success",
-        description: "Logged out successfully",
-      });
-      window.location.href = "/";
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out",
-        variant: "destructive",
-      });
-    }
-  };
-  
+  // Logout is handled by the RestaurantOwnerLayout component
+
   if (!activeRestaurant) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <RestaurantOwnerHeader onLogout={handleLogout} />
-        <div className="container mx-auto px-4 py-6">
+      <RestaurantOwnerLayout>
+        <div className="px-4 py-6">
           <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
             <p className="mb-6">Create your restaurant profile first before sharing your menu.</p>
             <button 
@@ -58,19 +41,17 @@ const ShareMenu = () => {
             </button>
           </div>
         </div>
-        <RestaurantOwnerFooter />
-      </div>
+      </RestaurantOwnerLayout>
     );
   }
   
   if (!hasMenuItems) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <RestaurantOwnerHeader onLogout={handleLogout} />
-        <TabNavigation />
-        <section className="container mx-auto px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+      <RestaurantOwnerLayout>
+        <div className="px-4 py-6">
+          <TabNavigation />
+          <h1 className="text-2xl font-heading font-bold my-6">Share Menu</h1>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <p className="text-lg mb-4">You haven't created any menu items yet.</p>
             <p className="mb-6">Create your menu first before sharing it with customers.</p>
             <button 
@@ -80,19 +61,17 @@ const ShareMenu = () => {
               Create Menu
             </button>
           </div>
-        </section>
-        <RestaurantOwnerFooter />
-      </div>
+        </div>
+      </RestaurantOwnerLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <RestaurantOwnerHeader onLogout={handleLogout} />
-      <TabNavigation />
-      
-      <section className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-heading font-bold mb-6">Share Your Menu</h1>
+    <RestaurantOwnerLayout>
+      <div className="px-4 py-6">
+        <TabNavigation />
+        
+        <h1 className="text-2xl font-heading font-bold my-6">Share Your Menu</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <QRCodeGenerator 
@@ -104,9 +83,8 @@ const ShareMenu = () => {
             menuUrl={menuUrl}
           />
         </div>
-      </section>
-      <RestaurantOwnerFooter />
-    </div>
+      </div>
+    </RestaurantOwnerLayout>
   );
 };
 

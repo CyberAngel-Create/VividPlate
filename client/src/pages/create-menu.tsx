@@ -4,8 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import TabNavigation from "@/components/layout/TabNavigation";
-import RestaurantOwnerHeader from "@/components/layout/RestaurantOwnerHeader";
-import RestaurantOwnerFooter from "@/components/layout/RestaurantOwnerFooter";
+import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import MenuCategoriesList from "@/components/menu/MenuCategoriesList";
 import MenuItemsList from "@/components/menu/MenuItemsList";
 import { MenuCategory, MenuItem, InsertMenuCategory, InsertMenuItem } from "@shared/schema";
@@ -34,25 +33,25 @@ const CreateMenu = () => {
   
   // Query for menu categories
   const { 
-    data: categories = [],
+    data: categories = [] as MenuCategory[],
     isLoading: isLoadingCategories
-  } = useQuery({
+  } = useQuery<MenuCategory[]>({
     queryKey: [activeRestaurant ? `/api/restaurants/${activeRestaurant.id}/categories` : null],
     enabled: !!activeRestaurant,
   });
   
   // Query for menu items in the selected category
   const {
-    data: menuItems = [],
+    data: menuItems = [] as MenuItem[],
     isLoading: isLoadingItems
-  } = useQuery({
+  } = useQuery<MenuItem[]>({
     queryKey: [selectedCategoryId ? `/api/categories/${selectedCategoryId}/items` : null],
     enabled: !!selectedCategoryId,
   });
   
   // Get selected category
   const selectedCategory = selectedCategoryId 
-    ? categories.find((c: MenuCategory) => c.id === selectedCategoryId) || null
+    ? categories.find((c) => c.id === selectedCategoryId) || null
     : null;
   
   // Create menu item counts map
@@ -71,9 +70,9 @@ const CreateMenu = () => {
         
         for (const category of categories) {
           try {
-            const items = await queryClient.fetchQuery({
+            const items = await queryClient.fetchQuery<MenuItem[]>({
               queryKey: [`/api/categories/${category.id}/items`],
-            }) as MenuItem[];
+            });
             counts[category.id] = items.length;
           } catch (error) {
             counts[category.id] = 0;
@@ -85,7 +84,7 @@ const CreateMenu = () => {
       
       fetchCategoryCounts();
     }
-  }, [categories, selectedCategoryId]);
+  }, [categories, selectedCategoryId, queryClient]);
   
   // Mutations
   const addCategoryMutation = useMutation({
@@ -263,30 +262,14 @@ const CreateMenu = () => {
     await deleteItemMutation.mutateAsync(id);
   };
   
-  const handleLogout = async () => {
-    try {
-      await apiRequest("POST", "/api/auth/logout");
-      toast({
-        title: "Success",
-        description: "Logged out successfully",
-      });
-      window.location.href = "/";
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out",
-        variant: "destructive",
-      });
-    }
-  };
+  // Logout is handled by the RestaurantOwnerLayout component
 
   if (!activeRestaurant) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <RestaurantOwnerHeader onLogout={handleLogout} />
-        <div className="container mx-auto px-4 py-6">
+      <RestaurantOwnerLayout>
+        <div className="px-4 py-6">
           <h1 className="text-2xl font-heading font-bold mb-6">Create Menu</h1>
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
             <p className="mb-6">Create your restaurant profile first before adding menu items.</p>
             <button 
@@ -297,18 +280,16 @@ const CreateMenu = () => {
             </button>
           </div>
         </div>
-        <RestaurantOwnerFooter />
-      </div>
+      </RestaurantOwnerLayout>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <RestaurantOwnerHeader onLogout={handleLogout} />
-      <TabNavigation />
-      
-      <section className="container mx-auto px-4 py-6">
-        <h1 className="text-2xl font-heading font-bold mb-6">Create Your Menu</h1>
+    <RestaurantOwnerLayout>
+      <div className="px-4 py-6">
+        <TabNavigation />
+        
+        <h1 className="text-2xl font-heading font-bold my-6">Create Your Menu</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
@@ -334,10 +315,8 @@ const CreateMenu = () => {
             />
           </div>
         </div>
-      </section>
-      
-      <RestaurantOwnerFooter />
-    </div>
+      </div>
+    </RestaurantOwnerLayout>
   );
 };
 
