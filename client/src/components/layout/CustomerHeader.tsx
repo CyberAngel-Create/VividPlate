@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Menu, X, LogOut, User, Star, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { PremiumBadge } from "@/components/ui/premium-badge";
 import { ReactNode } from "react";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
@@ -73,9 +74,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                   </Link>
                   {isPaid ? (
                     <div className="flex items-center">
-                      <div className="mr-2 text-sm font-medium bg-gradient-to-r from-yellow-400 to-amber-600 text-white px-2 py-1 rounded-md flex items-center">
-                        <Star className="h-3 w-3" fill="white" />
-                      </div>
+                      <PremiumBadge size="sm" className="mr-2" />
                     </div>
                   ) : (
                     <Link href="/pricing">

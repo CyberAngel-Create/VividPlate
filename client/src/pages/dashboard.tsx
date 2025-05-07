@@ -8,6 +8,7 @@ import QuickActions from "@/components/dashboard/QuickActions";
 import FeedbackSummary from "@/components/dashboard/FeedbackSummary";
 import GlobalMenuSearch from "@/components/ui/global-menu-search";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
+import { PremiumBadge } from "@/components/ui/premium-badge";
 import { Eye, QrCode, Utensils, Calendar, CreditCard, AlertCircle } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useMenu } from "@/hooks/use-menu";
@@ -134,9 +135,13 @@ const Dashboard = () => {
                 )}
               </div>
               <div>
-                <h3 className="font-semibold text-lg">
-                  {subscriptionStatus.isPaid ? 'Premium Subscription' : 'Free Plan'}
-                </h3>
+                <div className="flex items-center space-x-2">
+                  {subscriptionStatus.isPaid ? (
+                    <PremiumBadge size="sm" />
+                  ) : (
+                    <h3 className="font-semibold text-lg">Free Plan</h3>
+                  )}
+                </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   {subscriptionStatus.isPaid ? (
                     <>You can create up to {subscriptionStatus.maxRestaurants} restaurants with no ads.</>
