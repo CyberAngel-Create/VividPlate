@@ -35,12 +35,12 @@ const RestaurantOwnerLayout = ({ children }: RestaurantOwnerLayoutProps) => {
       {/* Main content area */}
       <main className="flex-1 lg:ml-64 min-h-screen">
         {/* Restaurant Switcher Header */}
-        <div className="lg:pl-6 lg:pr-6">
+        <div>
           <RestaurantOwnerHeader />
         </div>
         
         {/* Page Content */}
-        <div className="container mx-auto py-6 px-4 lg:px-6">
+        <div className="p-0 px-0">
           {children}
         </div>
       </main>

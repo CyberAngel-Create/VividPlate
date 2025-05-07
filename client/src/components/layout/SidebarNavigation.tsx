@@ -100,7 +100,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       {/* Mobile Header with Logo and Menu Toggle */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 h-16">
         <Link href="/dashboard">
-          <div className="flex items-center">
+          <div>
             <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
             <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
           </div>
@@ -143,8 +143,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
                 
                 {/* Theme Toggle and Logout */}
                 <div className="p-4 border-t dark:border-gray-800">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-sm text-gray-500">Theme</span>
+                  <div className="flex items-center justify-end mb-4">
                     <ThemeToggle />
                   </div>
                   <Button
@@ -167,10 +166,8 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
         {/* Logo */}
         <div className="p-4 border-b dark:border-gray-800">
           <Link href="/dashboard">
-            <div className="flex items-center">
-              <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
-              <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
-            </div>
+            <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
+            <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
           </Link>
         </div>
         
@@ -197,8 +194,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
         
         {/* Theme Toggle and Logout */}
         <div className="p-4 border-t dark:border-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm text-gray-500">Theme</span>
+          <div className="flex items-center justify-end mb-4">
             <ThemeToggle />
           </div>
           <Button
