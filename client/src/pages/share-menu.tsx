@@ -1,6 +1,5 @@
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import TabNavigation from "@/components/layout/TabNavigation";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import QRCodeGenerator from "@/components/share/QRCodeGenerator";
 import ShareOptions from "@/components/share/ShareOptions";
@@ -49,8 +48,7 @@ const ShareMenu = () => {
     return (
       <RestaurantOwnerLayout>
         <div className="px-4 py-6">
-          <TabNavigation />
-          <h1 className="text-2xl font-heading font-bold my-6">Share Menu</h1>
+          <h1 className="text-2xl font-heading font-bold mb-6">Share Menu</h1>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <p className="text-lg mb-4">You haven't created any menu items yet.</p>
             <p className="mb-6">Create your menu first before sharing it with customers.</p>
@@ -69,9 +67,7 @@ const ShareMenu = () => {
   return (
     <RestaurantOwnerLayout>
       <div className="px-4 py-6">
-        <TabNavigation />
-        
-        <h1 className="text-2xl font-heading font-bold my-6">Share Your Menu</h1>
+        <h1 className="text-2xl font-heading font-bold mb-6">Share Your Menu</h1>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <QRCodeGenerator 
