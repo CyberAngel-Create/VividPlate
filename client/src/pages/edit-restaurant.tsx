@@ -222,6 +222,7 @@ const EditRestaurant = () => {
             <RestaurantProfileForm 
               restaurant={undefined}
               onSubmit={handleSubmit}
+              canCreateRestaurant={canCreateRestaurant}
             />
           </div>
         )}

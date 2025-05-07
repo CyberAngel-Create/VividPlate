@@ -31,6 +31,7 @@ import { getInitials } from "@/lib/utils";
 interface RestaurantProfileFormProps {
   restaurant?: Restaurant;
   onSubmit: (data: Partial<Restaurant>) => Promise<void>;
+  canCreateRestaurant?: boolean;
 }
 
 // Hours of operation type
@@ -104,7 +105,7 @@ const restaurantSchema = z.object({
 
 type FormValues = z.infer<typeof restaurantSchema>;
 
-const RestaurantProfileForm = ({ restaurant, onSubmit }: RestaurantProfileFormProps) => {
+const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = true }: RestaurantProfileFormProps) => {
   const [tags, setTags] = useState<string[]>(restaurant?.tags || []);
   const [hours, setHours] = useState<HoursOfOperation>(
     restaurant?.hoursOfOperation as HoursOfOperation || defaultHours
@@ -483,10 +484,19 @@ const RestaurantProfileForm = ({ restaurant, onSubmit }: RestaurantProfileFormPr
           >
             Cancel
           </Button>
-          <Button type="submit" className="bg-primary text-white hover:bg-primary/90">
-            Save Changes
+          <Button 
+            type="submit" 
+            className="bg-primary text-white hover:bg-primary/90"
+            disabled={!restaurant && !canCreateRestaurant}
+          >
+            {restaurant ? "Save Changes" : "Create Restaurant"}
           </Button>
         </div>
+        {!restaurant && !canCreateRestaurant && (
+          <p className="text-sm text-destructive mt-2 text-center">
+            You've reached your restaurant limit. Upgrade to create more restaurants.
+          </p>
+        )}
       </form>
     </Form>
   );
