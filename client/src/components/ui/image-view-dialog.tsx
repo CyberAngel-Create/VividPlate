@@ -28,7 +28,7 @@ const ImageViewDialog = ({ imageSrc, imageAlt, children }: ImageViewDialogProps)
           <img 
             src={normalizeImageUrl(imageSrc)} 
             alt={imageAlt} 
-            className="w-full h-auto rounded-lg max-h-[80vh] object-contain"
+            className="w-full h-auto rounded-lg max-h-[80vh] object-contain dark:brightness-90 dark:contrast-110 dark:bg-gray-800"
             onError={(e) => {
               console.error("Failed to load image in dialog:", imageSrc);
               e.currentTarget.src = getFallbackImage('menu');

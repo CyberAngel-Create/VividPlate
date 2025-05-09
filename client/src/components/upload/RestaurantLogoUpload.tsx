@@ -126,7 +126,7 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
             <img 
               src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)}
               alt="Restaurant logo preview" 
-              className={`w-full h-full object-cover rounded-md ${isUploading ? 'opacity-50' : ''}`}
+              className={`w-full h-full object-cover rounded-md dark:brightness-90 dark:contrast-110 ${isUploading ? 'opacity-50' : ''}`}
               onError={(e) => {
                 console.error("Failed to load logo image:", previewUrl);
                 e.currentTarget.src = getFallbackImage('logo');

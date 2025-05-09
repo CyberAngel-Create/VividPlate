@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="300" fill="#1e1e1e"/>
+  <rect x="50" y="50" width="1100" height="200" rx="10" ry="10" fill="#2a2a2a" stroke="#3a3a3a" stroke-width="2"/>
+  <path d="M300,150 C300,116.863 266.421,90 225,90 C183.579,90 150,116.863 150,150 C150,183.137 183.579,210 225,210 L975,210 C1016.42,210 1050,183.137 1050,150 C1050,116.863 1016.42,90 975,90 C933.579,90 900,116.863 900,150 Z" fill="#444444"/>
+  <line x1="150" y1="150" x2="1050" y2="150" stroke="#555555" stroke-width="5" stroke-dasharray="20,20"/>
+  <text x="600" y="170" font-family="Arial, sans-serif" font-size="30" fill="#b0b0b0" text-anchor="middle">Restaurant Banner</text>
+</svg>

@@ -31,7 +31,10 @@ export function normalizeImageUrl(url: string | null | undefined): string {
  */
 export function getFallbackImage(type: 'menu' | 'logo' | 'banner' = 'menu'): string {
   // Check if we should use dark mode images
-  const isDarkMode = document.documentElement.classList.contains('dark');
+  // This will detect system preference or user-selected dark mode
+  const isDarkMode = document.documentElement.classList.contains('dark') || 
+                    window.matchMedia?.('(prefers-color-scheme: dark)').matches || 
+                    localStorage.getItem('theme') === 'dark';
   
   let fallbackUrl = '';
   switch (type) {
