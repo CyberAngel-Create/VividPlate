@@ -310,7 +310,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           onClick={() => handleMainCategoryClick('Food')}
         >
           <Utensils className="h-4 w-4" />
-          <span>Food</span>
+          <span>{t('menu.food', 'Food')}</span>
         </button>
         <button
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center space-x-2 ${
@@ -325,7 +325,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           onClick={() => handleMainCategoryClick('Beverage')}
         >
           <Coffee className="h-4 w-4" />
-          <span>Beverage</span>
+          <span>{t('menu.beverage', 'Beverage')}</span>
         </button>
       </div>
       
@@ -385,7 +385,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       <div className="p-4">
         {menuData.length === 0 ? (
           <div className="text-center py-8">
-            <p className="text-midgray">No menu items yet</p>
+            <p className="text-midgray">{t('menu.noMenuItems', 'No menu items yet')}</p>
           </div>
         ) : (
           filteredMenuData.map((category) => (
@@ -398,7 +398,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               </h3>
               
               {category.items.length === 0 ? (
-                <p className="text-sm italic" style={menuItemDescriptionStyle}>No items in this category</p>
+                <p className="text-sm italic" style={menuItemDescriptionStyle}>{t('menu.noItemsInCategory', 'No items in this category')}</p>
               ) : (
                 <div className="space-y-4">
                   {category.items.map((item) => (
@@ -429,7 +429,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                       ) : (
                         <div className="w-1/3 pr-4 relative">
                           <div className="w-full h-24 sm:h-28 bg-neutral dark:bg-gray-800 rounded-md flex items-center justify-center">
-                            <span className="text-xs text-gray-500 dark:text-gray-400">No image</span>
+                            <span className="text-xs text-gray-500 dark:text-gray-400">{t('menu.noImage', 'No image')}</span>
                           </div>
                         </div>
                       )}
@@ -471,7 +471,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 style={{ color: menuTheme.accentColor }}
                               >
                                 <MessageSquare className="h-3 w-3 mr-1" />
-                                <span>Click to leave feedback</span>
+                                <span>{t('menu.clickToLeaveFeedback', 'Click to leave feedback')}</span>
                               </div>
                             </div>
                           }
