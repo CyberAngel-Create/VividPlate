@@ -5,12 +5,18 @@
  */
 export function normalizeImageUrl(url: string | null | undefined): string {
   if (!url) {
+    console.warn('Attempted to normalize a null or undefined image URL');
     return '';
   }
   
   // Handle placeholder images
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
+  }
+  
+  // Log malformed URLs for debugging
+  if (!url.includes('/uploads/')) {
+    console.warn(`Possible malformed image URL: ${url}`);
   }
   
   // Ensure URLs start with a slash for server paths
@@ -23,13 +29,20 @@ export function normalizeImageUrl(url: string | null | undefined): string {
  * @returns URL to an appropriate fallback image
  */
 export function getFallbackImage(type: 'menu' | 'logo' | 'banner' = 'menu'): string {
+  let fallbackUrl = '';
   switch (type) {
     case 'logo':
-      return '/placeholder-logo.jpg';
+      fallbackUrl = '/placeholder-logo.jpg';
+      break;
     case 'banner':
-      return '/placeholder-banner.jpg';
+      fallbackUrl = '/placeholder-banner.jpg';
+      break;
     case 'menu':
     default:
-      return '/placeholder-food.jpg';
+      fallbackUrl = '/placeholder-food.jpg';
+      break;
   }
+  
+  console.log(`Using fallback image for ${type}: ${fallbackUrl}`);
+  return fallbackUrl;
 }

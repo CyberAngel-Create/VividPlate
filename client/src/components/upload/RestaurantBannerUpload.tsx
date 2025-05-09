@@ -37,16 +37,38 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
     }
   }, [currentBannerUrl]);
   
+  // Add auto-slideshow functionality
+  useEffect(() => {
+    if (bannerUrls.length <= 1) return;
+    
+    const timer = setInterval(() => {
+      setActiveIndex((prev) => (prev === bannerUrls.length - 1 ? 0 : prev + 1));
+      console.log('Banner carousel auto-advancing');
+    }, 5000); // 5 seconds interval
+    
+    return () => clearInterval(timer);
+  }, [bannerUrls.length]);
+
   // Go to the previous banner image in the carousel
   const previousImage = () => {
     if (bannerUrls.length <= 1) return;
-    setActiveIndex((prev) => (prev === 0 ? bannerUrls.length - 1 : prev - 1));
+    console.log('Manual navigation to previous banner image');
+    setActiveIndex((prev) => {
+      const newIndex = prev === 0 ? bannerUrls.length - 1 : prev - 1;
+      console.log(`Changing banner from ${prev} to ${newIndex}`);
+      return newIndex;
+    });
   };
 
   // Go to the next banner image in the carousel
   const nextImage = () => {
     if (bannerUrls.length <= 1) return;
-    setActiveIndex((prev) => (prev === bannerUrls.length - 1 ? 0 : prev + 1));
+    console.log('Manual navigation to next banner image');
+    setActiveIndex((prev) => {
+      const newIndex = prev === bannerUrls.length - 1 ? 0 : prev + 1;
+      console.log(`Changing banner from ${prev} to ${newIndex}`);
+      return newIndex;
+    });
   };
 
   // Remove the current banner image

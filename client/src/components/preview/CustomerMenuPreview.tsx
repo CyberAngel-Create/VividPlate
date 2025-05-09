@@ -24,44 +24,80 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
   interval = 5000 // default to 5 seconds
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
   
-  // Automatic slideshow
+  // Process the banner URLs
+  const processedBannerUrls = useMemo(() => {
+    if (!bannerUrls || bannerUrls.length === 0) {
+      console.warn('No banner URLs provided to BannerSlideshow');
+      return [getFallbackImage('banner')];
+    }
+    // Filter out empty URLs
+    return bannerUrls.filter(url => !!url);
+  }, [bannerUrls]);
+  
+  // Automatic slideshow - only runs when not hovering
   useEffect(() => {
-    if (bannerUrls.length <= 1) return;
+    if (processedBannerUrls.length <= 1 || isHovering) return;
     
+    console.log('Banner slideshow initiated with interval:', interval);
     const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev === bannerUrls.length - 1 ? 0 : prev + 1));
+      setActiveIndex((prev) => {
+        const nextIndex = prev === processedBannerUrls.length - 1 ? 0 : prev + 1;
+        console.log(`Sliding banner from index ${prev} to ${nextIndex}`);
+        return nextIndex;
+      });
     }, interval);
     
-    return () => clearInterval(timer);
-  }, [bannerUrls.length, interval]);
+    return () => {
+      console.log('Clearing banner slideshow interval');
+      clearInterval(timer);
+    };
+  }, [processedBannerUrls.length, interval, isHovering]);
   
   const prevSlide = () => {
-    setActiveIndex((prev) => (prev === 0 ? bannerUrls.length - 1 : prev - 1));
+    setActiveIndex((prev) => {
+      const newIndex = prev === 0 ? processedBannerUrls.length - 1 : prev - 1;
+      console.log(`Manual slide to previous: ${prev} -> ${newIndex}`);
+      return newIndex;
+    });
   };
   
   const nextSlide = () => {
-    setActiveIndex((prev) => (prev === bannerUrls.length - 1 ? 0 : prev + 1));
+    setActiveIndex((prev) => {
+      const newIndex = prev === processedBannerUrls.length - 1 ? 0 : prev + 1;
+      console.log(`Manual slide to next: ${prev} -> ${newIndex}`);
+      return newIndex;
+    });
   };
   
   return (
-    <div className="relative w-full h-full">
-      {bannerUrls.map((url, index) => (
-        <img
-          key={index}
-          src={normalizeImageUrl(url)}
-          alt={`${restaurantName} banner ${index + 1}`}
-          className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ${
-            index === activeIndex ? 'opacity-100' : 'opacity-0'
-          }`}
-          onError={(e) => {
-            console.error("Failed to load banner image:", url);
-            e.currentTarget.src = getFallbackImage('banner');
-          }}
-        />
-      ))}
+    <div 
+      className="relative w-full h-full"
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
+    >
+      {processedBannerUrls.map((url, index) => {
+        const normalizedUrl = normalizeImageUrl(url);
+        console.log(`Banner image ${index}: ${normalizedUrl}, active: ${index === activeIndex}`);
+        
+        return (
+          <img
+            key={index}
+            src={normalizedUrl}
+            alt={`${restaurantName} banner ${index + 1}`}
+            className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ${
+              index === activeIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+            onError={(e) => {
+              console.error("Failed to load banner image:", url);
+              e.currentTarget.src = getFallbackImage('banner');
+            }}
+          />
+        );
+      })}
       
-      {bannerUrls.length > 1 && (
+      {processedBannerUrls.length > 1 && (
         <>
           <button 
             onClick={prevSlide}
@@ -79,7 +115,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
           </button>
           
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
-            {bannerUrls.map((_, index) => (
+            {processedBannerUrls.map((_, index) => (
               <button 
                 key={index}
                 className={`w-2 h-2 rounded-full bg-white ${

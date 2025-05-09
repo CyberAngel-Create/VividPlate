@@ -1,0 +1,6 @@
+<svg width="800" height="300" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="300" fill="#e6e6e6" />
+  <text x="400" y="150" font-family="Arial" font-size="32" text-anchor="middle" fill="#888888">Restaurant Banner</text>
+  <rect x="300" y="180" width="200" height="10" fill="#888888" />
+  <rect x="340" y="200" width="120" height="10" fill="#888888" />
+</svg>
