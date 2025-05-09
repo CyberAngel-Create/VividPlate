@@ -284,26 +284,36 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         </div>
         
         {/* Main Category Filter (Food/Beverage) */}
-        <div className="bg-gray-100 dark:bg-gray-800 p-3 flex justify-center space-x-4">
+        <div className="p-3 flex justify-center space-x-4" style={{ backgroundColor: theme.headerColor }}>
           <button
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center space-x-2 ${
               activeMainCategory === 'Food'
-                ? 'bg-primary text-white'
+                ? 'text-white'
                 : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
+            style={{ 
+              backgroundColor: activeMainCategory === 'Food' ? theme.accentColor : 'white',
+              color: activeMainCategory === 'Food' ? 'white' : theme.menuItemColor
+            }}
             onClick={() => handleMainCategoryClick('Food')}
           >
-            Food
+            <Utensils className="h-4 w-4" />
+            <span>Food</span>
           </button>
           <button
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center space-x-2 ${
               activeMainCategory === 'Beverage'
-                ? 'bg-primary text-white'
+                ? 'text-white'
                 : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
             }`}
+            style={{ 
+              backgroundColor: activeMainCategory === 'Beverage' ? theme.accentColor : 'white',
+              color: activeMainCategory === 'Beverage' ? 'white' : theme.menuItemColor
+            }}
             onClick={() => handleMainCategoryClick('Beverage')}
           >
-            Beverage
+            <Coffee className="h-4 w-4" />
+            <span>Beverage</span>
           </button>
         </div>
         
