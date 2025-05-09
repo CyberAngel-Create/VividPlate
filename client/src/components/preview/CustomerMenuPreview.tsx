@@ -524,7 +524,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       
       {previewMode && (
         <div className="bg-neutral text-midgray text-sm py-2 px-4 text-center">
-          Preview Mode
+          {t('menu.previewMode', 'Preview Mode')}
         </div>
       )}
     </div>
