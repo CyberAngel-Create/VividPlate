@@ -106,9 +106,9 @@ const MenuItemsList = ({
   }, [items, searchQuery]);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
       <div className="flex flex-wrap justify-between items-center mb-4">
-        <h2 className="text-xl font-heading font-semibold">
+        <h2 className="text-xl font-heading font-semibold dark:text-white">
           {category ? category.name : "Select a Category"}
         </h2>
         
@@ -119,10 +119,10 @@ const MenuItemsList = ({
                 <PlusCircle className="mr-1 h-4 w-4" /> Add Item
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-h-[90vh] overflow-y-auto dark:bg-gray-800">
               <DialogHeader>
-                <DialogTitle>{category.name} - Add Menu Item</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="dark:text-white">{category.name} - Add Menu Item</DialogTitle>
+                <DialogDescription className="dark:text-gray-300">
                   Add a new item to the "{category.name}" category
                 </DialogDescription>
               </DialogHeader>
@@ -146,7 +146,7 @@ const MenuItemsList = ({
             placeholder="Search menu items by name, description, or tags..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-white"
+            className="pl-10 bg-white dark:bg-gray-700 dark:text-white dark:border-gray-600"
           />
         </div>
       )}
@@ -186,15 +186,19 @@ const MenuItemsList = ({
               className="border rounded-lg p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex flex-col md:flex-row gap-4">
-                <div className="w-full md:w-32 h-32 bg-neutral rounded-md overflow-hidden flex items-center justify-center">
+                <div className="w-full md:w-32 h-32 bg-neutral dark:bg-gray-700 rounded-md overflow-hidden flex items-center justify-center">
                   {item.imageUrl ? (
                     <img 
                       src={item.imageUrl} 
                       alt={item.name} 
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        console.error("Failed to load menu item image:", item.imageUrl);
+                        e.currentTarget.src = "/placeholder-food.jpg";
+                      }}
                     />
                   ) : (
-                    <div className="text-midgray text-center">
+                    <div className="text-midgray dark:text-gray-400 text-center">
                       <PlusCircle className="h-8 w-8 mx-auto mb-2 opacity-30" />
                       <p className="text-xs">No image</p>
                     </div>
@@ -202,10 +206,10 @@ const MenuItemsList = ({
                 </div>
                 <div className="flex-grow">
                   <div className="flex justify-between">
-                    <h3 className="font-heading font-semibold">{item.name}</h3>
-                    <div className="text-primary font-semibold">{formatCurrency(item.price)}</div>
+                    <h3 className="font-heading font-semibold dark:text-white">{item.name}</h3>
+                    <div className="text-primary dark:text-primary-light font-semibold">{formatCurrency(item.price)}</div>
                   </div>
-                  <p className="text-midgray text-sm mt-1 mb-3">
+                  <p className="text-midgray dark:text-gray-300 text-sm mt-1 mb-3">
                     {item.description || "No description provided."}
                   </p>
                   <div className="flex flex-wrap gap-2 mb-3">
@@ -250,10 +254,10 @@ const MenuItemsList = ({
       {/* Edit Dialog */}
       {editingItem && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-h-[90vh] overflow-y-auto dark:bg-gray-800">
             <DialogHeader>
-              <DialogTitle>Edit Menu Item</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="dark:text-white">Edit Menu Item</DialogTitle>
+              <DialogDescription className="dark:text-gray-300">
                 Make changes to your menu item below
               </DialogDescription>
             </DialogHeader>
@@ -268,16 +272,16 @@ const MenuItemsList = ({
       
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="dark:bg-gray-800">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="dark:text-white">Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription className="dark:text-gray-300">
               This will permanently delete the menu item "{deletingItem?.name}".
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel className="dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600">Cancel</AlertDialogCancel>
             <AlertDialogAction 
               className="bg-destructive hover:bg-destructive/90"
               onClick={confirmDelete}

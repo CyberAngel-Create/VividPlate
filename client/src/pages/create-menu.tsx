@@ -287,9 +287,9 @@ const CreateMenu = () => {
   return (
     <RestaurantOwnerLayout>
       <div className="px-4 py-6">
-        <TabNavigation />
+        {/* Removed TabNavigation as per user request */}
         
-        <h1 className="text-2xl font-heading font-bold my-6">Create Your Menu</h1>
+        <h1 className="text-2xl font-heading font-bold my-6 dark:text-white">Create Your Menu</h1>
         
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
