@@ -32,14 +32,14 @@ export function getFallbackImage(type: 'menu' | 'logo' | 'banner' = 'menu'): str
   let fallbackUrl = '';
   switch (type) {
     case 'logo':
-      fallbackUrl = '/placeholder-logo.jpg';
+      fallbackUrl = '/placeholder-logo.svg';
       break;
     case 'banner':
-      fallbackUrl = '/placeholder-banner.jpg';
+      fallbackUrl = '/placeholder-banner.svg';
       break;
     case 'menu':
     default:
-      fallbackUrl = '/placeholder-food.jpg';
+      fallbackUrl = '/placeholder-food.svg';
       break;
   }
   

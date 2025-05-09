@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import MenuItemForm from "./MenuItemForm";
 import { formatCurrency } from "@/lib/utils";
+import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 
 interface MenuItemsListProps {
   category: MenuCategory | null;
@@ -189,12 +190,12 @@ const MenuItemsList = ({
                 <div className="w-full md:w-32 h-32 bg-neutral dark:bg-gray-700 rounded-md overflow-hidden flex items-center justify-center">
                   {item.imageUrl ? (
                     <img 
-                      src={item.imageUrl} 
+                      src={normalizeImageUrl(item.imageUrl)} 
                       alt={item.name} 
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         console.error("Failed to load menu item image:", item.imageUrl);
-                        e.currentTarget.src = "/placeholder-food.jpg";
+                        e.currentTarget.src = getFallbackImage('menu');
                       }}
                     />
                   ) : (
