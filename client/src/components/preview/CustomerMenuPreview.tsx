@@ -1,6 +1,6 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight } from "lucide-react";
+import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import { useState, useMemo, useEffect, CSSProperties } from "react";
@@ -148,9 +148,25 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   previewMode = false
 }) => {
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
+    // Reset main category filter when a specific category is selected
+    if (categoryId !== "all") {
+      setActiveMainCategory(null);
+    }
+  };
+  
+  const handleMainCategoryClick = (mainCategory: string) => {
+    if (activeMainCategory === mainCategory) {
+      // Toggle off if already selected
+      setActiveMainCategory(null);
+    } else {
+      setActiveMainCategory(mainCategory);
+      // Reset to "all" categories when filtering by main category
+      setActiveCategory("all");
+    }
   };
   
   // Get theme settings from restaurant or use defaults
@@ -186,10 +202,26 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     return menuData.flatMap(category => category.items);
   }, [menuData]);
 
-  // Filter items based on selected category
-  const filteredMenuData = activeCategory === "all" 
-    ? menuData 
-    : menuData.filter(category => category.id.toString() === activeCategory);
+  // Filter items based on selected category and main category
+  const filteredMenuData = useMemo(() => {
+    // First filter by main category if selected
+    let filtered = menuData;
+    
+    if (activeMainCategory) {
+      filtered = menuData.filter(category => 
+        category.mainCategory === activeMainCategory
+      );
+    }
+    
+    // Then filter by specific category if not "all"
+    if (activeCategory !== "all") {
+      filtered = filtered.filter(category => 
+        category.id.toString() === activeCategory
+      );
+    }
+    
+    return filtered;
+  }, [menuData, activeCategory, activeMainCategory]);
 
   // Create styles based on theme
   const containerStyle: CSSProperties = {
@@ -249,6 +281,30 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             <h2 className="text-2xl font-heading font-bold">{restaurant.name}</h2>
             <p className="text-sm opacity-90">{restaurant.cuisine || "Restaurant Menu"}</p>
           </div>
+        </div>
+        
+        {/* Main Category Filter (Food/Beverage) */}
+        <div className="bg-gray-100 dark:bg-gray-800 p-3 flex justify-center space-x-4">
+          <button
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              activeMainCategory === 'Food'
+                ? 'bg-primary text-white'
+                : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+            onClick={() => handleMainCategoryClick('Food')}
+          >
+            Food
+          </button>
+          <button
+            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+              activeMainCategory === 'Beverage'
+                ? 'bg-primary text-white'
+                : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+            onClick={() => handleMainCategoryClick('Beverage')}
+          >
+            Beverage
+          </button>
         </div>
         
         {/* Menu Categories Tabs and Search */}
