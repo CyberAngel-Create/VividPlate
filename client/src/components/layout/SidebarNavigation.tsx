@@ -65,16 +65,16 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       showFor: "free" 
     },
     {
-      id: 'contact',
-      icon: <Mail className="h-5 w-5" />,
-      label: 'Contact',
-      path: '/contact'
-    },
-    {
       id: 'profile',
       icon: <User className="h-5 w-5" />,
       label: 'Profile',
       path: '/profile'
+    },
+    {
+      id: 'contact',
+      icon: <Mail className="h-5 w-5" />,
+      label: 'Contact',
+      path: '/contact'
     }
   ];
 
