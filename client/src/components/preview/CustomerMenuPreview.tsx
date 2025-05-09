@@ -293,7 +293,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       </div>
       
       {/* Main Category Filter (Food/Beverage) */}
-      <div className="p-3 flex justify-center space-x-4" style={{ backgroundColor: theme.headerColor }}>
+      <div className="p-3 flex justify-center space-x-4" style={{ backgroundColor: menuTheme.headerColor }}>
         <button
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center space-x-2 ${
             activeMainCategory === 'Food'
@@ -301,8 +301,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
           }`}
           style={{ 
-            backgroundColor: activeMainCategory === 'Food' ? theme.accentColor : 'white',
-            color: activeMainCategory === 'Food' ? 'white' : theme.menuItemColor
+            backgroundColor: activeMainCategory === 'Food' ? menuTheme.accentColor : 'white',
+            color: activeMainCategory === 'Food' ? 'white' : menuTheme.menuItemColor
           }}
           onClick={() => handleMainCategoryClick('Food')}
         >
@@ -316,8 +316,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
           }`}
           style={{ 
-            backgroundColor: activeMainCategory === 'Beverage' ? theme.accentColor : 'white',
-            color: activeMainCategory === 'Beverage' ? 'white' : theme.menuItemColor
+            backgroundColor: activeMainCategory === 'Beverage' ? menuTheme.accentColor : 'white',
+            color: activeMainCategory === 'Beverage' ? 'white' : menuTheme.menuItemColor
           }}
           onClick={() => handleMainCategoryClick('Beverage')}
         >
@@ -337,8 +337,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                   : ""
               }`}
               style={{ 
-                color: activeCategory === "all" ? theme.accentColor : theme.menuItemColor,
-                borderColor: activeCategory === "all" ? theme.accentColor : ""
+                color: activeCategory === "all" ? menuTheme.accentColor : menuTheme.menuItemColor,
+                borderColor: activeCategory === "all" ? menuTheme.accentColor : ""
               }}
               onClick={() => handleCategoryClick("all")}
             >
@@ -354,8 +354,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                     : ""
                 }`}
                 style={{ 
-                  color: activeCategory === category.id.toString() ? theme.accentColor : theme.menuItemColor,
-                  borderColor: activeCategory === category.id.toString() ? theme.accentColor : ""
+                  color: activeCategory === category.id.toString() ? menuTheme.accentColor : menuTheme.menuItemColor,
+                  borderColor: activeCategory === category.id.toString() ? menuTheme.accentColor : ""
                 }}
                 onClick={() => handleCategoryClick(category.id.toString())}
               >
@@ -460,7 +460,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               {/* Feedback button indicator - always visible */}
                               <div 
                                 className="mt-2 text-xs flex items-center" 
-                                style={{ color: theme.accentColor }}
+                                style={{ color: menuTheme.accentColor }}
                               >
                                 <MessageSquare className="h-3 w-3 mr-1" />
                                 <span>Click to leave feedback</span>
@@ -490,21 +490,21 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             <div className="flex justify-center space-x-2 mt-2">
               <a 
                 href="#" 
-                style={{ color: theme.accentColor }}
+                style={{ color: menuTheme.accentColor }}
                 className="hover:opacity-80 transition-colors"
               >
                 <Facebook className="h-4 w-4" />
               </a>
               <a 
                 href="#" 
-                style={{ color: theme.accentColor }}
+                style={{ color: menuTheme.accentColor }}
                 className="hover:opacity-80 transition-colors"
               >
                 <Instagram className="h-4 w-4" />
               </a>
               <a 
                 href="#" 
-                style={{ color: theme.accentColor }}
+                style={{ color: menuTheme.accentColor }}
                 className="hover:opacity-80 transition-colors"
               >
                 <Globe className="h-4 w-4" />

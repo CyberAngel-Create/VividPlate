@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/hooks/use-subscription";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface SidebarNavigationProps {
   onLogout?: () => void;
@@ -106,6 +107,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
         </Link>
         
         <div className="flex items-center gap-2">
+          <ThemeToggle variant="ghost" size="icon" tooltipPosition="bottom" />
           <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Open menu">
@@ -187,8 +189,12 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
           </ul>
         </nav>
         
-        {/* Logout */}
-        <div className="p-4 border-t dark:border-gray-800">
+        {/* Theme Toggle and Logout */}
+        <div className="p-4 border-t dark:border-gray-800 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Appearance</span>
+            <ThemeToggle variant="outline" size="sm" tooltipPosition="top" />
+          </div>
           <Button
             variant="outline"
             className="w-full flex items-center justify-start gap-3"
