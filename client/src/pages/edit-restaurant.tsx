@@ -55,9 +55,9 @@ const EditRestaurant = () => {
       // Set a flag in session storage to indicate form should be reset
       sessionStorage.setItem("resetRestaurantForm", "true");
       
-      // Force reload to ensure the new restaurant is loaded
-      // This will trigger the form reset in the component
-      window.location.reload();
+      // No need to reload the page, just refetch the restaurant list
+      // This allows the form to stay open while updating data in the background
+      queryClient.refetchQueries({ queryKey: ["/api/restaurants"] });
     },
     onError: (error) => {
       console.error("Restaurant creation error:", error);

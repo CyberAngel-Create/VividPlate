@@ -83,7 +83,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
             key={index}
             src={normalizedUrl}
             alt={`${restaurantName} banner ${index + 1}`}
-            className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 ${
+            className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 dark:brightness-90 dark:contrast-110 ${
               index === activeIndex ? 'opacity-100' : 'opacity-0'
             }`}
             onError={(e) => {
@@ -265,7 +265,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             <img 
               src={normalizeImageUrl(restaurant.bannerUrl)}
               alt={`${restaurant.name} banner`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover dark:brightness-90 dark:contrast-110"
               onError={(e) => {
                 console.error("Failed to load banner image:", restaurant.bannerUrl);
                 e.currentTarget.src = getFallbackImage('banner');
@@ -397,7 +397,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               <img 
                                 src={normalizeImageUrl(item.imageUrl)} 
                                 alt={item.name} 
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover dark:brightness-90 dark:contrast-110"
                                 onError={(e) => {
                                   console.error("Failed to load menu item image:", item.imageUrl);
                                   e.currentTarget.src = getFallbackImage('menu');

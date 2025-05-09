@@ -25,24 +25,28 @@ export function normalizeImageUrl(url: string | null | undefined): string {
 
 /**
  * Gets a fallback image in case the original image fails to load
+ * Takes into account dark mode preferences
  * @param type The type of fallback image (menu, logo, banner)
  * @returns URL to an appropriate fallback image
  */
 export function getFallbackImage(type: 'menu' | 'logo' | 'banner' = 'menu'): string {
+  // Check if we should use dark mode images
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  
   let fallbackUrl = '';
   switch (type) {
     case 'logo':
-      fallbackUrl = '/placeholder-logo.svg';
+      fallbackUrl = isDarkMode ? '/placeholder-logo-dark.svg' : '/placeholder-logo.svg';
       break;
     case 'banner':
-      fallbackUrl = '/placeholder-banner.svg';
+      fallbackUrl = isDarkMode ? '/placeholder-banner-dark.svg' : '/placeholder-banner.svg';
       break;
     case 'menu':
     default:
-      fallbackUrl = '/placeholder-food.svg';
+      fallbackUrl = isDarkMode ? '/placeholder-food-dark.svg' : '/placeholder-food.svg';
       break;
   }
   
-  console.log(`Using fallback image for ${type}: ${fallbackUrl}`);
+  console.log(`Using fallback image for ${type}: ${fallbackUrl} (dark mode: ${isDarkMode})`);
   return fallbackUrl;
 }

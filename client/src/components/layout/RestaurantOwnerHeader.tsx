@@ -58,7 +58,10 @@ const RestaurantOwnerHeader = () => {
               {canAddRestaurant && (
                 <>
                   <DropdownMenuSeparator className="dark:border-gray-700" />
-                  <Link href="/edit-restaurant">
+                  <Link href="/edit-restaurant" onClick={(e) => {
+                    // Remove any existing reset flag to ensure we get a clean form
+                    sessionStorage.removeItem("resetRestaurantForm");
+                  }}>
                     <DropdownMenuItem className="cursor-pointer text-primary dark:text-primary-light font-medium">
                       <PlusCircle className="h-4 w-4 mr-2" />
                       {t("Create Restaurant")}
