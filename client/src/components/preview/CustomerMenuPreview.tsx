@@ -1,9 +1,10 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee } from "lucide-react";
+import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee, Moon, Sun } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import { useState, useMemo, useEffect, CSSProperties } from "react";
+import { useTheme } from "next-themes";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import CompactSearch from "@/components/ui/compact-search";
@@ -144,8 +145,19 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   menuData,
   previewMode = false
 }) => {
+  const { theme: appTheme, setTheme } = useTheme();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  
+  // Toggle dark/light mode
+  const toggleTheme = () => {
+    setTheme(appTheme === 'light' ? 'dark' : 'light');
+  };
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
@@ -192,7 +204,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     console.error('Error parsing theme settings:', e);
   }
   
-  const theme = themeSettings;
+  const menuTheme = themeSettings;
 
   // Collect all menu items for search functionality
   const allMenuItems = useMemo(() => {
@@ -222,29 +234,29 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
 
   // Create styles based on theme
   const containerStyle: CSSProperties = {
-    backgroundColor: theme.backgroundColor,
-    color: theme.textColor,
-    fontFamily: theme.fontFamily
+    backgroundColor: menuTheme.backgroundColor,
+    color: menuTheme.textColor,
+    fontFamily: menuTheme.fontFamily
   };
   
   const headerContainerStyle: CSSProperties = {
-    backgroundColor: theme.headerColor
+    backgroundColor: menuTheme.headerColor
   };
   
   const categoryNameStyle: CSSProperties = {
-    color: theme.menuItemColor
+    color: menuTheme.menuItemColor
   };
   
   const menuItemNameStyle: CSSProperties = {
-    color: theme.menuItemColor
+    color: menuTheme.menuItemColor
   };
   
   const menuItemDescriptionStyle: CSSProperties = {
-    color: theme.menuDescriptionColor
+    color: menuTheme.menuDescriptionColor
   };
   
   const menuItemPriceStyle: CSSProperties = {
-    color: theme.menuPriceColor
+    color: menuTheme.menuPriceColor
   };
 
   return (
