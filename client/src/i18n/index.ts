@@ -1,7 +1,9 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
 
-// English translations only
+// Translations for multiple languages
+// Common translation keys used across the app
 const translations = {
   common: {
     login: 'Login',
@@ -25,6 +27,8 @@ const translations = {
     successAdminLogin: 'Admin login successful',
     invalidCredentials: 'Invalid username or password',
     invalidAdminCredentials: 'Invalid admin credentials',
+    language: 'Language',
+    translateMenu: 'Translate Menu',
   },
   home: {
     welcome: 'Welcome to MenuMate',
@@ -118,14 +122,91 @@ const translations = {
   },
 };
 
+// Additional languages
+const amharicTranslations = {
+  common: {
+    login: 'ግባ',
+    register: 'ተመዝገብ',
+    logout: 'ውጣ',
+    username: 'የተጠቃሚ ስም',
+    password: 'የይለፍ ቃል',
+    language: 'ቋንቋ',
+    translateMenu: 'ምናሌዉን ተረጉም',
+  },
+  menu: {
+    categories: 'ምድቦች',
+    items: 'ምግቦች',
+    price: 'ዋጋ',
+    description: 'መግለጫ',
+  },
+  restaurant: {
+    feedback: 'የደንበኛ አስተያየት',
+    leaveFeedback: 'አስተያየትዎን ያጋሩ',
+  }
+};
+
+const frenchTranslations = {
+  common: {
+    login: 'Connexion',
+    register: 'S\'inscrire',
+    logout: 'Déconnexion',
+    username: 'Nom d\'utilisateur',
+    password: 'Mot de passe',
+    language: 'Langue',
+    translateMenu: 'Traduire le menu',
+  },
+  menu: {
+    categories: 'Catégories',
+    items: 'Articles',
+    price: 'Prix',
+    description: 'Description',
+  },
+  restaurant: {
+    feedback: 'Commentaires des clients',
+    leaveFeedback: 'Partagez votre expérience',
+  }
+};
+
+const arabicTranslations = {
+  common: {
+    login: 'تسجيل الدخول',
+    register: 'التسجيل',
+    logout: 'تسجيل الخروج',
+    username: 'اسم المستخدم',
+    password: 'كلمة المرور',
+    language: 'اللغة',
+    translateMenu: 'ترجمة القائمة',
+  },
+  menu: {
+    categories: 'الفئات',
+    items: 'العناصر',
+    price: 'السعر',
+    description: 'الوصف',
+  },
+  restaurant: {
+    feedback: 'آراء العملاء',
+    leaveFeedback: 'شارك تجربتك',
+  }
+};
+
 // Initialize i18next
 i18n
   .use(initReactI18next)
+  .use(LanguageDetector)
   .init({
     resources: {
       en: {
         translation: translations
       },
+      am: {
+        translation: amharicTranslations
+      },
+      fr: {
+        translation: frenchTranslations
+      },
+      ar: {
+        translation: arabicTranslations
+      }
     },
     lng: 'en',
     fallbackLng: 'en',
@@ -133,6 +214,12 @@ i18n
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },
+    detection: {
+      order: ['querystring', 'localStorage', 'navigator'],
+      lookupQuerystring: 'lang',
+      lookupLocalStorage: 'i18nextLng',
+      caches: ['localStorage'],
+    }
   });
 
 export default i18n;

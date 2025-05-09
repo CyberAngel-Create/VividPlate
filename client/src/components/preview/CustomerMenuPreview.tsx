@@ -5,9 +5,11 @@ import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import { useState, useMemo, useEffect, CSSProperties } from "react";
 import { useTheme } from "next-themes";
+import { useTranslation } from "react-i18next";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import CompactSearch from "@/components/ui/compact-search";
+import MenuLanguageSwitcher from "@/components/ui/menu-language-switcher";
 
 // Banner slideshow component
 interface BannerSlideshowProps {
@@ -146,6 +148,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   previewMode = false
 }) => {
   const { theme: appTheme, setTheme } = useTheme();
+  const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -342,7 +345,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               }}
               onClick={() => handleCategoryClick("all")}
             >
-              All
+              {t('menu.all', 'All')}
             </button>
             
             {menuData.map((category) => (
@@ -362,6 +365,11 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                 {category.name}
               </button>
             ))}
+          </div>
+          
+          {/* Language switcher component */}
+          <div className="flex-shrink-0 ml-2">
+            <MenuLanguageSwitcher variant="ghost" />
           </div>
         </div>
       </div>
