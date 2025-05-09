@@ -16,16 +16,24 @@ export function formatDate(date: Date): string {
   }).format(date);
 }
 
-export function formatCurrency(amount: string | number): string {
-  if (typeof amount === 'string' && !amount.startsWith('$')) {
-    return `$${amount}`;
+export function formatCurrency(amount: string | number, currency: string = "USD"): string {
+  const value = typeof amount === 'string' ? parseFloat(amount) : amount;
+  
+  if (isNaN(value)) {
+    return String(amount);
   }
   
-  if (typeof amount === 'number') {
-    return `$${amount.toFixed(2)}`;
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  } catch (error) {
+    // Fallback if there's an issue with the currency format
+    return `$${value.toFixed(2)}`;
   }
-  
-  return String(amount);
 }
 
 export function generateSlug(text: string): string {

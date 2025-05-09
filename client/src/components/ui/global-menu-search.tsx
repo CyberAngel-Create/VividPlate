@@ -39,6 +39,8 @@ const GlobalMenuSearch = ({ categories, menuItems, onEditItem, onDeleteItem }: G
   const [searchTerm, setSearchTerm] = useState('');
   const [, setLocation] = useLocation();
   const [sort, setSort] = useState<SortState>({ field: "name", direction: "asc" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   // Create a lookup map for category names by ID for faster access
   const categoryMap = useMemo(() => {
@@ -82,6 +84,21 @@ const GlobalMenuSearch = ({ categories, menuItems, onEditItem, onDeleteItem }: G
       return sort.direction === "asc" ? comparison : -comparison;
     });
   }, [filteredItems, sort, categoryMap]);
+  
+  // Calculate pagination
+  const totalPages = Math.ceil(sortedItems.length / ITEMS_PER_PAGE);
+  
+  // Get current page items
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return sortedItems.slice(startIndex, endIndex);
+  }, [sortedItems, currentPage, ITEMS_PER_PAGE]);
+  
+  // Reset to page 1 when search term changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   // Handle sort column click
   const handleSort = (field: SortField) => {
@@ -175,7 +192,7 @@ const GlobalMenuSearch = ({ categories, menuItems, onEditItem, onDeleteItem }: G
                 </TableCell>
               </TableRow>
             ) : (
-              sortedItems.map((item) => (
+              paginatedItems.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell className="font-medium">
                     <div className="flex items-center">
@@ -260,6 +277,67 @@ const GlobalMenuSearch = ({ categories, menuItems, onEditItem, onDeleteItem }: G
           </TableBody>
         </Table>
       </div>
+      
+      {/* Pagination Controls */}
+      {sortedItems.length > 0 && (
+        <div className="flex items-center justify-between border-t dark:border-gray-700 px-4 py-3 mt-4">
+          <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
+            <span>
+              Showing {paginatedItems.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(currentPage * ITEMS_PER_PAGE, sortedItems.length)} of {sortedItems.length} items
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous page</span>
+            </Button>
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                // Calculate page numbers to show (centered around current page)
+                let pageNum = i + 1;
+                if (totalPages > 5) {
+                  if (currentPage > 3) {
+                    pageNum = currentPage - 3 + i;
+                  }
+                  if (currentPage > totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  }
+                }
+                // Ensure page numbers are in valid range
+                pageNum = Math.max(1, Math.min(totalPages, pageNum));
+                
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="h-8 w-8 p-0"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next page</span>
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
