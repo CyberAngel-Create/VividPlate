@@ -129,7 +129,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
             <img
               src={previewUrl.startsWith('blob:') ? previewUrl : normalizeImageUrl(previewUrl)}
               alt="Menu item"
-              className={`w-full h-48 object-cover rounded-md ${isUploading ? 'opacity-50' : ''}`}
+              className={`w-full h-48 object-cover rounded-md dark:brightness-90 dark:contrast-110 ${isUploading ? 'opacity-50' : ''}`}
               onError={(e) => {
                 console.error("Failed to load menu item image:", previewUrl);
                 e.currentTarget.src = getFallbackImage('menu');

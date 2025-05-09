@@ -203,7 +203,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
               <img 
                 src={normalizeImageUrl(bannerUrls[activeIndex])} 
                 alt="Restaurant banner preview" 
-                className={`object-cover w-full h-full ${isUploading ? 'opacity-60' : ''}`}
+                className={`object-cover w-full h-full dark:brightness-90 dark:contrast-110 ${isUploading ? 'opacity-60' : ''}`}
                 onError={(e) => {
                   console.error("Failed to load banner image:", bannerUrls[activeIndex]);
                   e.currentTarget.src = getFallbackImage('banner');
