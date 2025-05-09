@@ -82,6 +82,7 @@ export const menuCategories = pgTable("menu_categories", {
   name: text("name").notNull(),
   description: text("description"),
   displayOrder: integer("display_order").default(0),
+  mainCategory: text("main_category").default("Food"), // 'Food' or 'Beverage'
 });
 
 export const insertMenuCategorySchema = createInsertSchema(menuCategories).pick({
@@ -89,6 +90,7 @@ export const insertMenuCategorySchema = createInsertSchema(menuCategories).pick(
   name: true,
   description: true,
   displayOrder: true,
+  mainCategory: true,
 });
 
 // Menu items
