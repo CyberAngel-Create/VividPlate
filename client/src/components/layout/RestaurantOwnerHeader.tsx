@@ -1,8 +1,9 @@
-import { Link } from "wouter";
+import { useState } from "react";
 import { Store, ChevronRight, PlusCircle } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
+import CreateRestaurantModal from "@/components/restaurant/CreateRestaurantModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +17,7 @@ const RestaurantOwnerHeader = () => {
   const { restaurants, activeRestaurant, setActiveRestaurant } = useRestaurant();
   const { isPaid } = useSubscription();
   const { t } = useTranslation();
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   // Check if the user can add more restaurants (premium users can add up to 3)
   const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
@@ -58,21 +60,30 @@ const RestaurantOwnerHeader = () => {
               {canAddRestaurant && (
                 <>
                   <DropdownMenuSeparator className="dark:border-gray-700" />
-                  <Link href="/edit-restaurant" onClick={(e) => {
-                    // Remove any existing reset flag to ensure we get a clean form
-                    sessionStorage.removeItem("resetRestaurantForm");
-                  }}>
-                    <DropdownMenuItem className="cursor-pointer text-primary dark:text-primary-light font-medium">
-                      <PlusCircle className="h-4 w-4 mr-2" />
-                      {t("Create Restaurant")}
-                    </DropdownMenuItem>
-                  </Link>
+                  <DropdownMenuItem 
+                    className="cursor-pointer text-primary dark:text-primary-light font-medium"
+                    onClick={() => {
+                      // Remove any existing reset flag to ensure we get a clean form
+                      sessionStorage.removeItem("resetRestaurantForm");
+                      // Open the create restaurant modal
+                      setIsCreateModalOpen(true);
+                    }}
+                  >
+                    <PlusCircle className="h-4 w-4 mr-2" />
+                    {t("Create Restaurant")}
+                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+
+      {/* Create Restaurant Modal */}
+      <CreateRestaurantModal 
+        isOpen={isCreateModalOpen} 
+        onClose={() => setIsCreateModalOpen(false)} 
+      />
     </div>
   );
 };
