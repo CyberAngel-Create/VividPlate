@@ -100,8 +100,8 @@ function Router() {
         <PublicRoute path="/reset-password" component={ResetPassword} />
         <PublicRoute path="/pricing" component={Pricing} />
         <PublicRoute path="/contact" component={Contact} />
-        <PublicRoute path="/menu/:restaurantId" component={ViewMenu} />
-        <PublicRoute path="/view-menu/:restaurantId" component={ViewMenu} />
+        <PublicRoute path="/menu/:restaurantName" component={ViewMenu} />
+        <PublicRoute path="/view-menu/:restaurantName" component={ViewMenu} />
 
         <AuthenticatedRoute path="/dashboard" component={Dashboard} />
         <AuthenticatedRoute path="/profile" component={Profile} />

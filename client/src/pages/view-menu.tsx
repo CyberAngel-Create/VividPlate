@@ -29,10 +29,11 @@ interface MenuData {
 }
 
 const ViewMenu = () => {
-  const { restaurantId } = useParams();
+  const { restaurantName } = useParams();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [restaurantId, setRestaurantId] = useState<number | null>(null);
   
   // Check if user is authenticated
   useEffect(() => {
@@ -69,6 +70,32 @@ const ViewMenu = () => {
   // Get source parameter from URL (e.g., qr or link)
   const source = new URLSearchParams(window.location.search).get("source") || "link";
   
+  // First lookup restaurant ID by name using the dedicated API endpoint
+  useEffect(() => {
+    if (restaurantName) {
+      const fetchRestaurantIdByName = async () => {
+        try {
+          // Use the new dedicated API endpoint for looking up restaurant by name
+          const response = await apiRequest("GET", `/api/restaurants/name/${restaurantName}`);
+          
+          if (response.ok) {
+            const restaurant = await response.json();
+            setRestaurantId(restaurant.id);
+          } else {
+            console.error("Restaurant not found:", restaurantName);
+            // Redirect to 404 or home page if restaurant not found
+            setLocation("/");
+          }
+        } catch (error) {
+          console.error("Failed to fetch restaurant by name:", error);
+          setLocation("/");
+        }
+      };
+      
+      fetchRestaurantIdByName();
+    }
+  }, [restaurantName, setLocation]);
+  
   // Record menu view
   useEffect(() => {
     if (restaurantId) {
@@ -88,7 +115,7 @@ const ViewMenu = () => {
   
   // Fetch menu data
   const { data, isLoading, error } = useQuery<MenuData>({
-    queryKey: [`/api/restaurants/${restaurantId}/menu`],
+    queryKey: [restaurantId ? `/api/restaurants/${restaurantId}/menu` : null],
     enabled: !!restaurantId,
   });
   

@@ -5,27 +5,33 @@ import { useRestaurant } from "@/hooks/use-restaurant";
 const QuickActions = () => {
   const [, setLocation] = useLocation();
   const { activeRestaurant } = useRestaurant();
-  const restaurantId = activeRestaurant?.id;
+  
+  // Function to create URL-friendly restaurant name
+  const getRestaurantUrlName = (name: string) => {
+    return encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'));
+  };
 
   const handleAddMenuItem = () => {
-    if (restaurantId) {
-      setLocation(`/create-menu/${restaurantId}`);
+    if (activeRestaurant) {
+      // For internal routes, still use ID for simplicity
+      setLocation(`/create-menu/${activeRestaurant.id}`);
     } else {
       setLocation("/create-menu");
     }
   };
 
   const handleShareMenu = () => {
-    if (restaurantId) {
-      setLocation(`/share-menu/${restaurantId}`);
+    if (activeRestaurant) {
+      setLocation(`/share-menu`);
     } else {
       setLocation("/share-menu");
     }
   };
 
   const handlePreviewMenu = () => {
-    if (restaurantId) {
-      setLocation(`/menu-preview/${restaurantId}`);
+    if (activeRestaurant) {
+      // For internal routes, still use ID for simplicity
+      setLocation(`/menu-preview/${activeRestaurant.id}`);
     } else {
       setLocation("/menu-preview");
     }

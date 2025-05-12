@@ -870,7 +870,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/restaurants/:restaurantId', async (req, res) => {
+  app.get('/api/restaurants/name/:restaurantName', async (req, res) => {
+    try {
+      const restaurantName = req.params.restaurantName;
+      const normalizedName = decodeURIComponent(restaurantName).replace(/-/g, ' ');
+      console.log(`Fetching restaurant with name: ${normalizedName}`);
+      
+      // Fetch all restaurants and find the one with matching name
+      const allRestaurants = await storage.getAllRestaurants();
+      const restaurant = allRestaurants.find(
+        (r) => r.name.toLowerCase() === normalizedName.toLowerCase()
+      );
+      
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      res.json(restaurant);
+    } catch (error) {
+      console.error('Error fetching restaurant by name:', error);
+      res.status(500).json({ message: 'Server error while fetching restaurant by name' });
+    }
+});
+
+app.get('/api/restaurants/:restaurantId', async (req, res) => {
     try {
       const restaurantId = parseInt(req.params.restaurantId);
       console.log(`Fetching restaurant with ID: ${restaurantId}`);
