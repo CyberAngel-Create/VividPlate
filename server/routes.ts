@@ -960,23 +960,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Logo uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
       const restaurantId = parseInt(req.params.restaurantId);
-      const logoUrl = `/uploads/${req.file.filename}`;
+      
+      // Original file path
+      const originalFilePath = path.join(process.cwd(), 'uploads', req.file.filename);
       
       // Test file access immediately after upload to verify it exists
-      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
-      if (fs.existsSync(filePath)) {
-        console.log(`Confirmed logo file exists at: ${filePath}`);
-        
-        // Log file stats for debugging
-        try {
-          const stats = fs.statSync(filePath);
-          console.log(`Logo file stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
-        } catch (statErr) {
-          console.error(`Error getting logo file stats: ${statErr}`);
-        }
-      } else {
-        console.error(`WARNING: Logo file should exist but was not found at: ${filePath}`);
+      if (!fs.existsSync(originalFilePath)) {
+        console.error(`WARNING: Logo file should exist but was not found at: ${originalFilePath}`);
+        return res.status(500).json({ message: 'File not found after upload' });
       }
+      
+      console.log(`Confirmed logo file exists at: ${originalFilePath}, now processing for optimization`);
+      
+      // Process and compress the image
+      let finalFilePath = originalFilePath;
+      let finalFileName = req.file.filename;
+      
+      try {
+        // Process and compress the logo image to appropriate dimensions and quality
+        const processedFilePath = await processLogoImage(originalFilePath);
+        
+        // Check if processing was successful
+        if (fs.existsSync(processedFilePath)) {
+          // Get the processed file stats
+          const processedStats = fs.statSync(processedFilePath);
+          console.log(`Processed logo stats - Size: ${processedStats.size} bytes, Path: ${processedFilePath}`);
+          
+          // Update the filename and path to use the processed version
+          finalFilePath = processedFilePath;
+          finalFileName = path.basename(processedFilePath);
+          
+          // Delete the original file if it's different from the processed one
+          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+            fs.unlinkSync(originalFilePath);
+            console.log(`Deleted original logo file after successful processing: ${originalFilePath}`);
+          }
+        }
+      } catch (processingError) {
+        // Log error but continue with original file if processing fails
+        console.error(`Logo image processing failed, using original image: ${processingError}`);
+      }
+      
+      // Set the correct logo URL to use (either original or processed)
+      const logoUrl = `/uploads/${finalFileName}`;
+      console.log(`Using logo URL: ${logoUrl}`);
       
       // Update restaurant with new logo URL
       const restaurant = await storage.getRestaurant(restaurantId);
@@ -990,14 +1017,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
+      // Get final file stats for the response
+      const stats = fs.statSync(finalFilePath);
+      
       console.log(`Restaurant ${restaurantId} logo successfully updated to: ${logoUrl}`);
       res.json({ 
         logoUrl, 
         success: true,
         fileDetails: {
-          name: req.file.filename,
-          size: req.file.size,
-          type: req.file.mimetype
+          name: finalFileName,
+          size: stats.size,
+          type: req.file.mimetype,
+          compressed: finalFilePath !== originalFilePath
         }
       });
     } catch (error) {
@@ -1021,23 +1052,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Banner uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
       const restaurantId = parseInt(req.params.restaurantId);
-      const bannerUrl = `/uploads/${req.file.filename}`;
+      
+      // Original file path
+      const originalFilePath = path.join(process.cwd(), 'uploads', req.file.filename);
       
       // Test file access immediately after upload to verify it exists
-      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
-      if (fs.existsSync(filePath)) {
-        console.log(`Confirmed banner file exists at: ${filePath}`);
-        
-        // Log file stats for debugging
-        try {
-          const stats = fs.statSync(filePath);
-          console.log(`Banner file stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
-        } catch (statErr) {
-          console.error(`Error getting banner file stats: ${statErr}`);
-        }
-      } else {
-        console.error(`WARNING: Banner file should exist but was not found at: ${filePath}`);
+      if (!fs.existsSync(originalFilePath)) {
+        console.error(`WARNING: Banner file should exist but was not found at: ${originalFilePath}`);
+        return res.status(500).json({ message: 'File not found after upload' });
       }
+      
+      console.log(`Confirmed banner file exists at: ${originalFilePath}, now processing for optimization`);
+      
+      // Process and compress the image
+      let finalFilePath = originalFilePath;
+      let finalFileName = req.file.filename;
+      
+      try {
+        // Process and compress the banner image to max 200KB and appropriate dimensions
+        const processedFilePath = await processBannerImage(originalFilePath);
+        
+        // Check if processing was successful
+        if (fs.existsSync(processedFilePath)) {
+          // Get the processed file stats
+          const processedStats = fs.statSync(processedFilePath);
+          console.log(`Processed banner stats - Size: ${processedStats.size} bytes, Path: ${processedFilePath}`);
+          
+          // Update the filename and path to use the processed version
+          finalFilePath = processedFilePath;
+          finalFileName = path.basename(processedFilePath);
+          
+          // Delete the original file if it's different from the processed one
+          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+            fs.unlinkSync(originalFilePath);
+            console.log(`Deleted original banner file after successful processing: ${originalFilePath}`);
+          }
+        }
+      } catch (processingError) {
+        // Log error but continue with original file if processing fails
+        console.error(`Banner image processing failed, using original image: ${processingError}`);
+      }
+      
+      // Set the correct banner URL to use (either original or processed)
+      const bannerUrl = `/uploads/${finalFileName}`;
+      console.log(`Using banner URL: ${bannerUrl}`);
       
       // Get the restaurant and its current banner URLs
       const restaurant = await storage.getRestaurant(restaurantId);
@@ -1077,14 +1135,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Restaurant ${restaurantId} banners successfully updated, latest: ${bannerUrl}`);
       
+      // Get final file stats for the response
+      const stats = fs.statSync(finalFilePath);
+      
       res.json({ 
         bannerUrl,         // Return the single URL for backward compatibility
         bannerUrls,        // Return the full array of banner URLs
         success: true,
         fileDetails: {
-          name: req.file.filename,
-          size: req.file.size,
-          type: req.file.mimetype
+          name: finalFileName,
+          size: stats.size,
+          type: req.file.mimetype,
+          compressed: finalFilePath !== originalFilePath
         }
       });
     } catch (error) {
@@ -1350,34 +1412,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`File uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
-      // Simply return the URL to the uploaded file
-      const imageUrl = `/uploads/${req.file.filename}`;
+      // Original file path
+      const originalFilePath = path.join(process.cwd(), 'uploads', req.file.filename);
       
       // Test file access immediately after upload to verify it exists
-      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
-      if (fs.existsSync(filePath)) {
-        console.log(`Confirmed file exists at: ${filePath}`);
-        
-        // Log file stats for debugging
-        try {
-          const stats = fs.statSync(filePath);
-          console.log(`File stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
-          
-          // Verify file size again
-          if (stats.size === 0) {
-            console.error('Uploaded file has zero size');
-            return res.status(500).json({
-              message: 'Uploaded file is empty',
-              success: false,
-              code: 'EMPTY_FILE'
-            });
-          }
-          
-        } catch (statErr) {
-          console.error(`Error getting file stats: ${statErr}`);
-        }
-      } else {
-        console.error(`WARNING: File should exist but was not found at: ${filePath}`);
+      if (!fs.existsSync(originalFilePath)) {
+        console.error(`WARNING: File should exist but was not found at: ${originalFilePath}`);
         return res.status(500).json({
           message: 'File upload was processed but the file could not be found on the server.',
           success: false,
@@ -1385,16 +1425,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      console.log(`Confirmed file exists at: ${originalFilePath}, now processing for optimization`);
+      
+      // Verify file size
+      try {
+        const stats = fs.statSync(originalFilePath);
+        
+        // Verify file size again
+        if (stats.size === 0) {
+          console.error('Uploaded file has zero size');
+          return res.status(500).json({
+            message: 'Uploaded file is empty',
+            success: false,
+            code: 'EMPTY_FILE'
+          });
+        }
+        
+        console.log(`Original file stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
+      } catch (statErr) {
+        console.error(`Error getting file stats: ${statErr}`);
+      }
+      
+      // Process and compress the image
+      let finalFilePath = originalFilePath;
+      let finalFileName = req.file.filename;
+      
+      try {
+        // Process and compress the menu item image to max 150KB and appropriate dimensions
+        const processedFilePath = await processMenuItemImage(originalFilePath);
+        
+        // Check if processing was successful
+        if (fs.existsSync(processedFilePath)) {
+          // Get the processed file stats
+          const processedStats = fs.statSync(processedFilePath);
+          console.log(`Processed image stats - Size: ${processedStats.size} bytes, Path: ${processedFilePath}`);
+          
+          // Update the filename and path to use the processed version
+          finalFilePath = processedFilePath;
+          finalFileName = path.basename(processedFilePath);
+          
+          // Delete the original file if it's different from the processed one
+          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+            fs.unlinkSync(originalFilePath);
+            console.log(`Deleted original file after successful processing: ${originalFilePath}`);
+          }
+        }
+      } catch (processingError) {
+        // Log error but continue with original file if processing fails
+        console.error(`Image processing failed, using original image: ${processingError}`);
+      }
+      
+      // Set the correct image URL to use (either original or processed)
+      const imageUrl = `/uploads/${finalFileName}`;
+      console.log(`Using image URL: ${imageUrl}`);
+      
+      // Get final file stats for the response
+      const stats = fs.statSync(finalFilePath);
+      
       // Always return url field for backward compatibility
       res.json({ 
         url: imageUrl,
         imageUrl, 
         success: true,
         fileDetails: {
-          name: req.file.filename,
-          size: req.file.size,
+          name: finalFileName,
+          size: stats.size,
           type: req.file.mimetype,
-          path: req.file.path
+          path: finalFilePath,
+          compressed: finalFilePath !== originalFilePath
         }
       });
     } catch (error) {
@@ -1442,24 +1540,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: 'Access denied' });
       }
       
-      const imageUrl = `/uploads/${req.file.filename}`;
-      console.log(`File uploaded successfully, setting image URL: ${imageUrl}`);
+      // Original file path
+      const originalFilePath = path.join(process.cwd(), 'uploads', req.file.filename);
       
       // Test file access immediately after upload to verify it exists
-      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
-      if (fs.existsSync(filePath)) {
-        console.log(`Confirmed file exists at: ${filePath}`);
-        
-        // Log file stats for debugging
-        try {
-          const stats = fs.statSync(filePath);
-          console.log(`File stats - Size: ${stats.size} bytes, Created: ${stats.birthtime.toISOString()}`);
-        } catch (statErr) {
-          console.error(`Error getting file stats: ${statErr}`);
-        }
-      } else {
-        console.error(`WARNING: File should exist but was not found at: ${filePath}`);
+      if (!fs.existsSync(originalFilePath)) {
+        console.error(`WARNING: File should exist but was not found at: ${originalFilePath}`);
+        return res.status(500).json({ message: 'File not found after upload' });
       }
+      
+      console.log(`Confirmed file exists at: ${originalFilePath}, now processing for optimization`);
+      
+      // Process and compress the image
+      let finalFilePath = originalFilePath;
+      let finalFileName = req.file.filename;
+      
+      try {
+        // Process and compress the menu item image to max 150KB and appropriate dimensions
+        const processedFilePath = await processMenuItemImage(originalFilePath);
+        
+        // Check if processing was successful
+        if (fs.existsSync(processedFilePath)) {
+          // Get the processed file stats
+          const processedStats = fs.statSync(processedFilePath);
+          console.log(`Processed image stats - Size: ${processedStats.size} bytes, Path: ${processedFilePath}`);
+          
+          // Update the filename and path to use the processed version
+          finalFilePath = processedFilePath;
+          finalFileName = path.basename(processedFilePath);
+          
+          // Delete the original file if it's different from the processed one
+          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+            fs.unlinkSync(originalFilePath);
+            console.log(`Deleted original file after successful processing: ${originalFilePath}`);
+          }
+        }
+      } catch (processingError) {
+        // Log error but continue with original file if processing fails
+        console.error(`Image processing failed, using original image: ${processingError}`);
+      }
+      
+      // Set the correct image URL to use (either original or processed)
+      const imageUrl = `/uploads/${finalFileName}`;
+      console.log(`Using image URL: ${imageUrl}`);
       
       // If item has an existing image, make note for debugging
       if (item.imageUrl) {
@@ -1473,14 +1596,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Item not found after upload' });
       }
       
+      // Get final file stats for the response
+      const stats = fs.statSync(finalFilePath);
+      
       console.log(`Menu item ${itemId} successfully updated with new image URL: ${imageUrl}`);
       res.json({ 
         imageUrl, 
         success: true,
         fileDetails: {
-          name: req.file.filename,
-          size: req.file.size,
-          type: req.file.mimetype
+          name: finalFileName,
+          size: stats.size,
+          type: req.file.mimetype,
+          compressed: finalFilePath !== originalFilePath
         }
       });
     } catch (error) {
