@@ -26,7 +26,7 @@ const RestaurantOwnerHeader = () => {
   // State for tracking restaurant switch loading
   const [isRestaurantSwitching, setIsRestaurantSwitching] = useState(false);
 
-  // Handle restaurant change with proper cache invalidation
+  // Handle restaurant change with proper cache invalidation and page reload
   const handleRestaurantSwitch = useCallback((restaurantId: number) => {
     // Only update if it's different from current
     if (activeRestaurant?.id !== restaurantId) {
@@ -55,10 +55,17 @@ const RestaurantOwnerHeader = () => {
       // Set the new active restaurant
       setActiveRestaurant(restaurantId);
       
-      // Hide loading state after a short delay
+      // Store the current path before reload
+      const currentPath = window.location.pathname;
+      sessionStorage.setItem('lastPath', currentPath);
+      
+      // Add reload flag to session storage
+      sessionStorage.setItem('shouldReload', 'true');
+      
+      // Reload the current page to fully refresh all data
       setTimeout(() => {
-        setIsRestaurantSwitching(false);
-      }, 500);
+        window.location.reload();
+      }, 300);
     }
   }, [activeRestaurant, setActiveRestaurant]);
 

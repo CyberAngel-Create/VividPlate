@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { Restaurant } from "@shared/schema";
+import { useLocation } from "wouter";
 
 export function useRestaurant() {
   const [activeRestaurant, setActiveRestaurant] = useState<Restaurant | null>(null);
+  const [_, setLocation] = useLocation();
   
   // Fetch all restaurants for the current user
   const {
@@ -40,6 +42,30 @@ export function useRestaurant() {
       }
     }
   }, [restaurants, activeRestaurant]);
+  
+  // Check for navigation after page reload
+  useEffect(() => {
+    // Check if we've just reloaded the page after a restaurant switch
+    const shouldReload = sessionStorage.getItem('shouldReload');
+    if (shouldReload === 'true') {
+      // Get the path we were on before reload
+      const lastPath = sessionStorage.getItem('lastPath');
+      
+      // Clear the reload flag to prevent infinite reloads
+      sessionStorage.removeItem('shouldReload');
+      
+      if (lastPath) {
+        // Remove the lastPath from storage
+        sessionStorage.removeItem('lastPath');
+        
+        // Navigate back to where we were
+        console.log(`Navigating back to: ${lastPath}`);
+        setTimeout(() => {
+          setLocation(lastPath);
+        }, 100);
+      }
+    }
+  }, [setLocation]);
   
   // Function to change the active restaurant
   const setActiveRestaurantById = useCallback((id: number) => {
