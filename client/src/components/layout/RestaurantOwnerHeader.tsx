@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Store, ChevronRight, PlusCircle } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
+import { queryClient } from "@/lib/queryClient";
 import CreateRestaurantModal from "@/components/restaurant/CreateRestaurantModal";
 import {
   DropdownMenu,
@@ -21,6 +22,25 @@ const RestaurantOwnerHeader = () => {
 
   // Check if the user can add more restaurants (premium users can add up to 3)
   const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
+
+  // Handle restaurant change with proper cache invalidation
+  const handleRestaurantSwitch = useCallback((restaurantId: number) => {
+    // Only update if it's different from current
+    if (activeRestaurant?.id !== restaurantId) {
+      console.log(`Switching to restaurant ID: ${restaurantId}`);
+      
+      // Clear any cached menu data before switching restaurants
+      if (activeRestaurant) {
+        // Invalidate categories for the old restaurant
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/restaurants/${activeRestaurant.id}/categories`] 
+        });
+      }
+      
+      // Set the new active restaurant
+      setActiveRestaurant(restaurantId);
+    }
+  }, [activeRestaurant, setActiveRestaurant]);
 
   if (!restaurants || restaurants.length === 0) {
     return null;
@@ -47,7 +67,7 @@ const RestaurantOwnerHeader = () => {
               {restaurants.map((restaurant) => (
                 <DropdownMenuItem 
                   key={restaurant.id}
-                  onClick={() => setActiveRestaurant(restaurant.id)}
+                  onClick={() => handleRestaurantSwitch(restaurant.id)}
                   className={`cursor-pointer ${
                     activeRestaurant?.id === restaurant.id 
                       ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
