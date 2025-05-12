@@ -25,6 +25,7 @@ import multer from 'multer';
 import Stripe from "stripe";
 import { promisify } from "util";
 import { scrypt, timingSafeEqual } from "crypto";
+import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
 
 // Password comparison utility for authentication
 const scryptAsync = promisify(scrypt);
