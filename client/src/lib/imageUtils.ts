@@ -14,9 +14,12 @@ export function normalizeImageUrl(url: string | null | undefined): string {
     return url;
   }
   
-  // Log malformed URLs for debugging
-  if (!url.includes('/uploads/')) {
-    console.warn(`Possible malformed image URL: ${url}`);
+  // Handle cases where the URL might be missing uploads prefix
+  if (!url.includes('/uploads/') && !url.startsWith('/uploads/') && !url.includes('placeholder')) {
+    console.warn(`Possible malformed image URL: ${url}, adding /uploads/ prefix`);
+    // Add /uploads/ prefix if missing
+    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+    return `/uploads/${cleanUrl}`;
   }
   
   // Ensure URLs start with a slash for server paths

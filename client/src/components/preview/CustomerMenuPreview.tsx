@@ -420,6 +420,18 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 className="w-full h-full object-cover dark:brightness-90 dark:contrast-110"
                                 onError={(e) => {
                                   console.error("Failed to load menu item image:", item.imageUrl);
+                                  // Try with explicit /uploads/ prefix
+                                  const originalUrl = item.imageUrl;
+                                  const cleanUrl = originalUrl.startsWith('/') ? originalUrl.substring(1) : originalUrl;
+                                  if (!cleanUrl.startsWith('uploads/') && !originalUrl.startsWith('/uploads/')) {
+                                    e.currentTarget.src = `/uploads/${cleanUrl}`;
+                                    // Add a second error handler in case the updated path also fails
+                                    e.currentTarget.onerror = () => {
+                                      e.currentTarget.src = getFallbackImage('menu');
+                                      e.currentTarget.onerror = null; // Prevent error loop
+                                    };
+                                    return;
+                                  }
                                   e.currentTarget.src = getFallbackImage('menu');
                                 }}
                               />
