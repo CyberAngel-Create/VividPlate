@@ -23,22 +23,42 @@ const RestaurantOwnerHeader = () => {
   // Check if the user can add more restaurants (premium users can add up to 3)
   const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
 
+  // State for tracking restaurant switch loading
+  const [isRestaurantSwitching, setIsRestaurantSwitching] = useState(false);
+
   // Handle restaurant change with proper cache invalidation
   const handleRestaurantSwitch = useCallback((restaurantId: number) => {
     // Only update if it's different from current
     if (activeRestaurant?.id !== restaurantId) {
       console.log(`Switching to restaurant ID: ${restaurantId}`);
       
+      // Show loading state
+      setIsRestaurantSwitching(true);
+      
       // Clear any cached menu data before switching restaurants
       if (activeRestaurant) {
-        // Invalidate categories for the old restaurant
+        // Invalidate all queries related to the old restaurant
         queryClient.invalidateQueries({ 
           queryKey: [`/api/restaurants/${activeRestaurant.id}/categories`] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/restaurants/${activeRestaurant.id}/stats`] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/restaurants/${activeRestaurant.id}/menu`] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: [`/api/restaurants/${activeRestaurant.id}/feedbacks`] 
         });
       }
       
       // Set the new active restaurant
       setActiveRestaurant(restaurantId);
+      
+      // Hide loading state after a short delay
+      setTimeout(() => {
+        setIsRestaurantSwitching(false);
+      }, 500);
     }
   }, [activeRestaurant, setActiveRestaurant]);
 
@@ -52,11 +72,17 @@ const RestaurantOwnerHeader = () => {
         <div className="flex flex-col">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Current Restaurant</p>
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full lg:max-w-[calc(100%-52px)]">
+            <DropdownMenuTrigger disabled={isRestaurantSwitching} className="flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full lg:max-w-[calc(100%-52px)]">
               <div className="flex items-center gap-2 truncate">
-                <Store className="h-4 w-4 flex-shrink-0" />
+                {isRestaurantSwitching ? (
+                  <div className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-b-2 border-primary"></div>
+                ) : (
+                  <Store className="h-4 w-4 flex-shrink-0" />
+                )}
                 <span className="truncate text-sm">
-                  {activeRestaurant ? activeRestaurant.name : t("Select Restaurant")}
+                  {isRestaurantSwitching 
+                    ? "Switching..." 
+                    : (activeRestaurant ? activeRestaurant.name : t("Select Restaurant"))}
                 </span>
               </div>
               <ChevronRight className="h-4 w-4 flex-shrink-0" />

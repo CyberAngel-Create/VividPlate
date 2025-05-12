@@ -18,9 +18,26 @@ export function useRestaurant() {
   
   // Set the active restaurant when the restaurant list changes
   useEffect(() => {
-    // If there are restaurants and no active restaurant is set, set the first one
-    if (restaurants.length > 0 && (!activeRestaurant || !restaurants.some(r => r.id === activeRestaurant.id))) {
-      setActiveRestaurant(restaurants[0]);
+    if (restaurants.length > 0) {
+      // Try to restore active restaurant from session storage first
+      const savedRestaurantId = sessionStorage.getItem('activeRestaurantId');
+      
+      if (savedRestaurantId) {
+        const id = parseInt(savedRestaurantId);
+        const savedRestaurant = restaurants.find(r => r.id === id);
+        
+        if (savedRestaurant) {
+          console.log(`Restoring saved restaurant: ${savedRestaurant.name} (ID: ${savedRestaurant.id})`);
+          setActiveRestaurant(savedRestaurant);
+          return;
+        }
+      }
+      
+      // If no valid saved restaurant, and there's no active restaurant set, set the first one
+      if (!activeRestaurant || !restaurants.some(r => r.id === activeRestaurant.id)) {
+        console.log(`Setting default restaurant: ${restaurants[0].name} (ID: ${restaurants[0].id})`);
+        setActiveRestaurant(restaurants[0]);
+      }
     }
   }, [restaurants, activeRestaurant]);
   
@@ -28,6 +45,11 @@ export function useRestaurant() {
   const setActiveRestaurantById = useCallback((id: number) => {
     const restaurant = restaurants.find(r => r.id === id);
     if (restaurant) {
+      console.log(`Switching active restaurant to: ${restaurant.name} (ID: ${restaurant.id})`);
+      
+      // Store the active restaurant ID in sessionStorage so it persists between page refreshes
+      sessionStorage.setItem('activeRestaurantId', restaurant.id.toString());
+      
       setActiveRestaurant(restaurant);
     }
   }, [restaurants]);
