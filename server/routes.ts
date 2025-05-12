@@ -1672,16 +1672,34 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Menu view routes (for tracking)
   app.post('/api/restaurants/:restaurantId/views', async (req, res) => {
     try {
-      console.log(`Recording view for restaurant ID: ${req.params.restaurantId}, source: ${req.body.source}`);
+      const restaurantIdParam = req.params.restaurantId;
+      console.log(`Recording view for restaurant: ${restaurantIdParam}, source: ${req.body.source}`);
       
-      // Ensure restaurantId is a valid number
-      const restaurantId = parseInt(req.params.restaurantId);
-      if (isNaN(restaurantId)) {
-        return res.status(400).json({ message: 'Invalid restaurant ID' });
+      let restaurantId: number = 0; // Initialize with a default value
+      let restaurant;
+      
+      // Try to parse as number first (for backward compatibility)
+      if (!isNaN(parseInt(restaurantIdParam))) {
+        restaurantId = parseInt(restaurantIdParam);
+        restaurant = await storage.getRestaurant(restaurantId);
+      } else {
+        // If not a number, try to get restaurant by name
+        console.log(`Looking up restaurant ID for name: ${restaurantIdParam}`);
+        const normalizedName = decodeURIComponent(restaurantIdParam).replace(/-/g, ' ');
+        
+        // Fetch all restaurants and find the one with matching name
+        const allRestaurants = await storage.getAllRestaurants();
+        restaurant = allRestaurants.find(
+          (r) => r.name.toLowerCase() === normalizedName.toLowerCase()
+        );
+        
+        if (restaurant) {
+          restaurantId = restaurant.id;
+        } else {
+          return res.status(404).json({ message: 'Restaurant not found' });
+        }
       }
       
-      // Check if restaurant exists
-      const restaurant = await storage.getRestaurant(restaurantId);
       if (!restaurant) {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
@@ -1890,9 +1908,30 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Get all menu data for a restaurant (for public view)
   app.get('/api/restaurants/:restaurantId/menu', async (req, res) => {
     try {
-      const restaurantId = parseInt(req.params.restaurantId);
+      const restaurantIdParam = req.params.restaurantId;
+      let restaurantId: number = 0; // Initialize with a default value
+      let restaurant;
       
-      const restaurant = await storage.getRestaurant(restaurantId);
+      // Try to parse as number first (for backward compatibility)
+      if (!isNaN(parseInt(restaurantIdParam))) {
+        restaurantId = parseInt(restaurantIdParam);
+        restaurant = await storage.getRestaurant(restaurantId);
+      } else {
+        // If not a number, try to get restaurant by name
+        console.log(`Fetching menu for restaurant name: ${restaurantIdParam}`);
+        const normalizedName = decodeURIComponent(restaurantIdParam).replace(/-/g, ' ');
+        
+        // Fetch all restaurants and find the one with matching name
+        const allRestaurants = await storage.getAllRestaurants();
+        restaurant = allRestaurants.find(
+          (r) => r.name.toLowerCase() === normalizedName.toLowerCase()
+        );
+        
+        if (restaurant) {
+          restaurantId = restaurant.id;
+        }
+      }
+      
       if (!restaurant) {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
