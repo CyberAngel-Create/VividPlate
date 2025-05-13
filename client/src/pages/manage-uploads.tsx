@@ -3,14 +3,14 @@ import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { useRestaurantContext } from '@/contexts/restaurant-context';
+import { useRestaurant } from '@/hooks/use-restaurant';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Loader2, Trash2, RefreshCw, Image, FileImage, FileArchive, File, FileText, FileSpreadsheet, FileX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import PageHeader from '@/components/layout/PageHeader';
+import { RestaurantOwnerHeader } from '@/components/layout/RestaurantOwnerHeader';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatFileSize, getFileTypeIcon } from '@/lib/file-utils';
@@ -37,30 +37,30 @@ const ManageUploadsPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
-  const { currentRestaurant } = useRestaurantContext();
+  const { activeRestaurant } = useRestaurant();
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedFile, setSelectedFile] = useState<FileUpload | null>(null);
 
   // Redirect if no restaurant is selected
   useEffect(() => {
-    if (!currentRestaurant) {
+    if (!activeRestaurant) {
       setLocation('/restaurants');
     }
-  }, [currentRestaurant, setLocation]);
+  }, [activeRestaurant, setLocation]);
 
-  // Query for fetching uploads for current restaurant
+  // Query for fetching uploads for active restaurant
   const { 
     data: uploadsData, 
     isLoading: isLoadingUploads,
     refetch: refetchUploads
   } = useQuery({
-    queryKey: ['/api/restaurants', currentRestaurant?.id, 'uploads'],
+    queryKey: ['/api/restaurants', activeRestaurant?.id, 'uploads'],
     queryFn: async () => {
-      if (!currentRestaurant?.id) return null;
-      const response = await apiRequest('GET', `/api/restaurants/${currentRestaurant.id}/uploads`);
+      if (!activeRestaurant?.id) return null;
+      const response = await apiRequest('GET', `/api/restaurants/${activeRestaurant.id}/uploads`);
       return response.json();
     },
-    enabled: !!currentRestaurant?.id,
+    enabled: !!activeRestaurant?.id,
   });
 
   // Mutation for deleting a file
@@ -74,7 +74,7 @@ const ManageUploadsPage = () => {
         title: t('File deleted'),
         description: t('The file has been deleted successfully'),
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/restaurants', currentRestaurant?.id, 'uploads'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/restaurants', activeRestaurant?.id, 'uploads'] });
       setSelectedFile(null);
     },
     onError: (error) => {
