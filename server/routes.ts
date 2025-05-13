@@ -355,6 +355,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       headers: {
         'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
         'X-Content-Type-Options': 'nosniff', // Security header
+        'Access-Control-Allow-Origin': '*', // Allow cross-origin access
       }
     };
     
@@ -368,12 +369,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Log file access for debugging
     console.log(`Serving file: ${fileName} from ${uploadDir}`);
     
+    // Full path to the file
+    const filePath = path.join(uploadDir, fileName);
+    
+    // Check if file exists before attempting to send it
+    if (!fs.existsSync(filePath)) {
+      console.warn(`File not found: ${fileName}`);
+      
+      // For missing images, serve a default placeholder image instead
+      if (fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+        // First try to use SVG placeholder
+        const svgPlaceholderPath = path.join(process.cwd(), 'public', 'placeholder-image.svg');
+        if (fs.existsSync(svgPlaceholderPath)) {
+          console.log(`Serving SVG placeholder for: ${fileName}`);
+          return res.sendFile('placeholder-image.svg', {
+            root: path.join(process.cwd(), 'public'),
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Content-Type': 'image/svg+xml'
+            }
+          });
+        }
+        
+        // Try PNG placeholder as fallback
+        const pngPlaceholderPath = path.join(process.cwd(), 'public', 'placeholder-image.png');
+        if (fs.existsSync(pngPlaceholderPath)) {
+          console.log(`Serving PNG placeholder for: ${fileName}`);
+          return res.sendFile('placeholder-image.png', {
+            root: path.join(process.cwd(), 'public'),
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Content-Type': 'image/png'
+            }
+          });
+        } 
+        
+        // If no physical placeholder exists, create a simple SVG placeholder on the fly
+        console.log(`Serving dynamic SVG placeholder for: ${fileName}`);
+        const svg = `<svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+          <rect width="100%" height="100%" fill="#f0f0f0"/>
+          <text x="50%" y="50%" font-family="Arial" font-size="16" fill="#888" 
+            text-anchor="middle" dominant-baseline="middle">Image Placeholder</text>
+        </svg>`;
+        res.setHeader('Content-Type', 'image/svg+xml');
+        res.setHeader('Cache-Control', 'no-cache');
+        return res.send(svg);
+      }
+      
+      return res.status(404).send('File not found');
+    }
+    
     res.sendFile(fileName, options, (err) => {
       if (err) {
-        if (err instanceof Error && 'code' in err && err.code === 'ENOENT') {
-          console.warn(`File not found: ${fileName}`);
-          return res.status(404).send('File not found');
-        }
         console.error(`Error serving file ${fileName}:`, err);
         return next(err);
       }
