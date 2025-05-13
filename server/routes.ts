@@ -1,5 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import fs from 'fs';
 import { storage } from "./storage";
 import { 
   insertUserSchema, 
@@ -2026,6 +2027,176 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       });
     } catch (error) {
       res.status(500).json({ message: 'Server error' });
+    }
+  });
+  
+  // File upload management endpoints
+  app.get('/api/restaurants/:restaurantId/uploads', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const category = req.query.category as string | undefined;
+      
+      let fileUploads;
+      if (category) {
+        // If a specific category is requested, filter by that category
+        fileUploads = (await storage.getFileUploadsByRestaurantId(restaurantId))
+          .filter(upload => upload.fileCategory === category);
+      } else {
+        // Otherwise get all uploads for this restaurant
+        fileUploads = await storage.getFileUploadsByRestaurantId(restaurantId);
+      }
+      
+      // Group the uploads by category for better organization
+      const uploadsByCategory: Record<string, any[]> = {};
+      
+      fileUploads.forEach(upload => {
+        const category = upload.fileCategory;
+        if (!uploadsByCategory[category]) {
+          uploadsByCategory[category] = [];
+        }
+        uploadsByCategory[category].push(upload);
+      });
+      
+      res.json({
+        total: fileUploads.length,
+        uploads: fileUploads,
+        uploadsByCategory
+      });
+    } catch (error) {
+      console.error('Error fetching restaurant uploads:', error);
+      res.status(500).json({ message: 'Failed to fetch uploads' });
+    }
+  });
+  
+  // Delete a file upload (check if user has permission)
+  app.delete('/api/uploads/:uploadId', isAuthenticated, async (req, res) => {
+    try {
+      const uploadId = parseInt(req.params.uploadId);
+      const userId = (req.user as any).id;
+      
+      // Get the upload to check ownership
+      const upload = await storage.getFileUpload(uploadId);
+      
+      if (!upload) {
+        return res.status(404).json({ message: 'File upload not found' });
+      }
+      
+      // Check if user owns this upload or is the owner of the restaurant
+      if (upload.userId !== userId) {
+        // If the user is not the direct owner of the upload, check if they own the restaurant
+        if (upload.restaurantId) {
+          const restaurant = await storage.getRestaurant(upload.restaurantId);
+          if (!restaurant || restaurant.userId !== userId) {
+            return res.status(403).json({ message: 'You do not have permission to delete this file' });
+          }
+        } else {
+          return res.status(403).json({ message: 'You do not have permission to delete this file' });
+        }
+      }
+      
+      // If we're here, the user has permission to delete the file
+      // First, try to delete the physical file
+      try {
+        if (upload.filePath && fs.existsSync(upload.filePath)) {
+          fs.unlinkSync(upload.filePath);
+          console.log(`Physical file deleted: ${upload.filePath}`);
+        }
+      } catch (fileError) {
+        console.error(`Error deleting physical file: ${fileError}`);
+        // Continue with database deletion even if physical file deletion fails
+      }
+      
+      // Delete the record from the database
+      const deleted = await storage.deleteFileUpload(uploadId);
+      
+      if (deleted) {
+        console.log(`File upload with ID ${uploadId} deleted by user ${userId}`);
+        return res.json({ success: true, message: 'File deleted successfully' });
+      } else {
+        return res.status(500).json({ message: 'Failed to delete file record from database' });
+      }
+    } catch (error) {
+      console.error('Error deleting file upload:', error);
+      res.status(500).json({ message: 'Server error deleting file' });
+    }
+  });
+  
+  // Get all uploads for the current user (across all restaurants)
+  app.get('/api/user/uploads', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const category = req.query.category as string | undefined;
+      
+      let fileUploads;
+      if (category) {
+        // If a specific category is requested, filter by that category
+        fileUploads = (await storage.getFileUploadsByUserId(userId))
+          .filter(upload => upload.fileCategory === category);
+      } else {
+        // Otherwise get all uploads for this user
+        fileUploads = await storage.getFileUploadsByUserId(userId);
+      }
+      
+      // Group by restaurant and category
+      const uploadsByRestaurant: Record<number, any> = {};
+      const uploadsByCategory: Record<string, any[]> = {};
+      
+      for (const upload of fileUploads) {
+        // Group by restaurant
+        const restaurantId = upload.restaurantId;
+        if (restaurantId) {
+          if (!uploadsByRestaurant[restaurantId]) {
+            uploadsByRestaurant[restaurantId] = {
+              restaurantId,
+              uploads: [],
+              categories: {}
+            };
+          }
+          uploadsByRestaurant[restaurantId].uploads.push(upload);
+          
+          // Group within restaurant by category
+          const category = upload.fileCategory;
+          if (!uploadsByRestaurant[restaurantId].categories[category]) {
+            uploadsByRestaurant[restaurantId].categories[category] = [];
+          }
+          uploadsByRestaurant[restaurantId].categories[category].push(upload);
+        }
+        
+        // Group by category across all restaurants
+        const category = upload.fileCategory;
+        if (!uploadsByCategory[category]) {
+          uploadsByCategory[category] = [];
+        }
+        uploadsByCategory[category].push(upload);
+      }
+      
+      // Get restaurant names for better presentation
+      const restaurantIds = Object.keys(uploadsByRestaurant).map(id => parseInt(id));
+      const restaurantPromises = restaurantIds.map(id => storage.getRestaurant(id));
+      const restaurants = await Promise.all(restaurantPromises);
+      
+      // Add restaurant info to the grouped data
+      for (let i = 0; i < restaurantIds.length; i++) {
+        const id = restaurantIds[i];
+        const restaurant = restaurants[i];
+        if (restaurant && uploadsByRestaurant[id]) {
+          uploadsByRestaurant[id].restaurant = {
+            id: restaurant.id,
+            name: restaurant.name,
+            logoUrl: restaurant.logoUrl
+          };
+        }
+      }
+      
+      res.json({
+        total: fileUploads.length,
+        uploads: fileUploads,
+        uploadsByCategory,
+        uploadsByRestaurant
+      });
+    } catch (error) {
+      console.error('Error fetching user uploads:', error);
+      res.status(500).json({ message: 'Failed to fetch uploads' });
     }
   });
 
