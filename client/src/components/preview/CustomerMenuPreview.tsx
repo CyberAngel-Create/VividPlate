@@ -103,7 +103,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
       
       {/* Restaurant logo overlay */}
       {logoUrl && (
-        <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md">
+        <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full p-1 shadow-md">
           <ResponsiveImage
             src={logoUrl}
             alt={`${restaurantName} logo`}
@@ -306,7 +306,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               
               {/* Restaurant logo overlay for single banner image */}
               {restaurant.logoUrl && (
-                <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md">
+                <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full p-1 shadow-md">
                   <ResponsiveImage
                     src={restaurant.logoUrl}
                     alt={`${restaurant.name} logo`}
@@ -335,7 +335,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center space-x-2 ${
             activeMainCategory === 'Food'
               ? 'text-white'
-              : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              : 'bg-white hover:bg-gray-200'
           }`}
           style={{ 
             backgroundColor: activeMainCategory === 'Food' ? menuTheme.accentColor : 'white',
@@ -350,7 +350,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center space-x-2 ${
             activeMainCategory === 'Beverage'
               ? 'text-white'
-              : 'bg-white dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'
+              : 'bg-white hover:bg-gray-200'
           }`}
           style={{ 
             backgroundColor: activeMainCategory === 'Beverage' ? menuTheme.accentColor : 'white',
@@ -364,7 +364,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       </div>
       
       {/* Menu Categories Tabs and Search */}
-      <div className="border-b dark:border-gray-700" style={headerContainerStyle}>
+      <div className="border-b" style={headerContainerStyle}>
         <div className="flex justify-between items-center px-4">
           <div className="flex overflow-x-auto py-2 space-x-4 flex-grow">
             <button 
