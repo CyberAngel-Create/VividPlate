@@ -6,8 +6,8 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Add health check route for deployments
-app.get('/', (req, res) => {
+// Add health check endpoint while preserving SPA routing
+app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
