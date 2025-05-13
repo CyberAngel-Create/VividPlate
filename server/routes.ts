@@ -1757,6 +1757,13 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       });
       
       const view = await storage.createMenuView(viewData);
+      
+      // If the source is QR code, also increment the dedicated QR scan counter
+      if (req.body.source === 'qr') {
+        await storage.incrementQRCodeScans(restaurantId);
+        console.log(`QR code scan recorded and counter incremented for restaurant ${restaurantId}`);
+      }
+      
       console.log(`View recorded successfully for restaurant ${restaurantId}`);
       res.status(201).json(view);
     } catch (error) {
