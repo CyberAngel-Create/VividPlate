@@ -1,10 +1,9 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee, Moon, Sun } from "lucide-react";
+import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import { useState, useMemo, useEffect, CSSProperties } from "react";
-import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
@@ -168,16 +167,10 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   menuData,
   previewMode = false
 }) => {
-  const { theme: appTheme, setTheme } = useTheme();
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  
-  // Toggle dark/light mode
-  const toggleTheme = () => {
-    setTheme(appTheme === 'light' ? 'dark' : 'light');
-  };
   
   useEffect(() => {
     setMounted(true);
