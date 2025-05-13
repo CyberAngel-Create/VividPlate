@@ -18,6 +18,7 @@ import { useLocation } from "wouter";
 interface Stats {
   viewCount: number;
   qrScanCount: number;
+  directQrScans: number;
   menuItemCount: number;
   daysActive: number;
 }
@@ -26,6 +27,7 @@ interface Stats {
 const defaultStats: Stats = {
   viewCount: 0,
   qrScanCount: 0,
+  directQrScans: 0,
   menuItemCount: 0,
   daysActive: 0
 };
@@ -187,8 +189,9 @@ const Dashboard = () => {
           />
           <StatCard 
             icon={<QrCode className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.qrScanCount ?? defaultStats.qrScanCount)} 
-            label="QR Scans" 
+            value={isLoadingStats ? "..." : (stats?.directQrScans ?? defaultStats.directQrScans)} 
+            label="QR Code Scans" 
+            tooltip="Number of times your QR code has been scanned"
           />
           <StatCard 
             icon={<Utensils className="h-6 w-6" />} 

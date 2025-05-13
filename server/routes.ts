@@ -1938,12 +1938,17 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const qrScanCount = await storage.getQrScanCountByRestaurantId(restaurantId);
       const menuItemCount = await storage.getMenuItemCountByRestaurantId(restaurantId);
       
+      // Get the dedicated QR code scan counter (separate from menu views)
+      const restaurant = await storage.getRestaurant(restaurantId);
+      const directQrScans = restaurant?.qrCodeScans || 0;
+      
       // Calculate days active (in a real app, we would store a createdAt field)
       const daysActive = 7; // Hardcoded for demo purposes
       
       res.json({
         viewCount,
         qrScanCount,
+        directQrScans,
         menuItemCount,
         daysActive
       });
