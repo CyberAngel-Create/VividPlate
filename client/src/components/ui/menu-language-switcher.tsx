@@ -22,12 +22,13 @@ const MenuLanguageSwitcher = ({
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
-  // Support for common languages including Amharic
+  // Support for common languages including Amharic and Chinese
   const languages = [
     { code: 'en', name: 'English' },
     { code: 'am', name: 'አማርኛ (Amharic)' },
     { code: 'fr', name: 'Français (French)' },
     { code: 'ar', name: 'العربية (Arabic)' },
+    { code: 'zh', name: '中文 (Chinese)' },
   ];
 
   const changeLanguage = (languageCode: string) => {
