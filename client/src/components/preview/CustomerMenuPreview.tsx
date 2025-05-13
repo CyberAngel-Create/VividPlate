@@ -10,6 +10,7 @@ import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import CompactSearch from "@/components/ui/compact-search";
 import MenuLanguageSwitcher from "@/components/ui/menu-language-switcher";
+import ResponsiveImage from "@/components/ui/responsive-image";
 
 // Banner slideshow component
 interface BannerSlideshowProps {
@@ -82,16 +83,17 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
         console.log(`Banner image ${index}: ${normalizedUrl}, active: ${index === activeIndex}`);
         
         return (
-          <img
+          <ResponsiveImage
             key={index}
-            src={normalizedUrl}
+            src={url}
             alt={`${restaurantName} banner ${index + 1}`}
-            className={`w-full h-full object-cover absolute top-0 left-0 transition-opacity duration-1000 dark:brightness-90 dark:contrast-110 ${
+            fallbackType="banner"
+            className={`w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ${
               index === activeIndex ? 'opacity-100' : 'opacity-0'
             }`}
-            onError={(e) => {
+            imgClassName="object-cover w-full h-full"
+            onError={() => {
               console.error("Failed to load banner image:", url);
-              e.currentTarget.src = getFallbackImage('banner');
             }}
           />
         );
@@ -277,13 +279,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             />
           ) : restaurant.bannerUrl ? (
             // Fallback to legacy single banner image
-            <img 
-              src={normalizeImageUrl(restaurant.bannerUrl)}
+            <ResponsiveImage 
+              src={restaurant.bannerUrl}
               alt={`${restaurant.name} banner`}
-              className="w-full h-full object-cover dark:brightness-90 dark:contrast-110"
-              onError={(e) => {
+              fallbackType="banner"
+              className="w-full h-full"
+              imgClassName="object-cover w-full h-full"
+              onError={() => {
                 console.error("Failed to load banner image:", restaurant.bannerUrl);
-                e.currentTarget.src = getFallbackImage('banner');
               }}
             />
           ) : null}
@@ -414,27 +417,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                             imageAlt={item.name}
                           >
                             <div className="w-full h-24 sm:h-28 bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
-                              <img 
-                                src={normalizeImageUrl(item.imageUrl)} 
+                              <ResponsiveImage 
+                                src={item.imageUrl}
                                 alt={item.name} 
-                                className="w-full h-full object-cover dark:brightness-90 dark:contrast-110"
-                                onError={(e) => {
+                                fallbackType="menu"
+                                className="w-full h-full"
+                                imgClassName="object-cover w-full h-full"
+                                onError={() => {
                                   console.error("Failed to load menu item image:", item.imageUrl);
-                                  // Try with explicit /uploads/ prefix
-                                  if (item.imageUrl) {
-                                    const originalUrl = item.imageUrl;
-                                    const cleanUrl = originalUrl.startsWith('/') ? originalUrl.substring(1) : originalUrl;
-                                    if (!cleanUrl.startsWith('uploads/') && !originalUrl.startsWith('/uploads/')) {
-                                      e.currentTarget.src = `/uploads/${cleanUrl}`;
-                                      // Add a second error handler in case the updated path also fails
-                                      e.currentTarget.onerror = () => {
-                                        e.currentTarget.src = getFallbackImage('menu');
-                                        e.currentTarget.onerror = null; // Prevent error loop
-                                      };
-                                      return;
-                                    }
-                                  }
-                                  e.currentTarget.src = getFallbackImage('menu');
                                 }}
                               />
                             </div>
