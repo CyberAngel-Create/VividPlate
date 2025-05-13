@@ -16,7 +16,7 @@ const ShareMenu = () => {
   // Generate the menu URL using restaurant name instead of ID
   const hostname = window.location.origin;
   const menuUrl = activeRestaurant 
-    ? `${hostname}/menu/${encodeURIComponent(activeRestaurant.name.toLowerCase().replace(/\s+/g, '-'))}` 
+    ? `${hostname}/menu/${encodeURIComponent(activeRestaurant.name.toLowerCase().replace(/\s+/g, '-'))}?source=qr` 
     : "";
   
   // Check if there are menu items

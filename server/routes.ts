@@ -2034,10 +2034,16 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }));
       
       // Record a new view
+      const viewSource = req.query.source as string || 'link';
       await storage.createMenuView({
         restaurantId,
-        source: req.query.source as string || 'link'
+        source: viewSource
       });
+      
+      // If this is a QR code scan, increment the counter
+      if (viewSource === 'qr') {
+        await storage.incrementQRCodeScans(restaurantId);
+      }
       
       res.json({
         restaurant: restaurantWithSub,

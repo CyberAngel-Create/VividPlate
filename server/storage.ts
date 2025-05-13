@@ -1359,6 +1359,26 @@ export class DatabaseStorage implements IStorage {
     return restaurant;
   }
 
+  async incrementQRCodeScans(id: number): Promise<Restaurant | undefined> {
+    try {
+      const restaurant = await this.getRestaurant(id);
+      if (!restaurant) return undefined;
+      
+      const currentScans = restaurant.qrCodeScans || 0;
+      
+      const [updatedRestaurant] = await db
+        .update(restaurants)
+        .set({ qrCodeScans: currentScans + 1 })
+        .where(eq(restaurants.id, id))
+        .returning();
+        
+      return updatedRestaurant;
+    } catch (error) {
+      console.error(`Error incrementing QR code scans for restaurant ID ${id}:`, error);
+      return undefined;
+    }
+  }
+  
   async updateRestaurant(id: number, restaurantUpdate: Partial<InsertRestaurant>): Promise<Restaurant | undefined> {
     try {
       // First try with the standard ORM approach
