@@ -752,6 +752,67 @@ export class MemStorage implements IStorage {
     return this.advertisements.delete(id);
   }
   
+  // File upload operations
+  async createFileUpload(fileUpload: InsertFileUpload): Promise<FileUpload> {
+    const id = this.currentIds.fileUploads++;
+    const newFileUpload: FileUpload = {
+      id,
+      ...fileUpload,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.fileUploads.set(id, newFileUpload);
+    return newFileUpload;
+  }
+
+  async getFileUpload(id: number): Promise<FileUpload | undefined> {
+    return this.fileUploads.get(id);
+  }
+
+  async getFileUploadByStoredFilename(storedFilename: string): Promise<FileUpload | undefined> {
+    for (const upload of this.fileUploads.values()) {
+      if (upload.storedFilename === storedFilename) {
+        return upload;
+      }
+    }
+    return undefined;
+  }
+
+  async getFileUploadsByUserId(userId: number): Promise<FileUpload[]> {
+    return Array.from(this.fileUploads.values())
+      .filter(upload => upload.userId === userId);
+  }
+
+  async getFileUploadsByRestaurantId(restaurantId: number): Promise<FileUpload[]> {
+    return Array.from(this.fileUploads.values())
+      .filter(upload => upload.restaurantId === restaurantId);
+  }
+
+  async getFileUploadsByCategory(category: string): Promise<FileUpload[]> {
+    return Array.from(this.fileUploads.values())
+      .filter(upload => upload.category === category);
+  }
+
+  async updateFileUploadStatus(id: number, status: string): Promise<FileUpload | undefined> {
+    const fileUpload = this.fileUploads.get(id);
+    if (!fileUpload) {
+      return undefined;
+    }
+    
+    const updatedFileUpload: FileUpload = {
+      ...fileUpload,
+      status,
+      updatedAt: new Date()
+    };
+    
+    this.fileUploads.set(id, updatedFileUpload);
+    return updatedFileUpload;
+  }
+
+  async deleteFileUpload(id: number): Promise<boolean> {
+    return this.fileUploads.delete(id);
+  }
+  
   // Admin methods
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
@@ -1141,6 +1202,71 @@ export class DatabaseStorage implements IStorage {
       .where(eq(advertisements.id, id))
       .returning();
     return !!deletedAd;
+  }
+  
+  // File upload operations
+  async createFileUpload(fileUpload: InsertFileUpload): Promise<FileUpload> {
+    const [newUpload] = await db.insert(fileUploads)
+      .values({
+        ...fileUpload,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      })
+      .returning();
+    return newUpload;
+  }
+
+  async getFileUpload(id: number): Promise<FileUpload | undefined> {
+    const [upload] = await db.select()
+      .from(fileUploads)
+      .where(eq(fileUploads.id, id));
+    return upload;
+  }
+
+  async getFileUploadByStoredFilename(storedFilename: string): Promise<FileUpload | undefined> {
+    const [upload] = await db.select()
+      .from(fileUploads)
+      .where(eq(fileUploads.storedFilename, storedFilename));
+    return upload;
+  }
+
+  async getFileUploadsByUserId(userId: number): Promise<FileUpload[]> {
+    return await db.select()
+      .from(fileUploads)
+      .where(eq(fileUploads.userId, userId))
+      .orderBy(desc(fileUploads.createdAt));
+  }
+
+  async getFileUploadsByRestaurantId(restaurantId: number): Promise<FileUpload[]> {
+    return await db.select()
+      .from(fileUploads)
+      .where(eq(fileUploads.restaurantId, restaurantId))
+      .orderBy(desc(fileUploads.createdAt));
+  }
+
+  async getFileUploadsByCategory(category: string): Promise<FileUpload[]> {
+    return await db.select()
+      .from(fileUploads)
+      .where(eq(fileUploads.category, category))
+      .orderBy(desc(fileUploads.createdAt));
+  }
+
+  async updateFileUploadStatus(id: number, status: string): Promise<FileUpload | undefined> {
+    const [updatedUpload] = await db.update(fileUploads)
+      .set({
+        status,
+        updatedAt: new Date()
+      })
+      .where(eq(fileUploads.id, id))
+      .returning();
+    return updatedUpload;
+  }
+
+  async deleteFileUpload(id: number): Promise<boolean> {
+    const [deletedUpload] = await db.delete(fileUploads)
+      .where(eq(fileUploads.id, id))
+      .returning();
+    return !!deletedUpload;
   }
 
   // Contact info operations

@@ -1090,7 +1090,25 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Get final file stats for the response
       const stats = fs.statSync(finalFilePath);
       
-      console.log(`Restaurant ${restaurantId} logo successfully updated to: ${logoUrl}`);
+      // Create a file upload record in the database
+      const fileUpload = await storage.createFileUpload({
+        userId,
+        restaurantId,
+        originalFilename: req.file.originalname,
+        storedFilename: finalFileName,
+        filePath: finalFilePath,
+        fileUrl: logoUrl,
+        fileType: req.file.mimetype,
+        fileSize: stats.size,
+        status: 'active',
+        fileCategory: 'logo',
+        uploadedAt: new Date(),
+        metadata: {
+          compressed: finalFilePath !== originalFilePath
+        }
+      });
+      
+      console.log(`Restaurant ${restaurantId} logo successfully updated to: ${logoUrl}, file record ID: ${fileUpload.id}`);
       res.json({ 
         logoUrl, 
         success: true,
@@ -1099,7 +1117,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           size: stats.size,
           type: req.file.mimetype,
           compressed: finalFilePath !== originalFilePath
-        }
+        },
+        fileUpload
       });
     } catch (error) {
       console.error('Error uploading logo:', error);
