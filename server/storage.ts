@@ -132,6 +132,16 @@ export interface IStorage {
   createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
   updateAdvertisement(id: number, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined>;
   deleteAdvertisement(id: number): Promise<boolean>;
+  
+  // File upload operations
+  createFileUpload(fileUpload: InsertFileUpload): Promise<FileUpload>;
+  getFileUpload(id: number): Promise<FileUpload | undefined>;
+  getFileUploadByStoredFilename(storedFilename: string): Promise<FileUpload | undefined>;
+  getFileUploadsByUserId(userId: number): Promise<FileUpload[]>;
+  getFileUploadsByRestaurantId(restaurantId: number): Promise<FileUpload[]>;
+  getFileUploadsByCategory(category: string): Promise<FileUpload[]>;
+  updateFileUploadStatus(id: number, status: string): Promise<FileUpload | undefined>;
+  deleteFileUpload(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -149,6 +159,7 @@ export class MemStorage implements IStorage {
   private pricingPlans: Map<number, PricingPlan>;
   private contactInfo: ContactInfo;
   private advertisements: Map<number, Advertisement>;
+  private fileUploads: Map<number, FileUpload>;
   
   private currentIds: {
     users: number;
@@ -164,6 +175,7 @@ export class MemStorage implements IStorage {
     adminLogs: number;
     pricingPlans: number;
     advertisements: number;
+    fileUploads: number;
   };
 
   constructor() {
@@ -180,6 +192,7 @@ export class MemStorage implements IStorage {
     this.adminLogs = new Map();
     this.pricingPlans = new Map();
     this.advertisements = new Map();
+    this.fileUploads = new Map();
     this.contactInfo = {
       id: 1,
       address: 'Ethiopia, Addis Abeba',
@@ -201,7 +214,8 @@ export class MemStorage implements IStorage {
       feedbacks: 1,
       adminLogs: 1,
       pricingPlans: 1,
-      advertisements: 1
+      advertisements: 1,
+      fileUploads: 1
     };
     
     // Create an admin account if none exists
