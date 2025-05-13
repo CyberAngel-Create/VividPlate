@@ -1,6 +1,22 @@
-<svg width="800" height="300" xmlns="http://www.w3.org/2000/svg">
-  <rect width="800" height="300" fill="#e6e6e6" />
-  <text x="400" y="150" font-family="Arial" font-size="32" text-anchor="middle" fill="#888888">Restaurant Banner</text>
-  <rect x="300" y="180" width="200" height="10" fill="#888888" />
-  <rect x="340" y="200" width="120" height="10" fill="#888888" />
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="320" viewBox="0 0 1200 320" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1200" height="320" fill="#f8f9fa" rx="0" ry="0"/>
+  
+  <!-- Banner Pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <rect width="40" height="40" fill="#f8f9fa"/>
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+  </pattern>
+  <rect width="1200" height="320" fill="url(#grid)"/>
+  
+  <!-- Icon and Text -->
+  <g transform="translate(560, 130)">
+    <rect x="-40" y="-30" width="80" height="60" rx="4" stroke="#d1d5db" stroke-width="2" fill="none"/>
+    <line x1="-40" y1="-10" x2="40" y2="-10" stroke="#d1d5db" stroke-width="2"/>
+    <circle cx="-25" cy="-20" r="5" fill="#d1d5db"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="600" y="190" font-family="Arial, sans-serif" font-size="18" fill="#6b7280" text-anchor="middle">Restaurant Banner Placeholder</text>
 </svg>

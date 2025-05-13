@@ -1,9 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg width="400" height="300" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
-  <rect width="400" height="300" fill="#2a2a2a"/>
-  <path d="M200,150 C200,116.863 166.421,90 125,90 C83.5786,90 50,116.863 50,150 C50,183.137 83.5786,210 125,210 L275,210 C316.421,210 350,183.137 350,150 C350,116.863 316.421,90 275,90 C233.579,90 200,116.863 200,150 Z" fill="#444444"/>
-  <circle cx="125" cy="130" r="30" fill="#666666"/>
-  <circle cx="275" cy="130" r="30" fill="#666666"/>
-  <path d="M125,170 L275,170 L275,190 L125,190 Z" fill="#555555"/>
-  <text x="200" y="260" font-family="Arial, sans-serif" font-size="20" fill="#b0b0b0" text-anchor="middle">Food Image</text>
+  <!-- Background -->
+  <rect width="400" height="300" fill="#1f2937" rx="8" ry="8"/>
+  
+  <!-- Food icon -->
+  <g transform="translate(170, 105)" fill="#6b7280">
+    <!-- Plate -->
+    <circle cx="30" cy="30" r="30" fill="none" stroke="#6b7280" stroke-width="2"/>
+    <!-- Fork -->
+    <path d="M20,10 L20,35 M15,10 L15,25 M25,10 L25,25 M15,10 C15,5 25,5 25,10" stroke="#6b7280" stroke-width="2" fill="none"/>
+    <!-- Knife -->
+    <path d="M40,10 L40,35 M40,10 C50,15 50,25 40,25" stroke="#6b7280" stroke-width="2" fill="none"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="200" y="190" font-family="Arial, sans-serif" font-size="14" fill="#9ca3af" text-anchor="middle">Food image</text>
 </svg>

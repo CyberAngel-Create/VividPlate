@@ -9,13 +9,19 @@ export function normalizeImageUrl(url: string | null | undefined): string {
     return '';
   }
   
-  // Handle placeholder images
+  // Handle external URLs (http/https) 
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
   
-  // Handle cases where the URL might be missing uploads prefix
-  if (!url.includes('/uploads/') && !url.startsWith('/uploads/') && !url.includes('placeholder')) {
+  // Handle SVG placeholder images in the public directory
+  if (url.includes('placeholder') && (url.endsWith('.svg') || url.includes('.svg?'))) {
+    // If it's already a properly formatted path with leading slash, return as is
+    return url.startsWith('/') ? url : `/${url}`;
+  }
+  
+  // Handle cases where the URL might be missing uploads prefix for user-uploaded content
+  if (!url.includes('/uploads/') && !url.startsWith('/uploads/')) {
     console.warn(`Possible malformed image URL: ${url}, adding /uploads/ prefix`);
     // Add /uploads/ prefix if missing
     const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
@@ -53,6 +59,15 @@ export function getFallbackImage(type: 'menu' | 'logo' | 'banner' = 'menu'): str
       break;
   }
   
+  // Check if the fallback exists, if not use the generic placeholder as final fallback
+  const finalFallback = isDarkMode ? '/placeholder-image-dark.svg' : '/placeholder-image.svg';
+  
+  // We're adding a cache-busting parameter to avoid browser caching issues
+  // This ensures the browser doesn't serve a cached image that might be missing
+  const cacheBuster = `?t=${Date.now()}`;
+  
   console.log(`Using fallback image for ${type}: ${fallbackUrl} (dark mode: ${isDarkMode})`);
-  return fallbackUrl;
+  
+  // Return with cache buster to prevent cached 404 responses
+  return `${fallbackUrl}${cacheBuster}`;
 }
