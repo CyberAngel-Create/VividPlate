@@ -3353,6 +3353,169 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       });
     }
   });
+  
+  // Image system diagnostic route
+  app.get('/api/system/image-diagnostic', async (req, res) => {
+    try {
+      // Check placeholder SVGs
+      const placeholderResults = await Promise.all([
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-image.svg')),
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-image-dark.svg')),
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-food.svg')),
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-food-dark.svg')),
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-banner.svg')),
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-banner-dark.svg')),
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-logo.svg')),
+        checkFile(path.join(process.cwd(), 'public', 'placeholder-logo-dark.svg'))
+      ]);
+      
+      // Check uploads directory
+      let uploadsInfo = {};
+      try {
+        const uploadsDir = path.join(process.cwd(), 'uploads');
+        const uploadsExists = fs.existsSync(uploadsDir);
+        const uploadStats = uploadsExists ? fs.statSync(uploadsDir) : null;
+        
+        uploadsInfo = {
+          exists: uploadsExists,
+          isDirectory: uploadsExists && uploadStats?.isDirectory(),
+          writeable: false,
+          files: [],
+          recentFiles: []
+        };
+        
+        if (uploadsExists && uploadStats?.isDirectory()) {
+          // Test write permissions
+          try {
+            const testFilePath = path.join(uploadsDir, `.test-${Date.now()}`);
+            fs.writeFileSync(testFilePath, 'test');
+            fs.unlinkSync(testFilePath);
+            uploadsInfo.writeable = true;
+          } catch (e) {
+            uploadsInfo.writeable = false;
+          }
+          
+          // Get file listing (limited to 100)
+          try {
+            const files = fs.readdirSync(uploadsDir);
+            uploadsInfo.files = files.slice(0, 100);
+            
+            // Get 5 most recent files with details
+            const fileDetails = files
+              .map(file => {
+                try {
+                  const filePath = path.join(uploadsDir, file);
+                  const stats = fs.statSync(filePath);
+                  return {
+                    name: file,
+                    size: stats.size,
+                    created: stats.birthtime,
+                    accessTime: stats.atime,
+                    exists: true,
+                    accessible: true,
+                    path: filePath,
+                    url: `/uploads/${file}`,
+                    fullUrl: `${req.protocol}://${req.get('host')}/uploads/${file}`
+                  };
+                } catch (e) {
+                  return {
+                    name: file,
+                    exists: false,
+                    error: e.message
+                  };
+                }
+              })
+              .filter(file => file.exists && file.name.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+              .sort((a, b) => {
+                if (a.created && b.created) {
+                  return b.created.getTime() - a.created.getTime();
+                }
+                return 0;
+              })
+              .slice(0, 5);
+              
+            uploadsInfo.recentFiles = fileDetails;
+            
+            // Test HTTP accessibility of recent files
+            for (const file of fileDetails) {
+              try {
+                const url = `${req.protocol}://${req.get('host')}/uploads/${file.name}`;
+                const response = await fetch(url, { method: 'HEAD' });
+                file.httpAccessTest = {
+                  url,
+                  status: response.status,
+                  ok: response.ok,
+                  headers: Object.fromEntries(response.headers.entries())
+                };
+              } catch (e) {
+                file.httpAccessTest = {
+                  error: e.message
+                };
+              }
+            }
+          } catch (e) {
+            uploadsInfo.fileListError = e.message;
+          }
+        }
+      } catch (e) {
+        uploadsInfo.error = e.message;
+      }
+      
+      // Get server details
+      const serverInfo = {
+        hostname: req.hostname,
+        protocol: req.protocol,
+        headers: req.headers,
+        nodeVersion: process.version,
+        memoryUsage: process.memoryUsage(),
+        uptime: process.uptime()
+      };
+      
+      res.json({
+        timestamp: new Date().toISOString(),
+        placeholders: placeholderResults,
+        uploads: uploadsInfo,
+        server: serverInfo
+      });
+    } catch (error) {
+      console.error('Error generating image diagnostics:', error);
+      res.status(500).json({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  });
+
+  // Helper function to check if a file exists and get its stats
+  async function checkFile(filePath: string): Promise<any> {
+    try {
+      const exists = fs.existsSync(filePath);
+      if (!exists) {
+        return {
+          path: filePath,
+          exists: false,
+          error: 'File does not exist'
+        };
+      }
+      
+      const stats = fs.statSync(filePath);
+      return {
+        path: filePath,
+        exists: true,
+        size: stats.size,
+        modified: stats.mtime,
+        created: stats.birthtime,
+        isDirectory: stats.isDirectory(),
+        filename: path.basename(filePath)
+      };
+    } catch (error) {
+      return {
+        path: filePath,
+        exists: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
 
   const httpServer = createServer(app);
   return httpServer;
