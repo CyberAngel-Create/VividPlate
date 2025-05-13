@@ -380,3 +380,37 @@ export const insertAdvertisementSchema = createInsertSchema(advertisements).pick
 
 export type Advertisement = typeof advertisements.$inferSelect;
 export type InsertAdvertisement = z.infer<typeof insertAdvertisementSchema>;
+
+// File uploads table to track and manage uploaded files
+export const fileUploads = pgTable("file_uploads", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  restaurantId: integer("restaurant_id"), // Optional, only if related to a restaurant
+  originalFilename: text("original_filename").notNull(),
+  storedFilename: text("stored_filename").notNull(), // The actual filename in the uploads folder
+  filePath: text("file_path").notNull(), // Full path to the file in the uploads directory
+  fileUrl: text("file_url").notNull(), // URL to access the file
+  fileType: text("file_type").notNull(), // MIME type of the file
+  fileSize: integer("file_size").notNull(), // Size in bytes
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  fileCategory: text("file_category").notNull(), // e.g., "logo", "banner", "menu-item", "other"
+  status: text("status").default("active"), // "active", "deleted", "processing"
+  metadata: jsonb("metadata").default({}), // Additional metadata (width, height for images, etc.)
+});
+
+export const insertFileUploadSchema = createInsertSchema(fileUploads).pick({
+  userId: true,
+  restaurantId: true,
+  originalFilename: true,
+  storedFilename: true,
+  filePath: true,
+  fileUrl: true,
+  fileType: true,
+  fileSize: true,
+  fileCategory: true,
+  status: true,
+  metadata: true,
+});
+
+export type FileUpload = typeof fileUploads.$inferSelect;
+export type InsertFileUpload = z.infer<typeof insertFileUploadSchema>;
