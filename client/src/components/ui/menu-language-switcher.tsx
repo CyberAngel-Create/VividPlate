@@ -13,11 +13,13 @@ import { Globe } from 'lucide-react';
 interface MenuLanguageSwitcherProps {
   variant?: 'default' | 'outline' | 'ghost';
   showLabel?: boolean;
+  size?: 'default' | 'sm';
 }
 
 const MenuLanguageSwitcher = ({
   variant = 'outline',
   showLabel = false,
+  size = 'default',
 }: MenuLanguageSwitcherProps) => {
   const { t, i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -43,10 +45,10 @@ const MenuLanguageSwitcher = ({
       <DropdownMenuTrigger asChild>
         <Button
           variant={variant}
-          size={showLabel ? 'default' : 'icon'}
-          className={showLabel ? 'gap-2' : 'h-9 w-9 rounded-full p-0'}
+          size={showLabel ? size : 'icon'}
+          className={showLabel ? 'gap-2' : size === 'sm' ? 'h-7 w-7 rounded-full p-0' : 'h-9 w-9 rounded-full p-0'}
         >
-          <Globe className="h-4 w-4" />
+          <Globe className={size === 'sm' ? "h-3.5 w-3.5" : "h-4 w-4"} />
           {showLabel && <span>{t('common.translateMenu')}</span>}
           <span className="sr-only">Translate Menu</span>
         </Button>

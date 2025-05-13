@@ -168,7 +168,8 @@ const ViewMenu = () => {
 
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Header removed as requested */}
+      {/* Add a spacer to prevent content from being hidden by mobile header/restaurant switcher */}
+      <div className="h-16 md:h-0 w-full"></div>
       
       <div className="flex flex-col items-center flex-grow pt-4">
         {/* Top advertisement from advertisement management system - only shown if restaurant is not premium */}

@@ -105,11 +105,11 @@ function FeedbackDialog({
         <DialogHeader>
           <DialogTitle>
             {menuItemName
-              ? t("Leave feedback for {{name}}", { name: menuItemName })
-              : t("Leave feedback")}
+              ? t("feedback.leaveItemFeedback", "Leave feedback for {{name}}", { name: menuItemName })
+              : t("feedback.leaveFeedback", "Leave feedback")}
           </DialogTitle>
           <DialogDescription>
-            {t("Share your experience with us. Your feedback helps us improve!")}
+            {t("feedback.shareExperience", "Share your experience with us. Your feedback helps us improve!")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -135,33 +135,33 @@ function FeedbackDialog({
               ))}
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="comment">{t("Comments (optional)")}</Label>
+              <Label htmlFor="comment">{t("feedback.comments", "Comments (optional)")}</Label>
               <Textarea
                 id="comment"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder={t("Tell us about your experience")}
+                placeholder={t("feedback.tellExperience", "Tell us about your experience")}
                 className="resize-none"
                 rows={3}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="customerName">{t("Your Name (optional)")}</Label>
+              <Label htmlFor="customerName">{t("feedback.name", "Your Name (optional)")}</Label>
               <Input
                 id="customerName"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder={t("Enter your name")}
+                placeholder={t("feedback.enterName", "Enter your name")}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="customerEmail">{t("Your Email (optional)")}</Label>
+              <Label htmlFor="customerEmail">{t("feedback.email", "Your Email (optional)")}</Label>
               <Input
                 id="customerEmail"
                 type="email"
                 value={customerEmail}
                 onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder={t("Enter your email")}
+                placeholder={t("feedback.enterEmail", "Enter your email")}
               />
             </div>
           </div>
@@ -172,10 +172,10 @@ function FeedbackDialog({
               onClick={() => setIsOpen(false)}
               disabled={isSubmitting}
             >
-              {t("Cancel")}
+              {t("feedback.cancel", "Cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting || rating === 0}>
-              {isSubmitting ? t("Submitting...") : t("Submit Feedback")}
+              {isSubmitting ? t("feedback.submitting", "Submitting...") : t("feedback.submit", "Submit Feedback")}
             </Button>
           </DialogFooter>
         </form>

@@ -329,8 +329,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         </div>
       </div>
       
-      {/* Main Category Filter (Food/Beverage) */}
-      <div className="p-3 flex justify-center space-x-4" style={{ backgroundColor: menuTheme.headerColor }}>
+      {/* Main Category Filter (Food/Beverage) with Language Switcher */}
+      <div className="p-3 flex justify-center items-center space-x-4" style={{ backgroundColor: menuTheme.headerColor }}>
         <button
           className={`px-4 py-2 rounded-full text-sm font-medium transition-colors flex items-center space-x-2 ${
             activeMainCategory === 'Food'
@@ -361,6 +361,11 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           <Coffee className="h-4 w-4" />
           <span>{t('menu.beverage', 'Beverage')}</span>
         </button>
+        
+        {/* Language switcher moved next to beverage button */}
+        <div className="flex-shrink-0">
+          <MenuLanguageSwitcher variant="outline" size="sm" />
+        </div>
       </div>
       
       {/* Menu Categories Tabs and Search */}
@@ -399,11 +404,6 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                 {category.name}
               </button>
             ))}
-          </div>
-          
-          {/* Language switcher component */}
-          <div className="flex-shrink-0 ml-2">
-            <MenuLanguageSwitcher variant="ghost" />
           </div>
         </div>
       </div>
