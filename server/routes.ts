@@ -1227,6 +1227,27 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Get final file stats for the response
       const stats = fs.statSync(finalFilePath);
       
+      // Create a file upload record in the database
+      const fileUpload = await storage.createFileUpload({
+        userId,
+        restaurantId,
+        originalFilename: req.file.originalname,
+        storedFilename: finalFileName,
+        filePath: finalFilePath,
+        fileUrl: bannerUrl,
+        fileType: req.file.mimetype,
+        fileSize: stats.size,
+        status: 'active',
+        fileCategory: 'banner',
+        uploadedAt: new Date(),
+        metadata: {
+          compressed: finalFilePath !== originalFilePath,
+          bannerIndex: bannerUrls.length - 1 // Store the index of this banner in the array
+        }
+      });
+      
+      console.log(`Restaurant ${restaurantId} banner file record created with ID: ${fileUpload.id}`);
+      
       res.json({ 
         bannerUrl,         // Return the single URL for backward compatibility
         bannerUrls,        // Return the full array of banner URLs
@@ -1236,7 +1257,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           size: stats.size,
           type: req.file.mimetype,
           compressed: finalFilePath !== originalFilePath
-        }
+        },
+        fileUpload
       });
     } catch (error) {
       console.error('Error uploading banner:', error);
@@ -1688,7 +1710,30 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Get final file stats for the response
       const stats = fs.statSync(finalFilePath);
       
-      console.log(`Menu item ${itemId} successfully updated with new image URL: ${imageUrl}`);
+      // Get the restaurant ID for this menu item through the category
+      const restaurantId = category ? category.restaurantId : null;
+      
+      // Create a file upload record in the database
+      const fileUpload = await storage.createFileUpload({
+        userId,
+        restaurantId,
+        originalFilename: req.file.originalname,
+        storedFilename: finalFileName,
+        filePath: finalFilePath,
+        fileUrl: imageUrl,
+        fileType: req.file.mimetype,
+        fileSize: stats.size,
+        status: 'active',
+        fileCategory: 'menu_item',
+        uploadedAt: new Date(),
+        metadata: {
+          compressed: finalFilePath !== originalFilePath,
+          menuItemId: itemId,
+          menuItemName: item.name
+        }
+      });
+      
+      console.log(`Menu item ${itemId} successfully updated with new image URL: ${imageUrl}, file record ID: ${fileUpload.id}`);
       res.json({ 
         imageUrl, 
         success: true,
@@ -1697,7 +1742,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           size: stats.size,
           type: req.file.mimetype,
           compressed: finalFilePath !== originalFilePath
-        }
+        },
+        fileUpload
       });
     } catch (error) {
       console.error('Error uploading menu item image:', error);
