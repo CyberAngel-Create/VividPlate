@@ -16,12 +16,14 @@ import ResponsiveImage from "@/components/ui/responsive-image";
 interface BannerSlideshowProps {
   bannerUrls: string[];
   restaurantName: string;
+  logoUrl?: string | null;
   interval?: number; // milliseconds
 }
 
 const BannerSlideshow: React.FC<BannerSlideshowProps> = ({ 
   bannerUrls, 
   restaurantName,
+  logoUrl,
   interval = 5000 // default to 5 seconds
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -78,6 +80,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
+      {/* Banner images */}
       {processedBannerUrls.map((url, index) => {
         const normalizedUrl = normalizeImageUrl(url);
         console.log(`Banner image ${index}: ${normalizedUrl}, active: ${index === activeIndex}`);
@@ -98,6 +101,22 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
           />
         );
       })}
+      
+      {/* Restaurant logo overlay */}
+      {logoUrl && (
+        <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md">
+          <ResponsiveImage
+            src={logoUrl}
+            alt={`${restaurantName} logo`}
+            fallbackType="logo"
+            className="w-full h-full rounded-full overflow-hidden"
+            imgClassName="object-cover w-full h-full"
+            onError={() => {
+              console.error("Failed to load logo image:", logoUrl);
+            }}
+          />
+        </div>
+      )}
       
       {processedBannerUrls.length > 1 && (
         <>
@@ -275,20 +294,39 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           {restaurant.bannerUrls && Array.isArray(restaurant.bannerUrls) && restaurant.bannerUrls.length > 0 ? (
             <BannerSlideshow 
               bannerUrls={restaurant.bannerUrls as string[]} 
-              restaurantName={restaurant.name} 
+              restaurantName={restaurant.name}
+              logoUrl={restaurant.logoUrl}
             />
           ) : restaurant.bannerUrl ? (
-            // Fallback to legacy single banner image
-            <ResponsiveImage 
-              src={restaurant.bannerUrl}
-              alt={`${restaurant.name} banner`}
-              fallbackType="banner"
-              className="w-full h-full"
-              imgClassName="object-cover w-full h-full"
-              onError={() => {
-                console.error("Failed to load banner image:", restaurant.bannerUrl);
-              }}
-            />
+            <>
+              {/* Fallback to legacy single banner image */}
+              <ResponsiveImage 
+                src={restaurant.bannerUrl}
+                alt={`${restaurant.name} banner`}
+                fallbackType="banner"
+                className="w-full h-full"
+                imgClassName="object-cover w-full h-full"
+                onError={() => {
+                  console.error("Failed to load banner image:", restaurant.bannerUrl);
+                }}
+              />
+              
+              {/* Restaurant logo overlay for single banner image */}
+              {restaurant.logoUrl && (
+                <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md">
+                  <ResponsiveImage
+                    src={restaurant.logoUrl}
+                    alt={`${restaurant.name} logo`}
+                    fallbackType="logo"
+                    className="w-full h-full rounded-full overflow-hidden"
+                    imgClassName="object-cover w-full h-full"
+                    onError={() => {
+                      console.error("Failed to load logo image:", restaurant.logoUrl);
+                    }}
+                  />
+                </div>
+              )}
+            </>
           ) : null}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
         </div>
