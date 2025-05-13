@@ -12,7 +12,8 @@ import {
   adminLogs, AdminLog, InsertAdminLog,
   pricingPlans, PricingPlan, InsertPricingPlan,
   contactInfo, ContactInfo, InsertContactInfo,
-  advertisements, Advertisement, InsertAdvertisement
+  advertisements, Advertisement, InsertAdvertisement,
+  fileUploads, FileUpload, InsertFileUpload
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, lte, gte } from "drizzle-orm";
