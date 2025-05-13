@@ -34,39 +34,36 @@ export function normalizeImageUrl(url: string | null | undefined): string {
 
 /**
  * Gets a fallback image in case the original image fails to load
- * Takes into account dark mode preferences
+ * Always returns light mode images for the customer menu view
  * @param type The type of fallback image (menu, logo, banner)
  * @returns URL to an appropriate fallback image
  */
 export function getFallbackImage(type: 'menu' | 'logo' | 'banner' = 'menu'): string {
-  // Check if we should use dark mode images
-  // This will detect system preference or user-selected dark mode
-  const isDarkMode = document.documentElement.classList.contains('dark') || 
-                    window.matchMedia?.('(prefers-color-scheme: dark)').matches || 
-                    localStorage.getItem('theme') === 'dark';
+  // We've removed dark mode support for the customer menu view
+  // Always use light mode images for consistency
   
   let fallbackUrl = '';
   switch (type) {
     case 'logo':
-      fallbackUrl = isDarkMode ? '/placeholder-logo-dark.svg' : '/placeholder-logo.svg';
+      fallbackUrl = '/placeholder-logo.svg';
       break;
     case 'banner':
-      fallbackUrl = isDarkMode ? '/placeholder-banner-dark.svg' : '/placeholder-banner.svg';
+      fallbackUrl = '/placeholder-banner.svg';
       break;
     case 'menu':
     default:
-      fallbackUrl = isDarkMode ? '/placeholder-food-dark.svg' : '/placeholder-food.svg';
+      fallbackUrl = '/placeholder-food.svg';
       break;
   }
   
   // Check if the fallback exists, if not use the generic placeholder as final fallback
-  const finalFallback = isDarkMode ? '/placeholder-image-dark.svg' : '/placeholder-image.svg';
+  const finalFallback = '/placeholder-image.svg';
   
   // We're adding a cache-busting parameter to avoid browser caching issues
   // This ensures the browser doesn't serve a cached image that might be missing
   const cacheBuster = `?t=${Date.now()}`;
   
-  console.log(`Using fallback image for ${type}: ${fallbackUrl} (dark mode: ${isDarkMode})`);
+  console.log(`Using fallback image for ${type}: ${fallbackUrl}`);
   
   // Return with cache buster to prevent cached 404 responses
   return `${fallbackUrl}${cacheBuster}`;
