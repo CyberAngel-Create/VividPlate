@@ -171,8 +171,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const topRef = React.useRef<HTMLDivElement>(null);
-  const bottomRef = React.useRef<HTMLDivElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     setMounted(true);
@@ -291,6 +291,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden menu-preview-shadow"
       style={containerStyle}
     >
+      <div ref={topRef} className="absolute top-0 left-0"></div>
       {/* Restaurant header with banner slideshow */}
       <div className="relative">
         <div className="h-40 bg-gray-300 relative">
@@ -572,6 +573,30 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           {t('menu.previewMode', 'Preview Mode')}
         </div>
       )}
+      
+      {/* Scroll to top/bottom buttons */}
+      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
+        <button 
+          onClick={scrollToTop}
+          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
+          aria-label={t('menu.scrollToTop', 'Scroll to top')}
+          title={t('menu.scrollToTop', 'Scroll to top')}
+          style={{ color: menuTheme.accentColor }}
+        >
+          <ArrowUp className="h-5 w-5" />
+        </button>
+        <button 
+          onClick={scrollToBottom}
+          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
+          aria-label={t('menu.scrollToBottom', 'Scroll to bottom')}
+          title={t('menu.scrollToBottom', 'Scroll to bottom')}
+          style={{ color: menuTheme.accentColor }}
+        >
+          <ArrowDown className="h-5 w-5" />
+        </button>
+      </div>
+      
+      <div ref={bottomRef} className="h-1"></div>
     </div>
   );
 };
