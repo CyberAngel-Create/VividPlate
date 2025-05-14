@@ -1741,6 +1741,17 @@ export class DatabaseStorage implements IStorage {
       return 0;
     }
   }
+  
+  async countTotalMenuViews(): Promise<number> {
+    try {
+      const [result] = await db.select({ count: count() })
+        .from(menuViews);
+      return result.count || 0;
+    } catch (error) {
+      console.error('Error counting total menu views:', error);
+      return 0;
+    }
+  }
 
   async createMenuView(insertView: InsertMenuView): Promise<MenuView> {
     const [view] = await db.insert(menuViews).values(insertView).returning();
