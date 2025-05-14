@@ -1,9 +1,9 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee } from "lucide-react";
+import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
-import { useState, useMemo, useEffect, CSSProperties } from "react";
+import React, { useState, useMemo, useEffect, CSSProperties, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
@@ -171,10 +171,20 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const topRef = React.useRef<HTMLDivElement>(null);
+  const bottomRef = React.useRef<HTMLDivElement>(null);
   
   useEffect(() => {
     setMounted(true);
   }, []);
+  
+  const scrollToTop = () => {
+    topRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const scrollToBottom = () => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleCategoryClick = (categoryId: string) => {
     setActiveCategory(categoryId);
