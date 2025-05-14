@@ -37,6 +37,7 @@ type UserData = {
     weekly: number;
     monthly: number;
     yearly: number;
+    total: number;
   };
 };
 

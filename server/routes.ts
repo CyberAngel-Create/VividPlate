@@ -2823,7 +2823,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         daily: 0,
         weekly: 0,
         monthly: 0,
-        yearly: 0
+        yearly: 0,
+        total: 0
       };
       
       try {
@@ -2838,6 +2839,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         viewStats.weekly = await storage.countMenuViewsInDateRange(oneWeekAgo, now);
         viewStats.monthly = await storage.countMenuViewsInDateRange(oneMonthAgo, now);
         viewStats.yearly = await storage.countMenuViewsInDateRange(oneYearAgo, now);
+        viewStats.total = await storage.countTotalMenuViews();
       } catch (analyticsError) {
         console.error('Error fetching analytics data (table may not exist yet):', analyticsError);
         // Continue without analytics data if the table doesn't exist yet
