@@ -268,6 +268,26 @@ const AdminDashboard = () => {
           </TabsContent>
 
           <TabsContent value="views" className="space-y-4">
+            {/* Total Views Card */}
+            <Card className="mb-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Total Menu Views
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div className="text-3xl font-bold">{data?.viewStats?.total || 0}</div>
+                  <div className="p-3 rounded-full bg-red-500 text-white">
+                    <Eye className="h-6 w-6" />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Total menu views since launch
+                </p>
+              </CardContent>
+            </Card>
+            
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Card>
                 <CardHeader className="pb-2">

@@ -522,6 +522,10 @@ export class MemStorage implements IStorage {
         return viewDate >= startDate && viewDate <= endDate;
       }).length;
   }
+  
+  async countTotalMenuViews(): Promise<number> {
+    return this.menuViews.size;
+  }
 
   async createMenuView(insertView: InsertMenuView): Promise<MenuView> {
     const id = this.currentIds.menuViews++;
