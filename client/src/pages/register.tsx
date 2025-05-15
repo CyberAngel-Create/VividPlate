@@ -125,7 +125,7 @@ const Register = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-heading text-center">Create an Account</CardTitle>
             <CardDescription className="text-center">
-              Enter your details to create your MenuMate account
+              Enter your details to create your VividPlate account
             </CardDescription>
           </CardHeader>
           <CardContent>

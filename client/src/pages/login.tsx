@@ -99,7 +99,7 @@ const Login = () => {
       <div className="container mx-auto px-4 py-12 flex justify-center min-h-[calc(100vh-64px-380px)]">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-heading text-center">{t('common.login')} - DigitaMenuMate</CardTitle>
+            <CardTitle className="text-2xl font-heading text-center">{t('common.login')} - VividPlate</CardTitle>
             <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>

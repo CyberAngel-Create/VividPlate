@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Column 1: About */}
           <div>
-            <h3 className="font-heading font-bold text-lg mb-4">MenuMate</h3>
+            <h3 className="font-heading font-bold text-lg mb-4">VividPlate</h3>
             <p className="text-sm text-gray-300 mb-4">
               Creating beautiful digital menus for restaurants. Enhance your customers' dining experience with our QR code menu solution.
             </p>
@@ -91,8 +91,8 @@ export default function Footer() {
               </li>
               <li className="flex items-center">
                 <Mail size={18} className="mr-2 text-gray-300 flex-shrink-0" />
-                <a href="mailto:menumate.spp@gmail.com" className="text-gray-300 hover:text-white transition-colors">
-                  menumate.spp@gmail.com
+                <a href="mailto:vividplate.spp@gmail.com" className="text-gray-300 hover:text-white transition-colors">
+                  vividplate.spp@gmail.com
                 </a>
               </li>
               <li className="flex items-center">
@@ -106,7 +106,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-gray-800 mt-10 pt-6 text-center text-sm text-gray-400">
-          <p>&copy; {currentYear} MenuMate. All rights reserved.</p>
+          <p>&copy; {currentYear} VividPlate. All rights reserved.</p>
         </div>
       </div>
     </footer>
