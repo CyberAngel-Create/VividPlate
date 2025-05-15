@@ -31,7 +31,7 @@ const translations = {
     translateMenu: 'Translate Menu',
   },
   home: {
-    welcome: 'Welcome to MenuMate',
+    welcome: 'Welcome to VividPlate',
     subtitle: 'Create and share digital menus for your restaurant',
     getStarted: 'Get Started',
     learnMore: 'Learn More',

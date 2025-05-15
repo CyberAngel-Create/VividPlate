@@ -92,7 +92,7 @@ const Dashboard = () => {
         <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
           <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
-          <p className="mb-6">Create your first restaurant to get started with MenuMate.</p>
+          <p className="mb-6">Create your first restaurant to get started with VividPlate.</p>
           <button 
             onClick={() => window.location.href = "/edit-restaurant"}
             className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
