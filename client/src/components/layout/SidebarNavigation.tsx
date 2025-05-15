@@ -101,7 +101,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 h-16">
         <Link href="/dashboard">
           <div>
-            <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
+            <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">VividPlate</span>
             <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
           </div>
         </Link>
@@ -117,7 +117,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
             <SheetContent side="left" className="w-64 p-0">
               <div className="flex flex-col h-full">
                 <div className="p-4 border-b dark:border-gray-800">
-                  <span className="text-lg font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
+                  <span className="text-lg font-heading font-bold text-primary dark:text-primary-light">VividPlate</span>
                 </div>
                 
                 {/* Navigation Items */}

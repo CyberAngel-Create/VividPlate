@@ -66,7 +66,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Custom MenuMate colors
+        // Custom VividPlate colors
         neutral: "hsl(var(--neutral))",
         dark: "hsl(var(--dark))",
         midgray: "hsl(var(--midgray))",
