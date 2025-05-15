@@ -61,7 +61,7 @@ const Home = () => {
                 Create Beautiful Digital Menus for Your Restaurant
               </h1>
               <p className="text-white/90 text-lg mb-8">
-                MenuMate helps you create custom digital menus that are accessible via web links and QR codes, making it easy for customers to browse your offerings from their devices.
+                VividPlate helps you create custom digital menus that are accessible via web links and QR codes, making it easy for customers to browse your offerings from their devices.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
@@ -109,7 +109,7 @@ const Home = () => {
       <section className="py-16 bg-neutral">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-heading font-bold mb-4">How MenuMate Works</h2>
+            <h2 className="text-3xl font-heading font-bold mb-4">How VividPlate Works</h2>
             <p className="text-midgray max-w-2xl mx-auto">
               Our platform makes it easy to create, manage and share your restaurant menu with customers.
             </p>
@@ -155,7 +155,7 @@ const Home = () => {
           <div className="text-center mb-16">
             <h2 className="text-3xl font-heading font-bold mb-4">Beautiful Menu Examples</h2>
             <p className="text-midgray max-w-2xl mx-auto">
-              See how restaurants are using MenuMate to showcase their offerings
+              See how restaurants are using VividPlate to showcase their offerings
             </p>
           </div>
           
@@ -238,7 +238,7 @@ const Home = () => {
                 </div>
               </div>
               <p className="text-midgray">
-                "MenuMate has revolutionized our dining experience. Customers love being able to browse our full menu with detailed descriptions and pictures. It's also incredibly easy to update."
+                "VividPlate has revolutionized our dining experience. Customers love being able to browse our full menu with detailed descriptions and pictures. It's also incredibly easy to update."
               </p>
             </div>
             
@@ -253,7 +253,7 @@ const Home = () => {
                 </div>
               </div>
               <p className="text-midgray">
-                "Since implementing digital menus with MenuMate, we've reduced printing costs and waste. Our seasonal specials are now updated instantly without reprinting anything."
+                "Since implementing digital menus with VividPlate, we've reduced printing costs and waste. Our seasonal specials are now updated instantly without reprinting anything."
               </p>
             </div>
             
@@ -280,7 +280,7 @@ const Home = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-heading font-bold text-white mb-6">Ready to Modernize Your Restaurant Menu?</h2>
           <p className="text-white/90 max-w-2xl mx-auto mb-8">
-            Join thousands of restaurants using MenuMate to create beautiful, accessible digital menus.
+            Join thousands of restaurants using VividPlate to create beautiful, accessible digital menus.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 

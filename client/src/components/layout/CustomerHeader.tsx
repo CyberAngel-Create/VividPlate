@@ -35,7 +35,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
           {/* Logo */}
           <Link href="/">
             <div className="flex items-center">
-              <span className="text-xl font-heading font-bold text-primary">MenuMate</span>
+              <span className="text-xl font-heading font-bold text-primary">VividPlate</span>
             </div>
           </Link>
 
@@ -133,7 +133,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                 <div className="p-4 border-b border-gray-100">
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-heading font-bold text-primary">
-                      MenuMate
+                      VividPlate
                     </span>
                     <Button
                       variant="ghost"
