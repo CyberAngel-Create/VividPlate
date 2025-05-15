@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -6,7 +6,9 @@ import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { Feedback } from '@shared/schema';
 import FeedbackItem from './FeedbackItem';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Search, Star } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface RestaurantFeedbackProps {
   restaurantId: number;
@@ -18,6 +20,9 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
   isOwner = false 
 }) => {
   const [activeTab, setActiveTab] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [ratingFilter, setRatingFilter] = useState<string>('all');
+  const [groupByRating, setGroupByRating] = useState<boolean>(true);
   const { toast } = useToast();
   const { t } = useTranslation();
   
@@ -27,11 +32,46 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
     enabled: !!restaurantId,
   });
   
-  // Filter feedback based on active tab
-  const filteredFeedback = data ? data.filter(feedback => {
-    if (activeTab === 'all') return true;
-    return feedback.status === activeTab;
-  }) : [];
+  // Filter and group feedback
+  const processedFeedback = useMemo(() => {
+    if (!data) return { filtered: [], grouped: {} };
+    
+    // First apply status filter
+    let result = data.filter(feedback => {
+      if (activeTab === 'all') return true;
+      return feedback.status === activeTab;
+    });
+    
+    // Then apply rating filter
+    if (ratingFilter !== 'all') {
+      const rating = parseInt(ratingFilter);
+      result = result.filter(f => f.rating === rating);
+    }
+    
+    // Then apply search
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(f => 
+        (f.comment && f.comment.toLowerCase().includes(term)) ||
+        (f.customerName && f.customerName.toLowerCase().includes(term)) ||
+        (f.customerEmail && f.customerEmail.toLowerCase().includes(term))
+      );
+    }
+    
+    // Group by rating
+    const grouped: Record<string, Feedback[]> = {};
+    for (let i = 5; i >= 1; i--) {
+      const ratingItems = result.filter(f => f.rating === i);
+      if (ratingItems.length > 0) {
+        grouped[i.toString()] = ratingItems;
+      }
+    }
+    
+    return {
+      filtered: result,
+      grouped
+    };
+  }, [data, activeTab, ratingFilter, searchTerm]);
   
   // Count feedback by status
   const counts = {
@@ -120,22 +160,97 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
             </TabsTrigger>
           </TabsList>
           
-          <TabsContent value={activeTab} className="mt-0">
-            <div className="space-y-4">
-              {filteredFeedback.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground">No {activeTab} feedback found</p>
+          {/* Filter and search controls */}
+          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+            <div className="relative flex-1">
+              <Input
+                placeholder="Search feedback..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Select value={ratingFilter} onValueChange={setRatingFilter}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Filter by rating" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Ratings</SelectItem>
+                  <SelectItem value="5">5 Stars</SelectItem>
+                  <SelectItem value="4">4 Stars</SelectItem>
+                  <SelectItem value="3">3 Stars</SelectItem>
+                  <SelectItem value="2">2 Stars</SelectItem>
+                  <SelectItem value="1">1 Star</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  <input
+                    type="checkbox"
+                    id="groupByRating"
+                    checked={groupByRating}
+                    onChange={() => setGroupByRating(!groupByRating)}
+                    className="rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                  <label htmlFor="groupByRating" className="text-sm font-medium">
+                    Group by rating
+                  </label>
                 </div>
-              ) : (
-                filteredFeedback.map((feedback) => (
+              </div>
+            </div>
+          </div>
+          
+          <TabsContent value={activeTab} className="mt-0">
+            {processedFeedback.filtered.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-muted-foreground">No matching feedback found</p>
+              </div>
+            ) : groupByRating ? (
+              // Display feedback grouped by rating
+              <div className="space-y-8">
+                {Object.entries(processedFeedback.grouped).map(([rating, feedbacks]) => (
+                  <div key={rating} className="space-y-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <h3 className="text-lg font-semibold">{rating} Star{parseInt(rating) !== 1 ? 's' : ''}</h3>
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star 
+                            key={i}
+                            className={`h-4 w-4 ${i < parseInt(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm text-muted-foreground">({feedbacks.length})</span>
+                    </div>
+                    
+                    <div className="space-y-4 pl-2 border-l-2 border-muted">
+                      {feedbacks.map((feedback) => (
+                        <FeedbackItem 
+                          key={feedback.id} 
+                          feedback={feedback} 
+                          isOwner={isOwner}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              // Display feedback without grouping
+              <div className="space-y-4">
+                {processedFeedback.filtered.map((feedback) => (
                   <FeedbackItem 
                     key={feedback.id} 
                     feedback={feedback} 
                     isOwner={isOwner}
                   />
-                ))
-              )}
-            </div>
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </CardContent>

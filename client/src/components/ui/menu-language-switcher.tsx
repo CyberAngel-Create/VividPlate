@@ -46,21 +46,21 @@ const MenuLanguageSwitcher = ({
         <Button
           variant={variant}
           size={showLabel ? size : 'icon'}
-          className={showLabel ? 'gap-2' : size === 'sm' ? 'h-7 w-7 rounded-full p-0' : 'h-9 w-9 rounded-full p-0'}
+          className={`${showLabel ? 'gap-2' : size === 'sm' ? 'h-7 w-7 rounded-full p-0' : 'h-9 w-9 rounded-full p-0'} bg-white text-gray-800 hover:bg-gray-100 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700 dark:border-gray-700`}
         >
-          <Globe className={size === 'sm' ? "h-3.5 w-3.5" : "h-4 w-4"} />
+          <Globe className={`${size === 'sm' ? "h-3.5 w-3.5" : "h-4 w-4"} dark:text-white`} />
           {showLabel && <span>{t('common.translateMenu')}</span>}
           <span className="sr-only">Translate Menu</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[180px]">
-        <DropdownMenuLabel>{t('common.language')}</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="min-w-[180px] bg-white dark:bg-gray-800 dark:border-gray-700">
+        <DropdownMenuLabel className="dark:text-white">{t('common.language', 'Language')}</DropdownMenuLabel>
         {languages.map((language) => (
           <DropdownMenuItem
             key={language.code}
             onClick={() => changeLanguage(language.code)}
-            className={`cursor-pointer flex items-center justify-between ${
-              i18n.language === language.code ? 'bg-muted font-medium' : ''
+            className={`cursor-pointer flex items-center justify-between dark:text-white dark:hover:bg-gray-700 ${
+              i18n.language === language.code ? 'bg-muted font-medium dark:bg-gray-700' : ''
             }`}
           >
             <span>{language.name}</span>
