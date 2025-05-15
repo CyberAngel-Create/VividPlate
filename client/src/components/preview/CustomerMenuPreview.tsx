@@ -257,6 +257,9 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const allMenuItems = useMemo(() => {
     return menuData.flatMap(category => category.items);
   }, [menuData]);
+  
+  // Image dialog state for menu items
+  const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
 
   // Filter items based on selected category and main category
   const filteredMenuData = useMemo(() => {
@@ -551,12 +554,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                       
                       {/* Details on right side */}
                       <div className="flex-grow w-2/3">
-                        <FeedbackDialog
-                          menuItemId={item.id}
-                          menuItemName={item.name}
-                          restaurantId={restaurant.id}
-                          trigger={
-                            <div className="flex flex-col cursor-pointer relative group">
+                        <div className="flex flex-col cursor-pointer relative group">
                               <div className="flex justify-between items-start">
                                 <h4 className="font-medium" style={menuItemNameStyle}>{item.name}</h4>
                                 <span className="font-medium" style={menuItemPriceStyle}>
@@ -589,8 +587,6 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 <span>{t('menu.clickToLeaveFeedback', 'Click to leave feedback')}</span>
                               </div>
                             </div>
-                          }
-                        />
                       </div>
                     </div>
                   ))}
