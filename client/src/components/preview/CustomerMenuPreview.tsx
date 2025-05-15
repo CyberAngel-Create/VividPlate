@@ -378,8 +378,9 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                 <ResponsiveImage
                   src={restaurant.logoUrl}
                   alt={restaurant.name}
-                  className="w-full h-full object-cover"
-                  fallbackSrc={getFallbackImage('logo')}
+                  className="w-full h-full"
+                  imgClassName="object-cover"
+                  fallbackType="logo"
                 />
               </div>
             )}
@@ -417,7 +418,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               <Coffee className="h-3 w-3 mr-1" />
               <span>{t('menu.beverage', 'Beverage')}</span>
             </button>
-            <MenuLanguageSwitcher variant="outline" size="xs" />
+            <MenuLanguageSwitcher variant="outline" size="sm" />
           </div>
         </div>
       </div>
