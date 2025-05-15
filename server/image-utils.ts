@@ -29,43 +29,83 @@ export async function processImage(
       `${parsedPath.name}-processed${parsedPath.ext}`
     );
     
-    // Create Sharp instance
-    let imageProcessor = sharp(filePath);
+    // Create Sharp instance with additional error handling
+    let imageProcessor;
+    try {
+      imageProcessor = sharp(filePath);
+      
+      // Add a timeout to prevent hanging on corrupt images
+      imageProcessor.timeout({
+        seconds: 30
+      });
+    } catch (err) {
+      console.error(`Failed to create Sharp instance for ${filePath}:`, err);
+      throw new Error(`Image processing engine could not read the file: ${err.message}`);
+    }
     
-    // Get image metadata
-    const metadata = await imageProcessor.metadata();
-    console.log(`Original image: ${metadata.width}x${metadata.height}, format: ${metadata.format}`);
+    // Get image metadata with error handling
+    let metadata;
+    try {
+      metadata = await imageProcessor.metadata();
+      console.log(`Original image: ${metadata.width}x${metadata.height}, format: ${metadata.format}`);
+    } catch (err) {
+      console.error(`Failed to read image metadata for ${filePath}:`, err);
+      throw new Error(`Could not read image metadata: ${err.message}`);
+    }
+    
+    // Normalize image format - handle mobile specific issues
+    if (!metadata.format) {
+      console.warn(`Unknown image format for ${filePath}, will convert to JPEG`);
+      metadata.format = 'jpeg'; // Force a known format if none detected
+    }
     
     // Resize if dimensions are specified
     if (options.width || options.height) {
-      imageProcessor = imageProcessor.resize({
-        width: options.width,
-        height: options.height,
-        fit: options.fit || 'cover',
-        withoutEnlargement: true
-      });
+      try {
+        imageProcessor = imageProcessor.resize({
+          width: options.width,
+          height: options.height,
+          fit: options.fit || 'cover',
+          withoutEnlargement: true
+        });
+      } catch (err) {
+        console.error(`Failed to resize image ${filePath}:`, err);
+        throw new Error(`Image resize operation failed: ${err.message}`);
+      }
     }
     
     // Quality and compression settings
     const quality = options.quality || DEFAULT_QUALITY;
     
-    // Apply format-specific compression
+    // Apply format-specific compression with better error handling
     let buffer: Buffer;
     
-    switch (metadata.format?.toLowerCase()) {
-      case 'jpeg':
-      case 'jpg':
-        buffer = await imageProcessor.jpeg({ quality }).toBuffer();
-        break;
-      case 'png':
-        buffer = await imageProcessor.png({ quality }).toBuffer();
-        break;
-      case 'webp':
-        buffer = await imageProcessor.webp({ quality }).toBuffer();
-        break;
-      default:
-        // For other formats or if format is unknown, convert to JPEG
-        buffer = await imageProcessor.jpeg({ quality }).toBuffer();
+    try {
+      switch (metadata.format?.toLowerCase()) {
+        case 'jpeg':
+        case 'jpg':
+          buffer = await imageProcessor.jpeg({ quality }).toBuffer();
+          break;
+        case 'png':
+          buffer = await imageProcessor.png({ quality }).toBuffer();
+          break;
+        case 'webp':
+          buffer = await imageProcessor.webp({ quality }).toBuffer();
+          break;
+        case 'heic':
+        case 'heif':
+          // Mobile devices often use HEIC/HEIF format
+          console.log(`Converting HEIC/HEIF image to JPEG for better compatibility`);
+          buffer = await imageProcessor.jpeg({ quality }).toBuffer();
+          break;
+        default:
+          // For other formats or if format is unknown, convert to JPEG
+          console.log(`Converting unknown format to JPEG for compatibility`);
+          buffer = await imageProcessor.jpeg({ quality }).toBuffer();
+      }
+    } catch (err) {
+      console.error(`Failed to process ${metadata.format} image ${filePath}:`, err);
+      throw new Error(`Image format conversion failed: ${err.message}`);
     }
     
     // Further compression if needed to meet size limit
