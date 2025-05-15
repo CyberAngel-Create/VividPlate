@@ -366,16 +366,29 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       {/* Fixed header section that appears when scrolling up */}
       <div 
         ref={headerRef}
-        className={`fixed top-0 left-0 right-0 z-50 shadow-md transition-transform duration-300 ${
-          headerFixed ? 'translate-y-0' : '-translate-y-full'
+        className={`fixed top-0 left-0 right-0 z-50 shadow-md transition-all duration-300 ${
+          headerFixed ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
         }`}
         style={{ maxWidth: '42rem', margin: '0 auto' }}
       >
-        <div className="p-3 flex justify-between items-center" style={{ backgroundColor: menuTheme.headerColor }}>
-          <div className="text-sm font-medium">{restaurant.name}</div>
-          <div className="flex items-center space-x-3">
+        <div className="p-3 flex justify-between items-center rounded-b-lg" style={{ backgroundColor: menuTheme.headerColor }}>
+          <div className="flex items-center">
+            {restaurant.logoUrl && (
+              <div className="w-6 h-6 mr-2 rounded-full overflow-hidden">
+                <ResponsiveImage
+                  src={restaurant.logoUrl}
+                  alt={restaurant.name}
+                  className="w-full h-full object-cover"
+                  fallbackSrc={getFallbackImage('logo')}
+                />
+              </div>
+            )}
+            <div className="text-sm font-medium truncate max-w-[120px]">{restaurant.name}</div>
+          </div>
+          
+          <div className="flex items-center space-x-2">
             <button
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center space-x-1 ${
+              className={`px-2 py-1 rounded-full text-xs font-medium transition-colors flex items-center space-x-1 ${
                 activeMainCategory === 'Food'
                   ? 'text-white'
                   : 'bg-white hover:bg-gray-200'
@@ -386,11 +399,11 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               }}
               onClick={() => handleMainCategoryClick('Food')}
             >
-              <Utensils className="h-3 w-3" />
+              <Utensils className="h-3 w-3 mr-1" />
               <span>{t('menu.food', 'Food')}</span>
             </button>
             <button
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center space-x-1 ${
+              className={`px-2 py-1 rounded-full text-xs font-medium transition-colors flex items-center space-x-1 ${
                 activeMainCategory === 'Beverage'
                   ? 'text-white'
                   : 'bg-white hover:bg-gray-200'
@@ -401,10 +414,10 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               }}
               onClick={() => handleMainCategoryClick('Beverage')}
             >
-              <Coffee className="h-3 w-3" />
+              <Coffee className="h-3 w-3 mr-1" />
               <span>{t('menu.beverage', 'Beverage')}</span>
             </button>
-            <MenuLanguageSwitcher variant="outline" size="sm" />
+            <MenuLanguageSwitcher variant="outline" size="xs" />
           </div>
         </div>
       </div>
@@ -661,7 +674,9 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         </button>
       </div>
       
-      <div ref={bottomRef} className="h-1"></div>
+      <div ref={bottomRef} className="mt-6 pb-24 text-center text-gray-400 text-xs">
+        <p>{t('menu.endOfMenu', 'End of menu')}</p>
+      </div>
       
       {/* Feedback button at the bottom right */}
       {mounted && restaurant && restaurant.id && (

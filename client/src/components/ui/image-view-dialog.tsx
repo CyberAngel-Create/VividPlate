@@ -4,6 +4,7 @@ import { X, MessageSquare } from 'lucide-react';
 import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
 import FeedbackDialog from './feedback-dialog';
 import { useTranslation } from 'react-i18next';
+import { Button } from "@/components/ui/button";
 
 interface ImageViewDialogProps {
   imageSrc: string;
@@ -57,21 +58,36 @@ const ImageViewDialog = ({
             <h3 className="text-lg font-medium mb-2">{imageAlt}</h3>
             
             {description && (
-              <p className="text-sm text-gray-600 mb-4">{description}</p>
+              <div className="bg-gray-50 p-3 rounded-md mb-4">
+                <p className="text-sm text-gray-600">{description}</p>
+              </div>
             )}
             
             {/* Customer Feedback Section */}
             {menuItemId && restaurantId && (
               <div className="mt-4 border-t pt-4">
-                <h4 className="text-sm font-medium mb-2">{t("Leave Feedback")}</h4>
-                <FeedbackDialog
-                  menuItemId={menuItemId}
-                  menuItemName={imageAlt}
-                  restaurantId={restaurantId}
-                  position="inline"
-                  variant="ghost"
-                  size="sm"
-                />
+                <h4 className="text-sm font-medium mb-2">{t("feedback.leaveReview", "Share your thoughts")}</h4>
+                <div className="flex justify-start">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex items-center"
+                    onClick={() => {
+                      // Close this dialog and open the feedback dialog
+                      setOpen(false);
+                      // A small delay to ensure smooth transition
+                      setTimeout(() => {
+                        const feedbackBtn = document.getElementById(`feedback-btn-${menuItemId}`);
+                        if (feedbackBtn) {
+                          (feedbackBtn as HTMLButtonElement).click();
+                        }
+                      }, 100);
+                    }}
+                  >
+                    <MessageSquare className="h-4 w-4 mr-2" />
+                    {t("feedback.leaveFeedback", "Leave Feedback")}
+                  </Button>
+                </div>
               </div>
             )}
           </div>
