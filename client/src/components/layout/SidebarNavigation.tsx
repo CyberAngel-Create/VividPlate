@@ -163,7 +163,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
         {/* Logo */}
         <div className="p-4 border-b dark:border-gray-800">
           <Link href="/dashboard">
-            <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">MenuMate</span>
+            <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">VividPlate</span>
             <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
           </Link>
         </div>

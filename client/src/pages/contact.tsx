@@ -149,7 +149,7 @@ const Contact = () => {
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-medium">Email</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 break-words">menumate.spp@gmail.com</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 break-words">vividplate.spp@gmail.com</p>
                       </div>
                     </div>
                     
