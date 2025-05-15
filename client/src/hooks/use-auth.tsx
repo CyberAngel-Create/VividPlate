@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLocation("/dashboard");
       toast({
         title: "Registration successful",
-        description: `Welcome to DigitaMenuMate, ${user.fullName || user.username}!`,
+        description: `Welcome to VividPlate, ${user.fullName || user.username}!`,
       });
     },
     onError: (error: Error) => {

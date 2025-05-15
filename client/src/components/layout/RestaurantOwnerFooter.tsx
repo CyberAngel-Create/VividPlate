@@ -9,11 +9,11 @@ const RestaurantOwnerFooter = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <div className="flex items-center">
-              <span className="text-lg font-heading font-bold text-primary">MenuMate</span>
+              <span className="text-lg font-heading font-bold text-primary">VividPlate</span>
               <span className="ml-1 text-xs text-gray-500">for Restaurant Owners</span>
             </div>
             <p className="text-sm text-gray-500 mt-1">
-              © {currentYear} MenuMate. All rights reserved.
+              © {currentYear} VividPlate. All rights reserved.
             </p>
           </div>
           

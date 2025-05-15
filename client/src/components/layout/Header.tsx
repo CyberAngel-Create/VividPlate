@@ -54,7 +54,7 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center">
           <Link href="/" className="text-primary font-heading font-bold text-2xl">
-            MenuMate
+            VividPlate
           </Link>
         </div>
         

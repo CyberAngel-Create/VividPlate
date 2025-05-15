@@ -67,7 +67,7 @@ const AdminContactInfoPage = () => {
     resolver: zodResolver(formSchema),
     defaultValues: {
       address: "Ethiopia, Addis Abeba",
-      email: "menumate.spp@gmail.com",
+      email: "vividplate.spp@gmail.com",
       phone: "+251-913-690-687",
       openHours: "Monday - Sunday: 9:00 AM - 10:00 PM",
       latitude: 0,
@@ -84,7 +84,7 @@ const AdminContactInfoPage = () => {
     placeholderData: {
       id: 1,
       address: "Ethiopia, Addis Abeba",
-      email: "menumate.spp@gmail.com",
+      email: "vividplate.spp@gmail.com",
       phone: "+251-913-690-687",
       openHours: "Monday - Sunday: 9:00 AM - 10:00 PM",
       socialMedia: {
