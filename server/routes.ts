@@ -20,7 +20,6 @@ import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import memorystore from 'memorystore';
 import path from 'path';
-import fs from 'fs';
 import os from 'os';
 import multer from 'multer';
 import Stripe from "stripe";
