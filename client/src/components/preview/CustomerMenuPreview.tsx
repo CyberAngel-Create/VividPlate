@@ -360,6 +360,52 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         </div>
       </div>
       
+      {/* Fixed header section that appears when scrolling up */}
+      <div 
+        ref={headerRef}
+        className={`fixed top-0 left-0 right-0 z-50 shadow-md transition-transform duration-300 ${
+          headerFixed ? 'translate-y-0' : '-translate-y-full'
+        }`}
+        style={{ maxWidth: '42rem', margin: '0 auto' }}
+      >
+        <div className="p-3 flex justify-between items-center" style={{ backgroundColor: menuTheme.headerColor }}>
+          <div className="text-sm font-medium">{restaurant.name}</div>
+          <div className="flex items-center space-x-3">
+            <button
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center space-x-1 ${
+                activeMainCategory === 'Food'
+                  ? 'text-white'
+                  : 'bg-white hover:bg-gray-200'
+              }`}
+              style={{ 
+                backgroundColor: activeMainCategory === 'Food' ? menuTheme.accentColor : 'white',
+                color: activeMainCategory === 'Food' ? 'white' : menuTheme.menuItemColor
+              }}
+              onClick={() => handleMainCategoryClick('Food')}
+            >
+              <Utensils className="h-3 w-3" />
+              <span>{t('menu.food', 'Food')}</span>
+            </button>
+            <button
+              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors flex items-center space-x-1 ${
+                activeMainCategory === 'Beverage'
+                  ? 'text-white'
+                  : 'bg-white hover:bg-gray-200'
+              }`}
+              style={{ 
+                backgroundColor: activeMainCategory === 'Beverage' ? menuTheme.accentColor : 'white',
+                color: activeMainCategory === 'Beverage' ? 'white' : menuTheme.menuItemColor
+              }}
+              onClick={() => handleMainCategoryClick('Beverage')}
+            >
+              <Coffee className="h-3 w-3" />
+              <span>{t('menu.beverage', 'Beverage')}</span>
+            </button>
+            <MenuLanguageSwitcher variant="outline" size="sm" />
+          </div>
+        </div>
+      </div>
+      
       {/* Main Category Filter (Food/Beverage) with Language Switcher */}
       <div className="p-3 flex justify-center items-center space-x-4" style={{ backgroundColor: menuTheme.headerColor }}>
         <button
@@ -620,6 +666,16 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       </div>
       
       <div ref={bottomRef} className="h-1"></div>
+      
+      {/* Feedback button at the bottom right */}
+      {mounted && restaurant && restaurant.id && (
+        <FeedbackDialog
+          restaurantId={restaurant.id}
+          position="bottom-right"
+          variant="default"
+          size="default"
+        />
+      )}
     </div>
   );
 };

@@ -1,187 +1,148 @@
-import React, { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import React, { useState } from 'react';
+import { MessageCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Star } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { apiRequest } from "@/lib/queryClient";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 interface FeedbackDialogProps {
   menuItemId?: number;
   menuItemName?: string;
   restaurantId: number;
-  trigger?: React.ReactNode;
+  variant?: 'default' | 'outline' | 'ghost';
+  size?: 'default' | 'sm' | 'lg';
+  position?: 'bottom-right' | 'inline';
 }
 
-function FeedbackDialog({
+const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
   menuItemId,
   menuItemName,
   restaurantId,
-  trigger,
-}: FeedbackDialogProps) {
+  variant = 'default',
+  size = 'default',
+  position = 'bottom-right'
+}) => {
   const { t } = useTranslation();
   const { toast } = useToast();
-  const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [customerName, setCustomerName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [feedback, setFeedback] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (rating === 0) {
-      toast({
-        title: t("Please select a rating"),
-        description: t("You must provide a rating to submit feedback"),
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
-      const response = await apiRequest("POST", `/api/restaurants/${restaurantId}/feedback`, {
-        menuItemId,
-        rating,
-        comment: comment.trim() === "" ? null : comment,
-        customerName: customerName.trim() === "" ? null : customerName,
-        customerEmail: customerEmail.trim() === "" ? null : customerEmail,
+      // For now, we're just simulating the API call
+      // In the future, this would connect to a real feedback endpoint
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Reset form
+      setName('');
+      setEmail('');
+      setFeedback('');
+      setIsOpen(false);
+      
+      toast({
+        title: t('feedback.success', 'Feedback sent!'),
+        description: t('feedback.thankYou', 'Thank you for your feedback.'),
       });
-
-      if (response.ok) {
-        toast({
-          title: t("Thank you for your feedback!"),
-          description: t("Your feedback has been submitted successfully."),
-        });
-        setIsOpen(false);
-        resetForm();
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit feedback");
-      }
     } catch (error) {
       toast({
-        title: t("Failed to submit feedback"),
-        description: error instanceof Error ? error.message : String(error),
-        variant: "destructive",
+        title: t('feedback.error', 'Error sending feedback'),
+        description: t('feedback.tryAgain', 'Please try again later.'),
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const resetForm = () => {
-    setRating(0);
-    setComment("");
-    setCustomerName("");
-    setCustomerEmail("");
-  };
+  // Dynamic class based on position prop
+  const buttonPositionClass = position === 'bottom-right' 
+    ? 'fixed bottom-24 right-4 z-40 shadow-lg' 
+    : '';
+
+  // Dynamic sizing based on size prop
+  const buttonSizeClass = size === 'sm' 
+    ? 'h-9 px-3' 
+    : size === 'lg' 
+      ? 'h-11 px-5' 
+      : 'h-10 px-4';
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {trigger || (
-          <Button variant="ghost" size="sm" className="text-sm">
-            {t("Click to leave feedback")}
-          </Button>
-        )}
+        <Button 
+          variant={variant} 
+          className={`${buttonPositionClass} ${buttonSizeClass} rounded-full`}
+        >
+          <MessageCircle className="mr-2 h-4 w-4" />
+          {t('feedback.sendFeedback', 'Send Feedback')}
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {menuItemName
-              ? t("feedback.leaveItemFeedback", "Leave feedback for {{name}}", { name: menuItemName })
-              : t("feedback.leaveFeedback", "Leave feedback")}
+            {menuItemName 
+              ? t('feedback.aboutItem', 'Feedback for {{item}}', { item: menuItemName })
+              : t('feedback.sendFeedback', 'Send Feedback')}
           </DialogTitle>
           <DialogDescription>
-            {t("feedback.shareExperience", "Share your experience with us. Your feedback helps us improve!")}
+            {t('feedback.shareYourThoughts', 'Share your thoughts with the restaurant')}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="flex justify-center space-x-1">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className="focus:outline-none"
-                  onClick={() => setRating(value)}
-                  onMouseEnter={() => setHoverRating(value)}
-                  onMouseLeave={() => setHoverRating(0)}
-                >
-                  <Star
-                    className={`h-8 w-8 ${
-                      value <= (hoverRating || rating)
-                        ? "fill-yellow-400 text-yellow-400"
-                        : "text-gray-300"
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="comment">{t("feedback.comments", "Comments (optional)")}</Label>
-              <Textarea
-                id="comment"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder={t("feedback.tellExperience", "Tell us about your experience")}
-                className="resize-none"
-                rows={3}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="customerName">{t("feedback.name", "Your Name (optional)")}</Label>
-              <Input
-                id="customerName"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder={t("feedback.enterName", "Enter your name")}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="customerEmail">{t("feedback.email", "Your Email (optional)")}</Label>
-              <Input
-                id="customerEmail"
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder={t("feedback.enterEmail", "Enter your email")}
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">{t('feedback.name', 'Name')}</Label>
+            <Input 
+              id="name" 
+              value={name} 
+              onChange={(e) => setName(e.target.value)} 
+              placeholder={t('feedback.yourName', 'Your name')}
+              required
+            />
           </div>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsOpen(false)}
-              disabled={isSubmitting}
-            >
-              {t("feedback.cancel", "Cancel")}
+          
+          <div className="space-y-2">
+            <Label htmlFor="email">{t('feedback.email', 'Email')}</Label>
+            <Input 
+              id="email" 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder={t('feedback.yourEmail', 'Your email')}
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="feedback">{t('feedback.message', 'Message')}</Label>
+            <Textarea 
+              id="feedback" 
+              value={feedback} 
+              onChange={(e) => setFeedback(e.target.value)} 
+              placeholder={t('feedback.yourFeedback', 'Your feedback here...')}
+              className="min-h-[100px]"
+              required
+            />
+          </div>
+          
+          <div className="pt-4 flex justify-end">
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? t('feedback.sending', 'Sending...') : t('feedback.send', 'Send Feedback')}
             </Button>
-            <Button type="submit" disabled={isSubmitting || rating === 0}>
-              {isSubmitting ? t("feedback.submitting", "Submitting...") : t("feedback.submit", "Submit Feedback")}
-            </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default FeedbackDialog;

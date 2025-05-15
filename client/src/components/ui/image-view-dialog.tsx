@@ -68,12 +68,9 @@ const ImageViewDialog = ({
                   menuItemId={menuItemId}
                   menuItemName={imageAlt}
                   restaurantId={restaurantId}
-                  trigger={
-                    <button className="flex items-center text-sm text-primary hover:underline">
-                      <MessageSquare className="h-4 w-4 mr-1" />
-                      {t("Share your thoughts about this item")}
-                    </button>
-                  }
+                  position="inline"
+                  variant="ghost"
+                  size="sm"
                 />
               </div>
             )}
