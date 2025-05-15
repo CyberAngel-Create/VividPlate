@@ -171,11 +171,31 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [headerFixed, setHeaderFixed] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const prevScrollY = useRef(0);
   
   useEffect(() => {
     setMounted(true);
+    
+    // Set up scroll event listener for fixed header
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Only fix header when scrolling up and past a threshold
+      if (currentScrollY > 150 && currentScrollY < prevScrollY.current) {
+        setHeaderFixed(true);
+      } else if (currentScrollY > prevScrollY.current || currentScrollY < 100) {
+        setHeaderFixed(false);
+      }
+      
+      prevScrollY.current = currentScrollY;
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
   const scrollToTop = () => {
@@ -457,6 +477,9 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                           <ImageViewDialog 
                             imageSrc={normalizeImageUrl(item.imageUrl)} 
                             imageAlt={item.name}
+                            description={item.description ? item.description : undefined}
+                            menuItemId={item.id}
+                            restaurantId={restaurant.id}
                           >
                             <div className="w-full h-24 sm:h-28 bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                               <ResponsiveImage 
