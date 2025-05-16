@@ -680,8 +680,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <p>{t('menu.endOfMenu', 'End of menu')}</p>
       </div>
       
-      {/* Feedback button at the bottom right */}
-      {mounted && restaurant && restaurant.id && (
+      {/* Feedback button at the bottom right - only shown for premium restaurants */}
+      {mounted && restaurant && restaurant.id && restaurant.isPremium && (
         <FeedbackDialog
           restaurantId={restaurant.id}
           position="bottom-right"
