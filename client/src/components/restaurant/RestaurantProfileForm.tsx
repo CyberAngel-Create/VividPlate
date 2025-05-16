@@ -189,15 +189,26 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
   };
 
   const handleSubmit = async (data: FormValues) => {
-    const { tagInput, ...rest } = data;
+    const { tagInput, customCuisine, ...rest } = data;
     
     try {
-      // Submit the form data
-      await onSubmit({
+      // Prepare data to submit
+      let finalData = {
         ...rest,
         tags,
         hoursOfOperation: hours,
-      });
+      };
+      
+      // If "Other" cuisine is selected, store the custom cuisine value
+      if (rest.cuisine === "Other" && customCuisine) {
+        finalData = {
+          ...finalData,
+          customCuisine: customCuisine,
+        };
+      }
+      
+      // Submit the form data
+      await onSubmit(finalData);
       
       // Reset form if this is a new restaurant (creation mode)
       if (!restaurant) {
@@ -212,12 +223,15 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
           name: "",
           description: "",
           cuisine: "",
+          customCuisine: "",
           logoUrl: "",
           phone: "",
           email: "",
           address: "",
           tagInput: "",
         });
+        setCustomCuisine("");
+        setShowCustomCuisine(false);
         setTags([]);
         setHours(defaultHours);
       }

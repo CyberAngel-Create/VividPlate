@@ -52,32 +52,23 @@ const SubscriptionPage = () => {
     setLoadingCheckout(true);
     
     try {
-      // Call our subscription API
-      const response = await apiRequest('POST', '/api/subscribe', {
-        planId: selectedPlan
-      });
+      // Map selected plan to plan ID in database
+      // monthly => 1, yearly => 2
+      const planIdMap: Record<string, number> = {
+        'monthly': 1,
+        'yearly': 2
+      };
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Subscription failed');
-      }
+      const planId = planIdMap[selectedPlan] || 1;
       
-      // Show success toast
-      toast({
-        title: "Subscription upgraded!",
-        description: "You've been upgraded to the Premium plan.",
-        variant: "default",
-      });
-      
-      // Redirect to dashboard
-      setLocation("/dashboard");
+      // Redirect to the payment page with the selected plan ID
+      setLocation(`/subscribe/${planId}`);
     } catch (error: any) {
       toast({
         title: "Subscription failed",
         description: error.message || "Please try again or contact support.",
         variant: "destructive",
       });
-    } finally {
       setLoadingCheckout(false);
     }
   };
