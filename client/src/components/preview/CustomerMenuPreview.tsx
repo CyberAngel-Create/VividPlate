@@ -592,15 +592,17 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 </div>
                               )}
                               
-                              {/* Feedback button indicator - always visible */}
-                              <FeedbackDialog
-                                menuItemId={item.id}
-                                menuItemName={item.name}
-                                restaurantId={restaurant.id}
-                                position="inline"
-                                variant="ghost"
-                                size="sm"
-                              />
+                              {/* Feedback button indicator - only visible for premium restaurants */}
+                              {restaurant.isPremium && (
+                                <FeedbackDialog
+                                  menuItemId={item.id}
+                                  menuItemName={item.name}
+                                  restaurantId={restaurant.id}
+                                  position="inline"
+                                  variant="ghost"
+                                  size="sm"
+                                />
+                              )}
                             </div>
                       </div>
                     </div>

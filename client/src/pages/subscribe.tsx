@@ -129,12 +129,19 @@ export default function Subscribe() {
         const planDetails = await planResponse.json();
         setPlanData(planDetails);
         
-        // Then create the subscription with the plan ID (using path parameter)
-        const subscriptionResponse = await apiRequest("POST", `/api/create-subscription/${planId}`);
+        // Create subscription using body parameter instead of path parameter
+        const subscriptionResponse = await apiRequest("POST", "/api/create-subscription", { planId: parseInt(planId) });
         
         if (!subscriptionResponse.ok) {
-          const errorData = await subscriptionResponse.json();
-          throw new Error(errorData.message || "Error creating subscription");
+          // Try to parse the response as JSON
+          try {
+            const errorData = await subscriptionResponse.json();
+            throw new Error(errorData.message || "Error creating subscription");
+          } catch (parseError) {
+            // If it's not valid JSON, get the text
+            const errorText = await subscriptionResponse.text();
+            throw new Error(`Server error: ${errorText.substring(0, 100)}...`);
+          }
         }
 
         const data = await subscriptionResponse.json();
