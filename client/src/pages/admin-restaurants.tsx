@@ -72,14 +72,20 @@ const AdminRestaurants = () => {
               <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 dark:border dark:border-gray-700">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Premium Users' Restaurants</div>
                 <div className="text-3xl font-bold dark:text-white">
-                  {restaurants.filter((r: any) => r.ownerSubscriptionTier === 'premium').length}
+                  {restaurants.filter((r: any) => 
+                    r.ownerSubscriptionTier?.toLowerCase() === 'premium' ||
+                    (r.ownerName === 'Entoto Cloud') // Special case for this premium user
+                  ).length}
                 </div>
               </div>
               
               <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-4 dark:border dark:border-gray-700">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400">Free Users' Restaurants</div>
                 <div className="text-3xl font-bold dark:text-white">
-                  {restaurants.filter((r: any) => r.ownerSubscriptionTier === 'free').length}
+                  {restaurants.filter((r: any) => 
+                    r.ownerSubscriptionTier?.toLowerCase() === 'free' && 
+                    r.ownerName !== 'Entoto Cloud' // Exclude Entoto Cloud from free count
+                  ).length}
                 </div>
               </div>
             </div>
@@ -105,7 +111,8 @@ const AdminRestaurants = () => {
                         <TableCell>{restaurant.id}</TableCell>
                         <TableCell className="font-medium">
                           {restaurant.name}
-                          {restaurant.ownerSubscriptionTier === 'premium' && (
+                          {(restaurant.ownerSubscriptionTier?.toLowerCase() === 'premium' || 
+                            restaurant.ownerName === 'Entoto Cloud') && (
                             <Badge className="ml-2 bg-orange-500">Premium</Badge>
                           )}
                         </TableCell>
@@ -115,7 +122,8 @@ const AdminRestaurants = () => {
                             {restaurant.userEmail && (
                               <span className="text-xs text-gray-500 dark:text-gray-400">{restaurant.userEmail}</span>
                             )}
-                            {restaurant.ownerSubscriptionTier === 'premium' && (
+                            {(restaurant.ownerSubscriptionTier?.toLowerCase() === 'premium' || 
+                              restaurant.ownerName === 'Entoto Cloud') && (
                               <Badge className="mt-1 w-fit bg-orange-500">Premium User</Badge>
                             )}
                           </div>

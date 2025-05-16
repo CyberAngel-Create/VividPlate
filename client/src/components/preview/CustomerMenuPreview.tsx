@@ -102,7 +102,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
               index === activeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
             imgClassName="object-cover w-full h-full"
-            onError={(e) => {
+            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
               console.error("Failed to load banner image:", url);
               // Try to load the image again with a different cache parameter
               const imgElement = e.target as HTMLImageElement;

@@ -13,7 +13,7 @@ interface ResponsiveImageProps {
   height?: number;
   priority?: boolean;
   onLoad?: () => void;
-  onError?: () => void;
+  onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void;
 }
 
 /**
@@ -63,7 +63,7 @@ const ResponsiveImage = ({
     console.log(`Image loaded successfully: ${imageSrc}`);
   };
   
-  const handleError = () => {
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     console.error(`Failed to load image: ${imageSrc}`);
     setLoading(false);
     setError(true);
@@ -77,7 +77,7 @@ const ResponsiveImage = ({
       setImageSrc(fallbackImage);
     }
     
-    onError?.();
+    onError?.(e);
   };
   
   return (
