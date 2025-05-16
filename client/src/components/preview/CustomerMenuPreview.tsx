@@ -43,6 +43,11 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
     if (processedBannerUrls.length <= 1 || isHovering) return;
     
     console.log('Banner slideshow initiated with interval:', interval);
+    console.log('Available banner URLs:', processedBannerUrls);
+    
+    // Force initial banner to be visible
+    setActiveIndex(0);
+    
     const timer = setInterval(() => {
       setActiveIndex((prev) => {
         const nextIndex = prev === processedBannerUrls.length - 1 ? 0 : prev + 1;
@@ -84,18 +89,27 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
         const normalizedUrl = normalizeImageUrl(url);
         console.log(`Banner image ${index}: ${normalizedUrl}, active: ${index === activeIndex}`);
         
+        // Add a cache-busting parameter to prevent caching issues
+        const urlWithCacheBust = `${url}${url.includes('?') ? '&' : '?'}cb=${Date.now()}`;
+        
         return (
           <ResponsiveImage
-            key={index}
-            src={url}
+            key={`banner-${index}-${Date.now()}`}
+            src={urlWithCacheBust}
             alt={`${restaurantName} banner ${index + 1}`}
             fallbackType="banner"
             className={`w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ${
-              index === activeIndex ? 'opacity-100' : 'opacity-0'
+              index === activeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
             }`}
             imgClassName="object-cover w-full h-full"
-            onError={() => {
+            onError={(e) => {
               console.error("Failed to load banner image:", url);
+              // Try to load the image again with a different cache parameter
+              const imgElement = e.target as HTMLImageElement;
+              if (!imgElement.dataset.retried) {
+                imgElement.dataset.retried = 'true';
+                imgElement.src = `${url}${url.includes('?') ? '&' : '?'}retry=${Date.now()}`;
+              }
             }}
           />
         );
