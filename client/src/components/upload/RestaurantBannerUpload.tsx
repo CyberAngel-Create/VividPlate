@@ -72,7 +72,7 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
   };
 
   // Remove the current banner image
-  const removeImage = () => {
+  const removeImage = async () => {
     if (bannerUrls.length <= 1) {
       toast({
         title: 'Cannot Remove',
@@ -82,18 +82,57 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
       return;
     }
 
-    const newBannerUrls = [...bannerUrls];
-    newBannerUrls.splice(activeIndex, 1);
-    setBannerUrls(newBannerUrls);
-    
-    // Adjust the active index if necessary
-    if (activeIndex >= newBannerUrls.length) {
-      setActiveIndex(newBannerUrls.length - 1);
-    }
+    try {
+      setIsUploading(true); // Show loading state while we delete
+      
+      // Get the URL to delete
+      const urlToDelete = bannerUrls[activeIndex];
+      
+      // Call the server to delete the banner
+      const response = await fetch(`/api/restaurants/${restaurantId}/delete-banner`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          bannerUrl: urlToDelete,
+          bannerIndex: activeIndex
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete banner');
+      }
+      
+      // Update the local state
+      const newBannerUrls = [...bannerUrls];
+      newBannerUrls.splice(activeIndex, 1);
+      setBannerUrls(newBannerUrls);
+      
+      // Adjust the active index if necessary
+      if (activeIndex >= newBannerUrls.length) {
+        setActiveIndex(newBannerUrls.length - 1);
+      }
 
-    // Update parent component
-    if (onSuccess && newBannerUrls.length > 0) {
-      onSuccess(newBannerUrls[0], newBannerUrls);
+      // Update parent component
+      if (onSuccess && newBannerUrls.length > 0) {
+        onSuccess(newBannerUrls[0], newBannerUrls);
+      }
+      
+      toast({
+        title: 'Banner Removed',
+        description: 'The banner image was successfully removed.',
+      });
+    } catch (error) {
+      console.error('Error removing banner:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to remove banner image. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUploading(false);
     }
   };
 
