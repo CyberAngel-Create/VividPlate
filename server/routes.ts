@@ -2017,12 +2017,70 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
   
-  // Create a Stripe subscription
+  // Keep compatibility with both versions
   app.post('/api/create-subscription', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
       const { planId } = req.body;
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check if user already has an active subscription
+      const existingSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      if (existingSubscription) {
+        return res.status(400).json({ message: 'User already has an active subscription' });
+      }
+      
+      // Get the pricing plan from database
+      const pricingPlan = await storage.getPricingPlan(planId);
+      if (!pricingPlan) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
+      
+      if (!pricingPlan.isActive) {
+        return res.status(400).json({ message: 'Selected pricing plan is not currently available' });
+      }
+      
+      // Calculate price in cents
+      const priceInCents = Math.round(parseFloat(pricingPlan.price) * 100);
+      
+      // Create a payment intent with actual plan price from database
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: priceInCents,
+        currency: pricingPlan.currency?.toLowerCase() || 'usd',
+        metadata: {
+          userId: userId.toString(),
+          planId: pricingPlan.id.toString(),
+          planName: pricingPlan.name,
+          planTier: pricingPlan.tier,
+          userEmail: user.email,
+        },
+        automatic_payment_methods: {
+          enabled: true,
+        },
+      });
+      
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+      });
+    } catch (error) {
+      console.error("Subscription payment error:", error);
+      res.status(500).json({ 
+        message: 'Error creating payment intent', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+  
+  // Create a Stripe subscription with path param
+  app.post('/api/create-subscription/:planId', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      const planId = parseInt(req.params.planId, 10);
       
       if (!user) {
         return res.status(404).json({ message: 'User not found' });

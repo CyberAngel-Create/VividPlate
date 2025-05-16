@@ -129,10 +129,8 @@ export default function Subscribe() {
         const planDetails = await planResponse.json();
         setPlanData(planDetails);
         
-        // Then create the subscription with the plan ID
-        const subscriptionResponse = await apiRequest("POST", "/api/create-subscription", { 
-          planId: parseInt(planId, 10)
-        });
+        // Then create the subscription with the plan ID (using path parameter)
+        const subscriptionResponse = await apiRequest("POST", `/api/create-subscription/${planId}`);
         
         if (!subscriptionResponse.ok) {
           const errorData = await subscriptionResponse.json();
