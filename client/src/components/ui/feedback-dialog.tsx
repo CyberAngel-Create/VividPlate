@@ -170,6 +170,11 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
       ? 'h-11 px-5' 
       : 'h-10 px-4';
 
+  // If not a premium restaurant, don't render the dialog at all
+  if (!isPremiumRestaurant && !isLoading) {
+    return null; // Don't show anything for non-premium restaurants
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -193,23 +198,6 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
           <div className="flex flex-col items-center justify-center py-8">
             <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
             <p className="text-center text-muted-foreground">Loading...</p>
-          </div>
-        ) : !isPremiumRestaurant ? (
-          // Show premium feature notice for non-premium restaurants
-          <div className="py-6">
-            <div className="flex flex-col items-center text-center">
-              <Lock className="h-16 w-16 text-muted-foreground mb-4" />
-              <DialogTitle className="mb-2">Premium Feature</DialogTitle>
-              <DialogDescription className="mb-4">
-                Customer feedback is only available for Premium restaurants.
-              </DialogDescription>
-              <p className="text-sm text-muted-foreground mb-6">
-                Upgrade to Premium to enable customer feedback and ratings for your restaurant.
-              </p>
-              <Button onClick={() => navigate('/subscription')} className="w-full">
-                Upgrade to Premium
-              </Button>
-            </div>
           </div>
         ) : (
           // Show regular feedback form for premium restaurants

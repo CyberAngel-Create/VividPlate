@@ -2704,18 +2704,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
       
       // Check if the restaurant is premium - ONLY premium restaurants get feedback
-      const restaurantOwner = await storage.getUser(restaurant.ownerId);
-      const isPremium = 
-        restaurant.subscriptionTier === 'premium' || 
-        (restaurantOwner && restaurantOwner.subscriptionTier === 'premium') ||
-        (restaurantOwner && restaurantOwner.username === 'Entoto Cloud');
+      const restaurantOwner = await storage.getUser(restaurant.userId); // Use userId instead of ownerId
+      // Check premium status from owner and restaurant settings
+      let isPremium = false;
+      
+      // Check if owner is premium
+      if (restaurantOwner && 
+          (restaurantOwner.subscriptionTier === 'premium' || 
+           restaurantOwner.username === 'Entoto Cloud')) {
+        isPremium = true;
+      }
       
       // Log restaurant premium status for debugging
       console.log('Restaurant premium check for feedback:', {
         restaurantId: restaurant.id,
         restaurantName: restaurant.name,
         ownerName: restaurantOwner?.username || 'unknown',
-        restaurantTier: restaurant.subscriptionTier || 'none',
         ownerTier: restaurantOwner?.subscriptionTier || 'none',
         isEntotoCloud: restaurantOwner?.username === 'Entoto Cloud',
         isPremium
