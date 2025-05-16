@@ -17,12 +17,12 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'monthly',
     name: 'Premium Monthly',
-    price: 9.99,
+    price: 15.00,
     interval: 'month',
     features: [
       'Up to 3 restaurant profiles',
       'No advertisements',
-      'Enhanced menu analytics',
+      'Customer feedback system',
       'Priority support',
       'Unlimited menu customization'
     ]
@@ -30,14 +30,14 @@ const plans: SubscriptionPlan[] = [
   {
     id: 'yearly',
     name: 'Premium Yearly',
-    price: 99.99,
+    price: 150.00,
     interval: 'year',
     features: [
       'All Monthly features',
-      'Save 16% compared to monthly',
-      'Seasonal menu templates',
+      'Save 17% compared to monthly',
+      'Enhanced analytics dashboard',
       'Advanced QR code customization',
-      'API access'
+      'Unlimited images'
     ]
   }
 ];

@@ -593,7 +593,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               )}
                               
                               {/* Feedback button indicator - only visible for premium restaurants */}
-                              {restaurant.isPremium && (
+                              {restaurant.subscriptionTier === 'premium' && (
                                 <FeedbackDialog
                                   menuItemId={item.id}
                                   menuItemName={item.name}
@@ -683,7 +683,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       </div>
       
       {/* Feedback button at the bottom right - only shown for premium restaurants */}
-      {mounted && restaurant && restaurant.id && restaurant.isPremium && (
+      {mounted && restaurant && restaurant.id && restaurant.subscriptionTier === 'premium' && (
         <FeedbackDialog
           restaurantId={restaurant.id}
           position="bottom-right"

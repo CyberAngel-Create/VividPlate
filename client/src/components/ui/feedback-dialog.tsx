@@ -52,7 +52,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
         
         if (response.ok) {
           const restaurant = await response.json();
-          setIsPremiumRestaurant(restaurant.isPremium === true || restaurant.subscriptionTier === 'premium');
+          setIsPremiumRestaurant(restaurant.subscriptionTier === 'premium');
         } else {
           setIsPremiumRestaurant(false);
         }
