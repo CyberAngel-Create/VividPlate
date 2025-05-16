@@ -69,6 +69,7 @@ const ViewMenu = () => {
   
   // Get source parameter from URL (e.g., qr or link)
   const source = new URLSearchParams(window.location.search).get("source") || "link";
+  console.log("Menu view source detected:", source);
   
   // First lookup restaurant ID by name using the dedicated API endpoint
   useEffect(() => {

@@ -1978,8 +1978,21 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       // If the source is QR code, also increment the dedicated QR scan counter
       if (req.body.source === 'qr') {
-        await storage.incrementQRCodeScans(restaurantId);
-        console.log(`QR code scan recorded and counter incremented for restaurant ${restaurantId}`);
+        try {
+          // Log details before incrementing
+          console.log(`Attempting to increment QR scan count for restaurant ${restaurantId}`);
+          
+          const result = await storage.incrementQRCodeScans(restaurantId);
+          
+          if (result) {
+            console.log(`QR code scan successfully recorded for restaurant ${restaurantId}. New count: ${result.qrCodeScans || 0}`);
+          } else {
+            console.error(`Failed to increment QR code scan count for restaurant ${restaurantId}`);
+          }
+        } catch (qrError) {
+          console.error(`Error incrementing QR code scan count: ${qrError}`);
+          // Don't fail the whole request if just the QR counter fails
+        }
       }
       
       console.log(`View recorded successfully for restaurant ${restaurantId}`);
