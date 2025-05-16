@@ -593,13 +593,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               )}
                               
                               {/* Feedback button indicator - always visible */}
-                              <div 
-                                className="mt-2 text-xs flex items-center" 
-                                style={{ color: menuTheme.accentColor }}
-                              >
-                                <MessageSquare className="h-3 w-3 mr-1" />
-                                <span>{t('menu.clickToLeaveFeedback', 'Click to leave feedback')}</span>
-                              </div>
+                              <FeedbackDialog
+                                menuItemId={item.id}
+                                menuItemName={item.name}
+                                restaurantId={restaurant.id}
+                                position="inline"
+                                variant="ghost"
+                                size="sm"
+                              />
                             </div>
                       </div>
                     </div>

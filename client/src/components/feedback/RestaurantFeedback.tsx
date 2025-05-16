@@ -23,6 +23,7 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [ratingFilter, setRatingFilter] = useState<string>('all');
   const [groupByRating, setGroupByRating] = useState<boolean>(true);
+  const [groupingOption, setGroupingOption] = useState<'rating' | 'item' | 'category'>('rating');
   const { toast } = useToast();
   const { t } = useTranslation();
   
@@ -32,9 +33,20 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
     enabled: !!restaurantId,
   });
   
+  // Fetch menu items and categories for grouping
+  const { data: menuItemsData } = useQuery({
+    queryKey: [`/api/restaurants/${restaurantId}/menu-items`],
+    enabled: !!restaurantId && groupingOption === 'item',
+  });
+  
+  const { data: categoriesData } = useQuery({
+    queryKey: [`/api/restaurants/${restaurantId}/menu-categories`],
+    enabled: !!restaurantId && groupingOption === 'category',
+  });
+  
   // Filter and group feedback
   const processedFeedback = useMemo(() => {
-    if (!data) return { filtered: [], grouped: {} };
+    if (!data) return { filtered: [], grouped: {}, groupType: 'rating' };
     
     // First apply status filter
     let result = data.filter(feedback => {
@@ -58,20 +70,81 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
       );
     }
     
-    // Group by rating
+    // Create grouped object based on selected grouping option
     const grouped: Record<string, Feedback[]> = {};
-    for (let i = 5; i >= 1; i--) {
-      const ratingItems = result.filter(f => f.rating === i);
-      if (ratingItems.length > 0) {
-        grouped[i.toString()] = ratingItems;
+    
+    if (groupingOption === 'rating') {
+      // Group by rating
+      for (let i = 5; i >= 1; i--) {
+        const ratingItems = result.filter(f => f.rating === i);
+        if (ratingItems.length > 0) {
+          grouped[i.toString()] = ratingItems;
+        }
       }
+    } 
+    else if (groupingOption === 'item' && menuItemsData) {
+      // Group by menu item
+      const itemMap = new Map(menuItemsData.map(item => [item.id, item]));
+      
+      // First create "No Item" group for feedback without menuItemId
+      const noItemFeedback = result.filter(f => !f.menuItemId);
+      if (noItemFeedback.length > 0) {
+        grouped['no-item'] = noItemFeedback;
+      }
+      
+      // Then group by menu item
+      result.forEach(feedback => {
+        if (feedback.menuItemId) {
+          const itemId = feedback.menuItemId.toString();
+          if (!grouped[itemId]) {
+            grouped[itemId] = [];
+          }
+          grouped[itemId].push(feedback);
+        }
+      });
+    }
+    else if (groupingOption === 'category' && categoriesData && menuItemsData) {
+      // Create a map of menuItemId to categoryId
+      const itemCategoryMap = new Map();
+      menuItemsData.forEach(item => {
+        if (item.categoryId) {
+          itemCategoryMap.set(item.id, item.categoryId);
+        }
+      });
+      
+      // Group feedback with no menuItemId
+      const noItemFeedback = result.filter(f => !f.menuItemId);
+      if (noItemFeedback.length > 0) {
+        grouped['no-category'] = noItemFeedback;
+      }
+      
+      // Group feedback by category using the map
+      result.forEach(feedback => {
+        if (feedback.menuItemId) {
+          const categoryId = itemCategoryMap.get(feedback.menuItemId);
+          if (categoryId) {
+            const catId = categoryId.toString();
+            if (!grouped[catId]) {
+              grouped[catId] = [];
+            }
+            grouped[catId].push(feedback);
+          } else {
+            // Feedback for items without a category
+            if (!grouped['uncategorized']) {
+              grouped['uncategorized'] = [];
+            }
+            grouped['uncategorized'].push(feedback);
+          }
+        }
+      });
     }
     
     return {
       filtered: result,
-      grouped
+      grouped,
+      groupType: groupingOption
     };
-  }, [data, activeTab, ratingFilter, searchTerm]);
+  }, [data, activeTab, ratingFilter, searchTerm, groupingOption, menuItemsData, categoriesData]);
   
   // Count feedback by status
   const counts = {
@@ -187,20 +260,19 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
                 </SelectContent>
               </Select>
               
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center space-x-1">
-                  <input
-                    type="checkbox"
-                    id="groupByRating"
-                    checked={groupByRating}
-                    onChange={() => setGroupByRating(!groupByRating)}
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  <label htmlFor="groupByRating" className="text-sm font-medium">
-                    Group by rating
-                  </label>
-                </div>
-              </div>
+              <Select 
+                value={groupingOption} 
+                onValueChange={(value) => setGroupingOption(value as 'rating' | 'item' | 'category')}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Grouping option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="rating">Group by Rating</SelectItem>
+                  <SelectItem value="item">Group by Menu Item</SelectItem>
+                  <SelectItem value="category">Group by Category</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
@@ -209,46 +281,107 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
               <div className="text-center py-6">
                 <p className="text-muted-foreground">No matching feedback found</p>
               </div>
-            ) : groupByRating ? (
-              // Display feedback grouped by rating
-              <div className="space-y-8">
-                {Object.entries(processedFeedback.grouped).map(([rating, feedbacks]) => (
-                  <div key={rating} className="space-y-4">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="text-lg font-semibold">{rating} Star{parseInt(rating) !== 1 ? 's' : ''}</h3>
-                      <div className="flex">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star 
-                            key={i}
-                            className={`h-4 w-4 ${i < parseInt(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                          />
-                        ))}
-                      </div>
-                      <span className="text-sm text-muted-foreground">({feedbacks.length})</span>
-                    </div>
-                    
-                    <div className="space-y-4 pl-2 border-l-2 border-muted">
-                      {feedbacks.map((feedback) => (
-                        <FeedbackItem 
-                          key={feedback.id} 
-                          feedback={feedback} 
-                          isOwner={isOwner}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
             ) : (
-              // Display feedback without grouping
-              <div className="space-y-4">
-                {processedFeedback.filtered.map((feedback) => (
-                  <FeedbackItem 
-                    key={feedback.id} 
-                    feedback={feedback} 
-                    isOwner={isOwner}
-                  />
-                ))}
+              <div className="space-y-8">
+                {processedFeedback.groupType === 'rating' && (
+                  // Display feedback grouped by rating
+                  <>
+                    {Object.entries(processedFeedback.grouped).map(([rating, feedbacks]) => (
+                      <div key={rating} className="space-y-4">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <h3 className="text-lg font-semibold">{rating} Star{parseInt(rating) !== 1 ? 's' : ''}</h3>
+                          <div className="flex">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star 
+                                key={i}
+                                className={`h-4 w-4 ${i < parseInt(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-muted-foreground">({feedbacks.length})</span>
+                        </div>
+                        
+                        <div className="space-y-4 pl-2 border-l-2 border-muted">
+                          {feedbacks.map((feedback) => (
+                            <FeedbackItem 
+                              key={feedback.id} 
+                              feedback={feedback} 
+                              isOwner={isOwner}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+                
+                {processedFeedback.groupType === 'item' && (
+                  // Display feedback grouped by menu item
+                  <>
+                    {Object.entries(processedFeedback.grouped).map(([itemId, feedbacks]) => {
+                      // Get item name
+                      let groupTitle = "General Feedback";
+                      if (itemId !== 'no-item') {
+                        const menuItem = menuItemsData?.find(item => item.id.toString() === itemId);
+                        groupTitle = menuItem ? menuItem.name : `Item #${itemId}`;
+                      }
+                      
+                      return (
+                        <div key={itemId} className="space-y-4">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="text-lg font-semibold">{groupTitle}</h3>
+                            <span className="text-sm text-muted-foreground">({feedbacks.length})</span>
+                          </div>
+                          
+                          <div className="space-y-4 pl-2 border-l-2 border-muted">
+                            {feedbacks.map((feedback) => (
+                              <FeedbackItem 
+                                key={feedback.id} 
+                                feedback={feedback} 
+                                isOwner={isOwner}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
+                
+                {processedFeedback.groupType === 'category' && (
+                  // Display feedback grouped by category
+                  <>
+                    {Object.entries(processedFeedback.grouped).map(([categoryId, feedbacks]) => {
+                      // Get category name
+                      let groupTitle = "Uncategorized";
+                      if (categoryId === 'no-category') {
+                        groupTitle = "General Feedback";
+                      } else if (categoryId !== 'uncategorized') {
+                        const category = categoriesData?.find(cat => cat.id.toString() === categoryId);
+                        groupTitle = category ? category.name : `Category #${categoryId}`;
+                      }
+                      
+                      return (
+                        <div key={categoryId} className="space-y-4">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="text-lg font-semibold">{groupTitle}</h3>
+                            <span className="text-sm text-muted-foreground">({feedbacks.length})</span>
+                          </div>
+                          
+                          <div className="space-y-4 pl-2 border-l-2 border-muted">
+                            {feedbacks.map((feedback) => (
+                              <FeedbackItem 
+                                key={feedback.id} 
+                                feedback={feedback} 
+                                isOwner={isOwner}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             )}
           </TabsContent>
