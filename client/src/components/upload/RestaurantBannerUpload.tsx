@@ -275,10 +275,10 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
                 }}
               />
               
-              {/* Upload progress indicator */}
+              {/* Upload progress overlay */}
               {isUploading && uploadProgress > 0 && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <div className="w-3/4 h-3 bg-gray-200 rounded-full overflow-hidden">
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/30">
+                  <div className="w-1/3 h-2 bg-white/30 rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-primary rounded-full transition-all duration-300 ease-in-out"
                       style={{ width: `${uploadProgress}%` }}
@@ -342,9 +342,10 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
                       variant="destructive" 
                       size="icon"
                       className="h-8 w-8 rounded-full bg-white/50 hover:bg-red-600 hover:text-white text-red-600 dark:bg-black/30"
-                      onClick={removeImage}
+                      onClick={confirmBannerDelete}
+                      disabled={isDeleting}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                     </Button>
                     <label 
                       htmlFor="bannerImage" 
@@ -407,45 +408,43 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
           />
         </div>
         
-        {/* Upload progress indicator outside of image */}
-        {isUploading && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <div className="animate-spin w-4 h-4 border-2 border-primary border-t-transparent rounded-full"></div>
-            <span>Uploading banner{uploadProgress > 0 ? ` (${uploadProgress}%)` : '...'}</span>
-            {uploadProgress > 0 && (
-              <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden ml-2">
-                <div 
-                  className="h-full bg-primary rounded-full transition-all duration-300 ease-in-out"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            )}
-          </div>
-        )}
-        
         {/* Error message */}
         {error && (
-          <div className="flex items-center gap-2 text-sm text-destructive">
-            <AlertCircle className="w-4 h-4" />
-            <span>{error}</span>
-          </div>
-        )}
-        
-        {/* Banner upload summary */}
-        {!error && bannerUrls.length > 0 && !isUploading && (
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle className="w-4 h-4" />
-              <span>{bannerUrls.length > 1 ? `${bannerUrls.length} banners uploaded` : 'Banner ready'}</span>
-            </div>
-            {bannerUrls.length > 1 && (
-              <p className="text-xs text-muted-foreground">
-                Showing image {activeIndex + 1} of {bannerUrls.length}
-              </p>
-            )}
+          <div className="p-2 bg-destructive/10 text-destructive rounded-md flex items-start mt-2">
+            <AlertCircle className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+            <p className="text-sm">{error}</p>
           </div>
         )}
       </CardContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Banner Image</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this banner image? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={removeImage} 
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };
