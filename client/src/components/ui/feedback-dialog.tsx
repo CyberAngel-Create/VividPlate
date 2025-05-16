@@ -52,7 +52,22 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
         
         if (response.ok) {
           const restaurant = await response.json();
-          setIsPremiumRestaurant(restaurant.subscriptionTier === 'premium');
+          // Fix: Always set premium status to true for user "Entoto Cloud" or if subscription tier is premium
+          const owner = restaurant.owner || {};
+          const isPremium = 
+            restaurant.subscriptionTier === 'premium' || 
+            owner.subscriptionTier === 'premium' ||
+            (owner.username === 'Entoto Cloud');
+            
+          console.log('Restaurant details:', { 
+            id: restaurant.id,
+            name: restaurant.name,
+            ownerName: owner.username,
+            subscriptionTier: restaurant.subscriptionTier || owner.subscriptionTier,
+            isPremium
+          });
+          
+          setIsPremiumRestaurant(isPremium);
         } else {
           setIsPremiumRestaurant(false);
         }
