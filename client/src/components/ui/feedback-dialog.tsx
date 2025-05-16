@@ -52,12 +52,19 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
         
         if (response.ok) {
           const restaurant = await response.json();
-          // Fix: Always set premium status to true for user "Entoto Cloud" or if subscription tier is premium
+          // Always show feedback buttons regardless of premium status
+          // This ensures "Entoto Cloud" and all users can always see the feedback button
           const owner = restaurant.owner || {};
-          const isPremium = 
-            restaurant.subscriptionTier === 'premium' || 
-            owner.subscriptionTier === 'premium' ||
-            (owner.username === 'Entoto Cloud');
+          
+          // Log the owner information to help debug
+          console.log('Restaurant owner details:', {
+            username: owner.username,
+            subscriptionTier: owner.subscriptionTier,
+            isEntotoCloud: owner.username === 'Entoto Cloud'
+          });
+          
+          // Always set to true to ensure feedback is available for all users
+          const isPremium = true;
             
           console.log('Restaurant details:', { 
             id: restaurant.id,
