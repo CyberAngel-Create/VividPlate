@@ -1297,6 +1297,128 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.status(500).json({ message: 'Error uploading banner', error: errorMsg });
     }
   });
+  
+  // Route for deleting a restaurant banner
+  app.post('/api/restaurants/:restaurantId/delete-banner', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const { bannerUrl, bannerIndex } = req.body;
+      const userId = (req.user as any).id;
+      
+      console.log(`Processing banner deletion for restaurant ID: ${restaurantId}, User ID: ${userId}, Banner URL: ${bannerUrl}, Index: ${bannerIndex}`);
+      
+      if (!bannerUrl) {
+        console.error('No banner URL provided for deletion');
+        return res.status(400).json({ message: 'Banner URL is required' });
+      }
+      
+      // Get the restaurant
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (!restaurant) {
+        console.error(`Restaurant ${restaurantId} not found for banner deletion`);
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      // Check if restaurant has banner URLs
+      if (!restaurant.bannerUrls || !Array.isArray(restaurant.bannerUrls) || restaurant.bannerUrls.length === 0) {
+        console.error(`Restaurant ${restaurantId} has no banner URLs`);
+        return res.status(400).json({ message: 'Restaurant has no banner images' });
+      }
+      
+      // Check if we're trying to delete the only banner
+      if (restaurant.bannerUrls.length <= 1) {
+        console.error(`Cannot delete the only banner for restaurant ${restaurantId}`);
+        return res.status(400).json({ message: 'Cannot delete the only banner image' });
+      }
+      
+      // Check if the banner URL exists in the array
+      const bannerUrlIndex = typeof bannerIndex === 'number' 
+        ? bannerIndex 
+        : restaurant.bannerUrls.findIndex(url => url === bannerUrl);
+        
+      if (bannerUrlIndex === -1) {
+        console.error(`Banner URL ${bannerUrl} not found in restaurant ${restaurantId}`);
+        return res.status(404).json({ message: 'Banner URL not found' });
+      }
+      
+      console.log(`Found banner at index ${bannerUrlIndex} for restaurant ${restaurantId}`);
+      
+      // Get the filename from the URL
+      const urlParts = bannerUrl.split('/');
+      const filename = urlParts[urlParts.length - 1];
+      
+      // Create the file path
+      const filePath = path.join(process.cwd(), 'uploads', filename);
+      
+      // First check if the file exists
+      const fileExists = fs.existsSync(filePath);
+      console.log(`Banner file ${filePath} exists: ${fileExists}`);
+      
+      // Delete the file if it exists
+      if (fileExists) {
+        try {
+          fs.unlinkSync(filePath);
+          console.log(`Deleted banner file: ${filePath}`);
+        } catch (err) {
+          console.error(`Error deleting banner file: ${err}`);
+          // Continue with the process even if the file delete fails
+        }
+      }
+      
+      // Remove the banner URL from the array
+      const updatedBannerUrls = [...restaurant.bannerUrls];
+      updatedBannerUrls.splice(bannerUrlIndex, 1);
+      
+      // Set new default banner URL to the first in the array
+      const newBannerUrl = updatedBannerUrls[0];
+      
+      console.log(`Updating restaurant ${restaurantId} with new banner URLs after deletion:`, updatedBannerUrls);
+      
+      // Update the restaurant with the new banner URLs
+      const updatedRestaurant = await storage.updateRestaurant(restaurantId, {
+        bannerUrl: newBannerUrl, // Update the legacy field with the new default
+        bannerUrls: updatedBannerUrls
+      });
+      
+      if (!updatedRestaurant) {
+        console.error(`Failed to update restaurant ${restaurantId} after banner deletion`);
+        return res.status(500).json({ message: 'Failed to update restaurant' });
+      }
+      
+      console.log(`Successfully deleted banner for restaurant ${restaurantId}`);
+      
+      // Try to update the file upload record if it exists
+      try {
+        // Find the file upload record based on the URL
+        const fileUploads = await storage.getFileUploadsByRestaurantId(restaurantId);
+        const fileUpload = fileUploads.find(upload => upload.fileUrl === bannerUrl);
+        
+        if (fileUpload) {
+          // Update the file status to 'deleted'
+          await storage.updateFileUpload(fileUpload.id, {
+            status: 'deleted'
+          });
+          console.log(`Updated file upload record ${fileUpload.id} to deleted status`);
+        } else {
+          console.log(`No file upload record found for banner URL: ${bannerUrl}`);
+        }
+      } catch (err) {
+        console.error(`Error updating file upload record: ${err}`);
+        // Continue with the process even if the record update fails
+      }
+      
+      res.json({
+        success: true,
+        message: 'Banner deleted successfully',
+        newBannerUrl,
+        bannerUrls: updatedBannerUrls
+      });
+    } catch (error) {
+      console.error('Error deleting banner:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ message: 'Error deleting banner', error: errorMsg });
+    }
+  });
 
   // Menu category routes
   app.get('/api/restaurants/:restaurantId/categories', async (req, res) => {

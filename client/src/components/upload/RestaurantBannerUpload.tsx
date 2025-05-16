@@ -1,12 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Image, Upload, CheckCircle, AlertCircle, Loader2, X, ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react';
+import { 
+  Image, Upload, CheckCircle, AlertCircle, Loader2, X, 
+  ChevronLeft, ChevronRight, Plus, Trash2 
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useTranslation } from 'react-i18next';
 import { apiRequest } from '@/lib/queryClient';
 import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
 import { useFileUpload } from '@/lib/upload-utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface RestaurantBannerUploadProps {
   restaurantId: number;
@@ -26,6 +39,8 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
   const [activeIndex, setActiveIndex] = useState(0);
   const [bannerUrls, setBannerUrls] = useState<string[]>(currentBannerUrls || []);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const { t } = useTranslation();
   const { uploadFile } = useFileUpload();
@@ -71,8 +86,8 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
     });
   };
 
-  // Remove the current banner image
-  const removeImage = async () => {
+  // Open the confirmation dialog for banner deletion
+  const confirmBannerDelete = () => {
     if (bannerUrls.length <= 1) {
       toast({
         title: 'Cannot Remove',
@@ -81,12 +96,19 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
       });
       return;
     }
-
+    setIsDeleteDialogOpen(true);
+  };
+  
+  // Remove the current banner image
+  const removeImage = async () => {
     try {
+      setIsDeleting(true);
       setIsUploading(true); // Show loading state while we delete
       
       // Get the URL to delete
       const urlToDelete = bannerUrls[activeIndex];
+      
+      console.log(`Deleting banner for restaurant ${restaurantId}: ${urlToDelete} at index ${activeIndex}`);
       
       // Call the server to delete the banner
       const response = await fetch(`/api/restaurants/${restaurantId}/delete-banner`, {
@@ -105,19 +127,20 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
         throw new Error(errorData.message || 'Failed to delete banner');
       }
       
-      // Update the local state
-      const newBannerUrls = [...bannerUrls];
-      newBannerUrls.splice(activeIndex, 1);
-      setBannerUrls(newBannerUrls);
+      const responseData = await response.json();
+      console.log('Banner deletion response:', responseData);
+      
+      // Update the local state with the response data
+      setBannerUrls(responseData.bannerUrls);
       
       // Adjust the active index if necessary
-      if (activeIndex >= newBannerUrls.length) {
-        setActiveIndex(newBannerUrls.length - 1);
+      if (activeIndex >= responseData.bannerUrls.length) {
+        setActiveIndex(responseData.bannerUrls.length - 1);
       }
 
       // Update parent component
-      if (onSuccess && newBannerUrls.length > 0) {
-        onSuccess(newBannerUrls[0], newBannerUrls);
+      if (onSuccess && responseData.bannerUrls.length > 0) {
+        onSuccess(responseData.bannerUrls[0], responseData.bannerUrls);
       }
       
       toast({
@@ -126,13 +149,16 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
       });
     } catch (error) {
       console.error('Error removing banner:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to remove banner image. Please try again.';
       toast({
         title: 'Error',
-        description: error.message || 'Failed to remove banner image. Please try again.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
+      setIsDeleting(false);
       setIsUploading(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
