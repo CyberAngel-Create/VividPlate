@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -31,11 +31,35 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [feedback, setFeedback] = useState('');
+  const [rating, setRating] = useState(0);
+  const [hoveredRating, setHoveredRating] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  const handleStarHover = (value: number) => {
+    setHoveredRating(value);
+  };
+  
+  const handleStarLeave = () => {
+    setHoveredRating(null);
+  };
+  
+  const handleStarClick = (value: number) => {
+    setRating(value);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (rating === 0) {
+      toast({
+        title: 'Error',
+        description: 'Please select a rating',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
     try {
@@ -47,6 +71,7 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
       setName('');
       setEmail('');
       setFeedback('');
+      setRating(0);
       setIsOpen(false);
       
       toast({
@@ -106,6 +131,33 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <Label htmlFor="rating">{t('feedback.yourRating', 'Your Rating')}</Label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => handleStarClick(value)}
+                  onMouseEnter={() => handleStarHover(value)}
+                  onMouseLeave={handleStarLeave}
+                  className="p-1 focus:outline-none"
+                >
+                  <Star
+                    size={32}
+                    className={`${
+                      (hoveredRating !== null
+                        ? value <= hoveredRating
+                        : value <= rating)
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-muted-foreground'
+                    } transition-colors`}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+          
           <div className="space-y-2">
             <Label htmlFor="name">{t('feedback.name', 'Name')}</Label>
             <Input 
