@@ -96,6 +96,7 @@ const restaurantSchema = z.object({
   name: z.string().min(1, "Restaurant name is required"),
   description: z.string().optional(),
   cuisine: z.string().optional(),
+  customCuisine: z.string().optional(),
   logoUrl: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
@@ -110,6 +111,9 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
   const [hours, setHours] = useState<HoursOfOperation>(
     restaurant?.hoursOfOperation as HoursOfOperation || defaultHours
   );
+  const [showCustomCuisine, setShowCustomCuisine] = useState<boolean>(restaurant?.cuisine === "Other");
+  // Use empty string as fallback for custom cuisine
+  const [customCuisine, setCustomCuisine] = useState<string>("");
   
   const form = useForm<FormValues>({
     resolver: zodResolver(restaurantSchema),
@@ -117,6 +121,7 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
       name: restaurant?.name || "",
       description: restaurant?.description || "",
       cuisine: restaurant?.cuisine || "",
+      customCuisine: "",
       logoUrl: restaurant?.logoUrl || "",
       phone: restaurant?.phone || "",
       email: restaurant?.email || "",
@@ -247,7 +252,14 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
               <FormItem>
                 <FormLabel>Cuisine Type</FormLabel>
                 <Select 
-                  onValueChange={field.onChange} 
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    setShowCustomCuisine(value === "Other");
+                    if (value !== "Other") {
+                      setCustomCuisine("");
+                      form.setValue("customCuisine", "");
+                    }
+                  }}
                   defaultValue={field.value}
                 >
                   <FormControl>
@@ -263,6 +275,33 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
                     ))}
                   </SelectContent>
                 </Select>
+                
+                {showCustomCuisine && (
+                  <div className="mt-2">
+                    <FormField
+                      control={form.control}
+                      name="customCuisine"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormControl>
+                            <Input
+                              placeholder="Enter your cuisine type"
+                              {...field}
+                              value={customCuisine}
+                              onChange={(e) => {
+                                setCustomCuisine(e.target.value);
+                                field.onChange(e.target.value);
+                              }}
+                            />
+                          </FormControl>
+                          <FormDescription className="text-xs">
+                            Please specify your restaurant's cuisine type
+                          </FormDescription>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                )}
                 <FormMessage />
               </FormItem>
             )}

@@ -249,7 +249,9 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
               <Select value={ratingFilter} onValueChange={setRatingFilter}>
                 <SelectTrigger className="w-[160px]">
                   <SelectValue placeholder="Filter by rating">
-                    {ratingFilter !== 'all' && (
+                    {ratingFilter === 'all' ? (
+                      "All Ratings"
+                    ) : (
                       <div className="flex items-center">
                         <span className="mr-2">{ratingFilter}</span>
                         <div className="flex">
