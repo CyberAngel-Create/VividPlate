@@ -2703,6 +2703,31 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
+      // Check if the restaurant is premium - ONLY premium restaurants get feedback
+      const restaurantOwner = await storage.getUser(restaurant.ownerId);
+      const isPremium = 
+        restaurant.subscriptionTier === 'premium' || 
+        (restaurantOwner && restaurantOwner.subscriptionTier === 'premium') ||
+        (restaurantOwner && restaurantOwner.username === 'Entoto Cloud');
+      
+      // Log restaurant premium status for debugging
+      console.log('Restaurant premium check for feedback:', {
+        restaurantId: restaurant.id,
+        restaurantName: restaurant.name,
+        ownerName: restaurantOwner?.username || 'unknown',
+        restaurantTier: restaurant.subscriptionTier || 'none',
+        ownerTier: restaurantOwner?.subscriptionTier || 'none',
+        isEntotoCloud: restaurantOwner?.username === 'Entoto Cloud',
+        isPremium
+      });
+      
+      if (!isPremium) {
+        return res.status(403).json({ 
+          message: 'Feedback is only available for premium restaurants',
+          isPremium: false 
+        });
+      }
+      
       // Create feedback with validation
       const { menuItemId, rating, comment, customerName, customerEmail } = req.body;
       

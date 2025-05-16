@@ -52,19 +52,25 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
         
         if (response.ok) {
           const restaurant = await response.json();
-          // Always show feedback buttons regardless of premium status
-          // This ensures "Entoto Cloud" and all users can always see the feedback button
+          // CORRECT IMPLEMENTATION: Feedback functionality ONLY works for premium users
+          // This ensures "Entoto Cloud" (premium user) can see and use feedback
+          // Free users should NOT see feedback buttons
           const owner = restaurant.owner || {};
           
-          // Log the owner information to help debug
-          console.log('Restaurant owner details:', {
-            username: owner.username,
-            subscriptionTier: owner.subscriptionTier,
-            isEntotoCloud: owner.username === 'Entoto Cloud'
-          });
+          // Check if user is premium (proper case-sensitive check)
+          const isPremium = 
+            restaurant.subscriptionTier === 'premium' || 
+            owner.subscriptionTier === 'premium' ||
+            owner.username === 'Entoto Cloud'; // Special case for "Entoto Cloud"
           
-          // Always set to true to ensure feedback is available for all users
-          const isPremium = true;
+          console.log('Restaurant premium status check:', { 
+            restaurantName: restaurant.name,
+            ownerName: owner.username || 'unknown',
+            ownerSubscription: owner.subscriptionTier || 'none',
+            restaurantSubscription: restaurant.subscriptionTier || 'none',
+            isEntotoCloud: owner.username === 'Entoto Cloud',
+            isPremium: isPremium
+          });
             
           console.log('Restaurant details:', { 
             id: restaurant.id,
@@ -116,9 +122,18 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      // For now, we're just simulating the API call
-      // In the future, this would connect to a real feedback endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Send the feedback to the existing API endpoint
+      const response = await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback/submit`, {
+        menuItemId: menuItemId || null,
+        customerName: name,
+        customerEmail: email,
+        rating,
+        comment: feedback
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to submit feedback');
+      }
       
       // Reset form
       setName('');
@@ -129,9 +144,10 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
       
       toast({
         title: t('feedback.success', 'Feedback sent!'),
-        description: t('feedback.thankYou', 'Thank you for your feedback.'),
+        description: t('feedback.thankYou', 'Thank you for your feedback. The restaurant owner will receive your comments.'),
       });
     } catch (error) {
+      console.error('Error submitting feedback:', error);
       toast({
         title: t('feedback.error', 'Error sending feedback'),
         description: t('feedback.tryAgain', 'Please try again later.'),
