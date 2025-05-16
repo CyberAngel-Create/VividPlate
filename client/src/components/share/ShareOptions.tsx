@@ -7,6 +7,7 @@ import { FaWhatsapp } from "react-icons/fa";
 
 interface ShareOptionsProps {
   menuUrl: string;
+  isLoading?: boolean;
 }
 
 interface TeamMember {
@@ -16,53 +17,81 @@ interface TeamMember {
   color: string;
 }
 
-const ShareOptions = ({ menuUrl }: ShareOptionsProps) => {
+const ShareOptions = ({ menuUrl, isLoading = false }: ShareOptionsProps) => {
   const [email, setEmail] = useState("");
+  const [isCopying, setIsCopying] = useState(false);
+  const [isSharing, setIsSharing] = useState(false);
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([
     { id: "1", email: "john.smith@example.com", initials: "JS", color: "bg-primary" },
     { id: "2", email: "alex.doe@example.com", initials: "AD", color: "bg-secondary" }
   ]);
   const { toast } = useToast();
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(menuUrl).then(() => {
+  const copyToClipboard = async () => {
+    try {
+      setIsCopying(true);
+      await navigator.clipboard.writeText(menuUrl);
       toast({
         title: "Link copied",
         description: "The menu link has been copied to clipboard",
       });
-    });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link to clipboard",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCopying(false);
+    }
   };
 
-  const shareVia = (platform: string) => {
-    let shareUrl = "";
-    
-    switch (platform) {
-      case "facebook":
-        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(menuUrl)}`;
-        break;
-      case "twitter":
-        shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(menuUrl)}&text=${encodeURIComponent("Check out our restaurant menu!")}`;
-        break;
-      case "instagram":
-        // Instagram doesn't have a direct sharing URL, show a toast instead
-        toast({
-          title: "Instagram sharing",
-          description: "Copy the link and share it on Instagram manually",
-        });
-        return;
-      case "email":
-        shareUrl = `mailto:?subject=${encodeURIComponent("Check out our restaurant menu")}&body=${encodeURIComponent(`Here's our restaurant menu: ${menuUrl}`)}`;
-        break;
-      case "whatsapp":
-        shareUrl = `https://wa.me/?text=${encodeURIComponent(`Check out our restaurant menu: ${menuUrl}`)}`;
-        break;
-      case "sms":
-        shareUrl = `sms:?body=${encodeURIComponent(`Check out our restaurant menu: ${menuUrl}`)}`;
-        break;
-    }
-    
-    if (shareUrl) {
-      window.open(shareUrl, "_blank");
+  const shareVia = async (platform: string) => {
+    try {
+      setIsSharing(true);
+      
+      let shareUrl = "";
+      
+      switch (platform) {
+        case "facebook":
+          shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(menuUrl)}`;
+          break;
+        case "twitter":
+          shareUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(menuUrl)}&text=${encodeURIComponent("Check out our restaurant menu!")}`;
+          break;
+        case "instagram":
+          // Instagram doesn't have a direct sharing URL, show a toast instead
+          toast({
+            title: "Instagram sharing",
+            description: "Copy the link and share it on Instagram manually",
+          });
+          setIsSharing(false);
+          return;
+        case "email":
+          shareUrl = `mailto:?subject=${encodeURIComponent("Check out our restaurant menu")}&body=${encodeURIComponent(`Here's our restaurant menu: ${menuUrl}`)}`;
+          break;
+        case "whatsapp":
+          shareUrl = `https://wa.me/?text=${encodeURIComponent(`Check out our restaurant menu: ${menuUrl}`)}`;
+          break;
+        case "sms":
+          shareUrl = `sms:?body=${encodeURIComponent(`Check out our restaurant menu: ${menuUrl}`)}`;
+          break;
+      }
+      
+      if (shareUrl) {
+        // Short artificial delay to show loading state
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.open(shareUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+      toast({
+        title: "Error",
+        description: "Failed to open share dialog",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
     }
   };
 
@@ -106,7 +135,9 @@ const ShareOptions = ({ menuUrl }: ShareOptionsProps) => {
     setTeamMembers(teamMembers.filter(member => member.id !== id));
   };
 
-  const sendInvites = () => {
+  const [isSending, setIsSending] = useState(false);
+  
+  const sendInvites = async () => {
     if (teamMembers.length === 0) {
       toast({
         title: "Error",
@@ -116,10 +147,24 @@ const ShareOptions = ({ menuUrl }: ShareOptionsProps) => {
       return;
     }
     
-    toast({
-      title: "Invites sent",
-      description: `Menu link sent to ${teamMembers.length} team members`,
-    });
+    try {
+      setIsSending(true);
+      // Simulate sending process with a delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      toast({
+        title: "Invites sent",
+        description: `Menu link sent to ${teamMembers.length} team members`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send invites. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
@@ -140,8 +185,13 @@ const ShareOptions = ({ menuUrl }: ShareOptionsProps) => {
           <Button 
             className="bg-primary hover:bg-primary/90 text-white rounded-l-none"
             onClick={copyToClipboard}
+            disabled={isCopying || isLoading}
           >
-            <Copy className="h-4 w-4" />
+            {isCopying ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Copy className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>
@@ -152,43 +202,79 @@ const ShareOptions = ({ menuUrl }: ShareOptionsProps) => {
           variant="outline" 
           className="flex items-center justify-center"
           onClick={() => shareVia("facebook")}
+          disabled={isSharing || isLoading}
         >
-          <Facebook className="text-blue-600 mr-2 h-4 w-4" /> Facebook
+          {isSharing ? (
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+          ) : (
+            <Facebook className="text-blue-600 mr-2 h-4 w-4" />
+          )}
+          Facebook
         </Button>
         <Button 
           variant="outline" 
           className="flex items-center justify-center"
           onClick={() => shareVia("twitter")}
+          disabled={isSharing || isLoading}
         >
-          <Twitter className="text-blue-400 mr-2 h-4 w-4" /> Twitter
+          {isSharing ? (
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+          ) : (
+            <Twitter className="text-blue-400 mr-2 h-4 w-4" />
+          )}
+          Twitter
         </Button>
         <Button 
           variant="outline" 
           className="flex items-center justify-center"
           onClick={() => shareVia("instagram")}
+          disabled={isSharing || isLoading}
         >
-          <Instagram className="text-pink-600 mr-2 h-4 w-4" /> Instagram
+          {isSharing ? (
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+          ) : (
+            <Instagram className="text-pink-600 mr-2 h-4 w-4" />
+          )}
+          Instagram
         </Button>
         <Button 
           variant="outline" 
           className="flex items-center justify-center"
           onClick={() => shareVia("email")}
+          disabled={isSharing || isLoading}
         >
-          <Mail className="text-red-500 mr-2 h-4 w-4" /> Email
+          {isSharing ? (
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+          ) : (
+            <Mail className="text-red-500 mr-2 h-4 w-4" />
+          )}
+          Email
         </Button>
         <Button 
           variant="outline" 
           className="flex items-center justify-center"
           onClick={() => shareVia("whatsapp")}
+          disabled={isSharing || isLoading}
         >
-          <FaWhatsapp className="text-green-500 mr-2 h-4 w-4" /> WhatsApp
+          {isSharing ? (
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+          ) : (
+            <FaWhatsapp className="text-green-500 mr-2 h-4 w-4" />
+          )}
+          WhatsApp
         </Button>
         <Button 
           variant="outline" 
           className="flex items-center justify-center"
           onClick={() => shareVia("sms")}
+          disabled={isSharing || isLoading}
         >
-          <MessageSquare className="text-blue-500 mr-2 h-4 w-4" /> SMS
+          {isSharing ? (
+            <Loader2 className="animate-spin mr-2 h-4 w-4" />
+          ) : (
+            <MessageSquare className="text-blue-500 mr-2 h-4 w-4" />
+          )}
+          SMS
         </Button>
       </div>
       
@@ -241,8 +327,17 @@ const ShareOptions = ({ menuUrl }: ShareOptionsProps) => {
       <Button 
         className="w-full bg-primary hover:bg-primary/90 text-white flex items-center justify-center"
         onClick={sendInvites}
+        disabled={isSending || isLoading}
       >
-        <Mail className="mr-1 h-4 w-4" /> Send Invites
+        {isSending ? (
+          <>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
+          </>
+        ) : (
+          <>
+            <Mail className="mr-2 h-4 w-4" /> Send Invites
+          </>
+        )}
       </Button>
     </div>
   );
