@@ -1592,6 +1592,17 @@ export class DatabaseStorage implements IStorage {
         updateValues.push(restaurantUpdate.hoursOfOperation);
       }
       
+      if (restaurantUpdate.themeSettings !== undefined) {
+        updateFields.push(`theme_settings = $${paramIndex++}`);
+        updateValues.push(JSON.stringify(restaurantUpdate.themeSettings));
+        console.log('Updating theme settings:', JSON.stringify(restaurantUpdate.themeSettings, null, 2));
+      }
+      
+      if (restaurantUpdate.bannerUrls !== undefined) {
+        updateFields.push(`banner_urls = $${paramIndex++}`);
+        updateValues.push(JSON.stringify(restaurantUpdate.bannerUrls));
+      }
+      
       // Only if we have fields to update
       if (updateFields.length > 0) {
         // Fallback: use a raw SQL query
