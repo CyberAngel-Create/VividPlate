@@ -37,6 +37,13 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -96,6 +103,9 @@ type AdminFormData = z.infer<typeof adminFormSchema>;
 const UsersAdminPage = () => {
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [subscriptionFilter, setSubscriptionFilter] = useState<"all" | "free" | "premium">("all");
+  const [onlineFilter, setOnlineFilter] = useState<"all" | "online" | "offline">("all");
   const [userToModify, setUserToModify] = useState<User | null>(null);
   const [actionType, setActionType] = useState<"status" | "subscription" | null>(null);
   const [actionValue, setActionValue] = useState<boolean | string | null>(null);
@@ -175,12 +185,37 @@ const UsersAdminPage = () => {
     }
   }, [error, setLocation, toast]);
 
-  // Filter users by search term
-  const filteredUsers = users?.filter(user => 
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter users by search term, status, subscription, and online status
+  const filteredUsers = users?.filter(user => {
+    // Text search
+    const matchesSearch = 
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Status filter
+    const matchesStatus = 
+      statusFilter === "all" || 
+      (statusFilter === "active" && user.isActive) || 
+      (statusFilter === "inactive" && !user.isActive);
+    
+    // Subscription filter
+    const matchesSubscription = 
+      subscriptionFilter === "all" || 
+      (subscriptionFilter === "premium" && user.subscriptionTier === "premium") || 
+      (subscriptionFilter === "free" && user.subscriptionTier === "free");
+    
+    // Online filter - using a 5 minute threshold
+    const isUserOnline = user.lastLogin && 
+      (new Date().getTime() - new Date(user.lastLogin).getTime() < 5 * 60 * 1000);
+    
+    const matchesOnline = 
+      onlineFilter === "all" || 
+      (onlineFilter === "online" && isUserOnline) || 
+      (onlineFilter === "offline" && !isUserOnline);
+    
+    return matchesSearch && matchesStatus && matchesSubscription && matchesOnline;
+  });
 
   // Toggle user active status mutation
   const toggleUserStatusMutation = useMutation({
@@ -326,6 +361,63 @@ const UsersAdminPage = () => {
               />
             </div>
           </div>
+        </div>
+        
+        <div className="flex flex-wrap gap-3 mb-6">
+          <div className="w-32">
+            <Select value={statusFilter} onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-32">
+            <Select value={subscriptionFilter} onValueChange={(value: "all" | "free" | "premium") => setSubscriptionFilter(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Subscription" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Plans</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="premium">Premium</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-32">
+            <Select value={onlineFilter} onValueChange={(value: "all" | "online" | "offline") => setOnlineFilter(value)}>
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Users</SelectItem>
+                <SelectItem value="online">Online</SelectItem>
+                <SelectItem value="offline">Offline</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          {(statusFilter !== "all" || subscriptionFilter !== "all" || onlineFilter !== "all" || searchTerm) && (
+            <Button 
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setStatusFilter("all");
+                setSubscriptionFilter("all");
+                setOnlineFilter("all");
+                setSearchTerm("");
+              }}
+              className="h-10"
+            >
+              Clear Filters
+            </Button>
+          )}
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-md shadow">
