@@ -129,8 +129,17 @@ export default function Subscribe() {
         const planDetails = await planResponse.json();
         setPlanData(planDetails);
         
-        // Create subscription using body parameter instead of path parameter
-        const subscriptionResponse = await apiRequest("POST", "/api/create-subscription", { planId: parseInt(planId) });
+        // Use a simple direct query to the pricing endpoint to avoid JSON parsing errors
+        const subscriptionUrl = `/api/create-subscription/${planId}`;
+        console.log(`Sending subscription request to: ${subscriptionUrl}`);
+        
+        const subscriptionResponse = await fetch(subscriptionUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
         
         if (!subscriptionResponse.ok) {
           // Try to parse the response as JSON
@@ -140,7 +149,7 @@ export default function Subscribe() {
           } catch (parseError) {
             // If it's not valid JSON, get the text
             const errorText = await subscriptionResponse.text();
-            throw new Error(`Server error: ${errorText.substring(0, 100)}...`);
+            throw new Error(`Payment setup error: ${errorText.substring(0, 50)}...`);
           }
         }
 

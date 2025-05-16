@@ -2075,7 +2075,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
   
-  // Create a Stripe subscription with path param
+  // Create a Stripe subscription with path param - Legacy endpoint maintained for compatibility
   app.post('/api/create-subscription/:planId', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
