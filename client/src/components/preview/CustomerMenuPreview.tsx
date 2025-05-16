@@ -572,7 +572,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               <div className="flex justify-between items-start">
                                 <h4 className="font-medium" style={menuItemNameStyle}>{item.name}</h4>
                                 <span className="font-medium" style={menuItemPriceStyle}>
-                                  {formatCurrency(item.price, item.currency || restaurant.currency || "USD")}
+                                  {formatCurrency(item.price, item.currency || (restaurant as any).currency || "USD")}
                                 </span>
                               </div>
                               <p className="text-sm mt-2" style={menuItemDescriptionStyle}>
@@ -593,7 +593,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               )}
                               
                               {/* Feedback button indicator - only visible for premium restaurants */}
-                              {restaurant.subscriptionTier === 'premium' && (
+                              {!previewMode && ((restaurant as any).owner?.subscriptionTier === 'premium' || (restaurant as any).subscriptionTier === 'premium') && (
                                 <FeedbackDialog
                                   menuItemId={item.id}
                                   menuItemName={item.name}
@@ -683,13 +683,18 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       </div>
       
       {/* Feedback button at the bottom right - only shown for premium restaurants */}
-      {mounted && restaurant && restaurant.id && restaurant.subscriptionTier === 'premium' && (
-        <FeedbackDialog
-          restaurantId={restaurant.id}
-          position="bottom-right"
-          variant="default"
-          size="default"
-        />
+      {mounted && restaurant && restaurant.id && !previewMode && (
+        <div className="relative">
+          {/* Use type assertion to safely access owner properties */}
+          {((restaurant as any).owner?.subscriptionTier === 'premium' || (restaurant as any).subscriptionTier === 'premium') ? (
+            <FeedbackDialog
+              restaurantId={restaurant.id}
+              position="bottom-right"
+              variant="default"
+              size="default"
+            />
+          ) : null}
+        </div>
       )}
     </div>
   );
