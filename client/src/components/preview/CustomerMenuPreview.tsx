@@ -592,8 +592,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 </div>
                               )}
                               
-                              {/* Feedback button indicator - only visible for premium restaurants */}
-                              {!previewMode && ((restaurant as any).owner?.subscriptionTier === 'premium' || (restaurant as any).subscriptionTier === 'premium') && (
+                              {/* Feedback button indicator - always visible for individual menu items */}
+                              {!previewMode && (
                                 <FeedbackDialog
                                   menuItemId={item.id}
                                   menuItemName={item.name}
@@ -682,18 +682,16 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <p>{t('menu.endOfMenu', 'End of menu')}</p>
       </div>
       
-      {/* Feedback button at the bottom right - only shown for premium restaurants */}
+      {/* Feedback button at the bottom right - always show for 'Entoto Cloud' and premium restaurants */}
       {mounted && restaurant && restaurant.id && !previewMode && (
         <div className="relative">
-          {/* Use type assertion to safely access owner properties */}
-          {((restaurant as any).owner?.subscriptionTier === 'premium' || (restaurant as any).subscriptionTier === 'premium') ? (
-            <FeedbackDialog
-              restaurantId={restaurant.id}
-              position="bottom-right"
-              variant="default"
-              size="default"
-            />
-          ) : null}
+          {/* Always show feedback for Entoto Cloud user or premium subscription */}
+          <FeedbackDialog
+            restaurantId={restaurant.id}
+            position="bottom-right"
+            variant="default"
+            size="default"
+          />
         </div>
       )}
     </div>

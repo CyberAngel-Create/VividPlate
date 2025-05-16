@@ -2044,8 +2044,16 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(400).json({ message: 'Selected pricing plan is not currently available' });
       }
       
-      // Calculate price in cents
-      const priceInCents = Math.round(parseFloat(pricingPlan.price) * 100);
+      // Use the UI prices directly instead of database prices to ensure consistency
+      // This overrides the prices in the database to match what users see in the UI
+      const uiPrices = {
+        1: 15.00, // Monthly plan - $15/month 
+        2: 150.00 // Yearly plan - $150/year
+      };
+      
+      // Calculate price in cents using the UI prices to ensure consistency
+      const price = uiPrices[planId] || parseFloat(pricingPlan.price);
+      const priceInCents = Math.round(price * 100);
       
       // Create a payment intent with actual plan price from database
       const paymentIntent = await stripe.paymentIntents.create({
@@ -2102,8 +2110,16 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(400).json({ message: 'Selected pricing plan is not currently available' });
       }
       
-      // Calculate price in cents
-      const priceInCents = Math.round(parseFloat(pricingPlan.price) * 100);
+      // Use the UI prices directly instead of database prices to ensure consistency
+      // This overrides the prices in the database to match what users see in the UI
+      const uiPrices = {
+        1: 15.00, // Monthly plan - $15/month 
+        2: 150.00 // Yearly plan - $150/year
+      };
+      
+      // Calculate price in cents using the UI prices to ensure consistency
+      const price = uiPrices[planId] || parseFloat(pricingPlan.price);
+      const priceInCents = Math.round(price * 100);
       
       // Create a payment intent with actual plan price from database
       const paymentIntent = await stripe.paymentIntents.create({
