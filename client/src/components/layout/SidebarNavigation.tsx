@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store } from "lucide-react";
+import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTranslation } from "react-i18next";
@@ -56,6 +56,12 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       icon: <Share2 className="h-5 w-5" />, 
       label: 'Share Menu', 
       path: '/share-menu' 
+    },
+    { 
+      id: 'tutorial', 
+      icon: <HelpCircle className="h-5 w-5" />, 
+      label: 'Tutorial', 
+      path: '/tutorial' 
     },
     { 
       id: 'pricing', 

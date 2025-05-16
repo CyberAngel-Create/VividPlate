@@ -15,6 +15,7 @@ import EditRestaurant from "./pages/edit-restaurant";
 import MenuPreview from "./pages/menu-preview";
 import ShareMenu from "./pages/share-menu";
 import ViewMenu from "./pages/view-menu";
+import Tutorial from "./pages/tutorial";
 import SubscriptionPage from "./pages/subscription";
 import Subscribe from "./pages/subscribe";
 import PaymentSuccess from "./pages/payment-success";
@@ -116,6 +117,7 @@ function Router() {
         <AuthenticatedRoute path="/create-menu/:restaurantId" component={CreateMenu} />
         <AuthenticatedRoute path="/manage-uploads" component={ManageUploads} />
         <AuthenticatedRoute path="/manage-uploads/:restaurantId" component={ManageUploads} />
+        <AuthenticatedRoute path="/tutorial" component={Tutorial} />
         <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
         <AuthenticatedRoute path="/subscribe" component={Subscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />

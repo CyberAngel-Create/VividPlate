@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Facebook, Twitter, Instagram, Mail, MessageSquare, X } from "lucide-react";
+import { Copy, Facebook, Twitter, Instagram, Mail, MessageSquare, X, Loader2 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
 
 interface ShareOptionsProps {
