@@ -129,15 +129,17 @@ export default function Subscribe() {
         const planDetails = await planResponse.json();
         setPlanData(planDetails);
         
-        // Use a simple direct query to the pricing endpoint to avoid JSON parsing errors
+        // Use a direct path to the pricing endpoint with explicit planId
         const subscriptionUrl = `/api/create-subscription/${planId}`;
-        console.log(`Sending subscription request to: ${subscriptionUrl}`);
+        console.log(`Sending subscription request to: ${subscriptionUrl} for plan: ${planId}`);
         
+        // Use an empty body to avoid any parsing issues
         const subscriptionResponse = await fetch(subscriptionUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
+          body: JSON.stringify({}), // Send empty JSON object to avoid body parsing issues
           credentials: 'include',
         });
         

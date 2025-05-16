@@ -2044,16 +2044,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(400).json({ message: 'Selected pricing plan is not currently available' });
       }
       
-      // Use the UI prices directly instead of database prices to ensure consistency
-      // This overrides the prices in the database to match what users see in the UI
-      const uiPrices = {
-        1: 15.00, // Monthly plan - $15/month 
-        2: 150.00 // Yearly plan - $150/year
-      };
+      // HARDCODED PRICES: Use fixed UI prices instead of database values
+      // This ensures consistency with what's shown to users
+      let priceInCents;
       
-      // Calculate price in cents using the UI prices to ensure consistency
-      const price = uiPrices[planId] || parseFloat(pricingPlan.price);
-      const priceInCents = Math.round(price * 100);
+      if (planId === 1) {
+        // Monthly plan price: $15.00 = 1500 cents
+        priceInCents = 1500;
+      } else if (planId === 2) {
+        // Yearly plan price: $150.00 = 15000 cents
+        priceInCents = 15000;
+      } else {
+        // Fallback price calculation - using a safe minimum value of 50 cents
+        priceInCents = Math.max(50, Math.round(parseFloat(pricingPlan.price) * 100));
+      }
+      
+      console.log(`Processing payment for plan ${planId}: ${priceInCents} cents`);
       
       // Create a payment intent with actual plan price from database
       const paymentIntent = await stripe.paymentIntents.create({
@@ -2110,16 +2116,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(400).json({ message: 'Selected pricing plan is not currently available' });
       }
       
-      // Use the UI prices directly instead of database prices to ensure consistency
-      // This overrides the prices in the database to match what users see in the UI
-      const uiPrices = {
-        1: 15.00, // Monthly plan - $15/month 
-        2: 150.00 // Yearly plan - $150/year
-      };
+      // HARDCODED PRICES: Use fixed UI prices instead of database values
+      // This ensures consistency with what's shown to users
+      let priceInCents;
       
-      // Calculate price in cents using the UI prices to ensure consistency
-      const price = uiPrices[planId] || parseFloat(pricingPlan.price);
-      const priceInCents = Math.round(price * 100);
+      if (planId === 1) {
+        // Monthly plan price: $15.00 = 1500 cents
+        priceInCents = 1500;
+      } else if (planId === 2) {
+        // Yearly plan price: $150.00 = 15000 cents
+        priceInCents = 15000;
+      } else {
+        // Fallback price calculation
+        priceInCents = Math.max(50, Math.round(parseFloat(pricingPlan.price) * 100));
+      }
+      
+      console.log(`Processing payment for plan ${planId}: ${priceInCents} cents`);
       
       // Create a payment intent with actual plan price from database
       const paymentIntent = await stripe.paymentIntents.create({
