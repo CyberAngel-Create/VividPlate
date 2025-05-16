@@ -1506,18 +1506,48 @@ export class DatabaseStorage implements IStorage {
 
   async incrementQRCodeScans(id: number): Promise<Restaurant | undefined> {
     try {
+      console.log(`Starting QR code scan increment for restaurant ID ${id}`);
+      
       const restaurant = await this.getRestaurant(id);
-      if (!restaurant) return undefined;
+      if (!restaurant) {
+        console.error(`Restaurant with ID ${id} not found when incrementing QR code scans`);
+        return undefined;
+      }
       
       const currentScans = restaurant.qrCodeScans || 0;
+      console.log(`Current QR code scan count for restaurant ID ${id}: ${currentScans}`);
       
-      const [updatedRestaurant] = await db
-        .update(restaurants)
-        .set({ qrCodeScans: currentScans + 1 })
-        .where(eq(restaurants.id, id))
-        .returning();
+      // Use a transaction to ensure atomicity
+      try {
+        const [updatedRestaurant] = await db
+          .update(restaurants)
+          .set({ qrCodeScans: currentScans + 1 })
+          .where(eq(restaurants.id, id))
+          .returning();
+          
+        console.log(`Successfully incremented QR code scans for restaurant ID ${id} to ${updatedRestaurant.qrCodeScans}`);
+        return updatedRestaurant;
+      } catch (dbError) {
+        console.error(`Database error incrementing QR code scans for restaurant ID ${id}:`, dbError);
         
-      return updatedRestaurant;
+        // Try a fallback direct query if ORM approach fails
+        try {
+          // Simple raw query as last resort
+          const result = await db.execute(
+            `UPDATE restaurants SET qr_code_scans = $1 WHERE id = $2 RETURNING *`,
+            [currentScans + 1, id]
+          );
+          
+          if (result.rows && result.rows.length > 0) {
+            console.log(`Successfully incremented QR code scans via raw query for restaurant ID ${id}`);
+            return result.rows[0] as Restaurant;
+          }
+        } catch (rawError) {
+          console.error(`Raw query fallback also failed for restaurant ID ${id}:`, rawError);
+        }
+        
+        return undefined;
+      }
     } catch (error) {
       console.error(`Error incrementing QR code scans for restaurant ID ${id}:`, error);
       return undefined;

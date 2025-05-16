@@ -1982,12 +1982,33 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           // Log details before incrementing
           console.log(`Attempting to increment QR scan count for restaurant ${restaurantId}`);
           
-          const result = await storage.incrementQRCodeScans(restaurantId);
-          
-          if (result) {
-            console.log(`QR code scan successfully recorded for restaurant ${restaurantId}. New count: ${result.qrCodeScans || 0}`);
+          // Get current restaurant to ensure we have the latest state
+          const currentRestaurant = await storage.getRestaurant(restaurantId);
+          if (!currentRestaurant) {
+            console.error(`Restaurant ${restaurantId} not found when incrementing QR code scan count`);
           } else {
-            console.error(`Failed to increment QR code scan count for restaurant ${restaurantId}`);
+            // Ensure QR code scans has a valid value
+            const currentScans = currentRestaurant.qrCodeScans || 0;
+            
+            const result = await storage.incrementQRCodeScans(restaurantId);
+            
+            if (result) {
+              console.log(`QR code scan successfully recorded for restaurant ${restaurantId}. New count: ${result.qrCodeScans || 0}`);
+            } else {
+              console.error(`Failed to increment QR code scan count for restaurant ${restaurantId}`);
+              
+              // Fallback update if the main increment method failed
+              try {
+                const updatedRestaurant = await storage.updateRestaurant(restaurantId, { 
+                  qrCodeScans: currentScans + 1 
+                });
+                if (updatedRestaurant) {
+                  console.log(`QR code scan recorded using fallback method. New count: ${updatedRestaurant.qrCodeScans || 0}`);
+                }
+              } catch (fallbackError) {
+                console.error(`Fallback QR code scan increment also failed: ${fallbackError}`);
+              }
+            }
           }
         } catch (qrError) {
           console.error(`Error incrementing QR code scan count: ${qrError}`);
@@ -2541,7 +2562,39 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       // If this is a QR code scan, increment the counter
       if (viewSource === 'qr') {
-        await storage.incrementQRCodeScans(restaurantId);
+        try {
+          // Get current restaurant to ensure we have the latest state
+          const currentRestaurant = await storage.getRestaurant(restaurantId);
+          if (!currentRestaurant) {
+            console.error(`Restaurant ${restaurantId} not found when incrementing QR code scan count`);
+          } else {
+            // Ensure QR code scans has a valid value
+            const currentScans = currentRestaurant.qrCodeScans || 0;
+            
+            const result = await storage.incrementQRCodeScans(restaurantId);
+            
+            if (result) {
+              console.log(`QR code scan successfully recorded for restaurant ${restaurantId}. New count: ${result.qrCodeScans || 0}`);
+            } else {
+              console.error(`Failed to increment QR code scan count for restaurant ${restaurantId}`);
+              
+              // Fallback update if the main increment method failed
+              try {
+                const updatedRestaurant = await storage.updateRestaurant(restaurantId, { 
+                  qrCodeScans: currentScans + 1 
+                });
+                if (updatedRestaurant) {
+                  console.log(`QR code scan recorded using fallback method. New count: ${updatedRestaurant.qrCodeScans || 0}`);
+                }
+              } catch (fallbackError) {
+                console.error(`Fallback QR code scan increment also failed: ${fallbackError}`);
+              }
+            }
+          }
+        } catch (qrError) {
+          console.error(`Error incrementing QR code scan count: ${qrError}`);
+          // Don't fail the whole request if just the QR counter fails
+        }
       }
       
       res.json({
