@@ -247,16 +247,83 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
             
             <div className="flex items-center gap-2">
               <Select value={ratingFilter} onValueChange={setRatingFilter}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue placeholder="Filter by rating" />
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Filter by rating">
+                    {ratingFilter !== 'all' && (
+                      <div className="flex items-center">
+                        <span className="mr-2">{ratingFilter}</span>
+                        <div className="flex">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star 
+                              key={i} 
+                              className={`h-3 w-3 ${i < parseInt(ratingFilter) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Ratings</SelectItem>
-                  <SelectItem value="5">5 Stars</SelectItem>
-                  <SelectItem value="4">4 Stars</SelectItem>
-                  <SelectItem value="3">3 Stars</SelectItem>
-                  <SelectItem value="2">2 Stars</SelectItem>
-                  <SelectItem value="1">1 Star</SelectItem>
+                  <SelectItem value="5">
+                    <div className="flex items-center">
+                      <span className="mr-2">5</span>
+                      <div className="flex">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="4">
+                    <div className="flex items-center">
+                      <span className="mr-2">4</span>
+                      <div className="flex">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                        <Star className="h-3 w-3 text-gray-300" />
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="3">
+                    <div className="flex items-center">
+                      <span className="mr-2">3</span>
+                      <div className="flex">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                        {Array.from({ length: 2 }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-gray-300" />
+                        ))}
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="2">
+                    <div className="flex items-center">
+                      <span className="mr-2">2</span>
+                      <div className="flex">
+                        {Array.from({ length: 2 }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        ))}
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-gray-300" />
+                        ))}
+                      </div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="1">
+                    <div className="flex items-center">
+                      <span className="mr-2">1</span>
+                      <div className="flex">
+                        <Star className="h-3 w-3 text-yellow-400 fill-yellow-400" />
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <Star key={i} className="h-3 w-3 text-gray-300" />
+                        ))}
+                      </div>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
               
