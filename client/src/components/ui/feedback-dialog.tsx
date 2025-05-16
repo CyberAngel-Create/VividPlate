@@ -79,13 +79,20 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button 
-          variant={variant} 
-          className={`${buttonPositionClass} ${buttonSizeClass} rounded-full`}
-        >
-          <MessageCircle className="mr-2 h-4 w-4" />
-          {t('feedback.sendFeedback', 'Send Feedback')}
-        </Button>
+        {position === 'bottom-right' ? (
+          <Button 
+            variant={variant} 
+            className={`${buttonPositionClass} ${buttonSizeClass} rounded-full`}
+          >
+            <MessageCircle className="mr-2 h-4 w-4" />
+            {t('feedback.sendFeedback', 'Send Feedback')}
+          </Button>
+        ) : (
+          <div className="text-blue-500 hover:text-blue-700 text-sm cursor-pointer flex items-center">
+            <MessageCircle className="h-4 w-4 mr-1" />
+            {t('menu.clickToLeaveFeedback', 'Click to leave feedback')}
+          </div>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
