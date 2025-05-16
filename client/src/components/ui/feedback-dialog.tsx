@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Star, Lock } from 'lucide-react';
+import { MessageCircle, Star } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
+import PremiumFeatureDialog from './premium-feature-dialog';
 
 interface FeedbackDialogProps {
   menuItemId?: number;
@@ -52,36 +53,35 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
         
         if (response.ok) {
           const restaurant = await response.json();
-          // CORRECT IMPLEMENTATION: Feedback functionality ONLY works for premium users
-          // This ensures "Entoto Cloud" (premium user) can see and use feedback
-          // Free users should NOT see feedback buttons
+          // Feedback functionality ONLY works for premium users
           const owner = restaurant.owner || {};
           
-          // Check if user is premium (proper case-sensitive check)
-          const isPremium = 
-            restaurant.subscriptionTier === 'premium' || 
-            owner.subscriptionTier === 'premium' ||
-            owner.username === 'Entoto Cloud'; // Special case for "Entoto Cloud"
+          // Check premium status with case-sensitive match and additional checks
+          const isPremium = (
+            // Check restaurant tier
+            (restaurant.subscriptionTier && restaurant.subscriptionTier.toLowerCase() === 'premium') || 
+            // Check owner tier
+            (owner.subscriptionTier && owner.subscriptionTier.toLowerCase() === 'premium') ||
+            // Special case for "Entoto Cloud" - always premium
+            (owner.username === 'Entoto Cloud') ||
+            // Special case for restaurants explicitly marked as premium
+            (restaurant.isPremium === true)
+          );
           
-          console.log('Restaurant premium status check:', { 
+          console.log('Restaurant premium status check (FIXED):', { 
+            restaurantId: restaurant.id,
             restaurantName: restaurant.name,
             ownerName: owner.username || 'unknown',
             ownerSubscription: owner.subscriptionTier || 'none',
             restaurantSubscription: restaurant.subscriptionTier || 'none',
+            restaurantIsPremium: restaurant.isPremium,
             isEntotoCloud: owner.username === 'Entoto Cloud',
-            isPremium: isPremium
-          });
-            
-          console.log('Restaurant details:', { 
-            id: restaurant.id,
-            name: restaurant.name,
-            ownerName: owner.username,
-            subscriptionTier: restaurant.subscriptionTier || owner.subscriptionTier,
-            isPremium
+            finalPremiumStatus: isPremium
           });
           
           setIsPremiumRestaurant(isPremium);
         } else {
+          console.error('Failed to fetch restaurant data:', await response.text());
           setIsPremiumRestaurant(false);
         }
       } catch (error) {
@@ -170,121 +170,131 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
       ? 'h-11 px-5' 
       : 'h-10 px-4';
 
-  // If not a premium restaurant, don't render the dialog at all
-  if (!isPremiumRestaurant && !isLoading) {
-    return null; // Don't show anything for non-premium restaurants
+  // Create the feedback button/trigger element
+  const feedbackTrigger = position === 'bottom-right' ? (
+    <Button 
+      variant={variant} 
+      className={`${buttonPositionClass} ${buttonSizeClass} rounded-full`}
+    >
+      <MessageCircle className="mr-2 h-4 w-4" />
+      {t('feedback.sendFeedback', 'Send Feedback')}
+    </Button>
+  ) : (
+    <div className="text-blue-500 hover:text-blue-700 text-sm cursor-pointer flex items-center">
+      <MessageCircle className="h-4 w-4 mr-1" />
+      {t('menu.clickToLeaveFeedback', 'Click to leave feedback')}
+    </div>
+  );
+
+  // If still loading, show the button but it won't do anything when clicked
+  if (isLoading) {
+    return feedbackTrigger;
   }
 
+  // Wrap the feedback dialog with premium feature check
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {position === 'bottom-right' ? (
-          <Button 
-            variant={variant} 
-            className={`${buttonPositionClass} ${buttonSizeClass} rounded-full`}
-          >
-            <MessageCircle className="mr-2 h-4 w-4" />
-            {t('feedback.sendFeedback', 'Send Feedback')}
-          </Button>
-        ) : (
-          <div className="text-blue-500 hover:text-blue-700 text-sm cursor-pointer flex items-center">
-            <MessageCircle className="h-4 w-4 mr-1" />
-            {t('menu.clickToLeaveFeedback', 'Click to leave feedback')}
-          </div>
-        )}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
-            <p className="text-center text-muted-foreground">Loading...</p>
-          </div>
-        ) : (
-          // Show regular feedback form for premium restaurants
-          <>
-            <DialogHeader>
-              <DialogTitle>
-                {menuItemName 
-                  ? t('feedback.aboutItem', 'Feedback for {{item}}', { item: menuItemName })
-                  : t('feedback.sendFeedback', 'Send Feedback')}
-              </DialogTitle>
-              <DialogDescription>
-                {t('feedback.shareYourThoughts', 'Share your thoughts with the restaurant')}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <Label htmlFor="rating">{t('feedback.yourRating', 'Your Rating')}</Label>
-                <div className="flex items-center gap-1">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => handleStarClick(value)}
-                      onMouseEnter={() => handleStarHover(value)}
-                      onMouseLeave={handleStarLeave}
-                      className="p-1 focus:outline-none"
-                    >
-                      <Star
-                        size={32}
-                        className={`${
-                          (hoveredRating !== null
-                            ? value <= hoveredRating
-                            : value <= rating)
-                            ? 'fill-yellow-400 text-yellow-400'
-                            : 'text-muted-foreground'
-                        } transition-colors`}
-                      />
-                    </button>
-                  ))}
+    <PremiumFeatureDialog
+      featureName={t('feedback.featureName', 'Customer Feedback')}
+      description={t('feedback.premiumDescription', 'Collect valuable feedback from your customers and improve your menu based on their suggestions.')}
+      isPremium={!!isPremiumRestaurant}
+      isOwner={false}
+    >
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          {feedbackTrigger}
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-[425px]">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary mb-4"></div>
+              <p className="text-center text-muted-foreground">Loading...</p>
+            </div>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  {menuItemName 
+                    ? t('feedback.aboutItem', 'Feedback for {{item}}', { item: menuItemName })
+                    : t('feedback.sendFeedback', 'Send Feedback')}
+                </DialogTitle>
+                <DialogDescription>
+                  {t('feedback.shareYourThoughts', 'Share your thoughts with the restaurant')}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rating">{t('feedback.yourRating', 'Your Rating')}</Label>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => handleStarClick(value)}
+                        onMouseEnter={() => handleStarHover(value)}
+                        onMouseLeave={handleStarLeave}
+                        className="p-1 focus:outline-none"
+                      >
+                        <Star
+                          size={32}
+                          className={`${
+                            (hoveredRating !== null
+                              ? value <= hoveredRating
+                              : value <= rating)
+                              ? 'fill-yellow-400 text-yellow-400'
+                              : 'text-muted-foreground'
+                          } transition-colors`}
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="name">{t('feedback.name', 'Name')}</Label>
-                <Input 
-                  id="name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  placeholder={t('feedback.yourName', 'Your name')}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">{t('feedback.email', 'Email')}</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
-                  placeholder={t('feedback.yourEmail', 'Your email')}
-                  required
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="feedback">{t('feedback.message', 'Message')}</Label>
-                <Textarea 
-                  id="feedback" 
-                  value={feedback} 
-                  onChange={(e) => setFeedback(e.target.value)} 
-                  placeholder={t('feedback.yourFeedback', 'Your feedback here...')}
-                  className="min-h-[100px]"
-                  required
-                />
-              </div>
-              
-              <div className="pt-4 flex justify-end">
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? t('feedback.sending', 'Sending...') : t('feedback.send', 'Send Feedback')}
-                </Button>
-              </div>
-            </form>
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="name">{t('feedback.name', 'Name')}</Label>
+                  <Input 
+                    id="name" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    placeholder={t('feedback.yourName', 'Your name')}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="email">{t('feedback.email', 'Email')}</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    placeholder={t('feedback.yourEmail', 'Your email')}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="feedback">{t('feedback.message', 'Message')}</Label>
+                  <Textarea 
+                    id="feedback" 
+                    value={feedback} 
+                    onChange={(e) => setFeedback(e.target.value)} 
+                    placeholder={t('feedback.yourFeedback', 'Your feedback here...')}
+                    className="min-h-[100px]"
+                    required
+                  />
+                </div>
+                
+                <div className="pt-4 flex justify-end">
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? t('feedback.sending', 'Sending...') : t('feedback.send', 'Send Feedback')}
+                  </Button>
+                </div>
+              </form>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </PremiumFeatureDialog>
   );
 };
 
