@@ -38,6 +38,7 @@ export const restaurants = pgTable("restaurants", {
   name: text("name").notNull(),
   description: text("description"),
   cuisine: text("cuisine"),
+  customCuisine: text("custom_cuisine"), // For storing custom cuisine when "Other" is selected
   logoUrl: text("logo_url"),
   bannerUrl: text("banner_url"), // Kept for backward compatibility
   bannerUrls: jsonb("banner_urls").default([]).notNull(), // Array of banner image URLs for slideshow

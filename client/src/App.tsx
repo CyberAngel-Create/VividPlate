@@ -119,6 +119,7 @@ function Router() {
         <AuthenticatedRoute path="/manage-uploads/:restaurantId" component={ManageUploads} />
         <AuthenticatedRoute path="/tutorial" component={Tutorial} />
         <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
+        <AuthenticatedRoute path="/subscribe/:planId" component={Subscribe} />
         <AuthenticatedRoute path="/subscribe" component={Subscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
 

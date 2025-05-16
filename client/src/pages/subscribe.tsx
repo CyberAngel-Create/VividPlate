@@ -101,15 +101,19 @@ export default function Subscribe() {
   const { toast } = useToast();
   const [location] = useLocation();
   
-  // Extract planId from URL query parameters
-  const queryParams = new URLSearchParams(location.split('?')[1]);
-  const planId = queryParams.get('planId');
+  // Extract planId from URL path parameters
+  const pathParts = location.split('/');
+  // Get the last part of the URL path which should be the planId
+  const planId = pathParts[pathParts.length - 1];
+  
+  // Check if planId is a number, if not it might be "/subscribe" without an ID
+  const isValidPlanId = /^\d+$/.test(planId);
 
   useEffect(() => {
     const fetchPlanAndSetupPayment = async () => {
-      if (!planId) {
+      if (!isValidPlanId) {
         // Redirect to pricing page instead of showing error
-        window.location.href = '/pricing';
+        window.location.href = '/subscription';
         return;
       }
 
