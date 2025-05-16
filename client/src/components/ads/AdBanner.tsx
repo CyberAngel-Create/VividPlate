@@ -57,19 +57,19 @@ const AdBanner: React.FC<AdBannerProps> = ({ format = 'horizontal', position, cl
     }
   }, [isPaid]);
 
-  // Determine ad dimensions based on format
+  // Determine ad dimensions based on format - made smaller as requested
   let adStyle: React.CSSProperties = {};
   let adClassNames = 'mx-auto overflow-hidden bg-gray-100 flex items-center justify-center text-sm text-gray-400 ';
   
   if (format === 'horizontal') {
-    adStyle = { minHeight: '90px' };
-    adClassNames += 'w-full h-[90px] ' + className;
+    adStyle = { minHeight: '60px' }; // Reduced from 90px to 60px
+    adClassNames += 'w-full h-[60px] ' + className;
   } else if (format === 'vertical') {
-    adStyle = { minWidth: '160px', minHeight: '600px' };
-    adClassNames += 'w-[160px] h-[600px] ' + className;
+    adStyle = { minWidth: '120px', minHeight: '400px' }; // Reduced from 160x600 to 120x400
+    adClassNames += 'w-[120px] h-[400px] ' + className;
   } else if (format === 'rectangle') {
-    adStyle = { minWidth: '300px', minHeight: '250px' };
-    adClassNames += 'w-[300px] h-[250px] ' + className;
+    adStyle = { minWidth: '250px', minHeight: '200px' }; // Reduced from 300x250 to 250x200
+    adClassNames += 'w-[250px] h-[200px] ' + className;
   }
 
   return (
