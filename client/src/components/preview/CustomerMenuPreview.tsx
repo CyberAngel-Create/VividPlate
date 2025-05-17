@@ -606,17 +606,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 </div>
                               )}
                               
-                              {/* Feedback button indicator - always visible for individual menu items */}
-                              {!previewMode && (
-                                <FeedbackDialog
-                                  menuItemId={item.id}
-                                  menuItemName={item.name}
-                                  restaurantId={restaurant.id}
-                                  position="inline"
-                                  variant="ghost"
-                                  size="sm"
-                                />
-                              )}
+                              {/* Completely remove feedback buttons from menu items for all users */}
                             </div>
                       </div>
                     </div>
