@@ -696,16 +696,21 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <p>{t('menu.endOfMenu', 'End of menu')}</p>
       </div>
       
-      {/* Feedback button at the bottom right - always show, but PremiumFeatureDialog will handle visibility */}
+      {/* Feedback button - only show for premium restaurants */}
       {mounted && restaurant && restaurant.id && !previewMode && (
-        <div className="relative">
-          <FeedbackDialog
-            restaurantId={restaurant.id}
-            position="bottom-right"
-            variant="default"
-            size="default"
-          />
-        </div>
+        (restaurant.isPremium === true || 
+         (restaurant.owner && restaurant.owner.username === 'Entoto Cloud') ||
+         (restaurant.owner && restaurant.owner.subscriptionTier === 'premium') ||
+         (restaurant.subscriptionTier === 'premium')) ? (
+          <div className="relative">
+            <FeedbackDialog
+              restaurantId={restaurant.id}
+              position="bottom-right"
+              variant="default"
+              size="default"
+            />
+          </div>
+        ) : null
       )}
     </div>
   );
