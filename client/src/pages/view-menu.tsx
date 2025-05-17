@@ -68,7 +68,9 @@ const ViewMenu = () => {
   };
   
   // Get source parameter from URL (e.g., qr or link)
-  const source = new URLSearchParams(window.location.search).get("source") || "link";
+  // Get source parameter from URL (e.g. ?source=qr), with strong default to "qr" if coming from a QR code scan
+  const sourceParam = new URLSearchParams(window.location.search).get("source");
+  const source = sourceParam || (window.location.search.includes("qr") ? "qr" : "link");
   console.log("Menu view source detected:", source);
   
   // First lookup restaurant ID by name using the dedicated API endpoint

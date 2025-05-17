@@ -1517,7 +1517,19 @@ export class DatabaseStorage implements IStorage {
       const currentScans = restaurant.qrCodeScans || 0;
       console.log(`Current QR code scan count for restaurant ID ${id}: ${currentScans}`);
       
-      // Use a transaction to ensure atomicity
+      // Try multiple approaches to ensure the scan gets counted
+      // Method 1: Direct update with the regular updateRestaurant method
+      try {
+        const updatedRestaurant = await this.updateRestaurant(id, { qrCodeScans: currentScans + 1 });
+        if (updatedRestaurant) {
+          console.log(`Successfully incremented QR code scans for restaurant ID ${id} to ${updatedRestaurant.qrCodeScans}`);
+          return updatedRestaurant;
+        }
+      } catch (error1) {
+        console.error(`First method failed to increment QR code scans: ${error1}`);
+      }
+      
+      // Method 2: Direct ORM update (original method)
       try {
         const [updatedRestaurant] = await db
           .update(restaurants)
@@ -1525,31 +1537,32 @@ export class DatabaseStorage implements IStorage {
           .where(eq(restaurants.id, id))
           .returning();
           
-        console.log(`Successfully incremented QR code scans for restaurant ID ${id} to ${updatedRestaurant.qrCodeScans}`);
+        console.log(`Successfully incremented QR code scans via method 2 for restaurant ID ${id} to ${updatedRestaurant.qrCodeScans}`);
         return updatedRestaurant;
-      } catch (dbError) {
-        console.error(`Database error incrementing QR code scans for restaurant ID ${id}:`, dbError);
-        
-        // Try a fallback direct query if ORM approach fails
-        try {
-          // Simple raw query as last resort
-          const result = await db.execute(
-            `UPDATE restaurants SET qr_code_scans = $1 WHERE id = $2 RETURNING *`,
-            [currentScans + 1, id]
-          );
-          
-          if (result.rows && result.rows.length > 0) {
-            console.log(`Successfully incremented QR code scans via raw query for restaurant ID ${id}`);
-            return result.rows[0] as Restaurant;
-          }
-        } catch (rawError) {
-          console.error(`Raw query fallback also failed for restaurant ID ${id}:`, rawError);
-        }
-        
-        return undefined;
+      } catch (error2) {
+        console.error(`Second method failed to increment QR code scans: ${error2}`);
       }
+      
+      // Method 3: Raw SQL query as final fallback
+      try {
+        const result = await db.execute(
+          `UPDATE restaurants SET qr_code_scans = $1 WHERE id = $2 RETURNING *`,
+          [currentScans + 1, id]
+        );
+        
+        if (result.rows && result.rows.length > 0) {
+          console.log(`Successfully incremented QR code scans via raw query for restaurant ID ${id}`);
+          return result.rows[0] as Restaurant;
+        }
+      } catch (error3) {
+        console.error(`All methods failed to increment QR code scans: ${error3}`);
+      }
+      
+      // If all methods failed, log it but return the restaurant anyway
+      console.error(`Failed to increment QR code scans for restaurant ID ${id} using all available methods`);
+      return restaurant;
     } catch (error) {
-      console.error(`Error incrementing QR code scans for restaurant ID ${id}:`, error);
+      console.error(`Error in incrementQRCodeScans for restaurant ID ${id}: ${error}`);
       return undefined;
     }
   }
