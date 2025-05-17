@@ -215,12 +215,17 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
     return feedbackTrigger;
   }
 
+  // If checkPremiumStatus is true and restaurant is not premium, don't render anything
+  if (checkPremiumStatus && !isPremium) {
+    return null;
+  }
+
   // Wrap the feedback dialog with premium feature check
   return (
     <PremiumFeatureDialog
       featureName={t('feedback.featureName', 'Customer Feedback')}
       description={t('feedback.premiumDescription', 'Collect valuable feedback from your customers and improve your menu based on their suggestions.')}
-      isPremium={!!isPremiumRestaurant}
+      isPremium={true} // Always show for premium users
       isOwner={false}
     >
       <Dialog open={isOpen} onOpenChange={setIsOpen}>

@@ -606,7 +606,17 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 </div>
                               )}
                               
-                              {/* Completely remove feedback buttons from menu items for all users */}
+                              {/* Only show feedback buttons for premium restaurants */}
+                              {restaurant.subscriptionTier === 'premium' && !previewMode && (
+                                <FeedbackDialog
+                                  menuItemId={item.id}
+                                  menuItemName={item.name}
+                                  restaurantId={restaurant.id}
+                                  position="inline"
+                                  variant="ghost"
+                                  size="sm"
+                                />
+                              )}
                             </div>
                       </div>
                     </div>

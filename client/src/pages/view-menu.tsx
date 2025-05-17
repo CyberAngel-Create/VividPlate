@@ -99,14 +99,39 @@ const ViewMenu = () => {
     }
   }, [restaurantName, setLocation]);
   
-  // Record menu view
+  // Record menu view and make sure QR code scans are counted properly
   useEffect(() => {
     if (restaurantId) {
       const recordView = async () => {
         try {
           console.log(`Recording view for restaurant ${restaurantId} from source ${source}`);
-          const response = await apiRequest("POST", `/api/restaurants/${restaurantId}/views`, { source });
+          
+          // First attempt - using the regular view endpoint
+          let response = await apiRequest("POST", `/api/restaurants/${restaurantId}/views`, { source });
           console.log("View recorded successfully:", response);
+          
+          // For QR code scans, make an additional separate request to ensure the counter increments
+          if (source === 'qr') {
+            console.log(`This is a QR code scan, making extra request to increment the counter`);
+            
+            // Additional dedicated request to increment QR code scans
+            try {
+              const qrResponse = await apiRequest("POST", `/api/restaurants/${restaurantId}/qr-scan`, { source: 'qr' });
+              console.log("QR scan counter incremented:", qrResponse);
+            } catch (qrError) {
+              console.error("Failed to increment QR scan counter, using fallback method");
+              
+              // One more fallback attempt
+              try {
+                const fallbackResponse = await apiRequest("PATCH", `/api/restaurants/${restaurantId}`, { 
+                  incrementQRScan: true 
+                });
+                console.log("QR scan counter incremented using fallback method:", fallbackResponse);
+              } catch (fallbackError) {
+                console.error("All QR scan counter methods failed:", fallbackError);
+              }
+            }
+          }
         } catch (error) {
           console.error("Failed to record menu view:", error);
         }
