@@ -19,6 +19,7 @@ interface FeedbackDialogProps {
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg';
   position?: 'bottom-right' | 'inline';
+  checkPremiumStatus?: boolean;
 }
 
 const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
@@ -27,12 +28,35 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
   restaurantId,
   variant = 'default',
   size = 'default',
-  position = 'bottom-right'
+  position = 'bottom-right',
+  checkPremiumStatus = false
 }) => {
   const { t } = useTranslation();
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [name, setName] = useState('');
+  
+  // Check if restaurant is premium
+  const [isPremium, setIsPremium] = useState(true);
+  
+  useEffect(() => {
+    // Only perform the check if checkPremiumStatus is true
+    if (checkPremiumStatus) {
+      const checkRestaurantStatus = async () => {
+        try {
+          const response = await apiRequest('GET', `/api/restaurants/${restaurantId}`);
+          const data = await response.json();
+          setIsPremium(data.subscriptionTier === 'premium');
+        } catch (error) {
+          console.error('Error checking restaurant premium status:', error);
+          // Default to showing the feedback button if there's an error
+          setIsPremium(true);
+        }
+      };
+      
+      checkRestaurantStatus();
+    }
+  }, [restaurantId, checkPremiumStatus]);
   const [email, setEmail] = useState('');
   const [feedback, setFeedback] = useState('');
   const [rating, setRating] = useState(0);

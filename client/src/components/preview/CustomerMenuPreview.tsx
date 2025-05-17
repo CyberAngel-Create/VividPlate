@@ -686,8 +686,18 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <p>{t('menu.endOfMenu', 'End of menu')}</p>
       </div>
       
-      {/* Completely hide feedback button for all menu views to ensure free users don't see it */}
-      {/* Feedback feature was removed as requested */}
+      {/* Feedback button - only show for premium restaurants */}
+      {mounted && restaurant && restaurant.id && !previewMode && (
+        <div className="relative">
+          <FeedbackDialog
+            restaurantId={restaurant.id}
+            position="bottom-right"
+            variant="default"
+            size="default"
+            checkPremiumStatus={true}
+          />
+        </div>
+      )}
     </div>
   );
 };
