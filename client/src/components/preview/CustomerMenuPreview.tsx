@@ -670,8 +670,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         </div>
       )}
       
-      {/* Scroll to top/bottom buttons */}
-      <div className="fixed bottom-6 right-6 flex flex-col gap-2 z-50">
+      {/* Scroll to top/bottom buttons - centered on the right side */}
+      <div className="fixed right-0 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-50 mr-2">
         <button 
           onClick={scrollToTop}
           className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors border border-gray-200"
@@ -696,22 +696,8 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <p>{t('menu.endOfMenu', 'End of menu')}</p>
       </div>
       
-      {/* Feedback button - only show for premium restaurants */}
-      {mounted && restaurant && restaurant.id && !previewMode && (
-        (restaurant.isPremium === true || 
-         (restaurant.owner && restaurant.owner.username === 'Entoto Cloud') ||
-         (restaurant.owner && restaurant.owner.subscriptionTier === 'premium') ||
-         (restaurant.subscriptionTier === 'premium')) ? (
-          <div className="relative">
-            <FeedbackDialog
-              restaurantId={restaurant.id}
-              position="bottom-right"
-              variant="default"
-              size="default"
-            />
-          </div>
-        ) : null
-      )}
+      {/* Completely hide feedback button for all menu views to ensure free users don't see it */}
+      {/* Feedback feature was removed as requested */}
     </div>
   );
 };
