@@ -1058,11 +1058,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(400).json({ message: 'No file uploaded' });
       }
       
-      console.log(`Logo uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
+      console.log(`Logo received: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
       const restaurantId = parseInt(req.params.restaurantId);
       
-      // Original file path
+      // Original file path in temporary local storage
       const originalFilePath = path.join(process.cwd(), 'uploads', req.file.filename);
       
       // Test file access immediately after upload to verify it exists
@@ -1071,40 +1071,67 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(500).json({ message: 'File not found after upload' });
       }
       
-      console.log(`Confirmed logo file exists at: ${originalFilePath}, now processing for optimization`);
+      console.log(`Preparing to upload logo to ImageKit for restaurant ID: ${restaurantId}`);
       
-      // Process and compress the image
-      let finalFilePath = originalFilePath;
-      let finalFileName = req.file.filename;
+      // Import ImageKit service
+      const imagekit = await import('./imagekit-config').then(m => m.default);
+      
+      let logoUrl;
       
       try {
-        // Process and compress the logo image to appropriate dimensions and quality
+        // First process the image locally to optimize size and dimensions
         const processedFilePath = await processLogoImage(originalFilePath);
+        const fileToUpload = fs.existsSync(processedFilePath) ? processedFilePath : originalFilePath;
         
-        // Check if processing was successful
-        if (fs.existsSync(processedFilePath)) {
-          // Get the processed file stats
-          const processedStats = fs.statSync(processedFilePath);
-          console.log(`Processed logo stats - Size: ${processedStats.size} bytes, Path: ${processedFilePath}`);
-          
-          // Update the filename and path to use the processed version
-          finalFilePath = processedFilePath;
-          finalFileName = path.basename(processedFilePath);
-          
-          // Delete the original file if it's different from the processed one
-          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
-            fs.unlinkSync(originalFilePath);
-            console.log(`Deleted original logo file after successful processing: ${originalFilePath}`);
-          }
+        // Read the file as buffer for ImageKit upload
+        const fileBuffer = fs.readFileSync(fileToUpload);
+        
+        // Upload to ImageKit
+        const uploadResponse = await imagekit.upload({
+          file: fileBuffer,
+          fileName: path.basename(req.file.originalname),
+          folder: `vividplate/logos`,
+          useUniqueFileName: true,
+          tags: ['logo', `restaurant-${restaurantId}`],
+        });
+        
+        logoUrl = uploadResponse.url;
+        console.log(`Logo successfully uploaded to ImageKit: ${logoUrl}`);
+        
+        // Clean up local files
+        if (fs.existsSync(originalFilePath)) {
+          fs.unlinkSync(originalFilePath);
         }
-      } catch (processingError) {
-        // Log error but continue with original file if processing fails
-        console.error(`Logo image processing failed, using original image: ${processingError}`);
+        if (processedFilePath !== originalFilePath && fs.existsSync(processedFilePath)) {
+          fs.unlinkSync(processedFilePath);
+        }
+      } catch (uploadError) {
+        console.error(`Error uploading to ImageKit, falling back to local storage:`, uploadError);
+        
+        // Fallback to local storage
+        let finalFilePath = originalFilePath;
+        let finalFileName = req.file.filename;
+        
+        try {
+          // Process and compress the logo image to appropriate dimensions and quality
+          const processedFilePath = await processLogoImage(originalFilePath);
+          
+          if (fs.existsSync(processedFilePath)) {
+            finalFilePath = processedFilePath;
+            finalFileName = path.basename(processedFilePath);
+            
+            if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+              fs.unlinkSync(originalFilePath);
+            }
+          }
+        } catch (processingError) {
+          console.error(`Logo image processing failed, using original image: ${processingError}`);
+        }
+        
+        // Use local URL as fallback
+        logoUrl = `/uploads/${finalFileName}`;
+        console.log(`Fallback to local storage: ${logoUrl}`);
       }
-      
-      // Set the correct logo URL to use (either original or processed)
-      const logoUrl = `/uploads/${finalFileName}`;
-      console.log(`Using logo URL: ${logoUrl}`);
       
       // Update restaurant with new logo URL
       const restaurant = await storage.getRestaurant(restaurantId);
@@ -1118,24 +1145,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
-      // Get final file stats for the response
-      const stats = fs.statSync(finalFilePath);
-      
       // Create a file upload record in the database
       const fileUpload = await storage.createFileUpload({
         userId,
         restaurantId,
         originalFilename: req.file.originalname,
-        storedFilename: finalFileName,
-        filePath: finalFilePath,
+        storedFilename: path.basename(logoUrl),
+        filePath: '',  // We don't need local path when using ImageKit
         fileUrl: logoUrl,
         fileType: req.file.mimetype,
-        fileSize: stats.size,
+        fileSize: req.file.size,
         status: 'active',
         fileCategory: 'logo',
         uploadedAt: new Date(),
         metadata: {
-          compressed: finalFilePath !== originalFilePath
+          provider: logoUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local',
+          optimized: true
         }
       });
       
@@ -1144,10 +1169,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         logoUrl, 
         success: true,
         fileDetails: {
-          name: finalFileName,
-          size: stats.size,
+          name: path.basename(logoUrl),
+          size: req.file.size,
           type: req.file.mimetype,
-          compressed: finalFilePath !== originalFilePath
+          provider: logoUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local'
         },
         fileUpload
       });
