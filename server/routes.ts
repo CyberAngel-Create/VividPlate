@@ -1895,21 +1895,27 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Get the restaurant ID for this menu item through the category
       const restaurantId = category ? category.restaurantId : null;
       
+      // Get final file stats for the response
+      const fileSize = imageUrl.includes('ik.imagekit.io') 
+        ? req.file.size  // Use original file size for ImageKit uploads
+        : fs.existsSync(finalFilePath) ? fs.statSync(finalFilePath).size : req.file.size;
+      
       // Create a file upload record in the database
       const fileUpload = await storage.createFileUpload({
         userId,
         restaurantId,
         originalFilename: req.file.originalname,
         storedFilename: finalFileName,
-        filePath: finalFilePath,
+        filePath: finalFilePath, // Empty path for ImageKit uploads
         fileUrl: imageUrl,
         fileType: req.file.mimetype,
-        fileSize: stats.size,
+        fileSize: fileSize,
         status: 'active',
         fileCategory: 'menu_item',
         uploadedAt: new Date(),
         metadata: {
-          compressed: finalFilePath !== originalFilePath,
+          provider: imageUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local',
+          compressed: true, // We always optimize images
           menuItemId: itemId,
           menuItemName: item.name
         }
@@ -1921,9 +1927,9 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         success: true,
         fileDetails: {
           name: finalFileName,
-          size: stats.size,
+          size: fileSize,
           type: req.file.mimetype,
-          compressed: finalFilePath !== originalFilePath
+          provider: imageUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local'
         },
         fileUpload
       });
