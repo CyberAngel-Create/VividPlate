@@ -25,34 +25,32 @@ export class ImageService {
         throw new Error(`File not found: ${processedPath}`);
       }
 
-      // Upload to Filen based on folder type
-      let filenUrl;
-      switch (folder) {
-        case 'menu-items':
-          filenUrl = await uploadMenuItemImage(processedPath);
-          break;
-        case 'logos':
-          filenUrl = await uploadLogoImage(processedPath);
-          break;
-        case 'banners':
-          filenUrl = await uploadBannerImage(processedPath);
-          break;
-        default:
-          throw new Error(`Invalid folder type: ${folder}`);
-      }
+      // Try uploading to Filen first
+      try {
+        const filenUrl = await uploadToFilen(processedPath, folder);
+        
+        // Clean up local files after successful Filen upload
+        if (fs.existsSync(processedPath)) {
+          fs.unlinkSync(processedPath);
+        }
+        if (filePath !== processedPath && fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
 
-      // Clean up all local files
-      if (fs.existsSync(processedPath)) {
-        fs.unlinkSync(processedPath);
+        return {
+          url: filenUrl,
+          storagePath: filenUrl
+        };
+      } catch (filenError) {
+        console.warn('Filen upload failed, falling back to local storage:', filenError);
+        
+        // Fallback to local storage
+        const localUrl = `/uploads/${path.basename(processedPath)}`;
+        return {
+          url: localUrl,
+          storagePath: localUrl
+        };
       }
-      if (filePath !== processedPath && fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-
-      return { 
-        url: filenUrl,
-        storagePath: filenUrl 
-      };
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;
