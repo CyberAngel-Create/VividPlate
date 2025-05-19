@@ -64,13 +64,18 @@ async function ensureFolderStructure(email: string, password: string) {
 // Upload a file to Filen
 async function uploadToFilen(localFilePath: string, folderType: 'menu-items' | 'logos' | 'banners') {
   try {
-    const client = getFilenClient();
+    const client = await initializeFilenClient();
     if (!client) {
       throw new Error('Filen client not initialized');
     }
     
     const fileName = path.basename(localFilePath);
     const parentPath = `/${FOLDERS.ROOT}/${folderType}`;
+    
+    // Ensure the file exists
+    if (!fs.existsSync(localFilePath)) {
+      throw new Error(`File not found: ${localFilePath}`);
+    }
     
     // Upload the file
     const uploadResult = await client.fs().upload({
