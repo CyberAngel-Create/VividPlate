@@ -25,19 +25,20 @@ export class ImageService {
         throw new Error(`File not found: ${processedPath}`);
       }
 
-      // Upload to Filen
-      const filenUrl = await uploadToFilen(processedPath, folder);
-      console.log('Successfully uploaded to Filen:', filenUrl);
-      
-      // Clean up local files after successful Filen upload
-      if (fs.existsSync(processedPath)) {
-        fs.unlinkSync(processedPath);
-        console.log('Cleaned up processed file:', processedPath);
-      }
-      if (filePath !== processedPath && fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-        console.log('Cleaned up original file:', filePath);
-      }
+      try {
+        // Upload to Filen
+        const filenUrl = await uploadToFilen(processedPath, folder);
+        console.log('Successfully uploaded to Filen:', filenUrl);
+        
+        // Clean up local files after successful Filen upload
+        if (fs.existsSync(processedPath)) {
+          fs.unlinkSync(processedPath);
+          console.log('Cleaned up processed file:', processedPath);
+        }
+        if (filePath !== processedPath && fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+          console.log('Cleaned up original file:', filePath);
+        }
 
         return {
           url: filenUrl,
