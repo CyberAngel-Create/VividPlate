@@ -17,8 +17,12 @@ export async function handleLogin(req: Request, res: Response, next: NextFunctio
       console.log(`- Username: ${user.username}, Email: ${user.email}`);
     });
     
-    // Find user in memory
-    const user = findUserByCredentials(identifier, password);
+    // Find user in memory with case-insensitive comparison
+    const user = testUsers.find(u => 
+      (u.username.toLowerCase() === identifier.toLowerCase() || 
+       u.email.toLowerCase() === identifier.toLowerCase()) && 
+      u.password === password
+    );
     
     if (!user) {
       console.log(`Authentication failed: No user found with identifier "${identifier}" and matching password`);
