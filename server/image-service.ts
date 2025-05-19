@@ -1,9 +1,17 @@
+
 import fs from 'fs';
 import path from 'path';
 import { Storage } from '@replit/storage';
 import { processImage, ResizeOptions } from './image-utils';
 
-const storage = new Storage();
+// Initialize storage with error handling
+let storage: Storage;
+try {
+  storage = new Storage();
+} catch (error) {
+  console.error('Failed to initialize Replit Storage:', error);
+  throw new Error('Storage initialization failed');
+}
 
 /**
  * Service to handle image uploads using Replit Storage
@@ -11,11 +19,6 @@ const storage = new Storage();
 export class ImageService {
   /**
    * Upload an image to Replit Storage
-   * @param filePath Path to the local file
-   * @param folder Folder to store the image in (e.g., 'menu-items', 'logos', 'banners') 
-   * @param fileName Optional custom filename
-   * @param options Optional resize options
-   * @returns Object with the file URL
    */
   static async uploadImage(
     filePath: string,
@@ -24,27 +27,41 @@ export class ImageService {
     options?: ResizeOptions
   ) {
     try {
-      // Process the image first (resize, compress) if options are provided
+      // Process the image first if options are provided
       const processedPath = options ? await processImage(filePath, options) : filePath;
 
-      // Read the file as a buffer
+      // Verify file exists
+      if (!fs.existsSync(processedPath)) {
+        throw new Error(`File not found: ${processedPath}`);
+      }
+
+      // Read the file as buffer
       const fileBuffer = fs.readFileSync(processedPath);
 
-      // Use the original filename if no custom name is provided
+      // Generate unique filename
       const originalFileName = fileName || path.basename(filePath);
       const uniqueFileName = `${Date.now()}-${originalFileName}`;
       const storagePath = `${folder}/${uniqueFileName}`;
 
-      // Upload to Replit Storage
-      await storage.set(storagePath, fileBuffer);
-      const url = await storage.getUrl(storagePath);
+      // Upload to Replit Storage with retry
+      let retries = 3;
+      while (retries > 0) {
+        try {
+          await storage.set(storagePath, fileBuffer);
+          const url = await storage.getUrl(storagePath);
+          
+          // Clean up processed file if different from original
+          if (processedPath !== filePath && fs.existsSync(processedPath)) {
+            fs.unlinkSync(processedPath);
+          }
 
-      // Clean up the processed file if it's different from the original
-      if (processedPath !== filePath && fs.existsSync(processedPath)) {
-        fs.unlinkSync(processedPath);
+          return { url, storagePath };
+        } catch (error) {
+          retries--;
+          if (retries === 0) throw error;
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
       }
-
-      return { url, storagePath };
     } catch (error) {
       console.error('Error uploading image to Replit Storage:', error);
       throw error;
@@ -97,6 +114,20 @@ export class ImageService {
     } catch (error) {
       console.error('Error deleting image from Replit Storage:', error);
       throw error;
+    }
+  }
+
+  static async checkStorageConnection(): Promise<boolean> {
+    try {
+      // Test storage by setting and getting a value
+      const testKey = 'storage-test';
+      await storage.set(testKey, 'test');
+      const value = await storage.get(testKey);
+      await storage.delete(testKey);
+      return value === 'test';
+    } catch (error) {
+      console.error('Storage connection test failed:', error);
+      return false;
     }
   }
 }
