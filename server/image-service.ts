@@ -26,29 +26,32 @@ export class ImageService {
       }
 
       // Upload to Filen based on folder type
-      let imageUrl;
+      let filenUrl;
       switch (folder) {
         case 'menu-items':
-          imageUrl = await uploadMenuItemImage(processedPath);
+          filenUrl = await uploadMenuItemImage(processedPath);
           break;
         case 'logos':
-          imageUrl = await uploadLogoImage(processedPath);
+          filenUrl = await uploadLogoImage(processedPath);
           break;
         case 'banners':
-          imageUrl = await uploadBannerImage(processedPath);
+          filenUrl = await uploadBannerImage(processedPath);
           break;
         default:
           throw new Error(`Invalid folder type: ${folder}`);
       }
 
-      // Clean up processed file if different from original
-      if (processedPath !== filePath && fs.existsSync(processedPath)) {
+      // Clean up all local files
+      if (fs.existsSync(processedPath)) {
         fs.unlinkSync(processedPath);
+      }
+      if (filePath !== processedPath && fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
       }
 
       return { 
-        url: imageUrl,
-        storagePath: imageUrl 
+        url: filenUrl,
+        storagePath: filenUrl 
       };
     } catch (error) {
       console.error('Error uploading image:', error);
