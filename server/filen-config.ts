@@ -1,5 +1,5 @@
 
-import { Filen } from '@filen/sdk';
+import { FilenSDK } from '@filen/sdk';
 
 // Filen configuration
 let filenClient: any = null;
@@ -7,7 +7,7 @@ let filenClient: any = null;
 export function initializeFilenClient(email: string, password: string): any {
   if (!filenClient) {
     try {
-      filenClient = new Filen({
+      filenClient = new FilenSDK({
         email,
         password,
         twoFactorCode: null
