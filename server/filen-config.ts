@@ -1,5 +1,5 @@
 
-import FilenSDK from '@filen/sdk';
+import { Client as FilenSDK } from '@filen/sdk';
 
 // Filen configuration
 let filenClient: any = null;
