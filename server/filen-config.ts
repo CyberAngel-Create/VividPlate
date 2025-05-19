@@ -14,12 +14,12 @@ export async function initializeFilenClient(email: string = 'michaellegesse.gh@g
         twoFactorCode: null
       });
       console.log('Filen client initialized successfully');
-    } catch (error) {
-      console.error('Error initializing Filen client:', error);
-      throw error;
     }
+    return filenClient;
+  } catch (error) {
+    console.error('Error initializing Filen client:', error);
+    throw error;
   }
-  return filenClient;
 }
 
 export function getFilenClient(): any {
