@@ -2640,6 +2640,79 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
   
+  // Dedicated endpoint for incrementing QR code scans
+  app.post('/api/restaurants/:restaurantId/qr-scan', async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      console.log(`DEDICATED QR SCAN ENDPOINT: Processing scan request for restaurant ID ${restaurantId}`);
+      
+      // Get the restaurant and current scan count
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (!restaurant) {
+        console.error(`DEDICATED QR SCAN ENDPOINT: Restaurant ${restaurantId} not found`);
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      // Get current scan count and log it
+      const currentScans = restaurant.qrCodeScans || 0;
+      console.log(`DEDICATED QR SCAN ENDPOINT: Current scan count for restaurant ${restaurantId}: ${currentScans}`);
+      
+      // Try different methods to increment the counter
+      let success = false;
+      
+      // Method 1: Use the dedicated incrementQRCodeScans method
+      try {
+        const result = await storage.incrementQRCodeScans(restaurantId);
+        if (result && typeof result.qrCodeScans === 'number') {
+          console.log(`DEDICATED QR SCAN ENDPOINT: Successfully incremented QR code scans to ${result.qrCodeScans}`);
+          success = true;
+          return res.status(200).json({ 
+            success: true, 
+            message: 'QR code scan recorded successfully', 
+            previousCount: currentScans,
+            newCount: result.qrCodeScans
+          });
+        }
+      } catch (method1Error) {
+        console.error(`DEDICATED QR SCAN ENDPOINT: Method 1 failed: ${method1Error}`);
+      }
+      
+      // Method 2: Direct update via raw SQL as a fallback
+      if (!success) {
+        try {
+          const { pool } = await import('./db');
+          const result = await pool.query(
+            'UPDATE restaurants SET qr_code_scans = $1 WHERE id = $2 RETURNING qr_code_scans',
+            [currentScans + 1, restaurantId]
+          );
+          
+          if (result.rows && result.rows.length > 0) {
+            const newCount = result.rows[0].qr_code_scans;
+            console.log(`DEDICATED QR SCAN ENDPOINT: Raw SQL update successful. New count: ${newCount}`);
+            return res.status(200).json({ 
+              success: true, 
+              message: 'QR code scan recorded successfully using raw SQL', 
+              previousCount: currentScans,
+              newCount: newCount
+            });
+          }
+        } catch (method2Error) {
+          console.error(`DEDICATED QR SCAN ENDPOINT: Method 2 failed: ${method2Error}`);
+        }
+      }
+      
+      // If all methods failed
+      console.error(`DEDICATED QR SCAN ENDPOINT: All increment methods failed for restaurant ${restaurantId}`);
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Failed to increment QR code scan count' 
+      });
+    } catch (error) {
+      console.error(`DEDICATED QR SCAN ENDPOINT: Unexpected error: ${error}`);
+      res.status(500).json({ message: 'Server error', details: String(error) });
+    }
+  });
+  
   // Admin routes
   app.get('/api/admin/restaurants', isAuthenticated, isAdmin, async (req, res) => {
     try {

@@ -114,22 +114,26 @@ const ViewMenu = () => {
           if (source === 'qr') {
             console.log(`This is a QR code scan, making extra request to increment the counter`);
             
-            // Additional dedicated request to increment QR code scans
+            // Use dedicated endpoint for QR code scan counting
             try {
-              const qrResponse = await apiRequest("POST", `/api/restaurants/${restaurantId}/qr-scan`, { source: 'qr' });
-              console.log("QR scan counter incremented:", qrResponse);
-            } catch (qrError) {
-              console.error("Failed to increment QR scan counter, using fallback method");
-              
-              // One more fallback attempt
-              try {
-                const fallbackResponse = await apiRequest("PATCH", `/api/restaurants/${restaurantId}`, { 
-                  incrementQRScan: true 
-                });
-                console.log("QR scan counter incremented using fallback method:", fallbackResponse);
-              } catch (fallbackError) {
-                console.error("All QR scan counter methods failed:", fallbackError);
+              // Make multiple attempts to ensure the scan gets counted
+              for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                  console.log(`QR scan counter increment attempt ${attempt}/3`);
+                  const qrResponse = await apiRequest("POST", `/api/restaurants/${restaurantId}/qr-scan`, { source: 'qr' });
+                  console.log(`QR scan counter incremented (attempt ${attempt}):`, qrResponse);
+                  break; // Success, exit the retry loop
+                } catch (retryError) {
+                  console.error(`QR scan counter increment attempt ${attempt} failed:`, retryError);
+                  if (attempt === 3) {
+                    throw retryError; // Re-throw after all attempts fail
+                  }
+                  // Wait before retry (exponential backoff)
+                  await new Promise(resolve => setTimeout(resolve, attempt * 500));
+                }
               }
+            } catch (qrError) {
+              console.error("All QR scan counter increment attempts failed:", qrError);
             }
           }
         } catch (error) {
