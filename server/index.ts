@@ -8,12 +8,13 @@ import path from 'path';
 // Initialize Filen client
 (async () => {
   try {
+    // Using environment variables for credentials
     await initializeFilenClient();
     console.log('Filen client initialized successfully');
-    // Create required folders
-    await ensureFolderStructure('michaellegesse.gh@gmail.com', '@Mike@Leg#1746');
+    // Skip folder creation since we're using local storage now
   } catch (error) {
     console.error('Failed to initialize Filen client:', error);
+    // This is okay - we're using local storage as primary
   }
 })();
 
