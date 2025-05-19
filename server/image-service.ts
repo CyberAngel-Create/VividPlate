@@ -1,17 +1,15 @@
+
 import fs from 'fs';
 import path from 'path';
+import { Upload } from '@aws-sdk/lib-storage';
 import { processImage, ResizeOptions } from './image-utils';
-import { uploadMenuItemImage, uploadLogoImage, uploadBannerImage } from './filen-service';
+import backblazeClient from './backblaze-config';
 
-/**
- * Service to handle image uploads using Filen
- */
-export class ImageService {
-  /**
-   * Upload an image using Filen
-   */
+const BUCKET_NAME = 'menumate-images';
+
+class ImageService {
   static async uploadImage(
-    filePath: string,
+    filePath: string, 
     folder: string,
     fileName?: string,
     options?: ResizeOptions
@@ -26,11 +24,24 @@ export class ImageService {
       }
 
       try {
-        // Upload to Filen
-        const filenUrl = await uploadToFilen(processedPath, folder);
-        console.log('Successfully uploaded to Filen:', filenUrl);
+        // Upload to Backblaze B2
+        const fileStream = fs.createReadStream(processedPath);
+        const key = `${folder}/${path.basename(processedPath)}`;
         
-        // Clean up local files after successful Filen upload
+        const upload = new Upload({
+          client: backblazeClient,
+          params: {
+            Bucket: BUCKET_NAME,
+            Key: key,
+            Body: fileStream,
+            ContentType: 'image/jpeg'
+          }
+        });
+
+        await upload.done();
+        const fileUrl = `https://s3.us-west-004.backblazeb2.com/${BUCKET_NAME}/${key}`;
+        
+        // Clean up local files after successful upload
         if (fs.existsSync(processedPath)) {
           fs.unlinkSync(processedPath);
           console.log('Cleaned up processed file:', processedPath);
@@ -41,11 +52,11 @@ export class ImageService {
         }
 
         return {
-          url: filenUrl,
-          storagePath: filenUrl
+          url: fileUrl,
+          storagePath: key
         };
-      } catch (filenError) {
-        console.warn('Filen upload failed, falling back to local storage:', filenError);
+      } catch (uploadError) {
+        console.warn('Backblaze upload failed, falling back to local storage:', uploadError);
         
         // Fallback to local storage
         const localUrl = `/uploads/${path.basename(processedPath)}`;
@@ -101,7 +112,16 @@ export class ImageService {
 
   static async deleteImage(storagePath: string) {
     try {
-      // For now, just return true as Filen doesn't provide direct delete API
+      if (storagePath.startsWith('http')) {
+        // Extract key from URL
+        const url = new URL(storagePath);
+        storagePath = url.pathname.split('/').slice(2).join('/');
+      }
+
+      await backblazeClient.send({
+        Bucket: BUCKET_NAME,
+        Key: storagePath
+      });
       return true;
     } catch (error) {
       console.error('Error deleting image:', error);
@@ -109,3 +129,5 @@ export class ImageService {
     }
   }
 }
+
+export default ImageService;
