@@ -1,6 +1,40 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeFilenClient } from './filen-config';
+import fs from 'fs';
+import path from 'path';
+
+// Initialize Filen client with credentials
+if (process.env.FILEN_EMAIL && process.env.FILEN_PASSWORD) {
+  try {
+    initializeFilenClient(process.env.FILEN_EMAIL, process.env.FILEN_PASSWORD);
+    console.log('Filen client initialized successfully');
+  } catch (error) {
+    console.error('Failed to initialize Filen client:', error);
+  }
+} else {
+  console.warn('FILEN_EMAIL or FILEN_PASSWORD environment variables are missing. Image uploads will use local storage.');
+}
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log(`Created uploads directory at ${uploadsDir}`);
+} else {
+  console.log(`Using existing uploads directory at ${uploadsDir}`);
+}
+
+// Test uploads directory is writable
+try {
+  const testFile = path.join(uploadsDir, `test-${Date.now()}.txt`);
+  fs.writeFileSync(testFile, 'Test write permission');
+  fs.unlinkSync(testFile);
+  console.log('Uploads directory is writable');
+} catch (error) {
+  console.error('ERROR: Uploads directory is not writable:', error);
+}
 
 const app = express();
 app.use(express.json());
