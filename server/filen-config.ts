@@ -5,8 +5,9 @@ import { FilenSDK } from '@filen/sdk';
 let filenClient: any = null;
 
 export async function initializeFilenClient(email: string = 'michaellegesse.gh@gmail.com', password: string = '@Mike@Leg#1746'): Promise<any> {
-  if (!filenClient) {
-    try {
+  try {
+    if (!filenClient) {
+      console.log('Initializing new Filen client...');
       filenClient = new FilenSDK({
         email,
         password,

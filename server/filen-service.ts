@@ -78,14 +78,18 @@ async function uploadToFilen(localFilePath: string, folderType: 'menu-items' | '
     }
     
     // Upload the file
-    const uploadResult = await client.fs().upload({
-      source: localFilePath,
+    console.log('Attempting to upload to Filen:', { localFilePath, parentPath, fileName });
+    
+const fileStream = fs.createReadStream(localFilePath);
+const uploadResult = await client.fs().upload({
+      source: fileStream,
       parent: parentPath,
       name: fileName,
       onProgress: (percentage: number) => {
         console.log(`Uploading to Filen: ${percentage.toFixed(2)}%`);
       }
     });
+console.log('Filen upload result:', uploadResult);
     
     // Share the file to get a public URL
     const shareResult = await client.fs().share({
