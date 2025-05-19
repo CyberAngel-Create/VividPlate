@@ -5,16 +5,12 @@ import { initializeFilenClient } from './filen-config';
 import fs from 'fs';
 import path from 'path';
 
-// Initialize Filen client with credentials
-if (process.env.FILEN_EMAIL && process.env.FILEN_PASSWORD) {
-  try {
-    initializeFilenClient(process.env.FILEN_EMAIL, process.env.FILEN_PASSWORD);
-    console.log('Filen client initialized successfully');
-  } catch (error) {
-    console.error('Failed to initialize Filen client:', error);
-  }
-} else {
-  console.warn('FILEN_EMAIL or FILEN_PASSWORD environment variables are missing. Image uploads will use local storage.');
+// Initialize Filen client
+try {
+  initializeFilenClient();
+  console.log('Filen client initialized successfully');
+} catch (error) {
+  console.error('Failed to initialize Filen client:', error);
 }
 
 // Ensure uploads directory exists
