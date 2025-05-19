@@ -1071,66 +1071,34 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(500).json({ message: 'File not found after upload' });
       }
       
-      console.log(`Preparing to upload logo to ImageKit for restaurant ID: ${restaurantId}`);
-      
-      // Import ImageKit service
-      const imagekit = await import('./imagekit-config').then(m => m.default);
+      console.log(`Processing logo for local storage for restaurant ID: ${restaurantId}`);
       
       let logoUrl;
+      let finalFilePath = originalFilePath;
+      let finalFileName = req.file.filename;
       
       try {
-        // First process the image locally to optimize size and dimensions
+        // Process and compress the logo image to appropriate dimensions and quality
         const processedFilePath = await processLogoImage(originalFilePath);
-        const fileToUpload = fs.existsSync(processedFilePath) ? processedFilePath : originalFilePath;
         
-        // Read the file as buffer for ImageKit upload
-        const fileBuffer = fs.readFileSync(fileToUpload);
-        
-        // Upload to ImageKit
-        const uploadResponse = await imagekit.upload({
-          file: fileBuffer,
-          fileName: path.basename(req.file.originalname),
-          folder: `vividplate/logos`,
-          useUniqueFileName: true,
-          tags: ['logo', `restaurant-${restaurantId}`],
-        });
-        
-        logoUrl = uploadResponse.url;
-        console.log(`Logo successfully uploaded to ImageKit: ${logoUrl}`);
-        
-        // Clean up local files
-        if (fs.existsSync(originalFilePath)) {
-          fs.unlinkSync(originalFilePath);
-        }
-        if (processedFilePath !== originalFilePath && fs.existsSync(processedFilePath)) {
-          fs.unlinkSync(processedFilePath);
-        }
-      } catch (uploadError) {
-        console.error(`Error uploading to ImageKit, falling back to local storage:`, uploadError);
-        
-        // Fallback to local storage
-        let finalFilePath = originalFilePath;
-        let finalFileName = req.file.filename;
-        
-        try {
-          // Process and compress the logo image to appropriate dimensions and quality
-          const processedFilePath = await processLogoImage(originalFilePath);
+        if (fs.existsSync(processedFilePath)) {
+          finalFilePath = processedFilePath;
+          finalFileName = path.basename(processedFilePath);
           
-          if (fs.existsSync(processedFilePath)) {
-            finalFilePath = processedFilePath;
-            finalFileName = path.basename(processedFilePath);
-            
-            if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
-              fs.unlinkSync(originalFilePath);
-            }
+          // Delete the original file if it's different from the processed one
+          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+            fs.unlinkSync(originalFilePath);
+            console.log(`Deleted original file after successful processing: ${originalFilePath}`);
           }
-        } catch (processingError) {
-          console.error(`Logo image processing failed, using original image: ${processingError}`);
         }
         
-        // Use local URL as fallback
+        // Use local URL for the logo
         logoUrl = `/uploads/${finalFileName}`;
-        console.log(`Fallback to local storage: ${logoUrl}`);
+        console.log(`Processed and stored logo locally: ${logoUrl}`);
+      } catch (processingError) {
+        // If processing fails, use the original file
+        console.error(`Logo image processing failed, using original image: ${processingError}`);
+        logoUrl = `/uploads/${req.file.filename}`;
       }
       
       // Update restaurant with new logo URL
@@ -1725,39 +1693,30 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       let finalFileName = req.file.filename;
       
       try {
-        // Try to upload to ImageKit first
-        imageUrl = await ImageService.uploadMenuItemImage(originalFilePath);
-        console.log(`Successfully uploaded general menu item image to ImageKit: ${imageUrl}`);
+        // Process the image locally for optimization
+        const processedFilePath = await processMenuItemImage(originalFilePath);
+        imageUrl = `/uploads/${path.basename(processedFilePath)}`;
+        finalFilePath = processedFilePath;
+        finalFileName = path.basename(processedFilePath);
+        console.log(`Processed and stored image locally: ${imageUrl}`);
         
-        // ImageKit handles the file now, so we don't need to track local paths
-        finalFilePath = "";
-        finalFileName = path.basename(imageUrl);
-      } catch (uploadError) {
-        // If ImageKit upload fails, fall back to local processing and storage
-        console.error(`Error uploading to ImageKit, falling back to local storage:`, uploadError);
-        
-        try {
-          // Process the image locally as a fallback
-          const result = await processImageLocally(originalFilePath, processMenuItemImage);
-          imageUrl = result.url;
-          finalFilePath = result.filePath;
-          finalFileName = path.basename(finalFilePath);
-          console.log(`Using local storage fallback: ${imageUrl}`);
-        } catch (processingError) {
-          // If even local processing fails, use the original file
-          console.error(`Image processing failed, using original image: ${processingError}`);
-          imageUrl = `/uploads/${req.file.filename}`;
-          finalFilePath = originalFilePath;
-          finalFileName = req.file.filename;
+        // Delete the original file if it's different from the processed one
+        if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+          fs.unlinkSync(originalFilePath);
+          console.log(`Deleted original file after successful processing: ${originalFilePath}`);
         }
+      } catch (processingError) {
+        // If processing fails, use the original file
+        console.error(`Image processing failed, using original image: ${processingError}`);
+        imageUrl = `/uploads/${req.file.filename}`;
+        finalFilePath = originalFilePath;
+        finalFileName = req.file.filename;
       }
       
       console.log(`Using image URL: ${imageUrl}`);
       
       // Get final file stats for the response
-      const fileSize = imageUrl.includes('ik.imagekit.io') 
-        ? req.file.size  // Use original file size for ImageKit uploads
-        : fs.existsSync(finalFilePath) ? fs.statSync(finalFilePath).size : req.file.size;
+      const fileSize = fs.existsSync(finalFilePath) ? fs.statSync(finalFilePath).size : req.file.size;
       
       // Create a file upload record in the database
       const fileUpload = await storage.createFileUpload({
@@ -1765,7 +1724,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         restaurantId: null, // Will be assigned when the menu item is created
         originalFilename: req.file.originalname,
         storedFilename: finalFileName,
-        filePath: finalFilePath, // Empty path for ImageKit uploads
+        filePath: finalFilePath,
         fileUrl: imageUrl,
         fileType: req.file.mimetype,
         fileSize: fileSize,
@@ -1773,7 +1732,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         fileCategory: 'menu_item',
         uploadedAt: new Date(),
         metadata: {
-          provider: imageUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local',
+          provider: 'local',
           compressed: true // We always optimize images
         }
       });
@@ -1847,41 +1806,34 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(500).json({ message: 'File not found after upload' });
       }
       
-      console.log(`Confirmed file exists at: ${originalFilePath}, now preparing for upload to ImageKit`);
+      console.log(`Confirmed file exists at: ${originalFilePath}, now processing for local storage`);
       
-      // Import our ImageKit integration
-      const { uploadMenuItemImageToImageKit, processImageLocally } = await import('./imagekit-integration');
+      // Import our image processing util
+      const { processMenuItemImage } = await import('./image-utils');
       
       let imageUrl;
       let finalFilePath = originalFilePath;
       let finalFileName = req.file.filename;
       
       try {
-        // Try to upload to ImageKit first
-        imageUrl = await uploadMenuItemImageToImageKit(originalFilePath, itemId, category.restaurantId);
-        console.log(`Successfully uploaded menu item image to ImageKit: ${imageUrl}`);
+        // Process the image locally for optimization
+        const processedFilePath = await processMenuItemImage(originalFilePath);
+        imageUrl = `/uploads/${path.basename(processedFilePath)}`;
+        finalFilePath = processedFilePath;
+        finalFileName = path.basename(processedFilePath);
+        console.log(`Processed and stored image locally: ${imageUrl}`);
         
-        // ImageKit handles the file now, so we don't need to track local paths
-        finalFilePath = "";
-        finalFileName = path.basename(imageUrl);
-      } catch (uploadError) {
-        // If ImageKit upload fails, fall back to local processing and storage
-        console.error(`Error uploading to ImageKit, falling back to local storage:`, uploadError);
-        
-        try {
-          // Process the image locally as a fallback
-          const result = await processImageLocally(originalFilePath, processMenuItemImage);
-          imageUrl = result.url;
-          finalFilePath = result.filePath;
-          finalFileName = path.basename(finalFilePath);
-          console.log(`Using local storage fallback: ${imageUrl}`);
-        } catch (processingError) {
-          // If even local processing fails, use the original file
-          console.error(`Image processing failed, using original image: ${processingError}`);
-          imageUrl = `/uploads/${req.file.filename}`;
-          finalFilePath = originalFilePath;
-          finalFileName = req.file.filename;
+        // Delete the original file if it's different from the processed one
+        if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+          fs.unlinkSync(originalFilePath);
+          console.log(`Deleted original file after successful processing: ${originalFilePath}`);
         }
+      } catch (processingError) {
+        // If processing fails, use the original file
+        console.error(`Image processing failed, using original image: ${processingError}`);
+        imageUrl = `/uploads/${req.file.filename}`;
+        finalFilePath = originalFilePath;
+        finalFileName = req.file.filename;
       }
       
       console.log(`Using image URL: ${imageUrl}`);
