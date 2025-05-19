@@ -535,7 +535,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     passport.authenticate('local', (err, user, info) => {
       if (err) {
         console.error('Login error:', err);
-        return res.status(500).json({ message: 'Internal server error during login' });
+        // Check for specific database connection errors
+        if (err.code === 'XX000' && err.message.includes('Control plane request failed')) {
+          return res.status(503).json({ 
+            message: 'Database connection error. Please try again in a few moments.',
+            error: 'DB_CONNECTION_ERROR'
+          });
+        }
+        return res.status(500).json({ 
+          message: 'Internal server error during login',
+          error: err.message 
+        });
       }
       
       if (!user) {
