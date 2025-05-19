@@ -10,11 +10,18 @@ export async function handleLogin(req: Request, res: Response, next: NextFunctio
     const { identifier, password } = req.body;
     console.log(`Login attempt for: ${identifier}`);
     
+    // List all available test users for debugging
+    console.log('Available test users:');
+    const { testUsers } = await import('./mem-auth');
+    testUsers.forEach(user => {
+      console.log(`- Username: ${user.username}, Email: ${user.email}`);
+    });
+    
     // Find user in memory
     const user = findUserByCredentials(identifier, password);
     
     if (!user) {
-      console.log('Authentication failed: User not found or password mismatch');
+      console.log(`Authentication failed: No user found with identifier "${identifier}" and matching password`);
       return res.status(401).json({ message: 'Invalid username/email or password' });
     }
     

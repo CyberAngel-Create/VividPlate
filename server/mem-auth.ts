@@ -39,7 +39,7 @@ export const testUsers: MemUser[] = [
   },
   { 
     id: 3, 
-    username: 'Entoto Cloud', 
+    username: 'entotocloud', 
     password: 'cloud123',
     email: 'entoto@example.com',
     fullName: 'Entoto Cloud',
