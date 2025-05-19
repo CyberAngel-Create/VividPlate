@@ -545,96 +545,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/login', (req, res, next) => {
-    // Try memory-based auth first with hardcoded credentials
-    const { identifier, password } = req.body;
-    
-    console.log(`Attempting memory login for: ${identifier}`);
-    
-    // Hardcoded test accounts
-    const testUsers = [
-      { 
-        id: 1, 
-        username: 'admin', 
-        password: 'admin1234',
-        email: 'admin@example.com',
-        fullName: 'Admin User',
-        isAdmin: true,
-        subscriptionTier: 'admin',
-        isActive: true,
-        createdAt: new Date()
-      },
-      { 
-        id: 2, 
-        username: 'restaurant1', 
-        password: 'password123',
-        email: 'restaurant1@example.com',
-        fullName: 'Restaurant Owner',
-        isAdmin: false,
-        subscriptionTier: 'free',
-        isActive: true,
-        createdAt: new Date()
-      },
-      { 
-        id: 3, 
-        username: 'Entoto Cloud', 
-        password: 'cloud123',
-        email: 'entoto@example.com',
-        fullName: 'Entoto Cloud',
-        isAdmin: false,
-        subscriptionTier: 'premium',
-        isActive: true,
-        createdAt: new Date()
-      }
-    ];
-    
-    // Check for exact match in test users
-    const testUser = testUsers.find(u => 
-      (u.username === identifier || u.email === identifier) && 
-      u.password === password
-    );
-    
-    if (testUser) {
-      console.log('Direct memory authentication successful for:', testUser.username);
-      
-      req.login(testUser, (loginErr) => {
-        if (loginErr) {
-          console.error('Session error during login:', loginErr);
-          return res.status(500).json({ message: 'Error establishing session' });
-        }
-        
-        console.log(`User ${testUser.username} (ID: ${testUser.id}) logged in successfully`);
-        const { password, ...userWithoutPassword } = testUser;
-        return res.json(userWithoutPassword);
-      });
-      return;
-    }
-    
-    // Fallback to regular passport authentication if no direct match
-    passport.authenticate('local', (err, user, info) => {
-      if (err) {
-        console.error('Login error:', err);
-        return res.status(500).json({ 
-          message: 'Authentication error. Please try again later.'
-        });
-      }
-      
-      if (!user) {
-        console.log('Authentication failed:', info?.message);
-        return res.status(401).json({ message: info?.message || 'Invalid credentials' });
-      }
-      
-      req.login(user, (loginErr) => {
-        if (loginErr) {
-          console.error('Session error during login:', loginErr);
-          return res.status(500).json({ message: 'Error establishing session' });
-        }
-        
-        console.log(`User ${user.username} logged in successfully`);
-        const { password, ...userWithoutPassword } = user;
-        return res.json(userWithoutPassword);
-      });
-    })(req, res, next);
+  app.post('/api/auth/login', async (req, res, next) => {
+    // Import our fixed memory-based authentication handler
+    const { handleLogin } = await import('./fixed-login');
+    return handleLogin(req, res, next);
   });
   
   // Admin login endpoint
