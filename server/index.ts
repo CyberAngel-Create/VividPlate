@@ -95,15 +95,44 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  // Try to start server with retries and port fallback
+  const startServer = async (initialPort = 5000) => {
+    let port = initialPort;
+    const maxRetries = 3;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        await new Promise((resolve, reject) => {
+          server.listen({
+            port,
+            host: "0.0.0.0",
+            reusePort: true,
+          }, () => {
+            log(`serving on port ${port}`);
+            resolve(true);
+          }).on('error', (err: any) => {
+            if (err.code === 'EADDRINUSE') {
+              port++;
+              reject(err);
+            } else {
+              reject(err);
+            }
+          });
+        });
+        break; // If successful, exit loop
+      } catch (err) {
+        if (attempt === maxRetries - 1) {
+          throw err; // If all retries failed, throw error
+        }
+        log(`Port ${port-1} in use, trying ${port}...`);
+      }
+    }
+  };
+
+  try {
+    await startServer();
+  } catch (err) {
+    log(`Failed to start server: ${err.message}`);
+    process.exit(1);
+  }
 })();
