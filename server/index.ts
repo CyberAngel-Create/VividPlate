@@ -6,12 +6,16 @@ import fs from 'fs';
 import path from 'path';
 
 // Initialize Filen client
-try {
-  initializeFilenClient();
-  console.log('Filen client initialized successfully');
-} catch (error) {
-  console.error('Failed to initialize Filen client:', error);
-}
+(async () => {
+  try {
+    await initializeFilenClient();
+    console.log('Filen client initialized successfully');
+    // Create required folders
+    await ensureFolderStructure('michaellegesse.gh@gmail.com', '@Mike@Leg#1746');
+  } catch (error) {
+    console.error('Failed to initialize Filen client:', error);
+  }
+})();
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), 'uploads');
