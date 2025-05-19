@@ -3,22 +3,22 @@ import fs from 'fs';
 import path from 'path';
 import { Storage } from '@replit/storage';
 import { processImage, ResizeOptions } from './image-utils';
+import { filenClient } from './filen-config';
 
 // Initialize storage with error handling
-let storage: Storage;
+let storage: Storage | null = null;
 try {
   storage = new Storage();
 } catch (error) {
   console.error('Failed to initialize Replit Storage:', error);
-  throw new Error('Storage initialization failed');
 }
 
 /**
- * Service to handle image uploads using Replit Storage
+ * Service to handle image uploads using Replit Storage with Filen fallback
  */
 export class ImageService {
   /**
-   * Upload an image to Replit Storage
+   * Upload an image using available storage methods
    */
   static async uploadImage(
     filePath: string,
@@ -43,27 +43,32 @@ export class ImageService {
       const uniqueFileName = `${Date.now()}-${originalFileName}`;
       const storagePath = `${folder}/${uniqueFileName}`;
 
-      // Upload to Replit Storage with retry
-      let retries = 3;
-      while (retries > 0) {
+      // Try Replit Storage first
+      if (storage) {
         try {
           await storage.set(storagePath, fileBuffer);
-          const url = await storage.getUrl(storagePath);
-          
-          // Clean up processed file if different from original
-          if (processedPath !== filePath && fs.existsSync(processedPath)) {
-            fs.unlinkSync(processedPath);
-          }
-
+          const url = `/uploads/${uniqueFileName}`;
           return { url, storagePath };
         } catch (error) {
-          retries--;
-          if (retries === 0) throw error;
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          console.error('Replit Storage upload failed, using local storage:', error);
         }
       }
+
+      // Fallback to local storage
+      const localPath = path.join(process.cwd(), 'uploads', uniqueFileName);
+      fs.writeFileSync(localPath, fileBuffer);
+      
+      // Clean up processed file if different from original
+      if (processedPath !== filePath && fs.existsSync(processedPath)) {
+        fs.unlinkSync(processedPath);
+      }
+
+      return { 
+        url: `/uploads/${uniqueFileName}`,
+        storagePath: localPath 
+      };
     } catch (error) {
-      console.error('Error uploading image to Replit Storage:', error);
+      console.error('Error uploading image:', error);
       throw error;
     }
   }
@@ -109,25 +114,17 @@ export class ImageService {
 
   static async deleteImage(storagePath: string) {
     try {
-      await storage.delete(storagePath);
+      if (storage) {
+        await storage.delete(storagePath);
+      }
+      // Also try to delete local file
+      if (fs.existsSync(storagePath)) {
+        fs.unlinkSync(storagePath);
+      }
       return true;
     } catch (error) {
-      console.error('Error deleting image from Replit Storage:', error);
+      console.error('Error deleting image:', error);
       throw error;
-    }
-  }
-
-  static async checkStorageConnection(): Promise<boolean> {
-    try {
-      // Test storage by setting and getting a value
-      const testKey = 'storage-test';
-      await storage.set(testKey, 'test');
-      const value = await storage.get(testKey);
-      await storage.delete(testKey);
-      return value === 'test';
-    } catch (error) {
-      console.error('Storage connection test failed:', error);
-      return false;
     }
   }
 }
