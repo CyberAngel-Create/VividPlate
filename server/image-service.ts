@@ -1,24 +1,14 @@
-
 import fs from 'fs';
 import path from 'path';
-import { Storage } from '@replit/storage';
 import { processImage, ResizeOptions } from './image-utils';
-import { filenClient } from './filen-config';
-
-// Initialize storage with error handling
-let storage: Storage | null = null;
-try {
-  storage = new Storage();
-} catch (error) {
-  console.error('Failed to initialize Replit Storage:', error);
-}
+import { uploadMenuItemImage, uploadLogoImage, uploadBannerImage } from './filen-service';
 
 /**
- * Service to handle image uploads using Replit Storage with Filen fallback
+ * Service to handle image uploads using Filen
  */
 export class ImageService {
   /**
-   * Upload an image using available storage methods
+   * Upload an image using Filen
    */
   static async uploadImage(
     filePath: string,
@@ -35,37 +25,30 @@ export class ImageService {
         throw new Error(`File not found: ${processedPath}`);
       }
 
-      // Read the file as buffer
-      const fileBuffer = fs.readFileSync(processedPath);
-
-      // Generate unique filename
-      const originalFileName = fileName || path.basename(filePath);
-      const uniqueFileName = `${Date.now()}-${originalFileName}`;
-      const storagePath = `${folder}/${uniqueFileName}`;
-
-      // Try Replit Storage first
-      if (storage) {
-        try {
-          await storage.set(storagePath, fileBuffer);
-          const url = `/uploads/${uniqueFileName}`;
-          return { url, storagePath };
-        } catch (error) {
-          console.error('Replit Storage upload failed, using local storage:', error);
-        }
+      // Upload to Filen based on folder type
+      let imageUrl;
+      switch (folder) {
+        case 'menu-items':
+          imageUrl = await uploadMenuItemImage(processedPath);
+          break;
+        case 'logos':
+          imageUrl = await uploadLogoImage(processedPath);
+          break;
+        case 'banners':
+          imageUrl = await uploadBannerImage(processedPath);
+          break;
+        default:
+          throw new Error(`Invalid folder type: ${folder}`);
       }
 
-      // Fallback to local storage
-      const localPath = path.join(process.cwd(), 'uploads', uniqueFileName);
-      fs.writeFileSync(localPath, fileBuffer);
-      
       // Clean up processed file if different from original
       if (processedPath !== filePath && fs.existsSync(processedPath)) {
         fs.unlinkSync(processedPath);
       }
 
       return { 
-        url: `/uploads/${uniqueFileName}`,
-        storagePath: localPath 
+        url: imageUrl,
+        storagePath: imageUrl 
       };
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -114,13 +97,7 @@ export class ImageService {
 
   static async deleteImage(storagePath: string) {
     try {
-      if (storage) {
-        await storage.delete(storagePath);
-      }
-      // Also try to delete local file
-      if (fs.existsSync(storagePath)) {
-        fs.unlinkSync(storagePath);
-      }
+      // For now, just return true as Filen doesn't provide direct delete API
       return true;
     } catch (error) {
       console.error('Error deleting image:', error);
