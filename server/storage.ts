@@ -38,19 +38,19 @@ export interface IStorage {
   getRecentUsers(limit: number): Promise<User[]>;
   toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
   upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
-  
+
   // Admin operations
   createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
   getAdminLogs(limit?: number): Promise<AdminLog[]>;
   getAdminLogsByAdminId(adminId: number, limit?: number): Promise<AdminLog[]>;
-  
+
   // Pricing plan operations
   getAllPricingPlans(): Promise<PricingPlan[]>;
   getPricingPlan(id: number): Promise<PricingPlan | undefined>;
   createPricingPlan(plan: InsertPricingPlan): Promise<PricingPlan>;
   updatePricingPlan(id: number, plan: Partial<PricingPlan>): Promise<PricingPlan | undefined>;
   deletePricingPlan(id: number): Promise<boolean>;
-  
+
   // Contact info operations
   getContactInfo(): Promise<ContactInfo | undefined>;
   updateContactInfo(info: Partial<ContactInfo>): Promise<ContactInfo>;
@@ -62,14 +62,14 @@ export interface IStorage {
   updateRestaurant(id: number, restaurant: Partial<InsertRestaurant>): Promise<Restaurant | undefined>;
   countRestaurantsByUserId(userId: number): Promise<number>;
   getAllRestaurants(): Promise<Restaurant[]>;
-  
+
   // Menu category operations
   getMenuCategory(id: number): Promise<MenuCategory | undefined>;
   getMenuCategoriesByRestaurantId(restaurantId: number): Promise<MenuCategory[]>;
   createMenuCategory(category: InsertMenuCategory): Promise<MenuCategory>;
   updateMenuCategory(id: number, category: Partial<InsertMenuCategory>): Promise<MenuCategory | undefined>;
   deleteMenuCategory(id: number): Promise<boolean>;
-  
+
   // Menu item operations
   getMenuItem(id: number): Promise<MenuItem | undefined>;
   getMenuItemsByCategoryId(categoryId: number): Promise<MenuItem[]>;
@@ -77,13 +77,13 @@ export interface IStorage {
   createMenuItem(item: InsertMenuItem): Promise<MenuItem>;
   updateMenuItem(id: number, item: Partial<InsertMenuItem>): Promise<MenuItem | undefined>;
   deleteMenuItem(id: number): Promise<boolean>;
-  
+
   // Menu view operations
   getMenuViewsByRestaurantId(restaurantId: number): Promise<MenuView[]>;
   countMenuViewsByRestaurantId(restaurantId: number): Promise<number>;
   countMenuViewsInDateRange(startDate: Date, endDate: Date): Promise<number>;
   createMenuView(view: InsertMenuView): Promise<MenuView>;
-  
+
   // Registration analytics operations
   createRegistrationAnalytics(analytics: InsertRegistrationAnalytics): Promise<RegistrationAnalytics>;
   getRegistrationAnalyticsByUserId(userId: number): Promise<RegistrationAnalytics | undefined>;
@@ -93,21 +93,21 @@ export interface IStorage {
   // Stats operations
   getMenuItemCountByRestaurantId(restaurantId: number): Promise<number>;
   getQrScanCountByRestaurantId(restaurantId: number): Promise<number>;
-  
+
   // Subscription operations
   getSubscription(id: number): Promise<Subscription | undefined>;
   getActiveSubscriptionByUserId(userId: number): Promise<Subscription | undefined>;
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   updateSubscription(id: number, subscription: Partial<Subscription>): Promise<Subscription | undefined>;
   getAllSubscriptions(): Promise<Subscription[]>;
-  
+
   // Payment operations
   getPayment(id: number): Promise<Payment | undefined>;
   getPaymentsByUserId(userId: number): Promise<Payment[]>;
   getPaymentsBySubscriptionId(subscriptionId: number): Promise<Payment[]>;
   createPayment(payment: InsertPayment): Promise<Payment>;
   updatePayment(id: number, payment: Partial<Payment>): Promise<Payment | undefined>;
-  
+
   // Feedback operations
   getFeedback(id: number): Promise<Feedback | undefined>;
   getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]>;
@@ -116,7 +116,7 @@ export interface IStorage {
   updateFeedback(id: number, feedback: Partial<Feedback>): Promise<Feedback | undefined>;
   approveFeedback(id: number): Promise<Feedback | undefined>;
   rejectFeedback(id: number): Promise<Feedback | undefined>;
-  
+
   // Dietary preferences operations
   getDietaryPreference(id: number): Promise<DietaryPreference | undefined>;
   getDietaryPreferenceByUserId(userId: number): Promise<DietaryPreference | undefined>;
@@ -124,7 +124,7 @@ export interface IStorage {
   createDietaryPreference(preference: InsertDietaryPreference): Promise<DietaryPreference>;
   updateDietaryPreference(id: number, preference: Partial<InsertDietaryPreference>): Promise<DietaryPreference | undefined>;
   deleteDietaryPreference(id: number): Promise<boolean>;
-  
+
   // Advertisement operations
   getAdvertisement(id: number): Promise<Advertisement | undefined>;
   getAdvertisements(): Promise<Advertisement[]>;
@@ -132,7 +132,7 @@ export interface IStorage {
   createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
   updateAdvertisement(id: number, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined>;
   deleteAdvertisement(id: number): Promise<boolean>;
-  
+
   // File upload operations
   createFileUpload(fileUpload: InsertFileUpload): Promise<FileUpload>;
   getFileUpload(id: number): Promise<FileUpload | undefined>;
@@ -160,7 +160,7 @@ export class MemStorage implements IStorage {
   private contactInfo: ContactInfo;
   private advertisements: Map<number, Advertisement>;
   private fileUploads: Map<number, FileUpload>;
-  
+
   private currentIds: {
     users: number;
     restaurants: number;
@@ -200,7 +200,7 @@ export class MemStorage implements IStorage {
       phone: '+251-913-690-687',
       updatedAt: new Date()
     };
-    
+
     this.currentIds = {
       users: 1,
       restaurants: 1,
@@ -217,21 +217,21 @@ export class MemStorage implements IStorage {
       advertisements: 1,
       fileUploads: 1
     };
-    
+
     // Create an admin account if none exists
     this.initializeAdminUser();
   }
-  
+
   private async initializeAdminUser() {
     // Initialize default pricing plans
     this.initializeDefaultPricingPlans();
-    
+
     const adminUser = await this.getUserByUsername('admin');
     if (!adminUser) {
       // Create default admin user with username 'admin' and password 'admin1234'
       const adminPassword = '$2a$10$2R9tW8PUo1W/jnJm/JgHMuc6MLVYXEyfrwWwZ38iGhMk9nqo3KX5u'; // Hashed 'admin1234'
       const now = new Date();
-      
+
       const id = this.currentIds.users++;
       const user: User = {
         id,
@@ -251,7 +251,7 @@ export class MemStorage implements IStorage {
         resetPasswordToken: null,
         resetPasswordExpires: null
       };
-      
+
       this.users.set(id, user);
       console.log('Initialized admin user with ID:', id);
     }
@@ -273,7 +273,7 @@ export class MemStorage implements IStorage {
       (user) => user.email === email
     );
   }
-  
+
   async getUserByResetToken(token: string): Promise<User | undefined> {
     return Array.from(this.users.values()).find(
       (user) => user.resetPasswordToken === token
@@ -301,76 +301,76 @@ export class MemStorage implements IStorage {
     this.users.set(id, user);
     return user;
   }
-  
+
   async updateUser(id: number, userUpdate: Partial<User>): Promise<User | undefined> {
     const user = this.users.get(id);
     if (!user) return undefined;
-    
+
     const updatedUser = { ...user, ...userUpdate };
     this.users.set(id, updatedUser);
     return updatedUser;
   }
-  
+
   async setResetPasswordToken(email: string, token: string, expires: Date): Promise<User | undefined> {
     const user = await this.getUserByEmail(email);
     if (!user) return undefined;
-    
+
     user.resetPasswordToken = token;
     user.resetPasswordExpires = expires;
     this.users.set(user.id, user);
-    
+
     return user;
   }
-  
+
   async resetPassword(token: string, newPassword: string): Promise<boolean> {
     const user = await this.getUserByResetToken(token);
     if (!user || !user.resetPasswordExpires) return false;
-    
+
     // Check if token is expired
     const now = new Date();
     if (now > user.resetPasswordExpires) return false;
-    
+
     // Update password and clear token
     user.password = newPassword;
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
     this.users.set(user.id, user);
-    
+
     return true;
   }
-  
+
   async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean> {
     const user = await this.getUser(userId);
     if (!user) return false;
-    
+
     // Note: Password comparison is handled at the route level
     user.password = newPassword;
     this.users.set(userId, user);
-    
+
     return true;
   }
-  
+
   async updateUserWithPassword(id: number, userData: { username: string, email: string, password: string }): Promise<User> {
     const user = await this.getUser(id);
     if (!user) {
       throw new Error('User not found');
     }
-    
+
     const updatedUser = { 
       ...user, 
       username: userData.username,
       email: userData.email,
       password: userData.password
     };
-    
+
     this.users.set(id, updatedUser);
     return updatedUser;
   }
-  
+
   async verifyPassword(userId: number, password: string): Promise<boolean> {
     const user = await this.getUser(userId);
     if (!user) return false;
-    
+
     // In the MemStorage implementation, we'll assume password comparison
     // is done by the comparePasswords function in routes.ts
     return true;
@@ -386,7 +386,7 @@ export class MemStorage implements IStorage {
       (restaurant) => restaurant.userId === userId
     );
   }
-  
+
   async countRestaurantsByUserId(userId: number): Promise<number> {
     return (await this.getRestaurantsByUserId(userId)).length;
   }
@@ -468,7 +468,7 @@ export class MemStorage implements IStorage {
   async getMenuItemsByRestaurantId(restaurantId: number): Promise<MenuItem[]> {
     const categories = await this.getMenuCategoriesByRestaurantId(restaurantId);
     const categoryIds = categories.map(cat => cat.id);
-    
+
     return Array.from(this.menuItems.values())
       .filter(item => categoryIds.includes(item.categoryId));
   }
@@ -514,7 +514,7 @@ export class MemStorage implements IStorage {
   async countMenuViewsByRestaurantId(restaurantId: number): Promise<number> {
     return (await this.getMenuViewsByRestaurantId(restaurantId)).length;
   }
-  
+
   async countMenuViewsInDateRange(startDate: Date, endDate: Date): Promise<number> {
     return Array.from(this.menuViews.values())
       .filter(view => {
@@ -522,7 +522,7 @@ export class MemStorage implements IStorage {
         return viewDate >= startDate && viewDate <= endDate;
       }).length;
   }
-  
+
   async countTotalMenuViews(): Promise<number> {
     return this.menuViews.size;
   }
@@ -579,9 +579,9 @@ export class MemStorage implements IStorage {
       .filter(view => view.source === 'qr')
       .length;
   }
-  
 
-  
+
+
   // Subscription operations
   async getSubscription(id: number): Promise<Subscription | undefined> {
     return undefined; // Not implemented in memory storage
@@ -598,11 +598,11 @@ export class MemStorage implements IStorage {
   async updateSubscription(id: number, subscription: Partial<Subscription>): Promise<Subscription | undefined> {
     return undefined; // Not implemented in memory storage
   }
-  
+
   async getAllSubscriptions(): Promise<Subscription[]> {
     return []; // Not implemented in memory storage
   }
-  
+
   // Payment operations
   async getPayment(id: number): Promise<Payment | undefined> {
     return undefined; // Not implemented in memory storage
@@ -623,58 +623,58 @@ export class MemStorage implements IStorage {
   async updatePayment(id: number, payment: Partial<Payment>): Promise<Payment | undefined> {
     return undefined; // Not implemented in memory storage
   }
-  
+
   // Admin methods
   async getAllRestaurants(): Promise<Restaurant[]> {
     return Array.from(this.restaurants.values());
   }
-  
+
   // Feedback operations
   async getFeedback(id: number): Promise<Feedback | undefined> {
     return undefined; // Not implemented in memory storage
   }
-  
+
   async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
     return []; // Not implemented in memory storage
   }
-  
+
   async getFeedbacksByMenuItemId(menuItemId: number): Promise<Feedback[]> {
     return []; // Not implemented in memory storage
   }
-  
+
   async createFeedback(feedback: InsertFeedback): Promise<Feedback> {
     return { ...feedback, id: 1, createdAt: new Date() }; // Minimal implementation
   }
-  
+
   async updateFeedback(id: number, feedbackUpdate: Partial<Feedback>): Promise<Feedback | undefined> {
     return undefined; // Not implemented in memory storage
   }
-  
+
   async approveFeedback(id: number): Promise<Feedback | undefined> {
     return undefined; // Not implemented in memory storage
   }
-  
+
   async rejectFeedback(id: number): Promise<Feedback | undefined> {
     return undefined; // Not implemented in memory storage
   }
-  
+
   // Dietary preferences operations
   async getDietaryPreference(id: number): Promise<DietaryPreference | undefined> {
     return this.dietaryPreferences.get(id);
   }
-  
+
   async getDietaryPreferenceByUserId(userId: number): Promise<DietaryPreference | undefined> {
     return Array.from(this.dietaryPreferences.values()).find(
       (pref) => pref.userId === userId
     );
   }
-  
+
   async getDietaryPreferenceBySessionId(sessionId: string): Promise<DietaryPreference | undefined> {
     return Array.from(this.dietaryPreferences.values()).find(
       (pref) => pref.sessionId === sessionId
     );
   }
-  
+
   async createDietaryPreference(insertPreference: InsertDietaryPreference): Promise<DietaryPreference> {
     const id = this.currentIds.dietaryPreferences++;
     const now = new Date();
@@ -687,11 +687,11 @@ export class MemStorage implements IStorage {
     this.dietaryPreferences.set(id, preference);
     return preference;
   }
-  
+
   async updateDietaryPreference(id: number, preferenceUpdate: Partial<InsertDietaryPreference>): Promise<DietaryPreference | undefined> {
     const preference = this.dietaryPreferences.get(id);
     if (!preference) return undefined;
-    
+
     const updatedPreference = { 
       ...preference, 
       ...preferenceUpdate,
@@ -700,11 +700,11 @@ export class MemStorage implements IStorage {
     this.dietaryPreferences.set(id, updatedPreference);
     return updatedPreference;
   }
-  
+
   async deleteDietaryPreference(id: number): Promise<boolean> {
     return this.dietaryPreferences.delete(id);
   }
-  
+
   // Advertisement operations
   async getAdvertisement(id: number): Promise<Advertisement | undefined> {
     return this.advertisements.get(id);
@@ -755,7 +755,7 @@ export class MemStorage implements IStorage {
   async deleteAdvertisement(id: number): Promise<boolean> {
     return this.advertisements.delete(id);
   }
-  
+
   // File upload operations
   async createFileUpload(fileUpload: InsertFileUpload): Promise<FileUpload> {
     const id = this.currentIds.fileUploads++;
@@ -802,13 +802,13 @@ export class MemStorage implements IStorage {
     if (!fileUpload) {
       return undefined;
     }
-    
+
     const updatedFileUpload: FileUpload = {
       ...fileUpload,
       status,
       updatedAt: new Date()
     };
-    
+
     this.fileUploads.set(id, updatedFileUpload);
     return updatedFileUpload;
   }
@@ -816,24 +816,24 @@ export class MemStorage implements IStorage {
   async deleteFileUpload(id: number): Promise<boolean> {
     return this.fileUploads.delete(id);
   }
-  
+
   // Admin methods
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
   }
-  
+
   async countUsers(): Promise<number> {
     return this.users.size;
   }
-  
+
   async countActiveUsers(): Promise<number> {
     return Array.from(this.users.values()).filter(user => user.isActive).length;
   }
-  
+
   async countUsersBySubscriptionTier(tier: string): Promise<number> {
     return Array.from(this.users.values()).filter(user => user.subscriptionTier === tier).length;
   }
-  
+
   async getRecentUsers(limit: number): Promise<User[]> {
     return Array.from(this.users.values())
       .sort((a, b) => {
@@ -843,29 +843,29 @@ export class MemStorage implements IStorage {
       })
       .slice(0, limit);
   }
-  
+
   async toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined> {
     const user = await this.getUser(id);
     if (!user) return undefined;
-    
+
     user.isActive = isActive;
     this.users.set(id, user);
     return user;
   }
-  
+
   async upgradeUserSubscription(id: number, tier: string): Promise<User | undefined> {
     const user = await this.getUser(id);
     if (!user) return undefined;
-    
+
     user.subscriptionTier = tier;
     this.users.set(id, user);
     return user;
   }
-  
+
   async getAllRestaurants(): Promise<Restaurant[]> {
     return Array.from(this.restaurants.values());
   }
-  
+
   // Admin log operations
   async createAdminLog(log: InsertAdminLog): Promise<AdminLog> {
     const id = this.currentIds.adminLogs++;
@@ -878,7 +878,7 @@ export class MemStorage implements IStorage {
     this.adminLogs.set(id, adminLog);
     return adminLog;
   }
-  
+
   async getAdminLogs(limit?: number): Promise<AdminLog[]> {
     const logs = Array.from(this.adminLogs.values())
       .sort((a, b) => {
@@ -886,10 +886,10 @@ export class MemStorage implements IStorage {
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       });
-    
+
     return limit ? logs.slice(0, limit) : logs;
   }
-  
+
   async getAdminLogsByAdminId(adminId: number, limit?: number): Promise<AdminLog[]> {
     const logs = Array.from(this.adminLogs.values())
       .filter(log => log.adminId === adminId)
@@ -898,25 +898,25 @@ export class MemStorage implements IStorage {
         const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return dateB - dateA;
       });
-    
+
     return limit ? logs.slice(0, limit) : logs;
   }
-  
+
   // Feedback operations
   async getFeedback(id: number): Promise<Feedback | undefined> {
     return this.feedbacks.get(id);
   }
-  
+
   async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
     return Array.from(this.feedbacks.values())
       .filter(feedback => feedback.restaurantId === restaurantId);
   }
-  
+
   async getFeedbacksByMenuItemId(menuItemId: number): Promise<Feedback[]> {
     return Array.from(this.feedbacks.values())
       .filter(feedback => feedback.menuItemId === menuItemId);
   }
-  
+
   async createFeedback(feedback: InsertFeedback): Promise<Feedback> {
     const id = this.currentIds.feedbacks++;
     const createdAt = new Date();
@@ -933,39 +933,39 @@ export class MemStorage implements IStorage {
     this.feedbacks.set(id, newFeedback);
     return newFeedback;
   }
-  
+
   async updateFeedback(id: number, update: Partial<Feedback>): Promise<Feedback | undefined> {
     const feedback = this.feedbacks.get(id);
     if (!feedback) return undefined;
-    
+
     const updatedFeedback = { ...feedback, ...update };
     this.feedbacks.set(id, updatedFeedback);
     return updatedFeedback;
   }
-  
+
   async approveFeedback(id: number): Promise<Feedback | undefined> {
     const feedback = this.feedbacks.get(id);
     if (!feedback) return undefined;
-    
+
     feedback.status = 'approved';
     this.feedbacks.set(id, feedback);
     return feedback;
   }
-  
+
   async rejectFeedback(id: number): Promise<Feedback | undefined> {
     const feedback = this.feedbacks.get(id);
     if (!feedback) return undefined;
-    
+
     feedback.status = 'rejected';
     this.feedbacks.set(id, feedback);
     return feedback;
   }
-  
+
   // Subscription operations
   async getAllSubscriptions(): Promise<Subscription[]> {
     return Array.from(this.subscriptions.values());
   }
-  
+
   // Pricing plan operations
   private initializeDefaultPricingPlans() {
     // Only add default plans if none exist yet
@@ -983,7 +983,7 @@ export class MemStorage implements IStorage {
         isPopular: false,
         isActive: true
       };
-      
+
       // Premium plan
       const premiumPlan: PricingPlan = {
         id: 2,
@@ -997,76 +997,76 @@ export class MemStorage implements IStorage {
         isPopular: true,
         isActive: true
       };
-      
+
       this.pricingPlans.set(1, freePlan);
       this.pricingPlans.set(2, premiumPlan);
       this.currentIds.pricingPlans = 3; // Next ID will be 3
-      
+
       console.log('Initialized default pricing plans');
     }
   }
-  
+
   async getAllPricingPlans(): Promise<PricingPlan[]> {
     return Array.from(this.pricingPlans.values());
   }
-  
+
   async getPricingPlan(id: number): Promise<PricingPlan | undefined> {
     return this.pricingPlans.get(id);
   }
-  
+
   async createPricingPlan(plan: InsertPricingPlan): Promise<PricingPlan> {
     const id = this.currentIds.pricingPlans++;
     const newPlan: PricingPlan = { ...plan, id };
     this.pricingPlans.set(id, newPlan);
     return newPlan;
   }
-  
+
   async updatePricingPlan(id: number, plan: Partial<PricingPlan>): Promise<PricingPlan | undefined> {
     const existingPlan = this.pricingPlans.get(id);
     if (!existingPlan) return undefined;
-    
+
     const updatedPlan = { ...existingPlan, ...plan };
     this.pricingPlans.set(id, updatedPlan);
     return updatedPlan;
   }
-  
+
   async deletePricingPlan(id: number): Promise<boolean> {
     return this.pricingPlans.delete(id);
   }
-  
+
   // Contact info operations
   async getContactInfo(): Promise<ContactInfo | undefined> {
     return this.contactInfo;
   }
-  
+
   async updateContactInfo(info: Partial<ContactInfo>): Promise<ContactInfo> {
     this.contactInfo = { ...this.contactInfo, ...info };
     return this.contactInfo;
   }
-  
+
   // Stripe methods (stubs)
   async updateStripeCustomerId(userId: number, customerId: string): Promise<User | undefined> {
     const user = await this.getUser(userId);
     if (!user) return undefined;
-    
+
     user.stripeCustomerId = customerId;
     this.users.set(userId, user);
     return user;
   }
-  
+
   async updateStripeSubscriptionId(userId: number, subscriptionId: string): Promise<User | undefined> {
     const user = await this.getUser(userId);
     if (!user) return undefined;
-    
+
     user.stripeSubscriptionId = subscriptionId;
     this.users.set(userId, user);
     return user;
   }
-  
+
   async updateUserStripeInfo(userId: number, info: { customerId: string, subscriptionId: string }): Promise<User | undefined> {
     const user = await this.getUser(userId);
     if (!user) return undefined;
-    
+
     user.stripeCustomerId = info.customerId;
     user.stripeSubscriptionId = info.subscriptionId;
     this.users.set(userId, user);
@@ -1112,22 +1112,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(registrationAnalytics.source, source));
     return result[0]?.count || 0;
   }
-  
+
   // Pricing plan operations
   async getAllPricingPlans(): Promise<PricingPlan[]> {
     return await db.select().from(pricingPlans);
   }
-  
+
   async getPricingPlan(id: number): Promise<PricingPlan | undefined> {
     const [plan] = await db.select().from(pricingPlans).where(eq(pricingPlans.id, id));
     return plan;
   }
-  
+
   async createPricingPlan(plan: InsertPricingPlan): Promise<PricingPlan> {
     const [newPlan] = await db.insert(pricingPlans).values(plan).returning();
     return newPlan;
   }
-  
+
   async updatePricingPlan(id: number, plan: Partial<PricingPlan>): Promise<PricingPlan | undefined> {
     const [updatedPlan] = await db
       .update(pricingPlans)
@@ -1136,7 +1136,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedPlan;
   }
-  
+
   async deletePricingPlan(id: number): Promise<boolean> {
     const [deletedPlan] = await db
       .delete(pricingPlans)
@@ -1144,7 +1144,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return !!deletedPlan;
   }
-  
+
   // Advertisement operations
   async getAdvertisement(id: number): Promise<Advertisement | undefined> {
     const [ad] = await db.select()
@@ -1207,7 +1207,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return !!deletedAd;
   }
-  
+
   // File upload operations
   async createFileUpload(fileUpload: InsertFileUpload): Promise<FileUpload> {
     const [newUpload] = await db.insert(fileUploads)
@@ -1278,11 +1278,11 @@ export class DatabaseStorage implements IStorage {
     const [info] = await db.select().from(contactInfo).limit(1);
     return info;
   }
-  
+
   async updateContactInfo(info: Partial<ContactInfo>): Promise<ContactInfo> {
     // First check if we have any contact info already
     const existingInfo = await this.getContactInfo();
-    
+
     if (existingInfo) {
       // Update existing record
       const [updatedInfo] = await db
@@ -1304,7 +1304,7 @@ export class DatabaseStorage implements IStorage {
       return newInfo;
     }
   }
-  
+
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -1330,7 +1330,7 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
-  
+
   async updateUser(id: number, userUpdate: Partial<User>): Promise<User | undefined> {
     const [updatedUser] = await db.update(users)
       .set(userUpdate)
@@ -1353,11 +1353,11 @@ export class DatabaseStorage implements IStorage {
   async resetPassword(token: string, newPassword: string): Promise<boolean> {
     const user = await this.getUserByResetToken(token);
     if (!user || !user.resetPasswordExpires) return false;
-    
+
     // Check if token is expired
     const now = new Date();
     if (now > user.resetPasswordExpires) return false;
-    
+
     // Update password and clear token
     const [updatedUser] = await db.update(users)
       .set({
@@ -1367,39 +1367,39 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(users.id, user.id))
       .returning();
-    
+
     return !!updatedUser;
   }
 
   async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<boolean> {
     const user = await this.getUser(userId);
     if (!user) return false;
-    
+
     // Compare passwords happens at the route level
-    
+
     const [updatedUser] = await db.update(users)
       .set({ password: newPassword })
       .where(eq(users.id, userId))
       .returning();
-    
+
     return !!updatedUser;
   }
-  
+
   async verifyPassword(userId: number, password: string): Promise<boolean> {
     const user = await this.getUser(userId);
     if (!user) return false;
-    
+
     // In the DatabaseStorage implementation, we'll assume password comparison
     // is done by the comparePasswords function in routes.ts, same as MemStorage
     return true;
   }
-  
+
   async updateUserWithPassword(id: number, userData: { username: string, email: string, password: string }): Promise<User> {
     const user = await this.getUser(id);
     if (!user) {
       throw new Error('User not found');
     }
-    
+
     const [updatedUser] = await db.update(users)
       .set({
         username: userData.username,
@@ -1408,11 +1408,11 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(users.id, id))
       .returning();
-    
+
     if (!updatedUser) {
       throw new Error('Failed to update user');
     }
-    
+
     return updatedUser;
   }
 
@@ -1424,7 +1424,7 @@ export class DatabaseStorage implements IStorage {
       return restaurant;
     } catch (error) {
       console.error(`Error in ORM restaurant fetch for ID ${id}, attempting raw query fallback:`, error);
-      
+
       // Fallback: use a raw SQL query that doesn't depend on the full schema
       // This helps when there are schema version mismatches between code and database
       const { pool } = await import('./db');
@@ -1434,11 +1434,11 @@ export class DatabaseStorage implements IStorage {
         'FROM restaurants WHERE id = $1',
         [id]
       );
-      
+
       if (result.rows.length === 0) {
         return undefined;
       }
-      
+
       // Map the raw results to match our schema
       const row = result.rows[0];
       return {
@@ -1467,17 +1467,15 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(restaurants).where(eq(restaurants.userId, userId));
     } catch (error) {
       console.error("Error in ORM restaurant fetch, attempting raw query fallback:", error);
-      
+
       // Fallback: use a raw SQL query that doesn't depend on the full schema
       // This helps when there are schema version mismatches between code and database
       const { pool } = await import('./db');
       const result = await pool.query(
-        'SELECT id, user_id, name, description, cuisine, logo_url, banner_url, ' +
-        'phone, email, address, hours_of_operation, tags, banner_urls, theme_settings, qr_code_scans ' +
-        'FROM restaurants WHERE user_id = $1',
+        'SELECT * FROM restaurants WHERE user_id = $1',
         [userId]
       );
-      
+
       // Map the raw results to match our schema
       return result.rows.map(row => ({
         id: row.id,
@@ -1507,16 +1505,16 @@ export class DatabaseStorage implements IStorage {
   async incrementQRCodeScans(id: number): Promise<Restaurant | undefined> {
     try {
       console.log(`Starting QR code scan increment for restaurant ID ${id}`);
-      
+
       const restaurant = await this.getRestaurant(id);
       if (!restaurant) {
         console.error(`Restaurant with ID ${id} not found when incrementing QR code scans`);
         return undefined;
       }
-      
+
       const currentScans = restaurant.qrCodeScans || 0;
       console.log(`Current QR code scan count for restaurant ID ${id}: ${currentScans}`);
-      
+
       // Try multiple approaches to ensure the scan gets counted
       // Method 1: Direct update with the regular updateRestaurant method
       try {
@@ -1528,7 +1526,7 @@ export class DatabaseStorage implements IStorage {
       } catch (error1) {
         console.error(`First method failed to increment QR code scans: ${error1}`);
       }
-      
+
       // Method 2: Direct ORM update (original method)
       try {
         const [updatedRestaurant] = await db
@@ -1536,20 +1534,20 @@ export class DatabaseStorage implements IStorage {
           .set({ qrCodeScans: currentScans + 1 })
           .where(eq(restaurants.id, id))
           .returning();
-          
+
         console.log(`Successfully incremented QR code scans via method 2 for restaurant ID ${id} to ${updatedRestaurant.qrCodeScans}`);
         return updatedRestaurant;
       } catch (error2) {
         console.error(`Second method failed to increment QR code scans: ${error2}`);
       }
-      
+
       // Method 3: Raw SQL query as final fallback
       try {
         const result = await db.execute(
           `UPDATE restaurants SET qr_code_scans = $1 WHERE id = $2 RETURNING *`,
           [currentScans + 1, id]
         );
-        
+
         if (result.rows && result.rows.length > 0) {
           console.log(`Successfully incremented QR code scans via raw query for restaurant ID ${id}`);
           return result.rows[0] as Restaurant;
@@ -1557,7 +1555,7 @@ export class DatabaseStorage implements IStorage {
       } catch (error3) {
         console.error(`All methods failed to increment QR code scans: ${error3}`);
       }
-      
+
       // If all methods failed, log it but return the restaurant anyway
       console.error(`Failed to increment QR code scans for restaurant ID ${id} using all available methods`);
       return restaurant;
@@ -1566,7 +1564,7 @@ export class DatabaseStorage implements IStorage {
       return undefined;
     }
   }
-  
+
   async updateRestaurant(id: number, restaurantUpdate: Partial<InsertRestaurant>): Promise<Restaurant | undefined> {
     try {
       // First try with the standard ORM approach
@@ -1577,75 +1575,75 @@ export class DatabaseStorage implements IStorage {
       return updatedRestaurant;
     } catch (error) {
       console.error(`Error in ORM restaurant update for ID ${id}, attempting raw query fallback:`, error);
-      
+
       // Get the current restaurant to merge with updates
       const currentRestaurant = await this.getRestaurant(id);
       if (!currentRestaurant) {
         return undefined;
       }
-      
+
       // Prepare update fields
       const updateFields: string[] = [];
       const updateValues: any[] = [];
       let paramIndex = 1;
-      
+
       // For each property in restaurantUpdate, add to the update fields
       if (restaurantUpdate.name !== undefined) {
         updateFields.push(`name = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.name);
       }
-      
+
       if (restaurantUpdate.description !== undefined) {
         updateFields.push(`description = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.description);
       }
-      
+
       if (restaurantUpdate.cuisine !== undefined) {
         updateFields.push(`cuisine = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.cuisine);
       }
-      
+
       if (restaurantUpdate.logoUrl !== undefined) {
         updateFields.push(`logo_url = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.logoUrl);
       }
-      
+
       if (restaurantUpdate.bannerUrl !== undefined) {
         updateFields.push(`banner_url = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.bannerUrl);
       }
-      
+
       if (restaurantUpdate.phone !== undefined) {
         updateFields.push(`phone = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.phone);
       }
-      
+
       if (restaurantUpdate.email !== undefined) {
         updateFields.push(`email = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.email);
       }
-      
+
       if (restaurantUpdate.address !== undefined) {
         updateFields.push(`address = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.address);
       }
-      
+
       if (restaurantUpdate.hoursOfOperation !== undefined) {
         updateFields.push(`hours_of_operation = $${paramIndex++}`);
         updateValues.push(restaurantUpdate.hoursOfOperation);
       }
-      
+
       if (restaurantUpdate.themeSettings !== undefined) {
         updateFields.push(`theme_settings = $${paramIndex++}`);
         updateValues.push(JSON.stringify(restaurantUpdate.themeSettings));
         console.log('Updating theme settings:', JSON.stringify(restaurantUpdate.themeSettings, null, 2));
       }
-      
+
       if (restaurantUpdate.bannerUrls !== undefined) {
         updateFields.push(`banner_urls = $${paramIndex++}`);
         updateValues.push(JSON.stringify(restaurantUpdate.bannerUrls));
       }
-      
+
       // Only if we have fields to update
       if (updateFields.length > 0) {
         // Fallback: use a raw SQL query
@@ -1654,11 +1652,11 @@ export class DatabaseStorage implements IStorage {
           `UPDATE restaurants SET ${updateFields.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
           [...updateValues, id]
         );
-        
+
         if (result.rows.length === 0) {
           return undefined;
         }
-        
+
         // Map the raw results to match our schema
         const row = result.rows[0];
         return {
@@ -1678,7 +1676,7 @@ export class DatabaseStorage implements IStorage {
           themeSettings: restaurantUpdate.themeSettings || currentRestaurant.themeSettings
         };
       }
-      
+
       // If no fields to update, return the current restaurant
       return currentRestaurant;
     }
@@ -1713,7 +1711,7 @@ export class DatabaseStorage implements IStorage {
   async deleteMenuCategory(id: number): Promise<boolean> {
     // First delete all menu items in this category
     await db.delete(menuItems).where(eq(menuItems.categoryId, id));
-    
+
     // Then delete the category
     const result = await db.delete(menuCategories).where(eq(menuCategories.id, id)).returning();
     return result.length > 0;
@@ -1735,18 +1733,18 @@ export class DatabaseStorage implements IStorage {
   async getMenuItemsByRestaurantId(restaurantId: number): Promise<MenuItem[]> {
     // First get all categories for this restaurant
     const categories = await this.getMenuCategoriesByRestaurantId(restaurantId);
-    
+
     if (categories.length === 0) {
       return [];
     }
-    
+
     // Get all menu items for these categories
     const items: MenuItem[] = [];
     for (const category of categories) {
       const categoryItems = await this.getMenuItemsByCategoryId(category.id);
       items.push(...categoryItems);
     }
-    
+
     return items;
   }
 
@@ -1782,7 +1780,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(menuViews.restaurantId, restaurantId));
     return result.count;
   }
-  
+
   async countMenuViewsInDateRange(startDate: Date, endDate: Date): Promise<number> {
     try {
       const [result] = await db.select({ count: count() })
@@ -1799,7 +1797,7 @@ export class DatabaseStorage implements IStorage {
       return 0;
     }
   }
-  
+
   async countTotalMenuViews(): Promise<number> {
     try {
       const [result] = await db.select({ count: count() })
@@ -1820,11 +1818,11 @@ export class DatabaseStorage implements IStorage {
   async getMenuItemCountByRestaurantId(restaurantId: number): Promise<number> {
     // Get all categories for this restaurant
     const categories = await this.getMenuCategoriesByRestaurantId(restaurantId);
-    
+
     if (categories.length === 0) {
       return 0;
     }
-    
+
     // Count all menu items across all categories
     let total = 0;
     for (const category of categories) {
@@ -1833,7 +1831,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(menuItems.categoryId, category.id));
       total += result.count;
     }
-    
+
     return total;
   }
 
@@ -1924,7 +1922,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedPayment;
   }
-  
+
   // Admin methods
   async getAllRestaurants(): Promise<Restaurant[]> {
     try {
@@ -1932,7 +1930,7 @@ export class DatabaseStorage implements IStorage {
       return await db.select().from(restaurants);
     } catch (error) {
       console.error("Error in getAllRestaurants ORM fetch, attempting raw query fallback:", error);
-      
+
       // Fallback: use a raw SQL query that doesn't depend on the full schema
       const { pool } = await import('./db');
       const result = await pool.query(
@@ -1940,7 +1938,7 @@ export class DatabaseStorage implements IStorage {
         'phone, email, address, hours_of_operation, tags ' +
         'FROM restaurants ORDER BY id'
       );
-      
+
       // Map the raw results to match our schema
       return result.rows.map(row => ({
         id: row.id,
@@ -1961,29 +1959,29 @@ export class DatabaseStorage implements IStorage {
       }));
     }
   }
-  
+
   async getAllSubscriptions(): Promise<Subscription[]> {
     return db.select().from(subscriptions);
   }
-  
+
   async getFeedback(id: number): Promise<Feedback | undefined> {
     const [feedback] = await db.select().from(feedbacks).where(eq(feedbacks.id, id));
     return feedback;
   }
-  
+
   async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
     return db.select().from(feedbacks).where(eq(feedbacks.restaurantId, restaurantId));
   }
-  
+
   async getFeedbacksByMenuItemId(menuItemId: number): Promise<Feedback[]> {
     return db.select().from(feedbacks).where(eq(feedbacks.menuItemId, menuItemId));
   }
-  
+
   async createFeedback(feedback: InsertFeedback): Promise<Feedback> {
     const [newFeedback] = await db.insert(feedbacks).values(feedback).returning();
     return newFeedback;
   }
-  
+
   async updateFeedback(id: number, feedbackUpdate: Partial<Feedback>): Promise<Feedback | undefined> {
     const [updatedFeedback] = await db
       .update(feedbacks)
@@ -1992,11 +1990,11 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedFeedback;
   }
-  
+
   async approveFeedback(id: number): Promise<Feedback | undefined> {
     return this.updateFeedback(id, { status: 'approved' });
   }
-  
+
   async rejectFeedback(id: number): Promise<Feedback | undefined> {
     return this.updateFeedback(id, { status: 'rejected' });
   }
@@ -2008,28 +2006,28 @@ export class DatabaseStorage implements IStorage {
       .where(eq(dietaryPreferences.id, id));
     return preference;
   }
-  
+
   async getDietaryPreferenceByUserId(userId: number): Promise<DietaryPreference | undefined> {
     const [preference] = await db.select()
       .from(dietaryPreferences)
       .where(eq(dietaryPreferences.userId, userId));
     return preference;
   }
-  
+
   async getDietaryPreferenceBySessionId(sessionId: string): Promise<DietaryPreference | undefined> {
     const [preference] = await db.select()
       .from(dietaryPreferences)
       .where(eq(dietaryPreferences.sessionId, sessionId));
     return preference;
   }
-  
+
   async createDietaryPreference(insertPreference: InsertDietaryPreference): Promise<DietaryPreference> {
     const [preference] = await db.insert(dietaryPreferences)
       .values(insertPreference)
       .returning();
     return preference;
   }
-  
+
   async updateDietaryPreference(id: number, preferenceUpdate: Partial<InsertDietaryPreference>): Promise<DietaryPreference | undefined> {
     const now = new Date();
     const [updatedPreference] = await db.update(dietaryPreferences)
@@ -2041,7 +2039,7 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return updatedPreference;
   }
-  
+
   async deleteDietaryPreference(id: number): Promise<boolean> {
     const result = await db.delete(dietaryPreferences)
       .where(eq(dietaryPreferences.id, id))
