@@ -66,6 +66,9 @@ app.use((req, res, next) => {
   next();
 });
 
+// Import routes
+import { registerRoutes } from "./routes";
+
 (async () => {
   const server = await registerRoutes(app);
 
