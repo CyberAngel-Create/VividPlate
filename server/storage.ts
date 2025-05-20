@@ -1473,7 +1473,7 @@ export class DatabaseStorage implements IStorage {
       const { pool } = await import('./db');
       const result = await pool.query(
         'SELECT id, user_id, name, description, cuisine, logo_url, banner_url, ' +
-        'phone, email, address, hours_of_operation, tags ' +
+        'phone, email, address, hours_of_operation, tags, banner_urls, theme_settings, qr_code_scans ' +
         'FROM restaurants WHERE user_id = $1',
         [userId]
       );
