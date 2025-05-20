@@ -1,8 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import fs from 'fs';
 import path from 'path';
+import session from 'express-session';
+import memorystore from 'memorystore';
 
 // We're using only local storage for all file operations
 console.log('Using local storage for all file operations');
