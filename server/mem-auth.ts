@@ -38,10 +38,10 @@ export const testUsers: MemUser[] = [
     createdAt: new Date()
   },
   { 
-    id: 3, 
+    id: 5, 
     username: 'Entoto Cloud', 
     password: 'cloud123',
-    email: 'entoto@example.com',
+    email: 'entotocloudrestaurant@gmail.com',
     fullName: 'Entoto Cloud',
     isAdmin: false,
     subscriptionTier: 'premium',
