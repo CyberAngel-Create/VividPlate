@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VividPlate Test Login</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f7f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .login-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            width: 100%;
+            max-width: 400px;
+            margin-top: 60px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #4338ca;
+        }
+        .error {
+            color: #e53e3e;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .success {
+            color: #38a169;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .test-accounts {
+            margin-top: 30px;
+            background-color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+        }
+        .test-accounts h3 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        .account {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .account:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .account-label {
+            font-weight: 500;
+            display: inline-block;
+            min-width: 70px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>VividPlate Login</h1>
+        <div id="login-form">
+            <div class="form-group">
+                <label for="identifier">Username or Email</label>
+                <input type="text" id="identifier" placeholder="Enter your username or email">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter your password">
+            </div>
+            <button id="login-button">Log In</button>
+            <div id="message"></div>
+        </div>
+
+        <div class="test-accounts">
+            <h3>Test Accounts</h3>
+            <div class="account">
+                <div><span class="account-label">Role:</span> Admin</div>
+                <div><span class="account-label">Username:</span> admin</div>
+                <div><span class="account-label">Password:</span> admin1234</div>
+            </div>
+            <div class="account">
+                <div><span class="account-label">Role:</span> Restaurant Owner</div>
+                <div><span class="account-label">Username:</span> restaurant1</div>
+                <div><span class="account-label">Password:</span> password123</div>
+            </div>
+            <div class="account">
+                <div><span class="account-label">Role:</span> Premium User</div>
+                <div><span class="account-label">Username:</span> entotocloud</div>
+                <div><span class="account-label">Password:</span> cloud123</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-button').addEventListener('click', async () => {
+            const identifier = document.getElementById('identifier').value;
+            const password = document.getElementById('password').value;
+            const messageElement = document.getElementById('message');
+
+            if (!identifier || !password) {
+                messageElement.className = 'error';
+                messageElement.textContent = 'Please enter both username/email and password';
+                return;
+            }
+
+            try {
+                // Hard-coded test accounts
+                const testAccounts = [
+                    { username: 'admin', email: 'admin@example.com', password: 'admin1234', role: 'Admin' },
+                    { username: 'restaurant1', email: 'restaurant1@example.com', password: 'password123', role: 'Restaurant Owner' },
+                    { username: 'entotocloud', email: 'entoto@example.com', password: 'cloud123', role: 'Premium User' }
+                ];
+
+                // Check credentials against test accounts
+                const user = testAccounts.find(user => 
+                    (user.username.toLowerCase() === identifier.toLowerCase() || 
+                     user.email.toLowerCase() === identifier.toLowerCase()) && 
+                    user.password === password
+                );
+
+                if (user) {
+                    messageElement.className = 'success';
+                    messageElement.textContent = `Login successful! Welcome, ${user.role}.`;
+                    
+                    // Store user info in localStorage
+                    localStorage.setItem('user', JSON.stringify({
+                        username: user.username,
+                        email: user.email,
+                        role: user.role,
+                        isLoggedIn: true
+                    }));
+                    
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1500);
+                } else {
+                    messageElement.className = 'error';
+                    messageElement.textContent = 'Invalid username/email or password';
+                }
+            } catch (error) {
+                messageElement.className = 'error';
+                messageElement.textContent = `Error: ${error.message}`;
+                console.error('Login error:', error);
+            }
+        });
+
+        // Submit form when Enter key is pressed
+        document.getElementById('password').addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                document.getElementById('login-button').click();
+            }
+        });
+    </script>
+</body>
+</html>
