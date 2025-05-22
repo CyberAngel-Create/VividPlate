@@ -1,7 +1,4 @@
-The code is modified to replace the "Add" button with a "View" button wrapped in an ImageViewDialog component, enabling a pop-up window to display the item's image when the button is clicked.
-```
 
-```replit_final_file
 import { useState, useEffect, useMemo } from "react";
 import { MenuCategory, MenuItem } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -23,13 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { PlusCircle, Edit, Trash, Search } from "lucide-react";
+import { PlusCircle, Edit, Trash, Search, Image } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import MenuItemForm from "./MenuItemForm";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
-import { Image } from "lucide-react";
+import ImageViewDialog from "@/components/ui/image-view-dialog";
 
 interface MenuItemsListProps {
   category: MenuCategory | null;
@@ -253,8 +250,6 @@ const MenuItemsList = ({
                       imageSrc={normalizeImageUrl(item.imageUrl)} 
                       imageAlt={item.name}
                       description={item.description}
-                      menuItemId={item.id}
-                      restaurantId={restaurant.id}
                     >
                       <Button 
                         variant="ghost" 
