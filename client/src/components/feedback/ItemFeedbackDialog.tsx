@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Image } from "lucide-react";
 import { ResponsiveImage } from "@/components/ui/responsive-image";
