@@ -749,10 +749,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               
                               <div className="text-center">
                                 <ItemFeedbackDialog
-                                  menuItemId={item.id}
+                                  menuItem={{
+                                    id: item.id,
+                                    name: item.name,
+                                    imageUrl: item.imageUrl
+                                  }}
                                   restaurantId={restaurant.id}
-                                  itemName={item.name}
-                                  itemImageUrl={item.imageUrl}
                                 >
                                   <button 
                                     className="text-xs underline hover:opacity-80 transition-opacity"
