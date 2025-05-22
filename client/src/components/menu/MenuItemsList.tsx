@@ -1,3 +1,7 @@
+The code is modified to replace the "Add" button with a "View" button wrapped in an ImageViewDialog component, enabling a pop-up window to display the item's image when the button is clicked.
+```
+
+```replit_final_file
 import { useState, useEffect, useMemo } from "react";
 import { MenuCategory, MenuItem } from "@shared/schema";
 import { Button } from "@/components/ui/button";
@@ -245,14 +249,22 @@ const MenuItemsList = ({
                     >
                       <Trash className="mr-1 h-4 w-4" /> Delete
                     </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm"
-                      className="text-secondary hover:text-secondary/80 hover:bg-secondary/10 flex items-center"
+                    <ImageViewDialog 
+                      imageSrc={normalizeImageUrl(item.imageUrl)} 
+                      imageAlt={item.name}
+                      description={item.description}
+                      menuItemId={item.id}
+                      restaurantId={restaurant.id}
                     >
-                      <Image className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        className="text-secondary hover:text-secondary/80 hover:bg-secondary/10 flex items-center"
+                      >
+                        <Image className="h-4 w-4 mr-1" />
+                        View
+                      </Button>
+                    </ImageViewDialog>
                   </div>
                 </div>
               </div>
