@@ -1,6 +1,6 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee, ArrowUp, ArrowDown } from "lucide-react";
+import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee, ArrowUp, ArrowDown, Grid3X3, List, ChevronUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import React, { useState, useMemo, useEffect, CSSProperties, useRef } from "react";
@@ -184,6 +184,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const { t } = useTranslation();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list'); // New view mode state
   const [mounted, setMounted] = useState(false);
   const [headerFixed, setHeaderFixed] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
@@ -474,6 +475,32 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <div className="flex-shrink-0">
           <MenuLanguageSwitcher variant="outline" size="sm" />
         </div>
+        
+        {/* View Mode Toggle - List/Grid */}
+        <div className="flex items-center ml-4 border-l pl-4 space-x-1">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'list'
+                ? 'bg-white text-gray-800 shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            title="List View"
+          >
+            <List className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'grid'
+                ? 'bg-white text-gray-800 shadow-sm'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+            title="Grid View"
+          >
+            <Grid3X3 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
       
       {/* Menu Categories Tabs and Search */}
@@ -523,13 +550,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <CompactSearch menuItems={allMenuItems} />
       )}
       
-      {/* Menu Items */}
+      {/* Menu Items with List/Grid View */}
       <div className="p-4">
         {menuData.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-midgray">{t('menu.noMenuItems', 'No menu items yet')}</p>
           </div>
-        ) : (
+        ) : viewMode === 'list' ? (
+          // LIST VIEW - Current layout
           filteredMenuData.map((category) => (
             <div key={category.id} className="mb-6">
               <h3 
@@ -625,6 +653,100 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               )}
             </div>
           ))
+        ) : (
+          // GRID VIEW - New layout with horizontal scrolling categories
+          <div className="space-y-8">
+            {filteredMenuData.map((category) => (
+              <div key={category.id} className="mb-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 
+                    className="text-lg font-heading font-semibold" 
+                    style={categoryNameStyle}
+                  >
+                    {category.name}
+                  </h3>
+                  <ChevronUp className="h-4 w-4 text-gray-400" />
+                </div>
+                
+                {category.items.length === 0 ? (
+                  <p className="text-sm italic" style={menuItemDescriptionStyle}>
+                    {t('menu.noItemsInCategory', 'No items in this category')}
+                  </p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <div className="flex space-x-4 pb-4" style={{ minWidth: 'max-content' }}>
+                      {category.items.map((item) => (
+                        <div 
+                          key={item.id}
+                          className="flex-shrink-0 w-48 bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow"
+                        >
+                          {/* Grid item image */}
+                          {item.imageUrl && (
+                            <div className="w-full h-32 mb-3">
+                              <ImageViewDialog 
+                                imageSrc={normalizeImageUrl(item.imageUrl)} 
+                                imageAlt={item.name}
+                                description={item.description ? item.description : undefined}
+                                menuItemId={item.id}
+                                restaurantId={restaurant.id}
+                              >
+                                <div className="w-full h-full bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
+                                  <ResponsiveImage 
+                                    src={item.imageUrl}
+                                    alt={item.name} 
+                                    fallbackType="menu"
+                                    className="w-full h-full"
+                                    imgClassName="object-cover w-full h-full"
+                                    onError={() => {
+                                      console.error("Failed to load menu item image:", item.imageUrl);
+                                    }}
+                                  />
+                                </div>
+                              </ImageViewDialog>
+                            </div>
+                          )}
+                          
+                          {/* Grid item details */}
+                          <div className="flex flex-col">
+                            <h4 className="font-medium text-sm mb-1 line-clamp-2" style={menuItemNameStyle}>
+                              {item.name}
+                            </h4>
+                            
+                            {item.description && (
+                              <p className="text-xs mb-2 line-clamp-2" style={menuItemDescriptionStyle}>
+                                {item.description}
+                              </p>
+                            )}
+                            
+                            <div className="flex items-center justify-between mt-auto">
+                              <span className="font-semibold text-sm" style={menuItemPriceStyle}>
+                                {formatCurrency(item.price, item.currency)}
+                              </span>
+                              
+                              {item.tags && item.tags.length > 0 && (
+                                <div className="flex flex-wrap gap-1">
+                                  {item.tags.slice(0, 2).map((tag, tagIndex) => (
+                                    <Badge 
+                                      key={tagIndex} 
+                                      variant="outline" 
+                                      className="text-xs px-1 py-0 h-5"
+                                      style={{ borderColor: menuTheme.accentColor, color: menuTheme.accentColor }}
+                                    >
+                                      {tag}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         )}
         
         {/* Restaurant info footer */}
