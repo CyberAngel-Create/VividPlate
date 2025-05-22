@@ -1597,7 +1597,7 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (restaurantUpdate.themeSettings !== undefined) {
-        updateFields.push(`theme_settings = $${paramIndex++}`);
+        updateFields.push(`theme_settings = $${paramIndex++}::jsonb`);
         updateValues.push(JSON.stringify(restaurantUpdate.themeSettings));
         console.log('Updating theme settings:', JSON.stringify(restaurantUpdate.themeSettings, null, 2));
       }

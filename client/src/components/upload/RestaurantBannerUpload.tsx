@@ -138,9 +138,9 @@ const RestaurantBannerUpload: React.FC<RestaurantBannerUploadProps> = ({
         setActiveIndex(responseData.bannerUrls.length - 1);
       }
 
-      // Update parent component
-      if (onSuccess && responseData.bannerUrls.length > 0) {
-        onSuccess(responseData.bannerUrls[0], responseData.bannerUrls);
+      // Update parent component 
+      if (onSuccess) {
+        onSuccess(responseData.newBannerUrl, responseData.bannerUrls);
       }
       
       toast({

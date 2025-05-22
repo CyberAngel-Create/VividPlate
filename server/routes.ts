@@ -1365,7 +1365,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Update the restaurant with the new banner URLs
       const updatedRestaurant = await storage.updateRestaurant(restaurantId, {
         bannerUrl: newBannerUrl, // Update the legacy field with the new default
-        bannerUrls: updatedBannerUrls
+        bannerUrls: updatedBannerUrls,
+        themeSettings: restaurant.themeSettings // Preserve theme settings
       });
       
       if (!updatedRestaurant) {

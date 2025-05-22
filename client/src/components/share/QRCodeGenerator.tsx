@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { 
   Select,
   SelectContent,
@@ -12,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Restaurant } from "@shared/schema";
-import { Download, Printer } from "lucide-react";
+import { Download, Printer, Palette, Settings2 } from "lucide-react";
 
 interface QRCodeGeneratorProps {
   restaurant: Restaurant;
@@ -22,11 +23,51 @@ interface QRCodeGeneratorProps {
 const QRCodeGenerator = ({ restaurant, menuUrl }: QRCodeGeneratorProps) => {
   const [size, setSize] = useState<number>(300);
   const [qrColor, setQrColor] = useState<string>("#FF6B35");
+  const [backgroundColor, setBackgroundColor] = useState<string>("#ffffff");
   const [includeLogo, setIncludeLogo] = useState<boolean>(true);
+  const [logoSize, setLogoSize] = useState<number>(50);
+  const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<"L" | "M" | "Q" | "H">("M");
+  const [customText, setCustomText] = useState<string>("");
+  const [includeRestaurantInfo, setIncludeRestaurantInfo] = useState<boolean>(true);
+  const [borderWidth, setBorderWidth] = useState<number>(4);
   const qrRef = useRef<HTMLDivElement>(null);
 
   const handleColorChange = (e: ChangeEvent<HTMLInputElement>) => {
     setQrColor(e.target.value);
+  };
+
+  const handleBackgroundColorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setBackgroundColor(e.target.value);
+  };
+
+  // Create a branded QR code with custom styling
+  const generateBrandedQRCode = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const qrSize = size;
+    const totalSize = qrSize + (borderWidth * 2) + (includeRestaurantInfo ? 120 : 0);
+    
+    canvas.width = totalSize;
+    canvas.height = totalSize;
+    
+    // Fill background
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0, 0, totalSize, totalSize);
+    
+    // Add restaurant branding if enabled
+    if (includeRestaurantInfo) {
+      ctx.fillStyle = qrColor;
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(restaurant.name, totalSize / 2, 40);
+      
+      ctx.font = '16px Arial';
+      ctx.fillText(customText || 'Scan to view our menu', totalSize / 2, 70);
+    }
+    
+    return canvas;
   };
 
   const downloadQRCode = () => {
