@@ -1816,7 +1816,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Count restaurants by user ID
-  async countRestaurantsByUserId(userId: number): Promise<number> {```text
+  async countRestaurantsByUserId(userId: number): Promise<number> {
     const [result] = await db.select({ count: count() })
       .from(restaurants)
       .where(eq(restaurants.userId, userId));
