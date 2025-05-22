@@ -1504,34 +1504,39 @@ export class DatabaseStorage implements IStorage {
 
   async incrementQRCodeScans(id: number): Promise<Restaurant | undefined> {
     try {
-      console.log(`Storage: Starting QR code scan increment for restaurant ${id}`);
+      // Use direct SQL to atomically increment the counter
+      const { pool } = await import('./db');
+      const result = await pool.query(
+        'UPDATE restaurants SET qr_code_scans = COALESCE(qr_code_scans, 0) + 1 WHERE id = $1 RETURNING *',
+        [id]
+      );
 
-      // First get current restaurant
-      const restaurant = await this.getRestaurant(id);
-      if (!restaurant) {
-        console.error(`Storage: Restaurant ${id} not found`);
+      if (result.rows.length === 0) {
         return undefined;
       }
 
-      // Get current scan count
-      const currentScans = restaurant.qrCodeScans || 0;
-      console.log(`Storage: Current scan count: ${currentScans}`);
-
-      // Try to update with new count
-      const updatedRestaurant = await this.updateRestaurant(id, {
-        qrCodeScans: currentScans + 1
-      });
-
-      if (updatedRestaurant) {
-        console.log(`Storage: Successfully updated QR scans to ${updatedRestaurant.qrCodeScans}`);
-      } else {
-        console.error(`Storage: Failed to update QR scans`);
-      }
-
-      return updatedRestaurant;
+      // Map the raw result to match our schema
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        userId: row.user_id,
+        name: row.name,
+        description: row.description,
+        cuisine: row.cuisine,
+        logoUrl: row.logo_url,
+        bannerUrl: row.banner_url,
+        bannerUrls: Array.isArray(row.banner_urls) ? row.banner_urls : [],
+        phone: row.phone,
+        email: row.email,
+        address: row.address,
+        hoursOfOperation: row.hours_of_operation,
+        tags: row.tags || [],
+        themeSettings: row.theme_settings || {},
+        qrCodeScans: row.qr_code_scans || 0
+      };
     } catch (error) {
-      console.error(`Storage: Error in incrementQRCodeScans:`, error);
-      throw error; // Rethrow to allow retry logic above
+      console.error('Error incrementing QR code scans:', error);
+      throw error;
     }
   }
 

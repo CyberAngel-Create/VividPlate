@@ -47,7 +47,7 @@ export const restaurants = pgTable("restaurants", {
   address: text("address"),
   hoursOfOperation: jsonb("hours_of_operation"),
   tags: text("tags").array(),
-  qrCodeScans: integer("qr_code_scans").default(0), // Track QR code scans
+  qrCodeScans: integer("qr_code_scans").notNull().default(0), // Track QR code scans
   // Theme customization
   themeSettings: jsonb("theme_settings").default({
     backgroundColor: "#ffffff",
