@@ -748,21 +748,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               </div>
                               
                               <div className="text-center">
-                                <ItemFeedbackDialog
-                                  menuItem={{
-                                    id: item.id,
-                                    name: item.name,
-                                    imageUrl: item.imageUrl
-                                  }}
+                                <FeedbackDialog
+                                  menuItemId={item.id}
+                                  menuItemName={item.name}
                                   restaurantId={restaurant.id}
-                                >
-                                  <button 
-                                    className="text-xs underline hover:opacity-80 transition-opacity"
-                                    style={{ color: menuTheme.accentColor }}
-                                  >
-                                    {t('menu.clickToLeaveFeedback', 'Click to leave feedback')}
-                                  </button>
-                                </ItemFeedbackDialog>
+                                  variant="ghost"
+                                  size="sm"
+                                  position="inline"
+                                />
                               </div>
                             </div>
                           </div>
