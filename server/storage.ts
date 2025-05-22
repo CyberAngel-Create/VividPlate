@@ -1504,64 +1504,34 @@ export class DatabaseStorage implements IStorage {
 
   async incrementQRCodeScans(id: number): Promise<Restaurant | undefined> {
     try {
-      console.log(`Starting QR code scan increment for restaurant ID ${id}`);
+      console.log(`Storage: Starting QR code scan increment for restaurant ${id}`);
 
+      // First get current restaurant
       const restaurant = await this.getRestaurant(id);
       if (!restaurant) {
-        console.error(`Restaurant with ID ${id} not found when incrementing QR code scans`);
+        console.error(`Storage: Restaurant ${id} not found`);
         return undefined;
       }
 
+      // Get current scan count
       const currentScans = restaurant.qrCodeScans || 0;
-      console.log(`Current QR code scan count for restaurant ID ${id}: ${currentScans}`);
+      console.log(`Storage: Current scan count: ${currentScans}`);
 
-      // Try multiple approaches to ensure the scan gets counted
-      // Method 1: Direct update with the regular updateRestaurant method
-      try {
-        const updatedRestaurant = await this.updateRestaurant(id, { qrCodeScans: currentScans + 1 });
-        if (updatedRestaurant) {
-          console.log(`Successfully incremented QR code scans for restaurant ID ${id} to ${updatedRestaurant.qrCodeScans}`);
-          return updatedRestaurant;
-        }
-      } catch (error1) {
-        console.error(`First method failed to increment QR code scans: ${error1}`);
+      // Try to update with new count
+      const updatedRestaurant = await this.updateRestaurant(id, {
+        qrCodeScans: currentScans + 1
+      });
+
+      if (updatedRestaurant) {
+        console.log(`Storage: Successfully updated QR scans to ${updatedRestaurant.qrCodeScans}`);
+      } else {
+        console.error(`Storage: Failed to update QR scans`);
       }
 
-      // Method 2: Direct ORM update (original method)
-      try {
-        const [updatedRestaurant] = await db
-          .update(restaurants)
-          .set({ qrCodeScans: currentScans + 1 })
-          .where(eq(restaurants.id, id))
-          .returning();
-
-        console.log(`Successfully incremented QR code scans via method 2 for restaurant ID ${id} to ${updatedRestaurant.qrCodeScans}`);
-        return updatedRestaurant;
-      } catch (error2) {
-        console.error(`Second method failed to increment QR code scans: ${error2}`);
-      }
-
-      // Method 3: Raw SQL query as final fallback
-      try {
-        const result = await db.execute(
-          `UPDATE restaurants SET qr_code_scans = $1 WHERE id = $2 RETURNING *`,
-          [currentScans + 1, id]
-        );
-
-        if (result.rows && result.rows.length > 0) {
-          console.log(`Successfully incremented QR code scans via raw query for restaurant ID ${id}`);
-          return result.rows[0] as Restaurant;
-        }
-      } catch (error3) {
-        console.error(`All methods failed to increment QR code scans: ${error3}`);
-      }
-
-      // If all methods failed, log it but return the restaurant anyway
-      console.error(`Failed to increment QR code scans for restaurant ID ${id} using all available methods`);
-      return restaurant;
+      return updatedRestaurant;
     } catch (error) {
-      console.error(`Error in incrementQRCodeScans for restaurant ID ${id}: ${error}`);
-      return undefined;
+      console.error(`Storage: Error in incrementQRCodeScans:`, error);
+      throw error; // Rethrow to allow retry logic above
     }
   }
 
@@ -1846,7 +1816,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Count restaurants by user ID
-  async countRestaurantsByUserId(userId: number): Promise<number> {
+  async countRestaurantsByUserId(userId: number): Promise<number> {```text
     const [result] = await db.select({ count: count() })
       .from(restaurants)
       .where(eq(restaurants.userId, userId));
