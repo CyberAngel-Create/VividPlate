@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { X, MessageSquare } from 'lucide-react';
 import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
-import FeedbackDialog from './feedback-dialog';
+import ItemFeedbackDialog from './item-feedback-dialog';
 import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
 
@@ -68,23 +68,23 @@ const ImageViewDialog = ({
               <div className="mt-4 border-t pt-4">
                 <h4 className="text-sm font-medium mb-2">{t("feedback.leaveReview", "Share your thoughts")}</h4>
                 <div className="flex justify-start">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center"
-                    onClick={() => {
-                      setOpen(false);
-                      setTimeout(() => {
-                        const feedbackBtn = document.getElementById(`feedback-btn-${menuItemId}`);
-                        if (feedbackBtn) {
-                          (feedbackBtn as HTMLButtonElement).click();
-                        }
-                      }, 100);
+                  <ItemFeedbackDialog
+                    menuItem={{
+                      id: menuItemId,
+                      name: imageAlt,
+                      imageUrl: imageSrc
                     }}
+                    restaurantId={restaurantId}
                   >
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    {t("feedback.leaveFeedback", "Leave Feedback")}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center"
+                    >
+                      <MessageSquare className="h-4 w-4 mr-2" />
+                      {t("feedback.leaveFeedback", "Leave Feedback")}
+                    </Button>
+                  </ItemFeedbackDialog>
                 </div>
               </div>
             )}
