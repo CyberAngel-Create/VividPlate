@@ -37,21 +37,13 @@ const ResponsiveImage = ({
   const [error, setError] = useState(false);
   
   useEffect(() => {
-    // Reset state when src changes
-    setLoading(true);
-    setError(false);
-    
-    if (!src) {
-      // Handle null or undefined src
-      setImageSrc(getFallbackImage(fallbackType));
-      setLoading(false);
-      setError(true);
-      return;
+    // Only update if src actually changes
+    const normalizedSrc = src ? normalizeImageUrl(src) : getFallbackImage(fallbackType);
+    if (normalizedSrc !== imageSrc) {
+      setLoading(true);
+      setError(false);
+      setImageSrc(normalizedSrc);
     }
-    
-    // Normalize the source URL
-    const normalizedSrc = normalizeImageUrl(src);
-    setImageSrc(normalizedSrc);
   }, [src, fallbackType]);
   
   const handleLoad = () => {

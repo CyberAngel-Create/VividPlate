@@ -34,7 +34,7 @@ const ViewMenu = () => {
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
-  
+
   // Check if user is authenticated
   useEffect(() => {
     const checkAuth = async () => {
@@ -45,10 +45,10 @@ const ViewMenu = () => {
         setIsAuthenticated(false);
       }
     };
-    
+
     checkAuth();
   }, []);
-  
+
   // Handle logout
   const handleLogout = async () => {
     try {
@@ -66,13 +66,13 @@ const ViewMenu = () => {
       });
     }
   };
-  
+
   // Get source parameter from URL (e.g., qr or link)
   // Get source parameter from URL (e.g. ?source=qr), with strong default to "qr" if coming from a QR code scan
   const sourceParam = new URLSearchParams(window.location.search).get("source");
   const source = sourceParam || (window.location.search.includes("qr") ? "qr" : "link");
   console.log("Menu view source detected:", source);
-  
+
   // First lookup restaurant ID by name using the dedicated API endpoint
   useEffect(() => {
     if (restaurantName) {
@@ -80,7 +80,7 @@ const ViewMenu = () => {
         try {
           // Use the new dedicated API endpoint for looking up restaurant by name
           const response = await apiRequest("GET", `/api/restaurants/name/${restaurantName}`);
-          
+
           if (response.ok) {
             const restaurant = await response.json();
             setRestaurantId(restaurant.id);
@@ -94,63 +94,51 @@ const ViewMenu = () => {
           setLocation("/");
         }
       };
-      
+
       fetchRestaurantIdByName();
     }
   }, [restaurantName, setLocation]);
-  
+
   // Record menu view and make sure QR code scans are counted properly
   useEffect(() => {
     if (restaurantId) {
       const recordView = async () => {
         try {
           console.log(`Recording view for restaurant ${restaurantId} from source ${source}`);
-          
+
           // First attempt - using the regular view endpoint
           let response = await apiRequest("POST", `/api/restaurants/${restaurantId}/views`, { source });
           console.log("View recorded successfully:", response);
-          
+
           // For QR code scans, make an additional separate request to ensure the counter increments
           if (source === 'qr') {
-            console.log(`This is a QR code scan, making extra request to increment the counter`);
-            
-            // Use dedicated endpoint for QR code scan counting
-            try {
-              // Make multiple attempts to ensure the scan gets counted
-              for (let attempt = 1; attempt <= 3; attempt++) {
-                try {
-                  console.log(`QR scan counter increment attempt ${attempt}/3`);
-                  const qrResponse = await apiRequest("POST", `/api/restaurants/${restaurantId}/qr-scan`, { source: 'qr' });
-                  console.log(`QR scan counter incremented (attempt ${attempt}):`, qrResponse);
-                  break; // Success, exit the retry loop
-                } catch (retryError) {
-                  console.error(`QR scan counter increment attempt ${attempt} failed:`, retryError);
-                  if (attempt === 3) {
-                    throw retryError; // Re-throw after all attempts fail
-                  }
-                  // Wait before retry (exponential backoff)
-                  await new Promise(resolve => setTimeout(resolve, attempt * 500));
-                }
-              }
-            } catch (qrError) {
-              console.error("All QR scan counter increment attempts failed:", qrError);
-            }
+        try {
+          // Make a dedicated API call to increment QR scans
+          const response = await apiRequest("POST", `/api/restaurants/${restaurantId}/qr-scan`);
+          if (response.ok) {
+            console.log(`QR code scan successfully recorded for restaurant ${restaurantId}`);
+          } else {
+            console.error(`Failed to record QR code scan for restaurant ${restaurantId}`);
           }
+        } catch (qrError) {
+          console.error("Failed to record QR code scan:", qrError);
+        }
+      }
         } catch (error) {
           console.error("Failed to record menu view:", error);
         }
       };
-      
+
       recordView();
     }
   }, [restaurantId, source]);
-  
+
   // Fetch menu data
   const { data, isLoading, error } = useQuery<MenuData>({
     queryKey: [restaurantId ? `/api/restaurants/${restaurantId}/menu` : null],
     enabled: !!restaurantId,
   });
-  
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen p-4">
@@ -158,7 +146,7 @@ const ViewMenu = () => {
       </div>
     );
   }
-  
+
   if (error || !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-center">
@@ -173,22 +161,22 @@ const ViewMenu = () => {
       </div>
     );
   }
-  
+
   const { restaurant, menu } = data;
-  
+
   // Import the useSubscription hook for ad display control
   const { isPaid: isCurrentUserPaid } = useSubscription();
-  
+
   // Check if the restaurant owner has a premium subscription
   // If the server explicitly tells us the restaurant is premium, use that value
   // Otherwise fall back to checking if the restaurant's owner subscription tier is premium
   const isRestaurantPremium = restaurant.isPremium !== undefined 
     ? restaurant.isPremium 
     : (restaurant.userId && restaurant.subscriptionTier === "premium");
-    
+
   // Show ads only if the restaurant owner doesn't have a premium subscription
   const showAds = !isRestaurantPremium;
-  
+
   console.log("Restaurant subscription status:", {
     restaurantId: restaurant.id,
     restaurantUserId: restaurant.userId,
@@ -202,7 +190,7 @@ const ViewMenu = () => {
     <div className="flex flex-col min-h-screen w-full">
       {/* Add a spacer to prevent content from being hidden by mobile header/restaurant switcher */}
       <div className="h-16 md:h-0 w-full"></div>
-      
+
       <div className="flex flex-col items-center flex-grow pt-4">
         {/* Top advertisement from advertisement management system - only shown if restaurant is not premium */}
         {showAds && (
@@ -210,12 +198,12 @@ const ViewMenu = () => {
             <MenuAdvertisement position="top" restaurantId={restaurant.id} />
           </div>
         )}
-        
+
         {/* Top ad banner for free users - only shown if restaurant is not premium */}
         {showAds && (
           <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
         )}
-        
+
         <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full max-w-screen-xl">
           <div className="flex flex-col lg:flex-row w-full gap-6">
             {/* Sidebar advertisement (left side on larger screens) - only shown if restaurant is not premium */}
@@ -224,7 +212,7 @@ const ViewMenu = () => {
                 <MenuAdvertisement position="sidebar" restaurantId={restaurant.id} />
               </div>
             )}
-            
+
             {/* Main menu content - takes full width when ads are not shown */}
             <div className={`${showAds ? 'lg:w-3/4' : 'w-full'} order-1 lg:order-2`}>
               <CustomerMenuPreview 
@@ -234,20 +222,20 @@ const ViewMenu = () => {
             </div>
           </div>
         </div>
-        
+
         {/* Bottom advertisement from advertisement management system - only shown if restaurant is not premium */}
         {showAds && (
           <div className="w-full max-w-screen-md px-4 mt-6">
             <MenuAdvertisement position="bottom" restaurantId={restaurant.id} />
           </div>
         )}
-        
+
         {/* Bottom ad banner for free users - only shown if restaurant is not premium */}
         {showAds && (
           <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
         )}
       </div>
-      
+
       {/* Footer removed from customer view as requested */}
     </div>
   );
