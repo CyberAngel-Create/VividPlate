@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import MenuItemForm from "./MenuItemForm";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
+import { Image } from "lucide-react";
 
 interface MenuItemsListProps {
   category: MenuCategory | null;
@@ -49,7 +50,7 @@ const MenuItemsList = ({
   const [deletingItem, setDeletingItem] = useState<MenuItem | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   // Auto-open the edit dialog if a specific item ID is passed
   useEffect(() => {
     if (selectedItemId && items.length > 0) {
@@ -91,17 +92,17 @@ const MenuItemsList = ({
     setDeletingItem(item);
     setIsDeleteDialogOpen(true);
   };
-  
+
   // Filter items based on search query
   const filteredItems = useMemo(() => {
     if (!searchQuery.trim()) return items;
-    
+
     const query = searchQuery.toLowerCase().trim();
     return items.filter(item => {
       const nameMatch = item.name.toLowerCase().includes(query);
       const descMatch = item.description?.toLowerCase().includes(query);
       const tagMatch = item.tags?.some(tag => tag.toLowerCase().includes(query));
-      
+
       return nameMatch || descMatch || tagMatch;
     });
   }, [items, searchQuery]);
@@ -112,7 +113,7 @@ const MenuItemsList = ({
         <h2 className="text-xl font-heading font-semibold dark:text-white">
           {category ? category.name : "Select a Category"}
         </h2>
-        
+
         {category && (
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
@@ -135,7 +136,7 @@ const MenuItemsList = ({
           </Dialog>
         )}
       </div>
-      
+
       {/* Search bar for menu items */}
       {category && items.length > 0 && (
         <div className="relative mb-6">
@@ -151,7 +152,7 @@ const MenuItemsList = ({
           />
         </div>
       )}
-      
+
       {!category ? (
         <div className="text-center py-12">
           <p className="text-midgray mb-2">No category selected</p>
@@ -244,6 +245,14 @@ const MenuItemsList = ({
                     >
                       <Trash className="mr-1 h-4 w-4" /> Delete
                     </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="text-secondary hover:text-secondary/80 hover:bg-secondary/10 flex items-center"
+                    >
+                      <Image className="h-4 w-4 mr-1" />
+                      View
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -251,7 +260,7 @@ const MenuItemsList = ({
           ))}
         </div>
       )}
-      
+
       {/* Edit Dialog */}
       {editingItem && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -270,7 +279,7 @@ const MenuItemsList = ({
           </DialogContent>
         </Dialog>
       )}
-      
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent className="dark:bg-gray-800">

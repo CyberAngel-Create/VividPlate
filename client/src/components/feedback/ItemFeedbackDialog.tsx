@@ -2,11 +2,8 @@
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Star } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { Image } from "lucide-react";
+import { ResponsiveImage } from "@/components/ui/responsive-image";
 import { MenuItem } from "@shared/schema";
 
 interface ItemFeedbackDialogProps {
@@ -61,62 +58,29 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Rate this dish</DialogTitle>
+          <DialogTitle>{menuItem.name}</DialogTitle>
           <DialogDescription>
-            Please share your feedback about <span className="font-medium">{menuItem.name}</span>
+            {menuItem.description}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-4">
-          <div className="space-y-2">
-            <Label>Rating</Label>
-            <div className="flex items-center justify-center space-x-2">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setRating(value)}
-                  className="focus:outline-none"
-                >
-                  <Star
-                    className={`h-8 w-8 ${
-                      value <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="comment">Comments</Label>
-            <Textarea
-              id="comment"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Share your thoughts about this item..."
-              className="min-h-[100px]"
-            />
-          </div>
+        <div className="mt-4 relative aspect-video overflow-hidden rounded-lg">
+          <ResponsiveImage
+            src={menuItem.imageUrl}
+            alt={menuItem.name}
+            className="object-cover"
+          />
         </div>
 
-        <DialogFooter className="sm:justify-between">
+        <DialogFooter className="mt-4">
           <Button 
             type="button" 
             variant="outline" 
             onClick={() => setOpen(false)}
-            disabled={isSubmitting}
           >
-            Cancel
-          </Button>
-          <Button 
-            type="button" 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
+            Close
           </Button>
         </DialogFooter>
       </DialogContent>
