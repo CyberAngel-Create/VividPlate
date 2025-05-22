@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -22,10 +23,11 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
   const { toast } = useToast();
 
   const handleSubmit = async () => {
+    if (!menuItem) return;
+    
     setIsSubmitting(true);
 
     try {
-      // Send feedback to the server
       await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback`, {
         menuItemId: menuItem.id,
         rating,
@@ -38,7 +40,6 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
         variant: "default",
       });
 
-      // Reset form and close dialog
       setRating(5);
       setComment("");
       setOpen(false);
@@ -53,6 +54,8 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
     }
   };
 
+  if (!menuItem) return null;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -62,11 +65,7 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
         <DialogHeader>
           <DialogTitle>Rate this dish</DialogTitle>
           <DialogDescription>
-            {menuItem ? (
-              <>Please share your feedback about <span className="font-medium">{menuItem.name}</span></>
-            ) : (
-              'Please share your feedback'
-            )}
+            Please share your feedback about <span className="font-medium">{menuItem.name}</span>
           </DialogDescription>
         </DialogHeader>
 
@@ -126,4 +125,3 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
 };
 
 export default ItemFeedbackDialog;
-```
