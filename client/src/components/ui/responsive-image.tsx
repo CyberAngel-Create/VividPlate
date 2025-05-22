@@ -101,4 +101,4 @@ const ResponsiveImage = ({
   );
 };
 
-export default ResponsiveImage;
+export { ResponsiveImage };
