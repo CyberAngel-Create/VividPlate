@@ -1,12 +1,14 @@
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import { Badge } from "@/components/ui/badge";
-import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee, ArrowUp, ArrowDown, Grid3X3, List, ChevronUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Facebook, Instagram, Globe, MessageSquare, ChevronLeft, ChevronRight, Utensils, Coffee, ArrowUp, ArrowDown, Grid3X3, List, ChevronUp, LayoutGrid } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import React, { useState, useMemo, useEffect, CSSProperties, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
+import ItemFeedbackDialog from "@/components/feedback/ItemFeedbackDialog";
 import CompactSearch from "@/components/ui/compact-search";
 import MenuLanguageSwitcher from "@/components/ui/menu-language-switcher";
 import ResponsiveImage from "@/components/ui/responsive-image";
@@ -718,25 +720,40 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               </p>
                             )}
                             
-                            <div className="flex items-center justify-between mt-auto">
-                              <span className="font-semibold text-sm" style={menuItemPriceStyle}>
-                                {formatCurrency(item.price, item.currency)}
-                              </span>
+                            <div className="mt-auto space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="font-semibold text-sm" style={menuItemPriceStyle}>
+                                  {formatCurrency(item.price, item.currency)}
+                                </span>
+                                
+                                <Button
+                                  size="sm"
+                                  className="h-6 px-2 text-xs"
+                                  style={{ 
+                                    backgroundColor: menuTheme.accentColor, 
+                                    color: 'white',
+                                    fontSize: '10px'
+                                  }}
+                                >
+                                  {t('menu.addToOrder', 'Add')}
+                                </Button>
+                              </div>
                               
-                              {item.tags && item.tags.length > 0 && (
-                                <div className="flex flex-wrap gap-1">
-                                  {item.tags.slice(0, 2).map((tag, tagIndex) => (
-                                    <Badge 
-                                      key={tagIndex} 
-                                      variant="outline" 
-                                      className="text-xs px-1 py-0 h-5"
-                                      style={{ borderColor: menuTheme.accentColor, color: menuTheme.accentColor }}
-                                    >
-                                      {tag}
-                                    </Badge>
-                                  ))}
-                                </div>
-                              )}
+                              <div className="text-center">
+                                <ItemFeedbackDialog
+                                  menuItemId={item.id}
+                                  restaurantId={restaurant.id}
+                                  itemName={item.name}
+                                  itemImageUrl={item.imageUrl}
+                                >
+                                  <button 
+                                    className="text-xs underline hover:opacity-80 transition-opacity"
+                                    style={{ color: menuTheme.accentColor }}
+                                  >
+                                    {t('menu.clickToLeaveFeedback', 'Click to leave feedback')}
+                                  </button>
+                                </ItemFeedbackDialog>
+                              </div>
                             </div>
                           </div>
                         </div>
