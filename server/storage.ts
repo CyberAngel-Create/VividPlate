@@ -1504,36 +1504,24 @@ export class DatabaseStorage implements IStorage {
 
   async incrementQRCodeScans(id: number): Promise<Restaurant | undefined> {
     try {
-      // Use direct SQL to atomically increment the counter
-      const { pool } = await import('./db');
-      const result = await pool.query(
-        'UPDATE restaurants SET qr_code_scans = COALESCE(qr_code_scans, 0) + 1 WHERE id = $1 RETURNING *',
-        [id]
-      );
-
-      if (result.rows.length === 0) {
+      console.log('Incrementing QR code scans for restaurant:', id);
+      
+      // Get current restaurant first to verify it exists
+      const restaurant = await this.getRestaurant(id);
+      if (!restaurant) {
+        console.error('Restaurant not found:', id);
         return undefined;
       }
 
-      // Map the raw result to match our schema
-      const row = result.rows[0];
-      return {
-        id: row.id,
-        userId: row.user_id,
-        name: row.name,
-        description: row.description,
-        cuisine: row.cuisine,
-        logoUrl: row.logo_url,
-        bannerUrl: row.banner_url,
-        bannerUrls: Array.isArray(row.banner_urls) ? row.banner_urls : [],
-        phone: row.phone,
-        email: row.email,
-        address: row.address,
-        hoursOfOperation: row.hours_of_operation,
-        tags: row.tags || [],
-        themeSettings: row.theme_settings || {},
-        qrCodeScans: row.qr_code_scans || 0
-      };
+      // Use direct SQL to atomically increment the counter
+      const { pool } = await import('./db');
+      const result = await pool.query(
+        'UPDATE restaurants SET qr_code_scans = COALESCE(qr_code_scans, 0) + 1 WHERE id = $1',
+        [id]
+      );
+
+      // Return updated restaurant data
+      return await this.getRestaurant(id);
     } catch (error) {
       console.error('Error incrementing QR code scans:', error);
       throw error;
