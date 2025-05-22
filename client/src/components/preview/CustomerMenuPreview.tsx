@@ -726,17 +726,25 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                   {formatCurrency(item.price, item.currency)}
                                 </span>
                                 
-                                <Button
-                                  size="sm"
-                                  className="h-6 px-2 text-xs"
-                                  style={{ 
-                                    backgroundColor: menuTheme.accentColor, 
-                                    color: 'white',
-                                    fontSize: '10px'
-                                  }}
+                                <ImageViewDialog 
+                                  imageSrc={normalizeImageUrl(item.imageUrl)} 
+                                  imageAlt={item.name}
+                                  description={item.description ? item.description : undefined}
+                                  menuItemId={item.id}
+                                  restaurantId={restaurant.id}
                                 >
-                                  {t('menu.addToOrder', 'Add')}
-                                </Button>
+                                  <Button
+                                    size="sm"
+                                    className="h-6 px-2 text-xs"
+                                    style={{ 
+                                      backgroundColor: menuTheme.accentColor, 
+                                      color: 'white',
+                                      fontSize: '10px'
+                                    }}
+                                  >
+                                    {t('menu.view', 'View')}
+                                  </Button>
+                                </ImageViewDialog>
                               </div>
                               
                               <div className="text-center">

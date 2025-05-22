@@ -97,6 +97,7 @@ const translations = {
     downloadQR: 'Download QR Code',
     customizeQR: 'Customize QR Code',
     addToOrder: 'Add',
+    view: 'View',
   },
   restaurant: {
     uploadLogo: 'Upload Restaurant Logo',
