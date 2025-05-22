@@ -23,7 +23,7 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    
+
     try {
       // Send feedback to the server
       await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback`, {
@@ -31,13 +31,13 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
         rating,
         comment
       });
-      
+
       toast({
         title: "Feedback submitted",
         description: "Thank you for your feedback!",
         variant: "default",
       });
-      
+
       // Reset form and close dialog
       setRating(5);
       setComment("");
@@ -62,10 +62,14 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
         <DialogHeader>
           <DialogTitle>Rate this dish</DialogTitle>
           <DialogDescription>
-            Please share your feedback about <span className="font-medium">{menuItem.name}</span>
+            {menuItem ? (
+              <>Please share your feedback about <span className="font-medium">{menuItem.name}</span></>
+            ) : (
+              'Please share your feedback'
+            )}
           </DialogDescription>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
             <Label>Rating</Label>
@@ -86,7 +90,7 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
               ))}
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="comment">Comments</Label>
             <Textarea
@@ -98,7 +102,7 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
             />
           </div>
         </div>
-        
+
         <DialogFooter className="sm:justify-between">
           <Button 
             type="button" 
@@ -122,3 +126,4 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
 };
 
 export default ItemFeedbackDialog;
+```
