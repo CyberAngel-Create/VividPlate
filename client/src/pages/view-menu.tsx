@@ -216,23 +216,7 @@ const ViewMenu = () => {
             {/* Main menu content - takes full width when ads are not shown */}
             <div className={`${showAds ? 'lg:w-3/4' : 'w-full'} order-1 lg:order-2`}>
               <CustomerMenuPreview 
-                restaurant={{
-                  ...restaurant,
-                  themeSettings: restaurant.themeSettings ? 
-                    (typeof restaurant.themeSettings === 'string' ? 
-                      JSON.parse(restaurant.themeSettings) : 
-                      restaurant.themeSettings
-                    ) : {
-                      backgroundColor: "#ffffff",
-                      textColor: "#000000",
-                      headerColor: "#f5f5f5",
-                      accentColor: "#4f46e5",
-                      fontFamily: "Inter, sans-serif",
-                      menuItemColor: "#333333",
-                      menuDescriptionColor: "#666666",
-                      menuPriceColor: "#111111"
-                    }
-                }}
+                restaurant={restaurant}
                 menuData={menu}
                 previewMode={false}
               />
