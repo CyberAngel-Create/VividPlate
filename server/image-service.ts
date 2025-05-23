@@ -54,12 +54,12 @@ class ImageService {
         fs.unlinkSync(processedFilePath);
       }
       
-      // Try to upload to Backblaze if configured
+      // Always try to upload to Backblaze for permanent storage
       let fileUrl = '';
       
       if (isBackblazeConfigured()) {
         try {
-          // Upload to Backblaze B2
+          // Upload to Backblaze B2 for permanent cloud storage
           fileUrl = await uploadToBackblaze(
             destPath,
             backblazeFolder,
@@ -67,11 +67,22 @@ class ImageService {
             'image/jpeg'
           );
           
-          console.log(`Image uploaded to Backblaze: ${fileUrl}`);
+          console.log(`✅ Image permanently stored in Backblaze: ${fileUrl}`);
+          
+          // Clean up local file after successful cloud upload
+          try {
+            fs.unlinkSync(destPath);
+            console.log(`🗑️ Local file cleaned up: ${destPath}`);
+          } catch (cleanupError) {
+            console.log(`⚠️ Could not clean up local file: ${cleanupError.message}`);
+          }
+          
           return fileUrl;
         } catch (backblazeError) {
-          console.error('Backblaze upload failed, using local storage:', backblazeError);
+          console.error('❌ Backblaze upload failed, using local storage as fallback:', backblazeError);
         }
+      } else {
+        console.log('⚠️ Backblaze not configured, storing locally');
       }
       
       // Generate a URL for local access

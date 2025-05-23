@@ -8,12 +8,12 @@ let s3Client: S3Client | null = null;
 // Initialize Backblaze B2 client
 export function getBackblazeClient(): S3Client {
   if (!s3Client) {
-    const endpoint = process.env.BACKBLAZE_ENDPOINT || '';
-    const region = process.env.BACKBLAZE_REGION || '';
-    const keyId = process.env.BACKBLAZE_KEY_ID || '';
+    const region = process.env.BACKBLAZE_BUCKET_REGION || 'us-west-002';
+    const keyId = process.env.BACKBLAZE_APPLICATION_KEY_ID || '';
     const applicationKey = process.env.BACKBLAZE_APPLICATION_KEY || '';
+    const endpoint = `https://s3.${region}.backblazeb2.com`;
     
-    if (!endpoint || !region || !keyId || !applicationKey) {
+    if (!keyId || !applicationKey) {
       throw new Error('Backblaze configuration is incomplete. Using local storage instead.');
     }
     
