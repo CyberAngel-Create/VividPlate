@@ -72,14 +72,22 @@ export async function uploadToBackblaze(
 // Check if Backblaze configuration is available
 export function isBackblazeConfigured(): boolean {
   try {
-    const endpoint = process.env.BACKBLAZE_ENDPOINT;
-    const region = process.env.BACKBLAZE_REGION;
-    const keyId = process.env.BACKBLAZE_KEY_ID;
+    const region = process.env.BACKBLAZE_BUCKET_REGION;
+    const keyId = process.env.BACKBLAZE_APPLICATION_KEY_ID;
     const applicationKey = process.env.BACKBLAZE_APPLICATION_KEY;
     const bucketName = process.env.BACKBLAZE_BUCKET_NAME;
     
-    return !!(endpoint && region && keyId && applicationKey && bucketName);
+    const isConfigured = !!(region && keyId && applicationKey && bucketName);
+    
+    if (isConfigured) {
+      console.log('✅ Backblaze B2 configured for permanent image storage');
+    } else {
+      console.log('⚠️ Backblaze B2 not configured - using local storage');
+    }
+    
+    return isConfigured;
   } catch (error) {
+    console.log('❌ Error checking Backblaze configuration:', error);
     return false;
   }
 }
