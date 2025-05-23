@@ -218,6 +218,7 @@ const ViewMenu = () => {
               <CustomerMenuPreview 
                 restaurant={restaurant}
                 menuData={menu}
+                previewMode={false}
               />
             </div>
           </div>
