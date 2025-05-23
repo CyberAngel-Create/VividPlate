@@ -32,6 +32,8 @@ import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/reset-password";
+import PrivacyPolicy from "./pages/privacy-policy";
+import CookieConsent from "./components/ui/cookie-consent";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
@@ -100,6 +102,7 @@ function Router() {
         <PublicRoute path="/register" component={Register} />
         <PublicRoute path="/forgot-password" component={ForgotPassword} />
         <PublicRoute path="/reset-password" component={ResetPassword} />
+        <PublicRoute path="/privacy-policy" component={PrivacyPolicy} />
         <PublicRoute path="/pricing" component={Pricing} />
         <PublicRoute path="/contact" component={Contact} />
         <PublicRoute path="/menu/:restaurantName" component={ViewMenu} />
@@ -151,6 +154,7 @@ function App() {
                   <Toaster />
                   <AdSense />
                   <Router />
+                  <CookieConsent />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
             </SubscriptionProvider>
