@@ -222,7 +222,16 @@ const ViewMenu = () => {
                     (typeof restaurant.themeSettings === 'string' ? 
                       JSON.parse(restaurant.themeSettings) : 
                       restaurant.themeSettings
-                    ) : undefined
+                    ) : {
+                      backgroundColor: "#ffffff",
+                      textColor: "#000000",
+                      headerColor: "#f5f5f5",
+                      accentColor: "#4f46e5",
+                      fontFamily: "Inter, sans-serif",
+                      menuItemColor: "#333333",
+                      menuDescriptionColor: "#666666",
+                      menuPriceColor: "#111111"
+                    }
                 }}
                 menuData={menu}
                 previewMode={false}
