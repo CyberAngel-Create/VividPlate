@@ -417,3 +417,26 @@ export const insertFileUploadSchema = createInsertSchema(fileUploads).pick({
 
 export type FileUpload = typeof fileUploads.$inferSelect;
 export type InsertFileUpload = z.infer<typeof insertFileUploadSchema>;
+
+// Ad settings for controlling advertisement positions and display
+export const adSettings = pgTable("ad_settings", {
+  id: serial("id").primaryKey(),
+  position: text("position").notNull().default("bottom"), // "top", "middle", "bottom", "sidebar"
+  isEnabled: boolean("is_enabled").notNull().default(true),
+  description: text("description").default("Where the advertisement will be displayed on the menu."),
+  displayFrequency: integer("display_frequency").default(1), // How often to show ads (every N items)
+  maxAdsPerPage: integer("max_ads_per_page").default(3),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAdSettingsSchema = createInsertSchema(adSettings).pick({
+  position: true,
+  isEnabled: true,
+  description: true,
+  displayFrequency: true,
+  maxAdsPerPage: true,
+});
+
+export type AdSettings = typeof adSettings.$inferSelect;
+export type InsertAdSettings = z.infer<typeof insertAdSettingsSchema>;

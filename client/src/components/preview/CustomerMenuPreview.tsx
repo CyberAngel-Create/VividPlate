@@ -27,7 +27,8 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
   bannerUrls, 
   restaurantName,
   logoUrl,
-  interval = 5000 // default to 5 seconds
+  interval = 5000, // default to 5 seconds
+  autoSlide = true // default to auto-slide enabled
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
@@ -42,9 +43,9 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
     return bannerUrls.filter(url => !!url);
   }, [bannerUrls]);
   
-  // Automatic slideshow - only runs when not hovering
+  // Automatic slideshow - only runs when not hovering and autoSlide is enabled
   useEffect(() => {
-    if (processedBannerUrls.length <= 1 || isHovering) return;
+    if (processedBannerUrls.length <= 1 || isHovering || !autoSlide) return;
     
     console.log('Banner slideshow initiated with interval:', interval);
     console.log('Available banner URLs:', processedBannerUrls);
@@ -64,7 +65,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
       console.log('Clearing banner slideshow interval');
       clearInterval(timer);
     };
-  }, [processedBannerUrls.length, interval, isHovering]);
+  }, [processedBannerUrls.length, interval, isHovering, autoSlide]);
   
   const prevSlide = () => {
     setActiveIndex((prev) => {
@@ -352,6 +353,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               bannerUrls={restaurant.bannerUrls as string[]} 
               restaurantName={restaurant.name}
               logoUrl={restaurant.logoUrl}
+              autoSlide={!previewMode} // Only auto-slide for real customers, not in preview mode
             />
           ) : restaurant.bannerUrl ? (
             <>
