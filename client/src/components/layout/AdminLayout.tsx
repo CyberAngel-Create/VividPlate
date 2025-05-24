@@ -319,6 +319,48 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                     </Link>
                   );
                 })}
+                
+                {/* Mobile Manage Site Section */}
+                <div className="mt-4">
+                  <button
+                    onClick={() => setIsManageSiteOpen(!isManageSiteOpen)}
+                    className="flex items-center justify-between w-full px-2 py-2 text-sm font-medium rounded-md mb-1
+                      text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                  >
+                    <div className="flex items-center">
+                      <Globe className="h-5 w-5 mr-3" />
+                      Manage Site
+                    </div>
+                    {isManageSiteOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </button>
+                  
+                  {isManageSiteOpen && (
+                    <div className="ml-6 mt-1 space-y-1">
+                      {manageSiteItems.map((item) => {
+                        const isActive = location === item.href;
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 ${
+                              isActive
+                                ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-300"
+                                : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                            }`}
+                          >
+                            <div className="mr-3">{item.icon}</div>
+                            {item.title}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </nav>
             </ScrollArea>
           </div>
