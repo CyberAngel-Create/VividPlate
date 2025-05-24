@@ -7,6 +7,19 @@ import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import React, { useState, useMemo, useEffect, CSSProperties, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { apiRequest } from "@/lib/queryClient";
+
+// Analytics function to track menu item clicks
+const trackMenuItemClick = async (itemId: number) => {
+  try {
+    await fetch(`/api/menu-items/${itemId}/track-click`, {
+      method: 'POST',
+      credentials: 'include'
+    });
+  } catch (error) {
+    // Silently fail - analytics shouldn't break user experience
+    console.debug('Analytics tracking failed:', error);
+  }
+};
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import ItemFeedbackDialog from "@/components/feedback/ItemFeedbackDialog";
@@ -601,6 +614,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                             description={item.description ? item.description : undefined}
                             menuItemId={item.id}
                             restaurantId={restaurant.id}
+                            onOpen={() => trackMenuItemClick(item.id)}
                           >
                             <div className="w-full h-24 sm:h-28 bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                               <ResponsiveImage 
@@ -705,6 +719,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 description={item.description ? item.description : undefined}
                                 menuItemId={item.id}
                                 restaurantId={restaurant.id}
+                                onOpen={() => trackMenuItemClick(item.id)}
                               >
                                 <div className="w-full h-full bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                                   <ResponsiveImage 
