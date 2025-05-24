@@ -1,124 +1,45 @@
-import { useState, useEffect } from 'react';
-import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
-import { Loader2 } from 'lucide-react';
+import React from 'react';
 import { cn } from '@/lib/utils';
+import { getFallbackImage } from '@/lib/imageUtils';
 
-interface ResponsiveImageProps {
-  src: string | null | undefined;
+interface ResponsiveImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  src: string;
   alt: string;
-  fallbackType?: 'menu' | 'logo' | 'banner';
   className?: string;
-  imgClassName?: string;
-  width?: number;
-  height?: number;
-  priority?: boolean;
-  onLoad?: () => void;
-  onError?: (e: React.SyntheticEvent<HTMLImageElement>) => void;
+  fallbackType?: 'menu' | 'logo' | 'banner';
 }
 
-/**
- * A responsive image component with proper fallback handling
- * and loading states - use this for all images in the app
- */
 const ResponsiveImage = ({
   src,
   alt,
-  fallbackType = 'menu',
   className,
-  imgClassName,
-  width,
-  height,
-  priority = false,
-  onLoad,
-  onError
+  fallbackType = 'menu',
+  ...props
 }: ResponsiveImageProps) => {
-  const [imageSrc, setImageSrc] = useState<string>('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  
-  useEffect(() => {
-    if (!src && !fallbackType) return;
-    
-    // Normalize the source URL
-    const normalizedSrc = src ? normalizeImageUrl(src) : getFallbackImage(fallbackType);
-    
-    // Handle deployed URLs properly
-    const isDeployedUrl = normalizedSrc.startsWith('https://') || normalizedSrc.startsWith('http://');
-    const finalSrc = isDeployedUrl ? normalizedSrc : `${window.location.origin}${normalizedSrc}`;
-    
-    // Add cache buster
-    const cacheBuster = `${finalSrc}${finalSrc.includes('?') ? '&' : '?'}t=${Date.now()}`;
-    
-    if (cacheBuster !== imageSrc) {
-      setLoading(true);
-      setError(false);
-      setImageSrc(cacheBuster);
-      
-      // Preload image
-      const img = new Image();
-      img.src = cacheBuster;
-      img.onload = () => setLoading(false);
-      img.onerror = (e) => {
-        console.error('Failed to load image:', cacheBuster);
-        setError(true);
-      };
+  const [error, setError] = React.useState(false);
+  const [imageSrc, setImageSrc] = React.useState(src);
+
+  const handleError = () => {
+    console.error('Failed to load image:', imageSrc);
+    // If not already using /uploads path, try it
+    if (!imageSrc.startsWith('/uploads/') && src.includes('uploads/')) {
+      const localPath = `/uploads/${src.split('uploads/').pop()}`;
+      console.log('Trying local path:', localPath);
+      setImageSrc(localPath);
+    } else {
+      setError(true);
     }
-  }, [src, fallbackType]);
-  
-  const handleLoad = () => {
-    setLoading(false);
-    setError(false);
-    onLoad?.();
-    
-    // Log successful image load for debugging
-    console.log(`Image loaded successfully: ${imageSrc}`);
   };
-  
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.error(`Failed to load image: ${imageSrc}`);
-    setLoading(false);
-    setError(true);
-    
-    // Try to get a fallback image
-    const fallbackImage = getFallbackImage(fallbackType);
-    
-    // Only set fallback if we're not already trying to load it
-    if (imageSrc !== fallbackImage) {
-      console.log(`Using fallback image: ${fallbackImage}`);
-      setImageSrc(fallbackImage);
-    }
-    
-    onError?.(e);
-  };
-  
+
   return (
-    <div className={cn('relative overflow-hidden', className)}>
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/20">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-        </div>
-      )}
-      
-      {imageSrc && (
-        <img
-          src={imageSrc}
-          alt={alt}
-          width={width}
-          height={height}
-          onLoad={handleLoad}
-          onError={handleError}
-          className={cn(
-            'transition-all duration-300',
-            loading ? 'opacity-0 scale-95' : 'opacity-100 scale-100',
-            error ? 'grayscale-[30%]' : '',
-            imgClassName
-          )}
-          loading={priority ? 'eager' : 'lazy'}
-        />
-      )}
-    </div>
+    <img
+      src={error ? getFallbackImage(fallbackType) : imageSrc}
+      alt={alt}
+      onError={handleError}
+      className={cn('w-full h-full object-cover', className)}
+      {...props}
+    />
   );
 };
 
-export { ResponsiveImage };
 export default ResponsiveImage;
