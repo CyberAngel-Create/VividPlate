@@ -58,7 +58,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     }
   };
 
-  const navItems: NavItem[] = [
+  const mainNavItems: NavItem[] = [
     {
       title: "Dashboard",
       href: "/admin",
@@ -84,6 +84,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       href: "/admin/logs",
       icon: <FileText className="h-5 w-5" />,
     },
+  ];
+
+  const bottomNavItems: NavItem[] = [
     {
       title: "Profile",
       href: "#profile",
@@ -137,37 +140,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </Link>
           </div>
           <nav className="flex-1 px-2 pb-4 space-y-1 mt-3">
-            {navItems.map((item) => {
+            {/* Main Navigation Items */}
+            {mainNavItems.map((item) => {
               const isActive = location === item.href;
-              
-              if (item.href === "#profile") {
-                return (
-                  <button
-                    key={item.title}
-                    onClick={() => setIsProfileOpen(true)}
-                    className="flex items-center px-2 py-1.5 text-xs font-medium rounded-md group w-full text-left
-                      text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
-                  >
-                    <div className="mr-2">{item.icon}</div>
-                    {item.title}
-                  </button>
-                );
-              }
-              
-              if (item.href === "#logout") {
-                return (
-                  <button
-                    key={item.title}
-                    onClick={handleLogout}
-                    className="flex items-center px-2 py-1.5 text-xs font-medium rounded-md group w-full text-left
-                      text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
-                  >
-                    <div className="mr-2">{item.icon}</div>
-                    {item.title}
-                  </button>
-                );
-              }
-              
               return (
                 <Link
                   key={item.href}
@@ -224,6 +199,56 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 </div>
               )}
             </div>
+
+            {/* Bottom Navigation Items */}
+            <div className="mt-4 space-y-1">
+              {bottomNavItems.map((item) => {
+                const isActive = location === item.href;
+                
+                if (item.href === "#profile") {
+                  return (
+                    <button
+                      key={item.title}
+                      onClick={() => setIsProfileOpen(true)}
+                      className="flex items-center px-2 py-1.5 text-xs font-medium rounded-md group w-full text-left
+                        text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                    >
+                      <div className="mr-2">{item.icon}</div>
+                      {item.title}
+                    </button>
+                  );
+                }
+                
+                if (item.href === "#logout") {
+                  return (
+                    <button
+                      key={item.title}
+                      onClick={handleLogout}
+                      className="flex items-center px-2 py-1.5 text-xs font-medium rounded-md group w-full text-left
+                        text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
+                    >
+                      <div className="mr-2">{item.icon}</div>
+                      {item.title}
+                    </button>
+                  );
+                }
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center px-2 py-1.5 text-xs font-medium rounded-md group ${
+                      isActive
+                        ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-300"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                    }`}
+                  >
+                    <div className="mr-2">{item.icon}</div>
+                    {item.title}
+                  </Link>
+                );
+              })}
+            </div>
           </nav>
         </div>
       </div>
@@ -261,48 +286,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             </div>
             <ScrollArea className="flex-1 dark:bg-gray-900">
               <nav className="px-2 pt-4 pb-10">
-                {navItems.map((item) => {
+                {/* Main Navigation Items */}
+                {mainNavItems.map((item) => {
                   const isActive = location === item.href;
-                  
-                  if (item.href === "#profile") {
-                    return (
-                      <button
-                        key={item.title}
-                        onClick={() => {
-                          setIsProfileOpen(true);
-                          setIsOpen(false);
-                        }}
-                        className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
-                          text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
-                      >
-                        <div className="mr-3">{item.icon}</div>
-                        {item.title}
-                      </button>
-                    );
-                  }
-                  
-                  if (item.href === "#logout") {
-                    return (
-                      <>
-                        <div className="flex items-center px-2 py-2 mb-1">
-                          <ThemeToggle showLabel={true} />
-                        </div>
-                        <button
-                          key={item.title}
-                          onClick={() => {
-                            handleLogout();
-                            setIsOpen(false);
-                          }}
-                          className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
-                            text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
-                        >
-                          <div className="mr-3">{item.icon}</div>
-                          {item.title}
-                        </button>
-                      </>
-                    );
-                  }
-                  
                   return (
                     <Link
                       key={item.href}
@@ -360,6 +346,68 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                       })}
                     </div>
                   )}
+                </div>
+
+                {/* Bottom Navigation Items */}
+                <div className="mt-4 space-y-1">
+                  {bottomNavItems.map((item) => {
+                    const isActive = location === item.href;
+                    
+                    if (item.href === "#profile") {
+                      return (
+                        <button
+                          key={item.title}
+                          onClick={() => {
+                            setIsProfileOpen(true);
+                            setIsOpen(false);
+                          }}
+                          className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
+                            text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                        >
+                          <div className="mr-3">{item.icon}</div>
+                          {item.title}
+                        </button>
+                      );
+                    }
+                    
+                    if (item.href === "#logout") {
+                      return (
+                        <>
+                          <div key="theme-toggle" className="flex items-center px-2 py-2 mb-1">
+                            <ThemeToggle showLabel={true} />
+                          </div>
+                          <button
+                            key={item.title}
+                            onClick={() => {
+                              handleLogout();
+                              setIsOpen(false);
+                            }}
+                            className="flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 w-full text-left
+                              text-red-500 hover:bg-gray-50 hover:text-red-600 dark:text-red-400 dark:hover:bg-gray-700 dark:hover:text-red-300"
+                          >
+                            <div className="mr-3">{item.icon}</div>
+                            {item.title}
+                          </button>
+                        </>
+                      );
+                    }
+                    
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setIsOpen(false)}
+                        className={`flex items-center px-2 py-2 text-sm font-medium rounded-md mb-1 ${
+                          isActive
+                            ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-300"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                        }`}
+                      >
+                        <div className="mr-3">{item.icon}</div>
+                        {item.title}
+                      </Link>
+                    );
+                  })}
                 </div>
               </nav>
             </ScrollArea>
