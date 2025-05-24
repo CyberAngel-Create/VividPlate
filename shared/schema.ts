@@ -440,3 +440,53 @@ export const insertAdSettingsSchema = createInsertSchema(adSettings).pick({
 
 export type AdSettings = typeof adSettings.$inferSelect;
 export type InsertAdSettings = z.infer<typeof insertAdSettingsSchema>;
+
+// Beautiful Menu Examples table for homepage showcase
+export const menuExamples = pgTable("menu_examples", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle").notNull(),
+  imageUrl: text("image_url").notNull(),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertMenuExampleSchema = createInsertSchema(menuExamples).pick({
+  title: true,
+  subtitle: true,
+  imageUrl: true,
+  displayOrder: true,
+  isActive: true,
+});
+
+export type MenuExample = typeof menuExamples.$inferSelect;
+export type InsertMenuExample = z.infer<typeof insertMenuExampleSchema>;
+
+// Customer Testimonials table for homepage
+export const testimonials = pgTable("testimonials", {
+  id: serial("id").primaryKey(),
+  customerName: text("customer_name").notNull(),
+  customerTitle: text("customer_title").notNull(),
+  customerInitials: text("customer_initials").notNull(),
+  testimonialText: text("testimonial_text").notNull(),
+  rating: integer("rating").default(5),
+  displayOrder: integer("display_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
+  customerName: true,
+  customerTitle: true,
+  customerInitials: true,
+  testimonialText: true,
+  rating: true,
+  displayOrder: true,
+  isActive: true,
+});
+
+export type Testimonial = typeof testimonials.$inferSelect;
+export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
