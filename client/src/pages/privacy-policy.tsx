@@ -25,7 +25,7 @@ const PrivacyPolicy: React.FC = () => {
               <Shield className="h-8 w-8 text-orange-500" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Privacy Policy</h1>
-                <p className="text-gray-600">MenuMate Digital Menu Platform</p>
+                <p className="text-gray-600">VividPlate Digital Menu Platform</p>
               </div>
             </div>
           </div>

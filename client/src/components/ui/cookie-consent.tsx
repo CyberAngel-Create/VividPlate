@@ -21,7 +21,7 @@ const CookieConsent: React.FC = () => {
   });
 
   useEffect(() => {
-    const hasConsented = localStorage.getItem('menumate-cookie-consent');
+    const hasConsented = localStorage.getItem('vividplate-cookie-consent');
     if (!hasConsented) {
       setIsVisible(true);
     }
@@ -29,7 +29,7 @@ const CookieConsent: React.FC = () => {
 
   const handleAccept = () => {
     localStorage.setItem('menumate-cookie-consent', 'accepted');
-    localStorage.setItem('menumate-cookie-settings', JSON.stringify(settings));
+    localStorage.setItem('vividplate-cookie-settings', JSON.stringify(settings));
     setIsVisible(false);
   };
 

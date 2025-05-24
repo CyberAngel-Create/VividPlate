@@ -26,7 +26,7 @@ const TermsOfService: React.FC = () => {
               <ScrollText className="h-8 w-8 text-orange-500" />
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Terms of Service</h1>
-                <p className="text-gray-600">MenuMate Digital Menu Platform</p>
+                <p className="text-gray-600">VividPlate Digital Menu Platform</p>
               </div>
             </div>
           </div>
@@ -43,7 +43,7 @@ const TermsOfService: React.FC = () => {
               Agreement to Terms
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              By accessing or using MenuMate's digital menu platform, you agree to be bound by these Terms of Service. 
+              By accessing or using VividPlate's digital menu platform, you agree to be bound by these Terms of Service. 
               If you disagree with any part of these terms, you may not access or use our services.
             </p>
           </section>
