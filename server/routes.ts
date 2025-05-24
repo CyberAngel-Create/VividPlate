@@ -1896,6 +1896,47 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Track menu item clicks
+  app.post('/api/menu-items/:itemId/click', async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.itemId);
+      const item = await storage.getMenuItem(itemId);
+      
+      if (!item) {
+        return res.status(404).json({ message: 'Item not found' });
+      }
+
+      const updatedItem = await storage.updateMenuItem(itemId, {
+        clickCount: (item.clickCount || 0) + 1
+      });
+
+      res.json({ success: true, clicks: updatedItem.clickCount });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to record click' });
+    }
+  });
+
+  // Get most clicked items for a restaurant
+  app.get('/api/restaurants/:restaurantId/most-clicked', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const categories = await storage.getMenuCategoriesByRestaurantId(restaurantId);
+      
+      let allItems = [];
+      for (const category of categories) {
+        const items = await storage.getMenuItemsByCategoryId(category.id);
+        allItems = [...allItems, ...items];
+      }
+      
+      // Sort by click count
+      const sortedItems = allItems.sort((a, b) => (b.clickCount || 0) - (a.clickCount || 0));
+      
+      res.json(sortedItems);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to get most clicked items' });
+    }
+  });
+
   app.delete('/api/items/:itemId', isAuthenticated, async (req, res) => {
     try {
       const item = await storage.getMenuItem(parseInt(req.params.itemId));

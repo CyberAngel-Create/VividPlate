@@ -112,6 +112,7 @@ export const menuItems = pgTable("menu_items", {
   dietaryInfo: jsonb("dietary_info"),
   calories: integer("calories"),
   allergens: text("allergens").array(),
+  clickCount: integer("click_count").default(0),
 });
 
 export const insertMenuItemSchema = createInsertSchema(menuItems).pick({

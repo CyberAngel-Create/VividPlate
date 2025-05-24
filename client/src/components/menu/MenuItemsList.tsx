@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { MenuCategory, MenuItem } from "@shared/schema";
 import { Button } from "@/components/ui/button";
