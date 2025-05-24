@@ -28,6 +28,8 @@ import AdminLogs from "./pages/admin-logs";
 import AdminPricing from "./pages/admin-pricing";
 import AdminContactInfo from "./pages/admin-contact-info";
 import AdminAdvertisements from "./pages/admin-advertisements";
+import AdminMenuExamples from "./pages/admin-menu-examples";
+import AdminTestimonials from "./pages/admin-testimonials";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -137,6 +139,8 @@ function Router() {
         <AdminRoute path="/admin/profile" component={Profile} />
         <AdminRoute path="/admin/contact-info" component={AdminContactInfo} />
         <AdminRoute path="/admin/advertisements" component={AdminAdvertisements} />
+        <AdminRoute path="/admin/menu-examples" component={AdminMenuExamples} />
+        <AdminRoute path="/admin/testimonials" component={AdminTestimonials} />
 
         <Route component={NotFound} />
       </Switch>
