@@ -14,20 +14,47 @@ export function getBackblazeClient(): S3Client {
     const endpoint = `https://s3.${region}.backblazeb2.com`;
     
     if (!keyId || !applicationKey) {
+      console.error('❌ Backblaze configuration is incomplete');
       throw new Error('Backblaze configuration is incomplete. Using local storage instead.');
     }
     
-    s3Client = new S3Client({
-      endpoint,
-      region,
-      credentials: {
-        accessKeyId: keyId,
-        secretAccessKey: applicationKey
-      }
-    });
+    try {
+      s3Client = new S3Client({
+        endpoint,
+        region,
+        credentials: {
+          accessKeyId: keyId,
+          secretAccessKey: applicationKey
+        }
+      });
+      console.log('✅ Backblaze client initialized successfully');
+    } catch (error) {
+      console.error('❌ Failed to initialize Backblaze client:', error);
+      throw error;
+    }
   }
   
   return s3Client;
+}
+
+// Test Backblaze connection
+export async function testBackblazeConnection(): Promise<boolean> {
+  try {
+    const client = getBackblazeClient();
+    const bucketName = process.env.BACKBLAZE_BUCKET_NAME;
+    if (!bucketName) {
+      console.error('❌ Backblaze bucket name not configured');
+      return false;
+    }
+    
+    // Try to list objects to verify connection
+    await client.send(new ListObjectsCommand({ Bucket: bucketName }));
+    console.log('✅ Successfully connected to Backblaze B2');
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to connect to Backblaze:', error);
+    return false;
+  }
 }
 
 // Upload a file to Backblaze

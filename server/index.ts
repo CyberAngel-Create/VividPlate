@@ -68,6 +68,7 @@ app.use((req, res, next) => {
 
 // Import routes
 import { registerRoutes } from "./routes";
+import { testBackblazeConnection } from './backblaze-config';
 
 (async () => {
   const server = await registerRoutes(app);
@@ -93,7 +94,7 @@ import { registerRoutes } from "./routes";
   const startServer = async (initialPort = 5000) => {
     let port = initialPort;
     const maxRetries = 3;
-    
+
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         await new Promise((resolve, reject) => {
@@ -101,8 +102,9 @@ import { registerRoutes } from "./routes";
             port,
             host: "0.0.0.0",
             reusePort: true,
-          }, () => {
+          }, async () => {
             log(`serving on port ${port}`);
+            await testBackblazeConnection();
             resolve(true);
           }).on('error', (err: any) => {
             if (err.code === 'EADDRINUSE') {
