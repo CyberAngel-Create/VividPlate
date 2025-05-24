@@ -2062,6 +2062,35 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  // Menu item analytics operations
+  async incrementMenuItemClicks(itemId: number): Promise<void> {
+    await db.update(menuItems)
+      .set({ 
+        clickCount: db.$count(menuItems.clickCount) + 1 
+      })
+      .where(eq(menuItems.id, itemId));
+  }
+
+  async getMenuItemAnalytics(restaurantId: number): Promise<Array<{id: number, name: string, clickCount: number, categoryName: string}>> {
+    const result = await db.select({
+      id: menuItems.id,
+      name: menuItems.name,
+      clickCount: menuItems.clickCount,
+      categoryName: menuCategories.name
+    })
+    .from(menuItems)
+    .innerJoin(menuCategories, eq(menuItems.categoryId, menuCategories.id))
+    .where(eq(menuCategories.restaurantId, restaurantId))
+    .orderBy(desc(menuItems.clickCount));
+    
+    return result.map(item => ({
+      id: item.id,
+      name: item.name,
+      clickCount: item.clickCount || 0,
+      categoryName: item.categoryName
+    }));
+  }
+
   // Admin user operations
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(desc(users.createdAt));

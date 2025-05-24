@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/utils";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import React, { useState, useMemo, useEffect, CSSProperties, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { apiRequest } from "@/lib/queryClient";
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 import FeedbackDialog from "@/components/ui/feedback-dialog";
 import ItemFeedbackDialog from "@/components/feedback/ItemFeedbackDialog";
@@ -19,6 +20,7 @@ interface BannerSlideshowProps {
   restaurantName: string;
   logoUrl?: string | null;
   interval?: number; // milliseconds
+  autoSlide?: boolean; // whether to auto-advance slides
 }
 
 const BannerSlideshow: React.FC<BannerSlideshowProps> = ({ 
@@ -221,6 +223,16 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
 
   const scrollToBottom = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Track menu item clicks for analytics
+  const trackMenuItemClick = async (itemId: number) => {
+    try {
+      await apiRequest('POST', `/api/menu-items/${itemId}/track-click`);
+    } catch (error) {
+      console.log('Analytics tracking failed:', error);
+      // Fail silently - don't interrupt user experience
+    }
   };
 
   const handleCategoryClick = (categoryId: string) => {
@@ -741,6 +753,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                       color: 'white',
                                       fontSize: '10px'
                                     }}
+                                    onClick={() => trackMenuItemClick(item.id)}
                                   >
                                     {t('menu.view', 'View')}
                                   </Button>
