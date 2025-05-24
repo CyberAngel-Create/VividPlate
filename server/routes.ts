@@ -4336,6 +4336,151 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Admin routes for managing homepage content
+  const adminOnly = (req: Request, res: Response, next: NextFunction) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: 'Authentication required' });
+    }
+    
+    const user = req.user as any;
+    if (!user.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    next();
+  };
+
+  // Menu Examples Management Routes
+  app.get('/api/admin/menu-examples', adminOnly, async (req, res) => {
+    try {
+      const examples = await storage.getMenuExamples();
+      res.json(examples);
+    } catch (error) {
+      console.error('Error fetching menu examples:', error);
+      res.status(500).json({ message: 'Failed to fetch menu examples' });
+    }
+  });
+
+  app.post('/api/admin/menu-examples', adminOnly, async (req, res) => {
+    try {
+      const example = await storage.createMenuExample(req.body);
+      res.status(201).json(example);
+    } catch (error) {
+      console.error('Error creating menu example:', error);
+      res.status(500).json({ message: 'Failed to create menu example' });
+    }
+  });
+
+  app.patch('/api/admin/menu-examples/:id', adminOnly, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid example ID' });
+      }
+      
+      const example = await storage.updateMenuExample(id, req.body);
+      if (!example) {
+        return res.status(404).json({ message: 'Menu example not found' });
+      }
+      
+      res.json(example);
+    } catch (error) {
+      console.error('Error updating menu example:', error);
+      res.status(500).json({ message: 'Failed to update menu example' });
+    }
+  });
+
+  app.delete('/api/admin/menu-examples/:id', adminOnly, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid example ID' });
+      }
+      
+      await storage.deleteMenuExample(id);
+      res.json({ message: 'Menu example deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting menu example:', error);
+      res.status(500).json({ message: 'Failed to delete menu example' });
+    }
+  });
+
+  // Testimonials Management Routes
+  app.get('/api/admin/testimonials', adminOnly, async (req, res) => {
+    try {
+      const testimonials = await storage.getTestimonials();
+      res.json(testimonials);
+    } catch (error) {
+      console.error('Error fetching testimonials:', error);
+      res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
+  });
+
+  app.post('/api/admin/testimonials', adminOnly, async (req, res) => {
+    try {
+      const testimonial = await storage.createTestimonial(req.body);
+      res.status(201).json(testimonial);
+    } catch (error) {
+      console.error('Error creating testimonial:', error);
+      res.status(500).json({ message: 'Failed to create testimonial' });
+    }
+  });
+
+  app.patch('/api/admin/testimonials/:id', adminOnly, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid testimonial ID' });
+      }
+      
+      const testimonial = await storage.updateTestimonial(id, req.body);
+      if (!testimonial) {
+        return res.status(404).json({ message: 'Testimonial not found' });
+      }
+      
+      res.json(testimonial);
+    } catch (error) {
+      console.error('Error updating testimonial:', error);
+      res.status(500).json({ message: 'Failed to update testimonial' });
+    }
+  });
+
+  app.delete('/api/admin/testimonials/:id', adminOnly, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: 'Invalid testimonial ID' });
+      }
+      
+      await storage.deleteTestimonial(id);
+      res.json({ message: 'Testimonial deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting testimonial:', error);
+      res.status(500).json({ message: 'Failed to delete testimonial' });
+    }
+  });
+
+  // Public routes for homepage content
+  app.get('/api/menu-examples', async (req, res) => {
+    try {
+      const examples = await storage.getActiveMenuExamples();
+      res.json(examples);
+    } catch (error) {
+      console.error('Error fetching active menu examples:', error);
+      res.status(500).json({ message: 'Failed to fetch menu examples' });
+    }
+  });
+
+  app.get('/api/testimonials', async (req, res) => {
+    try {
+      const testimonials = await storage.getActiveTestimonials();
+      res.json(testimonials);
+    } catch (error) {
+      console.error('Error fetching active testimonials:', error);
+      res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

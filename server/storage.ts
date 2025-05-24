@@ -14,7 +14,9 @@ import {
   contactInfo, ContactInfo, InsertContactInfo,
   advertisements, Advertisement, InsertAdvertisement,
   fileUploads, FileUpload, InsertFileUpload,
-  adSettings, AdSettings, InsertAdSettings
+  adSettings, AdSettings, InsertAdSettings,
+  menuExamples, MenuExample, InsertMenuExample,
+  testimonials, Testimonial, InsertTestimonial
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, lte, gte } from "drizzle-orm";
@@ -146,6 +148,22 @@ export interface IStorage {
   getFileUploadsByRestaurantId(restaurantId: number): Promise<FileUpload[]>;
   getFileUploadsByCategory(category: string): Promise<FileUpload[]>;
   updateFileUploadStatus(id: number, status: string): Promise<FileUpload | undefined>;
+
+  // Menu examples operations
+  getMenuExamples(): Promise<MenuExample[]>;
+  getActiveMenuExamples(): Promise<MenuExample[]>;
+  getMenuExample(id: number): Promise<MenuExample | undefined>;
+  createMenuExample(example: InsertMenuExample): Promise<MenuExample>;
+  updateMenuExample(id: number, example: Partial<MenuExample>): Promise<MenuExample | undefined>;
+  deleteMenuExample(id: number): Promise<boolean>;
+
+  // Testimonials operations
+  getTestimonials(): Promise<Testimonial[]>;
+  getActiveTestimonials(): Promise<Testimonial[]>;
+  getTestimonial(id: number): Promise<Testimonial | undefined>;
+  createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
+  updateTestimonial(id: number, testimonial: Partial<Testimonial>): Promise<Testimonial | undefined>;
+  deleteTestimonial(id: number): Promise<boolean>;
   deleteFileUpload(id: number): Promise<boolean>;
 
   // Ad settings operations
@@ -2240,6 +2258,86 @@ export class DatabaseStorage implements IStorage {
       .where(eq(adminLogs.adminId, adminId))
       .orderBy(desc(adminLogs.createdAt))
       .limit(limit);
+  }
+
+  // Menu examples operations
+  async getMenuExamples(): Promise<MenuExample[]> {
+    return await db.select().from(menuExamples)
+      .orderBy(desc(menuExamples.displayOrder));
+  }
+
+  async getActiveMenuExamples(): Promise<MenuExample[]> {
+    return await db.select().from(menuExamples)
+      .where(eq(menuExamples.isActive, true))
+      .orderBy(desc(menuExamples.displayOrder));
+  }
+
+  async getMenuExample(id: number): Promise<MenuExample | undefined> {
+    const [example] = await db.select().from(menuExamples)
+      .where(eq(menuExamples.id, id));
+    return example;
+  }
+
+  async createMenuExample(example: InsertMenuExample): Promise<MenuExample> {
+    const [created] = await db.insert(menuExamples)
+      .values(example)
+      .returning();
+    return created;
+  }
+
+  async updateMenuExample(id: number, example: Partial<MenuExample>): Promise<MenuExample | undefined> {
+    const [updated] = await db.update(menuExamples)
+      .set(example)
+      .where(eq(menuExamples.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteMenuExample(id: number): Promise<boolean> {
+    const result = await db.delete(menuExamples)
+      .where(eq(menuExamples.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Testimonials operations
+  async getTestimonials(): Promise<Testimonial[]> {
+    return await db.select().from(testimonials)
+      .orderBy(desc(testimonials.displayOrder));
+  }
+
+  async getActiveTestimonials(): Promise<Testimonial[]> {
+    return await db.select().from(testimonials)
+      .where(eq(testimonials.isActive, true))
+      .orderBy(desc(testimonials.displayOrder));
+  }
+
+  async getTestimonial(id: number): Promise<Testimonial | undefined> {
+    const [testimonial] = await db.select().from(testimonials)
+      .where(eq(testimonials.id, id));
+    return testimonial;
+  }
+
+  async createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial> {
+    const [created] = await db.insert(testimonials)
+      .values(testimonial)
+      .returning();
+    return created;
+  }
+
+  async updateTestimonial(id: number, testimonial: Partial<Testimonial>): Promise<Testimonial | undefined> {
+    const [updated] = await db.update(testimonials)
+      .set(testimonial)
+      .where(eq(testimonials.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTestimonial(id: number): Promise<boolean> {
+    const result = await db.delete(testimonials)
+      .where(eq(testimonials.id, id))
+      .returning();
+    return result.length > 0;
   }
 }
 
