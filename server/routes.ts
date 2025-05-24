@@ -4235,6 +4235,107 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   }
 
+  // Ad settings API routes for admin control of advertisement positioning
+  app.get('/api/admin/ad-settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getAdSettings();
+      if (!settings) {
+        // Return default settings if none exist
+        const defaultSettings = {
+          id: 1,
+          position: "bottom",
+          isEnabled: true,
+          description: "Where the advertisement will be displayed on the menu.",
+          displayFrequency: 1,
+          maxAdsPerPage: 3,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        res.json(defaultSettings);
+      } else {
+        res.json(settings);
+      }
+    } catch (error) {
+      console.error('Error fetching ad settings:', error);
+      res.status(500).json({ message: 'Failed to fetch ad settings' });
+    }
+  });
+
+  app.put('/api/admin/ad-settings', isAdmin, async (req, res) => {
+    try {
+      const { position, isEnabled, displayFrequency, maxAdsPerPage } = req.body;
+
+      // Validate input
+      const validPositions = ['top', 'middle', 'bottom', 'sidebar'];
+      if (position && !validPositions.includes(position)) {
+        return res.status(400).json({ message: 'Invalid position. Must be one of: top, middle, bottom, sidebar' });
+      }
+
+      if (displayFrequency && (displayFrequency < 1 || displayFrequency > 20)) {
+        return res.status(400).json({ message: 'Display frequency must be between 1 and 20' });
+      }
+
+      if (maxAdsPerPage && (maxAdsPerPage < 1 || maxAdsPerPage > 10)) {
+        return res.status(400).json({ message: 'Max ads per page must be between 1 and 10' });
+      }
+
+      const updatedSettings = await storage.updateAdSettings({
+        position,
+        isEnabled,
+        displayFrequency,
+        maxAdsPerPage
+      });
+
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error('Error updating ad settings:', error);
+      res.status(500).json({ message: 'Failed to update ad settings' });
+    }
+  });
+
+  // Menu item analytics API - track which items customers click most
+  app.post('/api/menu-items/:id/track-click', async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.id);
+      if (isNaN(itemId)) {
+        return res.status(400).json({ message: 'Invalid menu item ID' });
+      }
+
+      await storage.incrementMenuItemClicks(itemId);
+      res.json({ success: true, message: 'Click tracked successfully' });
+    } catch (error) {
+      console.error('Error tracking menu item click:', error);
+      res.status(500).json({ message: 'Failed to track click' });
+    }
+  });
+
+  app.get('/api/restaurants/:id/menu-analytics', isAuthenticated, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.id);
+      if (isNaN(restaurantId)) {
+        return res.status(400).json({ message: 'Invalid restaurant ID' });
+      }
+
+      // Check if user owns this restaurant
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+
+      // For admin users, allow access to any restaurant
+      const user = req.user as any;
+      if (!user.isAdmin && restaurant.userId !== user.id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const analytics = await storage.getMenuItemAnalytics(restaurantId);
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching menu analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch menu analytics' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

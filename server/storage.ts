@@ -1096,6 +1096,65 @@ export class MemStorage implements IStorage {
     this.users.set(userId, user);
     return user;
   }
+
+  // Ad settings operations
+  async getAdSettings(): Promise<AdSettings | undefined> {
+    return this.adSettings;
+  }
+
+  async updateAdSettings(settings: Partial<InsertAdSettings>): Promise<AdSettings> {
+    if (this.adSettings) {
+      this.adSettings = {
+        ...this.adSettings,
+        ...settings,
+        updatedAt: new Date()
+      };
+    } else {
+      this.adSettings = {
+        id: 1,
+        position: settings.position || "bottom",
+        isEnabled: settings.isEnabled !== undefined ? settings.isEnabled : true,
+        description: settings.description || "Where the advertisement will be displayed on the menu.",
+        displayFrequency: settings.displayFrequency || 1,
+        maxAdsPerPage: settings.maxAdsPerPage || 3,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+    }
+    return this.adSettings;
+  }
+
+  // Analytics operations for menu item clicks
+  async incrementMenuItemClicks(itemId: number): Promise<void> {
+    const item = this.menuItems.get(itemId);
+    if (item) {
+      // Initialize clickCount if it doesn't exist
+      if (item.clickCount === null || item.clickCount === undefined) {
+        item.clickCount = 0;
+      }
+      item.clickCount = (item.clickCount || 0) + 1;
+      this.menuItems.set(itemId, item);
+    }
+  }
+
+  async getMenuItemAnalytics(restaurantId: number): Promise<Array<{itemId: number, itemName: string, clickCount: number}>> {
+    const results: Array<{itemId: number, itemName: string, clickCount: number}> = [];
+    
+    for (const item of this.menuItems.values()) {
+      // Check if this item belongs to the restaurant
+      const category = this.menuCategories.get(item.categoryId);
+      if (category && category.restaurantId === restaurantId) {
+        results.push({
+          itemId: item.id,
+          itemName: item.name,
+          clickCount: item.clickCount || 0
+        });
+      }
+    }
+    
+    // Sort by click count in descending order
+    return results.sort((a, b) => b.clickCount - a.clickCount);
+  }
 }
 
 export class DatabaseStorage implements IStorage {
