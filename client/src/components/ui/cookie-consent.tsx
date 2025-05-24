@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { X, Cookie, Settings } from 'lucide-react';
@@ -28,7 +27,7 @@ const CookieConsent: React.FC = () => {
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem('menumate-cookie-consent', 'accepted');
+    localStorage.setItem('vividplate-cookie-consent', 'accepted');
     localStorage.setItem('vividplate-cookie-settings', JSON.stringify(settings));
     setIsVisible(false);
   };
@@ -98,7 +97,7 @@ const CookieConsent: React.FC = () => {
             </div>
           </div>
         )}
-        
+
         <div className="flex flex-col sm:flex-row items-center gap-2 pt-2">
           <Button
             variant="outline"

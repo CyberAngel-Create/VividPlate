@@ -42,7 +42,7 @@ const PrivacyPolicy: React.FC = () => {
               Introduction
             </h2>
             <p className="text-gray-700 leading-relaxed">
-              Welcome to MenuMate, a digital menu platform that enables restaurants to create interactive, 
+              Welcome to VividPlate, a digital menu platform that enables restaurants to create interactive, 
               mobile-responsive menus. We are committed to protecting your privacy and ensuring transparency 
               about how we collect, use, and protect your information when you use our digital menu services.
             </p>
@@ -168,8 +168,8 @@ const PrivacyPolicy: React.FC = () => {
               If you have any questions about this Privacy Policy or our data practices, please contact us:
             </p>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-gray-700"><strong>Email:</strong> privacy@menumate.com</p>
-              <p className="text-gray-700"><strong>Address:</strong> MenuMate Privacy Office</p>
+              <p className="text-gray-700"><strong>Email:</strong> privacy@vividplate.com</p>
+              <p className="text-gray-700"><strong>Address:</strong> VividPlate Privacy Office</p>
               <p className="text-gray-700"><strong>Response Time:</strong> We will respond to privacy inquiries within 30 days</p>
             </div>
           </section>
@@ -188,7 +188,7 @@ const PrivacyPolicy: React.FC = () => {
         {/* Footer */}
         <div className="text-center mt-8 p-6 bg-white rounded-lg shadow-sm">
           <p className="text-sm text-gray-500">
-            This privacy policy applies to all MenuMate digital menu services and platforms.
+            This privacy policy applies to all VividPlate digital menu services and platforms.
           </p>
         </div>
       </div>

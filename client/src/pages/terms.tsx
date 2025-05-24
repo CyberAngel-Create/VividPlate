@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,7 @@ const TermsOfService: React.FC = () => {
 
         {/* Content */}
         <div className="bg-white rounded-lg shadow-sm p-6 space-y-8">
-          
+
           {/* Introduction */}
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -55,7 +54,7 @@ const TermsOfService: React.FC = () => {
               Description of Services
             </h2>
             <div className="space-y-4">
-              <p className="text-gray-700">MenuMate provides:</p>
+              <p className="text-gray-700">VividPlate provides:</p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
                 <li>Digital menu creation and management tools</li>
                 <li>QR code generation for menu access</li>
@@ -74,7 +73,7 @@ const TermsOfService: React.FC = () => {
               User Responsibilities
             </h2>
             <div className="space-y-4">
-              <p className="text-gray-700">As a user of MenuMate, you agree to:</p>
+              <p className="text-gray-700">As a user of VividPlate, you agree to:</p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
                 <li>Provide accurate and complete information</li>
                 <li>Maintain the security of your account credentials</li>
@@ -94,7 +93,7 @@ const TermsOfService: React.FC = () => {
             </h2>
             <div className="space-y-4">
               <p className="text-gray-700">
-                Some features of MenuMate require a paid subscription. By subscribing, you agree to:
+                Some features of VividPlate require a paid subscription. By subscribing, you agree to:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
                 <li>Pay all applicable fees on time</li>
@@ -126,7 +125,7 @@ const TermsOfService: React.FC = () => {
           <section>
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Intellectual Property Rights</h2>
             <p className="text-gray-700 mb-4">
-              MenuMate retains all rights to the platform's code, design, and functionality. Users retain 
+              VividPlate retains all rights to the platform's code, design, and functionality. Users retain 
               rights to their content while granting us license to use it for service provision.
             </p>
           </section>
@@ -138,7 +137,7 @@ const TermsOfService: React.FC = () => {
               Limitation of Liability
             </h2>
             <p className="text-gray-700 mb-4">
-              MenuMate provides the service "as is" without warranties. We are not liable for:
+              VividPlate provides the service "as is" without warranties. We are not liable for:
             </p>
             <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
               <li>Service interruptions or errors</li>
@@ -164,8 +163,8 @@ const TermsOfService: React.FC = () => {
               For questions about these Terms of Service, please contact us:
             </p>
             <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-gray-700"><strong>Email:</strong> terms@menumate.com</p>
-              <p className="text-gray-700"><strong>Address:</strong> MenuMate Legal Department</p>
+              <p className="text-gray-700"><strong>Email:</strong> terms@vividplate.com</p>
+              <p className="text-gray-700"><strong>Address:</strong> VividPlate Legal Department</p>
               <p className="text-gray-700"><strong>Response Time:</strong> We aim to respond within 2 business days</p>
             </div>
           </section>
@@ -174,7 +173,7 @@ const TermsOfService: React.FC = () => {
         {/* Footer */}
         <div className="text-center mt-8 p-6 bg-white rounded-lg shadow-sm">
           <p className="text-sm text-gray-500">
-            These terms of service apply to all MenuMate services and platforms.
+            These terms of service apply to all VividPlate services and platforms.
           </p>
         </div>
       </div>
