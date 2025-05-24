@@ -1848,11 +1848,62 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMenuItem(id: number, itemUpdate: Partial<InsertMenuItem>): Promise<MenuItem | undefined> {
-    const [updatedItem] = await db.update(menuItems)
-      .set(itemUpdate)
-      .where(eq(menuItems.id, id))
-      .returning();
-    return updatedItem;
+    try {
+      // Use raw query to avoid schema mismatch issues
+      const { pool } = await import('./db');
+      
+      // Build update query dynamically
+      const updateFields = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      for (const [key, value] of Object.entries(itemUpdate)) {
+        if (value !== undefined) {
+          updateFields.push(`${key} = $${paramIndex}`);
+          values.push(value);
+          paramIndex++;
+        }
+      }
+      
+      if (updateFields.length === 0) {
+        return undefined;
+      }
+      
+      const query = `
+        UPDATE menu_items 
+        SET ${updateFields.join(', ')} 
+        WHERE id = $${paramIndex} 
+        RETURNING *
+      `;
+      
+      const result = await pool.query(query, [...values, id]);
+      
+      if (result.rows.length === 0) {
+        return undefined;
+      }
+      
+      // Map result to MenuItem type
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        categoryId: row.category_id,
+        name: row.name,
+        description: row.description,
+        price: row.price,
+        currency: row.currency,
+        imageUrl: row.image_url,
+        tags: row.tags || [],
+        isAvailable: row.is_available,
+        displayOrder: row.display_order || 0,
+        dietaryInfo: row.dietary_info,
+        calories: row.calories,
+        allergens: row.allergens || [],
+        clickCount: row.click_count || 0
+      };
+    } catch (error) {
+      console.error('Error updating menu item:', error);
+      throw error;
+    }
   }
 
   async deleteMenuItem(id: number): Promise<boolean> {
