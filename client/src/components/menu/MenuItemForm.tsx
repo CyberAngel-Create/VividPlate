@@ -37,7 +37,7 @@ const menuItemSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   price: z.string().min(1, "Price is required"),
-  currency: z.string().default("USD"),
+  currency: z.string().default("ETB"),
   imageUrl: z.string().optional(),
   isAvailable: z.boolean().default(true),
   tagInput: z.string().optional(),
@@ -47,14 +47,14 @@ type FormValues = z.infer<typeof menuItemSchema>;
 
 const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
   const [tags, setTags] = useState<string[]>(item?.tags || []);
-  
+
   const form = useForm<FormValues>({
     resolver: zodResolver(menuItemSchema),
     defaultValues: {
       name: item?.name || "",
       description: item?.description || "",
       price: item?.price || "",
-      currency: item?.currency || "USD",
+      currency: item?.currency || "ETB",
       imageUrl: item?.imageUrl || "",
       isAvailable: item?.isAvailable !== false,
       tagInput: "",
@@ -95,7 +95,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
         <h2 className="text-lg font-heading font-semibold mb-4">
           {item ? "Edit Menu Item" : "Add Menu Item"}
         </h2>
-        
+
         <FormField
           control={form.control}
           name="name"
@@ -109,7 +109,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="description"
@@ -130,7 +130,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
             </FormItem>
           )}
         />
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField
             control={form.control}
@@ -145,7 +145,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
               </FormItem>
             )}
           />
-          
+
           <FormField
             control={form.control}
             name="currency"
@@ -175,7 +175,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
             )}
           />
         </div>
-        
+
         <FormField
           control={form.control}
           name="imageUrl"
@@ -202,7 +202,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
             </FormItem>
           )}
         />
-        
+
         <FormField
           control={form.control}
           name="isAvailable"
@@ -223,7 +223,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
             </FormItem>
           )}
         />
-        
+
         <div className="space-y-2">
           <FormLabel>Tags</FormLabel>
           <div className="flex flex-wrap gap-2 mb-2">
@@ -245,7 +245,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
               <span className="text-sm text-midgray italic">No tags added</span>
             )}
           </div>
-          
+
           <div className="flex space-x-2">
             <FormField
               control={form.control}
@@ -272,7 +272,7 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
             </Button>
           </div>
         </div>
-        
+
         <div className="flex justify-end space-x-2">
           <Button type="submit" className="bg-primary text-white hover:bg-primary/90">
             {item ? "Update Item" : "Add Item"}

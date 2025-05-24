@@ -45,7 +45,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
 }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
-  
+
   // Process the banner URLs
   const processedBannerUrls = useMemo(() => {
     if (!bannerUrls || bannerUrls.length === 0) {
@@ -55,17 +55,17 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
     // Filter out empty URLs
     return bannerUrls.filter(url => !!url);
   }, [bannerUrls]);
-  
+
   // Automatic slideshow - only runs when not hovering and autoSlide is enabled
   useEffect(() => {
     if (processedBannerUrls.length <= 1 || isHovering || !autoSlide) return;
-    
+
     console.log('Banner slideshow initiated with interval:', interval);
     console.log('Available banner URLs:', processedBannerUrls);
-    
+
     // Force initial banner to be visible
     setActiveIndex(0);
-    
+
     const timer = setInterval(() => {
       setActiveIndex((prev) => {
         const nextIndex = prev === processedBannerUrls.length - 1 ? 0 : prev + 1;
@@ -73,13 +73,13 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
         return nextIndex;
       });
     }, interval);
-    
+
     return () => {
       console.log('Clearing banner slideshow interval');
       clearInterval(timer);
     };
   }, [processedBannerUrls.length, interval, isHovering, autoSlide]);
-  
+
   const prevSlide = () => {
     setActiveIndex((prev) => {
       const newIndex = prev === 0 ? processedBannerUrls.length - 1 : prev - 1;
@@ -87,7 +87,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
       return newIndex;
     });
   };
-  
+
   const nextSlide = () => {
     setActiveIndex((prev) => {
       const newIndex = prev === processedBannerUrls.length - 1 ? 0 : prev + 1;
@@ -95,7 +95,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
       return newIndex;
     });
   };
-  
+
   return (
     <div 
       className="relative w-full h-full"
@@ -106,10 +106,10 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
       {processedBannerUrls.map((url, index) => {
         const normalizedUrl = normalizeImageUrl(url);
         console.log(`Banner image ${index}: ${normalizedUrl}, active: ${index === activeIndex}`);
-        
+
         // Add a cache-busting parameter to prevent caching issues
         const urlWithCacheBust = `${url}${url.includes('?') ? '&' : '?'}cb=${Date.now()}`;
-        
+
         return (
           <ResponsiveImage
             key={`banner-${index}-${Date.now()}`}
@@ -132,7 +132,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
           />
         );
       })}
-      
+
       {/* Restaurant logo overlay */}
       {logoUrl && (
         <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full p-1 shadow-md">
@@ -148,7 +148,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
           />
         </div>
       )}
-      
+
       {processedBannerUrls.length > 1 && (
         <>
           <button 
@@ -165,7 +165,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
           >
             <ChevronRight className="h-5 w-5" />
           </button>
-          
+
           <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1 z-10">
             {processedBannerUrls.map((_, index) => (
               <button 
@@ -209,28 +209,28 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const bottomRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const prevScrollY = useRef(0);
-  
+
   useEffect(() => {
     setMounted(true);
-    
+
     // Set up scroll event listener for fixed header
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       // Only fix header when scrolling up and past a threshold
       if (currentScrollY > 150 && currentScrollY < prevScrollY.current) {
         setHeaderFixed(true);
       } else if (currentScrollY > prevScrollY.current || currentScrollY < 100) {
         setHeaderFixed(false);
       }
-      
+
       prevScrollY.current = currentScrollY;
     };
-    
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-  
+
   const scrollToTop = () => {
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -256,7 +256,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       setActiveMainCategory(null);
     }
   };
-  
+
   const handleMainCategoryClick = (mainCategory: string) => {
     if (activeMainCategory === mainCategory) {
       // Toggle off if already selected
@@ -267,7 +267,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       setActiveCategory("all");
     }
   };
-  
+
   // Get theme settings from restaurant or use defaults
   const defaultTheme = {
     backgroundColor: "#ffffff",
@@ -279,7 +279,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     menuDescriptionColor: "#666666",
     menuPriceColor: "#111111"
   };
-  
+
   // Parse theme settings from JSON string if necessary or use the provided object
   let themeSettings = defaultTheme;
   try {
@@ -293,14 +293,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   } catch (e) {
     console.error('Error parsing theme settings:', e);
   }
-  
+
   const menuTheme = themeSettings;
 
   // Collect all menu items for search functionality
   const allMenuItems = useMemo(() => {
     return menuData.flatMap(category => category.items);
   }, [menuData]);
-  
+
   // Image dialog state for menu items
   const [selectedMenuItem, setSelectedMenuItem] = useState<MenuItem | null>(null);
 
@@ -308,20 +308,20 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const filteredMenuData = useMemo(() => {
     // First filter by main category if selected
     let filtered = menuData;
-    
+
     if (activeMainCategory) {
       filtered = menuData.filter(category => 
         category.mainCategory === activeMainCategory
       );
     }
-    
+
     // Then filter by specific category if not "all"
     if (activeCategory !== "all") {
       filtered = filtered.filter(category => 
         category.id.toString() === activeCategory
       );
     }
-    
+
     return filtered;
   }, [menuData, activeCategory, activeMainCategory]);
 
@@ -331,23 +331,23 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     color: menuTheme.textColor,
     fontFamily: menuTheme.fontFamily
   };
-  
+
   const headerContainerStyle: CSSProperties = {
     backgroundColor: menuTheme.headerColor
   };
-  
+
   const categoryNameStyle: CSSProperties = {
     color: menuTheme.menuItemColor
   };
-  
+
   const menuItemNameStyle: CSSProperties = {
     color: menuTheme.menuItemColor
   };
-  
+
   const menuItemDescriptionStyle: CSSProperties = {
     color: menuTheme.menuDescriptionColor
   };
-  
+
   const menuItemPriceStyle: CSSProperties = {
     color: menuTheme.menuPriceColor
   };
@@ -381,7 +381,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                   console.error("Failed to load banner image:", restaurant.bannerUrl);
                 }}
               />
-              
+
               {/* Restaurant logo overlay for single banner image */}
               {restaurant.logoUrl && (
                 <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full p-1 shadow-md">
@@ -406,7 +406,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           <p className="text-sm opacity-90">{restaurant.cuisine || "Restaurant Menu"}</p>
         </div>
       </div>
-      
+
       {/* Fixed header section that appears when scrolling up */}
       <div 
         ref={headerRef}
@@ -430,7 +430,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             )}
             <div className="text-sm font-medium truncate max-w-[120px]">{restaurant.name}</div>
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <button
               className={`px-2 py-1 rounded-full text-xs font-medium transition-colors flex items-center space-x-1 ${
@@ -466,7 +466,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Main Category Filter (Food/Beverage) with Language Switcher */}
       <div className="p-3 flex justify-center items-center space-x-4" style={{ backgroundColor: menuTheme.headerColor }}>
         <button
@@ -499,12 +499,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           <Coffee className="h-4 w-4" />
           <span>{t('menu.beverage', 'Beverage')}</span>
         </button>
-        
+
         {/* Language switcher moved next to beverage button */}
         <div className="flex-shrink-0">
           <MenuLanguageSwitcher variant="outline" size="sm" />
         </div>
-        
+
         {/* View Mode Toggle - List/Grid */}
         <div className="flex items-center ml-4 border-l pl-4 space-x-1">
           <button
@@ -531,7 +531,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           </button>
         </div>
       </div>
-      
+
       {/* Menu Categories Tabs and Search */}
       <div className="border-b" style={headerContainerStyle}>
         <div className="flex justify-between items-center px-4">
@@ -550,7 +550,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             >
               {t('menu.all', 'All')}
             </button>
-            
+
             {menuData.map((category) => (
               <button 
                 key={category.id}
@@ -571,14 +571,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Dietary Preferences removed as requested */}
-      
+
       {/* Compact Search Component */}
       {allMenuItems.length > 0 && (
         <CompactSearch menuItems={allMenuItems} />
       )}
-      
+
       {/* Menu Items with List/Grid View */}
       <div className="p-4">
         {menuData.length === 0 ? (
@@ -595,7 +595,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               >
                 {category.name}
               </h3>
-              
+
               {category.items.length === 0 ? (
                 <p className="text-sm italic" style={menuItemDescriptionStyle}>{t('menu.noItemsInCategory', 'No items in this category')}</p>
               ) : (
@@ -637,7 +637,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                           </div>
                         </div>
                       )}
-                      
+
                       {/* Details on right side */}
                       <div className="flex-grow w-2/3">
                         <div className="flex flex-col cursor-pointer relative group">
@@ -663,7 +663,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                   ))}
                                 </div>
                               )}
-                              
+
                               {/* Only show feedback buttons for premium restaurants */}
                               {restaurant.subscriptionTier === 'premium' && !previewMode && (
                                 <FeedbackDialog
@@ -697,7 +697,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                   </h3>
                   <ChevronUp className="h-4 w-4 text-gray-400" />
                 </div>
-                
+
                 {category.items.length === 0 ? (
                   <p className="text-sm italic" style={menuItemDescriptionStyle}>
                     {t('menu.noItemsInCategory', 'No items in this category')}
@@ -736,25 +736,25 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               </ImageViewDialog>
                             </div>
                           )}
-                          
+
                           {/* Grid item details */}
                           <div className="flex flex-col">
                             <h4 className="font-medium text-sm mb-1 line-clamp-2" style={menuItemNameStyle}>
                               {item.name}
                             </h4>
-                            
+
                             {item.description && (
                               <p className="text-xs mb-2 line-clamp-2" style={menuItemDescriptionStyle}>
                                 {item.description}
                               </p>
                             )}
-                            
+
                             <div className="mt-auto space-y-2">
                               <div className="flex items-center justify-between">
                                 <span className="font-semibold text-sm" style={menuItemPriceStyle}>
                                   {formatCurrency(item.price, item.currency)}
                                 </span>
-                                
+
                                 <ImageViewDialog 
                                   imageSrc={normalizeImageUrl(item.imageUrl)} 
                                   imageAlt={item.name}
@@ -776,7 +776,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                   </Button>
                                 </ImageViewDialog>
                               </div>
-                              
+
                               <div className="text-center">
                                 <FeedbackDialog
                                   menuItemId={item.id}
@@ -798,7 +798,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             ))}
           </div>
         )}
-        
+
         {/* Restaurant info footer */}
         <div className="mt-8 pt-4 border-t border-gray-200">
           <div className="text-center">
@@ -835,13 +835,13 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           </div>
         </div>
       </div>
-      
+
       {previewMode && (
         <div className="bg-neutral text-midgray text-sm py-2 px-4 text-center">
           {t('menu.previewMode', 'Preview Mode')}
         </div>
       )}
-      
+
       {/* Scroll to top/bottom buttons - centered on the right side */}
       <div className="fixed right-0 top-1/2 transform -translate-y-1/2 flex flex-col gap-2 z-50 mr-2">
         <button 
@@ -863,11 +863,11 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
           <ArrowDown className="h-5 w-5" />
         </button>
       </div>
-      
+
       <div ref={bottomRef} className="mt-6 pb-24 text-center text-gray-400 text-xs">
         <p>{t('menu.endOfMenu', 'End of menu')}</p>
       </div>
-      
+
       {/* Feedback button - only show for premium restaurants */}
       {mounted && restaurant && restaurant.id && !previewMode && (
         <div className="relative">
