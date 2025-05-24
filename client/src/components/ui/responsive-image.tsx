@@ -39,12 +39,22 @@ const ResponsiveImage = ({
   useEffect(() => {
     // Only update if src actually changes
     const normalizedSrc = src ? normalizeImageUrl(src) : getFallbackImage(fallbackType);
-    // Add cache buster to prevent browser caching
-    const cacheBuster = `${normalizedSrc}${normalizedSrc.includes('?') ? '&' : '?'}t=${Date.now()}`;
+    
+    // Generate a stable cache key using pathname only
+    const urlPath = normalizedSrc.split('?')[0];
+    const uniqueKey = Date.now();
+    const cacheBuster = `${urlPath}?cache=${uniqueKey}`;
+    
     if (cacheBuster !== imageSrc) {
       setLoading(true);
       setError(false);
       setImageSrc(cacheBuster);
+      
+      // Preload image
+      const img = new Image();
+      img.src = cacheBuster;
+      img.onload = () => setLoading(false);
+      img.onerror = () => setError(true);
     }
   }, [src, fallbackType]);
   
