@@ -154,11 +154,19 @@ const MenuItemForm = ({ categoryId, item, onSubmit }: MenuItemFormProps) => {
                 <FormLabel>Currency</FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
+                  defaultValue={field.value || "ETB"}
                 >
                   <FormControl>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select currency" />
+                      <SelectValue defaultValue={field.value || "ETB"}>
+                        {field.value === "USD" && "USD ($)"}
+                        {field.value === "ETB" && "ETB (Birr)"}
+                        {field.value === "EUR" && "EUR (€)"}
+                        {field.value === "GBP" && "GBP (£)"}
+                        {field.value === "CAD" && "CAD (C$)"}
+                        {field.value === "AUD" && "AUD (A$)"}
+                      </SelectValue>
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
