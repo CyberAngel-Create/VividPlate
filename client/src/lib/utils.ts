@@ -16,13 +16,17 @@ export function formatDate(date: Date): string {
   }).format(date);
 }
 
-export function formatCurrency(amount: string | number, currency: string = "USD"): string {
+export function formatCurrency(amount: string | number, currency: string = 'USD'): string {
   const value = typeof amount === 'string' ? parseFloat(amount) : amount;
-  
+
   if (isNaN(value)) {
     return String(amount);
   }
-  
+
+  if (currency === 'ETB') {
+    return `${value.toFixed(2)} Birr`;
+  }
+
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
