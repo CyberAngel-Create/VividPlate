@@ -13,7 +13,8 @@ import {
   pricingPlans, PricingPlan, InsertPricingPlan,
   contactInfo, ContactInfo, InsertContactInfo,
   advertisements, Advertisement, InsertAdvertisement,
-  fileUploads, FileUpload, InsertFileUpload
+  fileUploads, FileUpload, InsertFileUpload,
+  adSettings, AdSettings, InsertAdSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, lte, gte } from "drizzle-orm";
@@ -146,6 +147,14 @@ export interface IStorage {
   getFileUploadsByCategory(category: string): Promise<FileUpload[]>;
   updateFileUploadStatus(id: number, status: string): Promise<FileUpload | undefined>;
   deleteFileUpload(id: number): Promise<boolean>;
+
+  // Ad settings operations
+  getAdSettings(): Promise<AdSettings | undefined>;
+  updateAdSettings(settings: Partial<InsertAdSettings>): Promise<AdSettings>;
+  
+  // Analytics operations
+  incrementMenuItemClicks(itemId: number): Promise<void>;
+  getMenuItemAnalytics(restaurantId: number): Promise<Array<{itemId: number, itemName: string, clickCount: number}>>;
 }
 
 export class MemStorage implements IStorage {
@@ -164,6 +173,7 @@ export class MemStorage implements IStorage {
   private contactInfo: ContactInfo;
   private advertisements: Map<number, Advertisement>;
   private fileUploads: Map<number, FileUpload>;
+  private adSettings: AdSettings | null;
 
   private currentIds: {
     users: number;
@@ -197,6 +207,16 @@ export class MemStorage implements IStorage {
     this.pricingPlans = new Map();
     this.advertisements = new Map();
     this.fileUploads = new Map();
+    this.adSettings = {
+      id: 1,
+      position: "bottom",
+      isEnabled: true,
+      description: "Where the advertisement will be displayed on the menu.",
+      displayFrequency: 1,
+      maxAdsPerPage: 3,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
     this.contactInfo = {
       id: 1,
       address: 'Ethiopia, Addis Abeba',
