@@ -209,7 +209,7 @@ const MenuItemsList = ({
                 <div className="flex-grow">
                   <div className="flex justify-between">
                     <h3 className="font-heading font-semibold dark:text-white">{item.name}</h3>
-                    <div className="text-primary dark:text-primary-light font-semibold">{formatCurrency(item.price)}</div>
+                    <div className="text-primary dark:text-primary-light font-semibold">{formatCurrency(item.price, item.currency)}</div>
                   </div>
                   <p className="text-midgray dark:text-gray-300 text-sm mt-1 mb-3">
                     {item.description || "No description provided."}
