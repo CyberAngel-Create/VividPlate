@@ -1849,74 +1849,14 @@ export class DatabaseStorage implements IStorage {
 
   async updateMenuItem(id: number, itemUpdate: Partial<InsertMenuItem>): Promise<MenuItem | undefined> {
     try {
-      // Use raw query to avoid schema mismatch issues
-      const { pool } = await import('./db');
-      
-      // Build update query dynamically
-      const updateFields = [];
-      const values = [];
-      let paramIndex = 1;
-      
-      // Convert snake case to camel case for database fields
-      const fieldMapping = {
-        categoryId: 'category_id',
-        imageUrl: 'image_url',
-        isAvailable: 'is_available',
-        displayOrder: 'display_order',
-        dietaryInfo: 'dietary_info',
-        clickCount: 'click_count'
-      };
-      
-      for (const [key, value] of Object.entries(itemUpdate)) {
-        if (value !== undefined) {
-          const dbField = fieldMapping[key] || key;
-          updateFields.push(`${dbField} = $${paramIndex}`);
-          values.push(value);
-          paramIndex++;
-        }
-      }
-      
-      if (updateFields.length === 0) {
-        return undefined;
-      }
-      
-      const query = `
-        UPDATE menu_items 
-        SET ${updateFields.join(', ')} 
-        WHERE id = $${paramIndex} 
-        RETURNING id, category_id, name, description, price, currency, image_url,
-                  tags, is_available, display_order, dietary_info, calories, allergens,
-                  click_count
-      `;
-      
-      const result = await pool.query(query, [...values, id]);
-      
-      if (result.rows.length === 0) {
-        return undefined;
-      }
-      
-      // Map result to MenuItem type with proper defaults
-      const row = result.rows[0];
-      return {
-        id: row.id,
-        categoryId: row.category_id,
-        name: row.name,
-        description: row.description || null,
-        price: row.price,
-        currency: row.currency || null,
-        imageUrl: row.image_url || null,
-        tags: Array.isArray(row.tags) ? row.tags : [],
-        isAvailable: row.is_available !== false,
-        displayOrder: row.display_order || 0,
-        dietaryInfo: row.dietary_info || null,
-        calories: row.calories || null,
-        allergens: Array.isArray(row.allergens) ? row.allergens : [],
-        clickCount: row.click_count || 0
-      };
+      const [updatedItem] = await db.update(menuItems)
+        .set(itemUpdate)
+        .where(eq(menuItems.id, id))
+        .returning();
+      return updatedItem;
     } catch (error) {
       console.error('Error updating menu item:', error);
-      // Return undefined instead of throwing to handle error gracefully
-      return undefined;
+      throw error; // Let the error propagate to be handled by the route handler
     }
   }
 
