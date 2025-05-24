@@ -1797,7 +1797,7 @@ export class DatabaseStorage implements IStorage {
       // Use a raw query to avoid schema mismatch issues
       const { pool } = await import('./db');
       const result = await pool.query(
-        'SELECT id, category_id, name, description, price, currency, image_url, tags, is_available, display_order, dietary_info, calories, allergens, click_count FROM menu_items WHERE category_id = $1 ORDER BY display_order',
+        'SELECT id, category_id, name, description, price, currency, image_url, tags, is_available, display_order, dietary_info, calories, allergens FROM menu_items WHERE category_id = $1 ORDER BY display_order',
         [categoryId]
       );
       
@@ -1816,7 +1816,7 @@ export class DatabaseStorage implements IStorage {
         dietaryInfo: row.dietary_info,
         calories: row.calories,
         allergens: row.allergens || [],
-        clickCount: row.click_count || 0
+        clickCount: 0
       }));
     } catch (error) {
       console.error('Error fetching menu items:', error);
