@@ -93,6 +93,10 @@ export interface IStorage {
   // Stats operations
   getMenuItemCountByRestaurantId(restaurantId: number): Promise<number>;
   getQrScanCountByRestaurantId(restaurantId: number): Promise<number>;
+  
+  // Menu item analytics operations
+  incrementMenuItemClicks(itemId: number): Promise<void>;
+  getMenuItemAnalytics(restaurantId: number): Promise<Array<{id: number, name: string, clickCount: number, categoryName: string}>>;
 
   // Subscription operations
   getSubscription(id: number): Promise<Subscription | undefined>;

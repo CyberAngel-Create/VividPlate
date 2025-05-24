@@ -1409,6 +1409,30 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Track menu item clicks/views for analytics
+  app.post('/api/menu-items/:itemId/track-click', async (req, res) => {
+    try {
+      const itemId = parseInt(req.params.itemId);
+      await storage.incrementMenuItemClicks(itemId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error tracking menu item click:', error);
+      res.status(500).json({ message: 'Failed to track click' });
+    }
+  });
+
+  // Get menu item analytics for restaurant owner
+  app.get('/api/restaurants/:restaurantId/menu-analytics', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const analytics = await storage.getMenuItemAnalytics(restaurantId);
+      res.json(analytics);
+    } catch (error) {
+      console.error('Error fetching menu analytics:', error);
+      res.status(500).json({ message: 'Failed to fetch analytics' });
+    }
+  });
+
   // Menu category routes
   app.get('/api/restaurants/:restaurantId/categories', async (req, res) => {
     try {
