@@ -1710,10 +1710,35 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getMenuItemsByCategoryId(categoryId: number): Promise<MenuItem[]> {
-    return await db.select()
-      .from(menuItems)
-      .where(eq(menuItems.categoryId, categoryId))
-      .orderBy(menuItems.displayOrder);
+    try {
+      // Use a raw query to avoid schema mismatch issues
+      const { pool } = await import('./db');
+      const result = await pool.query(
+        'SELECT id, category_id, name, description, price, currency, image_url, tags, is_available, display_order, dietary_info, calories, allergens, click_count FROM menu_items WHERE category_id = $1 ORDER BY display_order',
+        [categoryId]
+      );
+      
+      // Map the raw results to match our schema
+      return result.rows.map(row => ({
+        id: row.id,
+        categoryId: row.category_id,
+        name: row.name,
+        description: row.description,
+        price: row.price,
+        currency: row.currency,
+        imageUrl: row.image_url,
+        tags: row.tags || [],
+        isAvailable: row.is_available,
+        displayOrder: row.display_order || 0,
+        dietaryInfo: row.dietary_info,
+        calories: row.calories,
+        allergens: row.allergens || [],
+        clickCount: row.click_count || 0
+      }));
+    } catch (error) {
+      console.error('Error fetching menu items:', error);
+      return [];
+    }
   }
 
   async getMenuItemsByRestaurantId(restaurantId: number): Promise<MenuItem[]> {
