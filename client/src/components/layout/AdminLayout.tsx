@@ -4,7 +4,8 @@ import {
   Users, Settings, LayoutDashboard, LogOut, 
   Menu, X, Building, FileText,
   UserCircle, User, Crown, Mail, ImageIcon,
-  Moon, Sun
+  Moon, Sun, ChevronDown, ChevronRight, Globe,
+  Star, BookOpen
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ interface NavItem {
 const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isManageSiteOpen, setIsManageSiteOpen] = useState(false);
   const [location, setLocation] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -93,19 +95,32 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <Settings className="h-5 w-5" />,
     },
     {
+      title: "Logout",
+      href: "#logout",
+      icon: <LogOut className="h-5 w-5" />,
+    },
+  ];
+
+  const manageSiteItems: NavItem[] = [
+    {
+      title: "Menu Examples",
+      href: "/admin/menu-examples",
+      icon: <BookOpen className="h-4 w-4" />,
+    },
+    {
+      title: "Testimonials",
+      href: "/admin/testimonials",
+      icon: <Star className="h-4 w-4" />,
+    },
+    {
       title: "Contact Info",
       href: "/admin/contact-info",
-      icon: <Mail className="h-5 w-5" />,
+      icon: <Mail className="h-4 w-4" />,
     },
     {
       title: "Advertisements",
       href: "/admin/advertisements",
-      icon: <ImageIcon className="h-5 w-5" />,
-    },
-    {
-      title: "Logout",
-      href: "#logout",
-      icon: <LogOut className="h-5 w-5" />,
+      icon: <ImageIcon className="h-4 w-4" />,
     },
   ];
 
@@ -168,6 +183,47 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 </Link>
               );
             })}
+            
+            {/* Manage Site Section */}
+            <div className="mt-4">
+              <button
+                onClick={() => setIsManageSiteOpen(!isManageSiteOpen)}
+                className="flex items-center justify-between w-full px-2 py-1.5 text-xs font-medium rounded-md group
+                  text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+              >
+                <div className="flex items-center">
+                  <Globe className="h-5 w-5 mr-2" />
+                  Manage Site
+                </div>
+                {isManageSiteOpen ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </button>
+              
+              {isManageSiteOpen && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {manageSiteItems.map((item) => {
+                    const isActive = location === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={`flex items-center px-2 py-1.5 text-xs font-medium rounded-md group ${
+                          isActive
+                            ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-300"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+                        }`}
+                      >
+                        <div className="mr-2">{item.icon}</div>
+                        {item.title}
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </nav>
         </div>
       </div>
