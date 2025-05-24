@@ -37,13 +37,17 @@ const ResponsiveImage = ({
   const [error, setError] = useState(false);
   
   useEffect(() => {
-    // Only update if src actually changes
+    if (!src && !fallbackType) return;
+    
+    // Normalize the source URL
     const normalizedSrc = src ? normalizeImageUrl(src) : getFallbackImage(fallbackType);
     
-    // Generate a stable cache key using pathname only
-    const urlPath = normalizedSrc.split('?')[0];
-    const uniqueKey = Date.now();
-    const cacheBuster = `${urlPath}?cache=${uniqueKey}`;
+    // Handle deployed URLs properly
+    const isDeployedUrl = normalizedSrc.startsWith('https://') || normalizedSrc.startsWith('http://');
+    const finalSrc = isDeployedUrl ? normalizedSrc : `${window.location.origin}${normalizedSrc}`;
+    
+    // Add cache buster
+    const cacheBuster = `${finalSrc}${finalSrc.includes('?') ? '&' : '?'}t=${Date.now()}`;
     
     if (cacheBuster !== imageSrc) {
       setLoading(true);
@@ -54,7 +58,10 @@ const ResponsiveImage = ({
       const img = new Image();
       img.src = cacheBuster;
       img.onload = () => setLoading(false);
-      img.onerror = () => setError(true);
+      img.onerror = (e) => {
+        console.error('Failed to load image:', cacheBuster);
+        setError(true);
+      };
     }
   }, [src, fallbackType]);
   
