@@ -26,6 +26,7 @@ import Stripe from "stripe";
 import { promisify } from "util";
 import { scrypt, timingSafeEqual } from "crypto";
 import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
+import { compressImageSmart } from './smart-image-compression';
 
 // Password comparison utility for authentication
 const scryptAsync = promisify(scrypt);
@@ -300,8 +301,8 @@ const configureFileUpload = () => {
     }
   });
 
-  // File size limit (3MB)
-  const fileSizeLimit = 3 * 1024 * 1024;
+  // File size limit (1MB as requested)
+  const fileSizeLimit = 1 * 1024 * 1024;
 
   // File filter to only allow image files with additional logging
   const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -1667,8 +1668,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         });
       }
       
-      // Validate file size (max 3MB)
-      const maxSize = 3 * 1024 * 1024; // 3MB in bytes
+      // Validate file size (max 1MB)
+      const maxSize = 1 * 1024 * 1024; // 1MB in bytes
       if (req.file.size > maxSize) {
         console.warn(`File too large: ${req.file.size} bytes`);
         
@@ -1681,7 +1682,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         }
         
         return res.status(400).json({
-          message: 'File too large. Maximum size is 3MB.',
+          message: 'File too large. Maximum size is 1MB.',
           success: false,
           code: 'FILE_TOO_LARGE'
         });
