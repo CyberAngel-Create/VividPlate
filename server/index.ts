@@ -104,7 +104,11 @@ import { testBackblazeConnection } from './backblaze-config';
             reusePort: true,
           }, async () => {
             log(`serving on port ${port}`);
-            await testBackblazeConnection();
+            try {
+              await testBackblazeConnection();
+            } catch (err) {
+              log('Warning: Backblaze connection failed, continuing without it');
+            }
             resolve(true);
           }).on('error', (err: any) => {
             if (err.code === 'EADDRINUSE') {
