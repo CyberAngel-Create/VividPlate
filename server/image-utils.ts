@@ -11,6 +11,9 @@ export interface ResizeOptions {
 }
 
 const DEFAULT_QUALITY = 80;
+const MAX_FILE_SIZE_KB = 100; // Target compressed size
+const MIN_FILE_SIZE_KB = 70;  // Minimum acceptable size
+const MAX_UPLOAD_SIZE_MB = 1;  // Maximum upload size
 
 /**
  * Compresses and resizes images based on their type and target size

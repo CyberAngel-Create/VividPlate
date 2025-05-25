@@ -1,5 +1,5 @@
 import TestimonialsManager from "@/components/admin/TestimonialsManager";
-import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
 
 const AdminTestimonials = () => {
   return (

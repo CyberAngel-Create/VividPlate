@@ -1,5 +1,5 @@
 import MenuExamplesManager from "@/components/admin/MenuExamplesManager";
-import AdminLayout from "@/components/admin/AdminLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
 
 const AdminMenuExamples = () => {
   return (
