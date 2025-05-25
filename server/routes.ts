@@ -1703,34 +1703,46 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         });
       }
       
-      console.log(`Confirmed file exists at: ${originalFilePath}, processing for local storage`);
+      console.log(`Confirmed file exists at: ${originalFilePath}, applying smart compression`);
       
-      // Using only local storage for images - no cloud services
-      const { processMenuItemImage } = await import('./image-utils');
-
       let imageUrl;
       let finalFilePath = originalFilePath;
       let finalFileName = req.file.filename;
       
       try {
-        // Process the image locally for optimization
-        const processedFilePath = await processMenuItemImage(originalFilePath);
-        imageUrl = `/uploads/${path.basename(processedFilePath)}`;
-        finalFilePath = processedFilePath;
-        finalFileName = path.basename(processedFilePath);
-        console.log(`Processed and stored image locally: ${imageUrl}`);
+        // Apply smart compression to achieve 70-100KB target size
+        const compressedFilePath = await compressImageSmart(originalFilePath);
+        imageUrl = `/uploads/${path.basename(compressedFilePath)}`;
+        finalFilePath = compressedFilePath;
+        finalFileName = path.basename(compressedFilePath);
+        console.log(`✅ Smart compression completed: ${imageUrl}`);
         
-        // Delete the original file if it's different from the processed one
-        if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+        // Delete the original file since we have the compressed version
+        if (compressedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
           fs.unlinkSync(originalFilePath);
-          console.log(`Deleted original file after successful processing: ${originalFilePath}`);
+          console.log(`🗑️ Deleted original file after compression: ${originalFilePath}`);
         }
-      } catch (processingError) {
-        // If processing fails, use the original file
-        console.error(`Image processing failed, using original image: ${processingError}`);
-        imageUrl = `/uploads/${req.file.filename}`;
-        finalFilePath = originalFilePath;
-        finalFileName = req.file.filename;
+      } catch (compressionError) {
+        // If smart compression fails, try standard processing as fallback
+        console.error(`⚠️ Smart compression failed, trying standard processing: ${compressionError}`);
+        try {
+          const { processMenuItemImage } = await import('./image-utils');
+          const processedFilePath = await processMenuItemImage(originalFilePath);
+          imageUrl = `/uploads/${path.basename(processedFilePath)}`;
+          finalFilePath = processedFilePath;
+          finalFileName = path.basename(processedFilePath);
+          console.log(`📸 Standard processing completed as fallback: ${imageUrl}`);
+          
+          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+            fs.unlinkSync(originalFilePath);
+          }
+        } catch (fallbackError) {
+          // If both fail, use the original file
+          console.error(`❌ Both compression methods failed, using original: ${fallbackError}`);
+          imageUrl = `/uploads/${req.file.filename}`;
+          finalFilePath = originalFilePath;
+          finalFileName = req.file.filename;
+        }
       }
       
       console.log(`Using image URL: ${imageUrl}`);
