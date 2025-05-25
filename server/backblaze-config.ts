@@ -30,7 +30,7 @@ export function getBackblazeClient(): S3Client {
       console.log('✅ Backblaze client initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Backblaze client:', error);
-      throw error;
+      return null;
     }
   }
   
