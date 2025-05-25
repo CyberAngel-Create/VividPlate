@@ -14,8 +14,8 @@ export function getBackblazeClient(): S3Client {
     const endpoint = `https://s3.${region}.backblazeb2.com`;
     
     if (!keyId || !applicationKey) {
-      console.error('❌ Backblaze configuration is incomplete');
-      throw new Error('Backblaze configuration is incomplete. Using local storage instead.');
+      console.error('❌ Backblaze configuration is incomplete. Using local storage.');
+      return null;
     }
     
     try {
@@ -41,6 +41,10 @@ export function getBackblazeClient(): S3Client {
 export async function testBackblazeConnection(): Promise<boolean> {
   try {
     const client = getBackblazeClient();
+    if (!client) {
+      console.log('⚠️ No Backblaze client available, using local storage only');
+      return false;
+    }
     const bucketName = process.env.BACKBLAZE_BUCKET_NAME;
     if (!bucketName) {
       console.error('❌ Backblaze bucket name not configured');
