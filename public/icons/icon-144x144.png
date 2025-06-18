@@ -1,22 +1,9 @@
-<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="96" fill="#2563eb"/>
-  <g transform="translate(128, 128)">
-    <!-- Menu Lines -->
-    <rect x="32" y="48" width="192" height="8" rx="4" fill="white"/>
-    <rect x="32" y="80" width="160" height="8" rx="4" fill="white" opacity="0.8"/>
-    <rect x="32" y="112" width="176" height="8" rx="4" fill="white" opacity="0.6"/>
-    
-    <!-- Menu Lines Group 2 -->
-    <rect x="32" y="160" width="184" height="8" rx="4" fill="white"/>
-    <rect x="32" y="192" width="144" height="8" rx="4" fill="white" opacity="0.8"/>
-    <rect x="32" y="224" width="168" height="8" rx="4" fill="white" opacity="0.6"/>
-    
-    <!-- Restaurant Icon -->
-    <circle cx="256" cy="64" r="24" fill="white"/>
-    <path d="M240 88h32v16h-32z" fill="white"/>
-    <path d="M232 104h48v8h-48z" fill="white"/>
-    
-    <!-- Mobile Device Frame -->
-    <rect x="0" y="16" width="256" height="224" rx="24" stroke="white" stroke-width="4" fill="none"/>
-  </g>
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+<rect width="192" height="192" rx="24" fill="#2563eb"/>
+<g transform="translate(48, 48)">
+<rect x="16" y="24" width="64" height="6" rx="3" fill="white"/>
+<rect x="16" y="40" width="48" height="6" rx="3" fill="white" opacity="0.8"/>
+<rect x="16" y="56" width="56" height="6" rx="3" fill="white" opacity="0.6"/>
+<circle cx="80" cy="32" r="12" fill="white"/>
+</g>
 </svg>
