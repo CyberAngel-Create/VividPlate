@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle } from "lucide-react";
+import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/hooks/use-subscription";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { cn } from "@/lib/utils";
 
 interface SidebarNavigationProps {
   onLogout?: () => void;
@@ -24,6 +25,11 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { subscription, isPaid } = useSubscription();
   const { t } = useTranslation();
+
+  // Close mobile sidebar when route changes
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location]);
   
   // Define navigation items
   const navItems: NavItem[] = [

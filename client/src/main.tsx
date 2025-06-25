@@ -32,18 +32,77 @@ if ('serviceWorker' in navigator) {
   }
 };
 
-const root = document.getElementById("root");
-if (root) {
-  // Clear loading content
-  root.innerHTML = '';
+// Enhanced browser compatibility and initialization
+const initApp = () => {
+  console.log('Initializing VividPlate...');
   
-  createRoot(root).render(
-    <ErrorBoundary>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
-        <App />
-      </ThemeProvider>
-    </ErrorBoundary>
-  );
-} else {
-  console.error('Failed to find root element for VividPlate');
-}
+  try {
+    const root = document.getElementById("root");
+    if (!root) {
+      throw new Error('Root element not found');
+    }
+
+    // Clear loading content
+    const loader = document.getElementById('initial-loader');
+    if (loader) {
+      loader.remove();
+    } else {
+      root.innerHTML = '';
+    }
+    
+    // Create React app
+    const reactRoot = createRoot(root);
+    
+    // Add error handling for React rendering
+    setTimeout(() => {
+      try {
+        reactRoot.render(
+          <ErrorBoundary>
+            <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
+              <App />
+            </ThemeProvider>
+          </ErrorBoundary>
+        );
+        console.log('VividPlate rendered successfully');
+      } catch (renderError) {
+        console.error('React render error:', renderError);
+        showFallbackUI();
+      }
+    }, 100);
+
+  } catch (error) {
+    console.error('VividPlate initialization error:', error);
+    showFallbackUI();
+  }
+};
+
+const showFallbackUI = () => {
+  const fallbackHTML = `
+    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background: #ffffff;">
+      <div style="max-width: 400px; padding: 32px;">
+        <h1 style="color: #f59e0b; margin: 0 0 16px 0; font-size: 28px; font-weight: bold;">VividPlate</h1>
+        <p style="color: #6b7280; margin: 0 0 24px 0; font-size: 16px;">Unable to load the application</p>
+        <button onclick="window.location.reload()" style="background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+          Reload Application
+        </button>
+        <p style="color: #9ca3af; margin: 24px 0 0 0; font-size: 12px;">If the problem persists, please clear your browser cache</p>
+      </div>
+    </div>
+  `;
+  
+  document.body.innerHTML = fallbackHTML;
+};
+
+// Cross-browser initialization
+const startApp = () => {
+  if (typeof window !== 'undefined' && window.document) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initApp);
+    } else {
+      // DOM already loaded
+      initApp();
+    }
+  }
+};
+
+startApp();
