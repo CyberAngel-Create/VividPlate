@@ -1,6 +1,5 @@
 import { createRoot } from "react-dom/client";
-import App from "./App-static";
-import "./index.css";
+import App from "./App-rollback";
 
 const container = document.getElementById("root");
 if (!container) {
