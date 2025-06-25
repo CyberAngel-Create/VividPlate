@@ -2,20 +2,43 @@ import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
 import App from "./App";
 import "./index.css";
-// Import i18n configuration
 import "./i18n";
-// PWA debug utilities (disabled to prevent crashes)
-// import "./utils/pwa-debug";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
-// Simple service worker registration for Chrome compatibility
+// PWA installation handling for desktop
+let deferredPrompt: any;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  console.log('PWA install prompt ready');
+});
+
+// Service worker registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    navigator.serviceWorker.register('/sw.js')
+      .then(() => console.log('Service Worker registered'))
+      .catch(() => console.log('Service Worker registration failed'));
   });
 }
 
-createRoot(document.getElementById("root")!).render(
-  <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
-    <App />
-  </ThemeProvider>
-);
+// Make install prompt available globally
+(window as any).installPWA = () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+    });
+  }
+};
+
+const root = document.getElementById("root");
+if (root) {
+  createRoot(root).render(
+    <ErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
+        <App />
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
+}
