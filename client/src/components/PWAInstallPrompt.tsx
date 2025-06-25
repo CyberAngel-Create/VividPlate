@@ -69,9 +69,15 @@ export const PWAInstallPrompt = () => {
           <div className="flex-shrink-0">
             <div className="w-12 h-12 bg-amber-500 rounded-lg flex items-center justify-center">
               <img 
-                src="/icon-72x72.png" 
+                src="/vividplate-icon.png" 
                 alt="VividPlate Icon" 
-                className="w-8 h-8 rounded"
+                className="w-8 h-8 rounded object-cover"
+                onError={(e) => {
+                  console.log('VividPlate icon failed to load');
+                  const target = e.currentTarget;
+                  target.src = '/icon-72x72.png';
+                }}
+                onLoad={() => console.log('VividPlate icon loaded successfully')}
               />
             </div>
           </div>
