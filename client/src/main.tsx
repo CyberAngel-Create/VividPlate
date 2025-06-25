@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
-import App from "./App-ultra-minimal";
-import "./index-minimal.css";
+import App from "./App.tsx";
+import "./index.css";
 import "./i18n";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
@@ -68,6 +68,14 @@ const initApp = () => {
 };
 
 
+
+// Hide the initial loader once React is ready
+setTimeout(() => {
+  const loader = document.getElementById('initial-loader');
+  if (loader) {
+    loader.style.display = 'none';
+  }
+}, 100);
 
 // Ultra-fast initialization
 initApp();
