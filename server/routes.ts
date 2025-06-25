@@ -3479,18 +3479,51 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const userId = parseInt(req.params.id);
       const { subscriptionTier, duration } = req.body;
       
+      console.log(`Admin subscription update request for user ${userId}:`, { subscriptionTier, duration });
+      
       if (!['free', 'premium'].includes(subscriptionTier)) {
         return res.status(400).json({ message: 'Invalid subscription tier' });
       }
       
-      if (subscriptionTier === 'premium' && !['1_month', '3_months', '1_year'].includes(duration)) {
+      if (subscriptionTier === 'premium' && !['1_month', '3_months', '6_months', '1_year'].includes(duration)) {
         return res.status(400).json({ message: 'Invalid premium duration' });
       }
       
       if (subscriptionTier === 'premium') {
-        await SubscriptionService.upgradeToPremium(userId, duration, (req.user as any).id);
+        // Calculate dates for premium subscription
+        const startDate = new Date();
+        const endDate = new Date(startDate);
+        
+        switch (duration) {
+          case '1_month':
+            endDate.setMonth(endDate.getMonth() + 1);
+            break;
+          case '3_months':
+            endDate.setMonth(endDate.getMonth() + 3);
+            break;
+          case '6_months':
+            endDate.setMonth(endDate.getMonth() + 6);
+            break;
+          case '1_year':
+            endDate.setFullYear(endDate.getFullYear() + 1);
+            break;
+        }
+        
+        await storage.updateUserPremiumStatus(userId, {
+          subscriptionTier: 'premium',
+          premiumStartDate: startDate,
+          premiumEndDate: endDate,
+          premiumDuration: duration,
+          notificationSent: false
+        });
       } else {
-        await SubscriptionService.downgradeToFree(userId, (req.user as any).id);
+        await storage.updateUserPremiumStatus(userId, {
+          subscriptionTier: 'free',
+          premiumStartDate: null,
+          premiumEndDate: null,
+          premiumDuration: null,
+          notificationSent: false
+        });
       }
       
       const updatedUser = await storage.getUser(userId);
@@ -3498,13 +3531,15 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
       
+      console.log(`Successfully updated user ${userId} subscription to ${subscriptionTier}`);
+      
       // Exclude sensitive data
       const { password, resetPasswordToken, resetPasswordExpires, ...sanitizedUser } = updatedUser;
       
       res.json(sanitizedUser);
     } catch (error) {
       console.error('Error updating user subscription:', error);
-      res.status(500).json({ message: 'Server error' });
+      res.status(500).json({ message: 'Failed to upgrade user. Please try again.' });
     }
   });
 

@@ -42,7 +42,13 @@ export interface IStorage {
   toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
   upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
   updateUserSubscription(id: number, updates: Partial<User>): Promise<User | undefined>;
-  updateUserPremiumStatus(userId: number, subscriptionData: { subscriptionTier: string; premiumStartDate?: Date; premiumEndDate?: Date }): Promise<User>;
+  updateUserPremiumStatus(userId: number, subscriptionData: { 
+    subscriptionTier: string; 
+    premiumStartDate?: Date | null; 
+    premiumEndDate?: Date | null;
+    premiumDuration?: string | null;
+    notificationSent?: boolean;
+  }): Promise<User>;
   getUsersNearExpiry(): Promise<User[]>;
   getUserMenuItemImageCount(userId: number): Promise<number>;
 
@@ -949,7 +955,13 @@ export class MemStorage implements IStorage {
     }
   }
 
-  async updateUserPremiumStatus(userId: number, subscriptionData: { subscriptionTier: string; premiumStartDate?: Date; premiumEndDate?: Date }): Promise<User> {
+  async updateUserPremiumStatus(userId: number, subscriptionData: { 
+    subscriptionTier: string; 
+    premiumStartDate?: Date | null; 
+    premiumEndDate?: Date | null;
+    premiumDuration?: string | null;
+    notificationSent?: boolean;
+  }): Promise<User> {
     const user = this.users.get(userId);
     if (!user) {
       throw new Error('User not found');
@@ -961,6 +973,7 @@ export class MemStorage implements IStorage {
     };
 
     this.users.set(userId, updatedUser);
+    console.log(`Updated user ${userId} subscription:`, subscriptionData);
     return updatedUser;
   }
 
