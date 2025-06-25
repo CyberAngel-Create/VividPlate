@@ -109,6 +109,7 @@ const UsersAdminPage = () => {
   const [userToModify, setUserToModify] = useState<User | null>(null);
   const [actionType, setActionType] = useState<"status" | "subscription" | null>(null);
   const [actionValue, setActionValue] = useState<boolean | string | null>(null);
+  const [selectedDuration, setSelectedDuration] = useState<string>("1_month");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showCreateAdminDialog, setShowCreateAdminDialog] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -319,6 +320,10 @@ const UsersAdminPage = () => {
     }
 
     if (actionType === "subscription") {
+      if (actionValue === "premium") {
+        const durationText = selectedDuration.replace("_", " ").replace("months", "months").replace("month", "month").replace("year", "year");
+        return `Are you sure you want to upgrade "${userToModify.username}" to premium for ${durationText}?`;
+      }
       return `Are you sure you want to change the subscription tier for "${userToModify.username}" to ${actionValue}?`;
     }
 
