@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
   } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
     gcTime: 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,
