@@ -166,9 +166,9 @@ export default function SubscriptionManagement() {
 
             <Button 
               onClick={handleUpdateSubscription}
-              disabled={!selectedUserId || !selectedTier || (selectedTier === "premium" && !selectedDuration) || updateSubscriptionMutation.isPending}
+              disabled={!selectedUserId || !selectedTier || (selectedTier === "premium" && !selectedDuration) || upgradeUserMutation.isPending || downgradeUserMutation.isPending}
             >
-              {updateSubscriptionMutation.isPending ? "Updating..." : "Update Subscription"}
+              {(upgradeUserMutation.isPending || downgradeUserMutation.isPending) ? "Updating..." : "Update Subscription"}
             </Button>
           </div>
         </CardContent>
