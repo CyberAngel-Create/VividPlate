@@ -29,6 +29,13 @@ export const InstallPrompt = () => {
   }, [isInstallable, isInstalled, hasShownPrompt]);
 
   const handleInstall = async () => {
+    // Try global PWA install function first
+    if ((window as any).installPWA) {
+      (window as any).installPWA();
+      setShowPrompt(false);
+      return;
+    }
+    
     if (canInstall) {
       const success = await installPWA();
       if (success) {

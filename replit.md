@@ -5,6 +5,12 @@ MenuMate is a comprehensive digital menu platform for restaurants that enables c
 
 ## Recent Changes (June 2025)
 
+### Critical Bug Fixes (Latest)
+- ✅ Fixed Restaurant switcher visibility issue on mobile devices
+- ✅ Implemented Chrome browser compatibility fixes for desktop loading
+- ✅ Enhanced PWA installation functionality for desktop browsers
+- ✅ Added error boundary and improved main.tsx for cross-platform stability
+
 ### Subscription System Implementation
 - ✅ Added time-based premium subscriptions with 1 month, 3 months, and 1 year duration options
 - ✅ Implemented automatic subscription countdown system with expiration tracking
