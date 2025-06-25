@@ -41,6 +41,9 @@ export interface IStorage {
   getRecentUsers(limit: number): Promise<User[]>;
   toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
   upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
+  updateUserSubscription(id: number, updates: Partial<User>): Promise<User | undefined>;
+  getUsersNearExpiry(): Promise<User[]>;
+  getUserMenuItemImageCount(userId: number): Promise<number>;
 
   // Admin operations
   createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
@@ -286,10 +289,13 @@ export class MemStorage implements IStorage {
         lastLogin: now,
         createdAt: now,
         subscriptionTier: 'premium',
+        premiumStartDate: null,
+        premiumEndDate: null,
+        premiumDuration: null,
+        notificationSent: false,
         stripeCustomerId: null,
         stripeSubscriptionId: null,
         telebirrCustomerId: null,
-        subscriptionExpiry: null,
         resetPasswordToken: null,
         resetPasswordExpires: null
       };
@@ -902,6 +908,39 @@ export class MemStorage implements IStorage {
     user.subscriptionTier = tier;
     this.users.set(id, user);
     return user;
+  }
+
+  async updateUserSubscription(id: number, updates: Partial<User>): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+
+    const updatedUser = { ...user, ...updates };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async getUsersNearExpiry(): Promise<User[]> {
+    const now = new Date();
+    const tenDaysFromNow = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000);
+    
+    return Array.from(this.users.values()).filter(user => 
+      user.subscriptionTier === "premium" &&
+      user.premiumEndDate &&
+      user.premiumEndDate <= tenDaysFromNow &&
+      user.premiumEndDate > now
+    );
+  }
+
+  async getUserMenuItemImageCount(userId: number): Promise<number> {
+    const restaurants = await this.getRestaurantsByUserId(userId);
+    let totalImages = 0;
+    
+    for (const restaurant of restaurants) {
+      const menuItems = await this.getMenuItemsByRestaurantId(restaurant.id);
+      totalImages += menuItems.filter(item => item.imageUrl).length;
+    }
+    
+    return totalImages;
   }
 
   async getAllRestaurants(): Promise<Restaurant[]> {

@@ -27,6 +27,7 @@ import { promisify } from "util";
 import { scrypt, timingSafeEqual } from "crypto";
 import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
 import { compressImageSmart } from './smart-image-compression';
+import { SubscriptionService } from './subscription-service';
 
 // Password comparison utility for authentication
 const scryptAsync = promisify(scrypt);
@@ -3482,26 +3483,26 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   app.patch('/api/admin/users/:id/subscription', isAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const { subscriptionTier } = req.body;
+      const { subscriptionTier, duration } = req.body;
       
       if (!['free', 'premium'].includes(subscriptionTier)) {
         return res.status(400).json({ message: 'Invalid subscription tier' });
       }
       
-      const updatedUser = await storage.upgradeUserSubscription(userId, subscriptionTier);
+      if (subscriptionTier === 'premium' && !['1_month', '3_months', '1_year'].includes(duration)) {
+        return res.status(400).json({ message: 'Invalid premium duration' });
+      }
       
+      if (subscriptionTier === 'premium') {
+        await SubscriptionService.upgradeToPremium(userId, duration, (req.user as any).id);
+      } else {
+        await SubscriptionService.downgradeToFree(userId, (req.user as any).id);
+      }
+      
+      const updatedUser = await storage.getUser(userId);
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
       }
-      
-      // Create admin log for this action
-      await storage.createAdminLog({
-        adminId: (req.user as any).id,
-        action: 'update_subscription',
-        entityType: 'user',
-        entityId: updatedUser.id,
-        details: `Changed user ${updatedUser.username} subscription to ${subscriptionTier} from IP ${req.ip}`,
-      });
       
       // Exclude sensitive data
       const { password, resetPasswordToken, resetPasswordExpires, ...sanitizedUser } = updatedUser;
