@@ -99,7 +99,7 @@ import { testBackblazeConnection } from './backblaze-config';
       try {
         await new Promise((resolve, reject) => {
           server.listen({
-            port,
+            port: process.env.PORT || port,
             host: "0.0.0.0",
             reusePort: true,
           }, async () => {
