@@ -103,6 +103,7 @@ function Router() {
       <Switch>
         <PublicRoute path="/" component={Home} />
         <PublicRoute path="/login" component={Login} />
+        <PublicRoute path="/fast-login" component={lazy(() => import("./pages/fast-login"))} />
         <PublicRoute path="/admin-login" component={AdminLogin} />
         <PublicRoute path="/register" component={Register} />
         <PublicRoute path="/forgot-password" component={ForgotPassword} />

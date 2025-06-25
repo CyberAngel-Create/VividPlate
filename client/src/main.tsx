@@ -63,8 +63,14 @@ const initApp = () => {
       throw new Error('Root element not found');
     }
 
-    // Create React app immediately
+    // Create React app and render immediately
     const reactRoot = createRoot(root);
+    
+    // Hide loader first for immediate feedback
+    const loader = document.getElementById('initial-loader');
+    if (loader) {
+      loader.style.display = 'none';
+    }
     
     // Render app
     reactRoot.render(
@@ -75,13 +81,7 @@ const initApp = () => {
       </ErrorBoundary>
     );
     
-    // Hide loader after successful render
-    const loader = document.getElementById('initial-loader');
-    if (loader) {
-      loader.style.display = 'none';
-    }
-    
-    console.log('VividPlate loaded successfully');
+    console.log('VividPlate loaded');
 
   } catch (error) {
     console.error('VividPlate initialization error:', error);
@@ -106,16 +106,9 @@ const showFallbackUI = () => {
   document.body.innerHTML = fallbackHTML;
 };
 
-// Cross-browser initialization
-const startApp = () => {
-  if (typeof window !== 'undefined' && window.document) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initApp);
-    } else {
-      // DOM already loaded
-      initApp();
-    }
-  }
-};
-
-startApp();
+// Immediate initialization for faster loading
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
