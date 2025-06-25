@@ -5,7 +5,7 @@ import {
   Menu, X, Building, FileText,
   UserCircle, User, Crown, Mail, ImageIcon,
   Moon, Sun, ChevronDown, ChevronRight, Globe,
-  Star, BookOpen
+  Star, BookOpen, DollarSign
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";

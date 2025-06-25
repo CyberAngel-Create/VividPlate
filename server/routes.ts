@@ -3508,6 +3508,104 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Admin route to upgrade user to premium with specified duration
+  app.post('/api/admin/upgrade-user/:userId', isAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const userId = parseInt(req.params.userId, 10);
+      const { duration } = req.body; // '1_month', '3_months', '1_year'
+
+      if (!duration || !['1_month', '3_months', '1_year'].includes(duration)) {
+        return res.status(400).json({ message: 'Invalid duration. Must be 1_month, 3_months, or 1_year' });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Calculate end date based on duration
+      const startDate = new Date();
+      const endDate = new Date(startDate);
+      
+      switch (duration) {
+        case '1_month':
+          endDate.setMonth(endDate.getMonth() + 1);
+          break;
+        case '3_months':
+          endDate.setMonth(endDate.getMonth() + 3);
+          break;
+        case '1_year':
+          endDate.setFullYear(endDate.getFullYear() + 1);
+          break;
+      }
+
+      // Update user subscription
+      const updatedUser = await storage.updateUserPremiumStatus(userId, {
+        subscriptionTier: 'premium',
+        premiumStartDate: startDate,
+        premiumEndDate: endDate,
+        premiumDuration: duration,
+        notificationSent: false
+      });
+
+      console.log(`Admin ${adminUser.username} upgraded user ${user.username} to premium for ${duration}`);
+
+      res.json({
+        message: 'User upgraded to premium successfully',
+        user: updatedUser,
+        subscription: {
+          tier: 'premium',
+          startDate: startDate.toISOString(),
+          endDate: endDate.toISOString(),
+          duration
+        }
+      });
+    } catch (error) {
+      console.error('Error upgrading user to premium:', error);
+      res.status(500).json({ message: 'Error upgrading user to premium' });
+    }
+  });
+
+  // Admin route to downgrade user from premium 
+  app.post('/api/admin/downgrade-user/:userId', isAuthenticated, async (req, res) => {
+    try {
+      const adminUser = req.user as any;
+      if (adminUser.role !== 'admin') {
+        return res.status(403).json({ message: 'Admin access required' });
+      }
+
+      const userId = parseInt(req.params.userId, 10);
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Update user subscription to free
+      const updatedUser = await storage.updateUserPremiumStatus(userId, {
+        subscriptionTier: 'free',
+        premiumStartDate: null,
+        premiumEndDate: null,
+        premiumDuration: null,
+        notificationSent: false
+      });
+
+      console.log(`Admin ${adminUser.username} downgraded user ${user.username} to free tier`);
+
+      res.json({
+        message: 'User downgraded to free tier successfully',
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error('Error downgrading user:', error);
+      res.status(500).json({ message: 'Error downgrading user' });
+    }
+  });
+
   // Get admin logs
   app.get('/api/admin/logs', isAdmin, async (req, res) => {
     try {
