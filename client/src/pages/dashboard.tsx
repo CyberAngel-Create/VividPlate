@@ -18,6 +18,7 @@ import { AdaptiveGrid } from "@/components/adaptive/AdaptiveGrid";
 import { AdaptiveContainer } from "@/components/adaptive/AdaptiveContainer";
 import { AdaptiveCard } from "@/components/adaptive/AdaptiveCard";
 import { useResponsive } from "@/hooks/use-responsive";
+import { cn } from "@/lib/utils";
 
 interface Stats {
   viewCount: number;
