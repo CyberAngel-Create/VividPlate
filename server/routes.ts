@@ -762,30 +762,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      
-      // Check if user has an active subscription
-      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
+      const subscriptionStatus = await SubscriptionService.getSubscriptionStatus(userId);
       
       // Count restaurants to enforce limits
       const restaurantCount = await storage.countRestaurantsByUserId(userId);
       
-      if (activeSubscription && activeSubscription.tier === "premium") {
-        return res.json({
-          tier: activeSubscription.tier,
-          isPaid: true,
-          maxRestaurants: 3,
-          currentRestaurants: restaurantCount,
-          expiresAt: activeSubscription.endDate
-        });
-      } else {
-        return res.json({
-          tier: "free",
-          isPaid: false,
-          maxRestaurants: 1,
-          currentRestaurants: restaurantCount,
-          expiresAt: null
-        });
-      }
+      res.json({
+        ...subscriptionStatus,
+        currentRestaurants: restaurantCount,
+        currentMenuItemImages: await storage.getUserMenuItemImageCount(userId)
+      });
     } catch (error) {
       console.error("Error getting subscription status:", error);
       res.status(500).json({ message: 'Server error' });
@@ -1805,6 +1791,14 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       if (!req.file) {
         console.warn(`Upload attempt with no file included for menu item by user ${userId}`);
         return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      // Check image upload limits for free users
+      const canUpload = await SubscriptionService.validateImageUpload(userId);
+      if (!canUpload) {
+        return res.status(403).json({ 
+          message: 'Upload limit reached. Free users can upload maximum 5 menu item images. Upgrade to premium for unlimited uploads.' 
+        });
       }
       
       const itemId = parseInt(req.params.itemId);
