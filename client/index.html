@@ -68,29 +68,7 @@
      crossorigin="anonymous"></script>
   </head>
   <body>
-    <div id="root">
-      <div id="initial-loader" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui;">
-        <div style="text-align: center;">
-          <h1 style="color: #f59e0b; margin: 0 0 12px 0; font-size: 24px; font-weight: bold;">VividPlate</h1>
-          <div style="width: 24px; height: 24px; border: 2px solid #f3f4f6; border-top: 2px solid #f59e0b; border-radius: 50%; animation: spin 0.6s linear infinite; margin: 0 auto;"></div>
-        </div>
-      </div>
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        body {
-          margin: 0;
-          padding: 0;
-          background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
-          min-height: 100vh;
-        }
-        #initial-loader {
-          background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
-        }
-      </style>
-    </div>
+    <div id="root"></div>
     <noscript>
       <div style="text-align: center; margin-top: 50px; font-family: system-ui;">
         <h1 style="color: #f59e0b;">VividPlate</h1>
@@ -100,16 +78,7 @@
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
     
-    <!-- Ultra-fast loading optimization -->
-    <script>
-      // Minimal fallback detection
-      setTimeout(() => {
-        const loader = document.getElementById('initial-loader');
-        if (loader && loader.style.display !== 'none') {
-          loader.innerHTML = '<div style="text-align: center; padding: 20px;"><h1 style="color: #f59e0b; margin-bottom: 12px;">VividPlate</h1><button onclick="location.reload()" style="background: #f59e0b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Reload</button></div>';
-        }
-      }, 3000);
-    </script>
+
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>

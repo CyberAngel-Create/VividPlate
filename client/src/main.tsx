@@ -56,12 +56,7 @@ if ('serviceWorker' in navigator) {
 const initApp = () => {
   const root = document.getElementById("root");
   if (!root) return;
-
-  // Hide loader immediately
-  const loader = document.getElementById('initial-loader');
-  if (loader) loader.style.display = 'none';
   
-  // Render React app
   const reactRoot = createRoot(root);
   reactRoot.render(
     <ErrorBoundary>
@@ -72,22 +67,7 @@ const initApp = () => {
   );
 };
 
-const showFallbackUI = () => {
-  const fallbackHTML = `
-    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; text-align: center; background: #ffffff;">
-      <div style="max-width: 400px; padding: 32px;">
-        <h1 style="color: #f59e0b; margin: 0 0 16px 0; font-size: 28px; font-weight: bold;">VividPlate</h1>
-        <p style="color: #6b7280; margin: 0 0 24px 0; font-size: 16px;">Unable to load the application</p>
-        <button onclick="window.location.reload()" style="background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
-          Reload Application
-        </button>
-        <p style="color: #9ca3af; margin: 24px 0 0 0; font-size: 12px;">If the problem persists, please clear your browser cache</p>
-      </div>
-    </div>
-  `;
 
-  document.body.innerHTML = fallbackHTML;
-};
 
 // Ultra-fast initialization
 initApp();
