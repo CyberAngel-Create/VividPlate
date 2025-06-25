@@ -106,9 +106,5 @@ const showFallbackUI = () => {
   document.body.innerHTML = fallbackHTML;
 };
 
-// Immediate initialization for faster loading
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
+// Ultra-fast initialization
+initApp();
