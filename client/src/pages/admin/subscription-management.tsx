@@ -34,23 +34,16 @@ export default function SubscriptionManagement() {
     },
   });
 
-  const updateSubscriptionMutation = useMutation({
-    mutationFn: async ({ userId, subscriptionTier, duration }: { 
-      userId: number; 
-      subscriptionTier: string; 
-      duration?: string; 
-    }) => {
-      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/subscription`, {
-        subscriptionTier,
-        duration,
-      });
+  const upgradeUserMutation = useMutation({
+    mutationFn: async ({ userId, duration }: { userId: number; duration: string }) => {
+      const res = await apiRequest("POST", `/api/admin/upgrade-user/${userId}`, { duration });
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({
         title: "Success",
-        description: "User subscription updated successfully",
+        description: "User upgraded to premium successfully",
       });
       setSelectedUserId(null);
       setSelectedTier("");
@@ -59,7 +52,31 @@ export default function SubscriptionManagement() {
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to update subscription",
+        description: error.message || "Failed to upgrade user to premium",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const downgradeUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const res = await apiRequest("POST", `/api/admin/downgrade-user/${userId}`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Success",
+        description: "User downgraded to free successfully",
+      });
+      setSelectedUserId(null);
+      setSelectedTier("");
+      setSelectedDuration("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to downgrade user",
         variant: "destructive",
       });
     },
@@ -68,20 +85,22 @@ export default function SubscriptionManagement() {
   const handleUpdateSubscription = () => {
     if (!selectedUserId || !selectedTier) return;
 
-    if (selectedTier === "premium" && !selectedDuration) {
-      toast({
-        title: "Error",
-        description: "Please select a duration for premium subscription",
-        variant: "destructive",
+    if (selectedTier === "premium") {
+      if (!selectedDuration) {
+        toast({
+          title: "Error",
+          description: "Please select a duration for premium subscription",
+          variant: "destructive",
+        });
+        return;
+      }
+      upgradeUserMutation.mutate({
+        userId: selectedUserId,
+        duration: selectedDuration,
       });
-      return;
+    } else if (selectedTier === "free") {
+      downgradeUserMutation.mutate(selectedUserId);
     }
-
-    updateSubscriptionMutation.mutate({
-      userId: selectedUserId,
-      subscriptionTier: selectedTier,
-      duration: selectedDuration,
-    });
   };
 
   const formatDate = (dateString?: string) => {
@@ -168,7 +187,7 @@ export default function SubscriptionManagement() {
               onClick={handleUpdateSubscription}
               disabled={!selectedUserId || !selectedTier || (selectedTier === "premium" && !selectedDuration) || upgradeUserMutation.isPending || downgradeUserMutation.isPending}
             >
-              {(upgradeUserMutation.isPending || downgradeUserMutation.isPending) ? "Updating..." : "Update Subscription"}
+              {upgradeUserMutation.isPending || downgradeUserMutation.isPending ? "Updating..." : "Update Subscription"}
             </Button>
           </div>
         </CardContent>
