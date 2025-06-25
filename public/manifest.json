@@ -62,17 +62,17 @@
   ],
   "shortcuts": [
     {
-      "name": "My Restaurants",
-      "short_name": "Restaurants",
-      "description": "Manage your restaurants",
-      "url": "/restaurants",
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Go to restaurant dashboard",
+      "url": "/dashboard",
       "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Menu Builder",
-      "short_name": "Menu",
-      "description": "Create and edit menus",
-      "url": "/menu-builder",
+      "name": "Admin Panel",
+      "short_name": "Admin",
+      "description": "Access admin dashboard",
+      "url": "/admin",
       "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
     }
   ],

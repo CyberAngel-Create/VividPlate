@@ -163,7 +163,7 @@ function App() {
                   <Toaster />
                   <AdSense />
                   <Router />
-                  <InstallBanner />
+                  <PWAInstallPrompt />
                   <CookieConsent />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
