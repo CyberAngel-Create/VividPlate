@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VividPlate - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        h1 {
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 32px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+        }
+        button {
+            width: 100%;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background: #d97706;
+        }
+        button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+        .test-accounts {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+        .test-accounts h3 {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .test-account {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .test-account:hover {
+            background: #f3f4f6;
+        }
+        .test-account strong {
+            color: #374151;
+            font-size: 14px;
+        }
+        .test-account small {
+            color: #6b7280;
+            font-size: 12px;
+        }
+        .error {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>VividPlate</h1>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username or Email</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" id="loginBtn">
+                <span id="loginText">Login</span>
+                <span id="loginLoader" class="loading" style="display: none;"></span>
+            </button>
+            <div id="error" class="error" style="display: none;"></div>
+        </form>
+
+        <div class="test-accounts">
+            <h3>Test Accounts (Click to use)</h3>
+            <div class="test-account" onclick="fillLogin('admin', 'admin1234')">
+                <strong>Admin Account</strong><br>
+                <small>Username: admin | Password: admin1234</small>
+            </div>
+            <div class="test-account" onclick="fillLogin('restaurant1', 'password123')">
+                <strong>Restaurant Owner</strong><br>
+                <small>Username: restaurant1 | Password: password123</small>
+            </div>
+            <div class="test-account" onclick="fillLogin('entotocloudrestaurant@gmail.com', 'cloud123')">
+                <strong>Premium User</strong><br>
+                <small>Email: entotocloudrestaurant@gmail.com | Password: cloud123</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function fillLogin(username, password) {
+            document.getElementById('username').value = username;
+            document.getElementById('password').value = password;
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const loginText = document.getElementById('loginText');
+            const loginLoader = document.getElementById('loginLoader');
+            const errorDiv = document.getElementById('error');
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginText.style.display = 'none';
+            loginLoader.style.display = 'inline-block';
+            errorDiv.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/dashboard';
+                } else {
+                    const error = await response.text();
+                    errorDiv.textContent = error || 'Login failed. Please check your credentials.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Network error. Please try again.';
+                errorDiv.style.display = 'block';
+            } finally {
+                // Reset button state
+                loginBtn.disabled = false;
+                loginText.style.display = 'inline';
+                loginLoader.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

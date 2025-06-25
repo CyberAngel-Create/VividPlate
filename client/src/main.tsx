@@ -63,33 +63,25 @@ const initApp = () => {
       throw new Error('Root element not found');
     }
 
-    // Clear loading content
+    // Create React app immediately
+    const reactRoot = createRoot(root);
+    
+    // Render app
+    reactRoot.render(
+      <ErrorBoundary>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
+          <App />
+        </ThemeProvider>
+      </ErrorBoundary>
+    );
+    
+    // Hide loader after successful render
     const loader = document.getElementById('initial-loader');
     if (loader) {
-      loader.remove();
-    } else {
-      root.innerHTML = '';
+      loader.style.display = 'none';
     }
-
-    // Create React app
-    const reactRoot = createRoot(root);
-
-    // Add error handling for React rendering
-    setTimeout(() => {
-      try {
-        reactRoot.render(
-          <ErrorBoundary>
-            <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
-              <App />
-            </ThemeProvider>
-          </ErrorBoundary>
-        );
-        console.log('VividPlate rendered successfully');
-      } catch (renderError) {
-        console.error('React render error:', renderError);
-        showFallbackUI();
-      }
-    }, 100);
+    
+    console.log('VividPlate loaded successfully');
 
   } catch (error) {
     console.error('VividPlate initialization error:', error);
