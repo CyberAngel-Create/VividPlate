@@ -28,8 +28,8 @@ try {
 }
 
 const app = express();
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: false, limit: '1mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
 
 // Add health check endpoint while preserving SPA routing
 app.get('/health', (req, res) => {
@@ -98,16 +98,12 @@ import { testBackblazeConnection } from './backblaze-config';
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         await new Promise((resolve, reject) => {
-          const serverPort = process.env.PORT || port;
-          const server_instance = server.listen(serverPort, "0.0.0.0", async () => {
-            log(`serving on port ${serverPort} in ${process.env.NODE_ENV || 'development'} mode`);
-            
-            // Set keepalive timeout for production
-            if (process.env.NODE_ENV === 'production') {
-              server_instance.keepAliveTimeout = 61 * 1000;
-              server_instance.headersTimeout = 65 * 1000;
-            }
-            
+          server.listen({
+            port,
+            host: "0.0.0.0",
+            reusePort: true,
+          }, async () => {
+            log(`serving on port ${port}`);
             try {
               await testBackblazeConnection();
             } catch (err) {

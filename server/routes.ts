@@ -18,7 +18,6 @@ import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
-import { setupPWARoutes } from "./pwa-routes";
 import memorystore from 'memorystore';
 import path from 'path';
 import os from 'os';
@@ -334,8 +333,6 @@ const configureFileUpload = () => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Setup PWA routes first
-  setupPWARoutes(app);
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
@@ -3597,21 +3594,16 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         notificationSent: false
       });
 
-      console.log(`Admin ${adminUser.username} upgraded user ${user.username} to premium for ${duration} - restrictions removed`);
+      console.log(`Admin ${adminUser.username} upgraded user ${user.username} to premium for ${duration}`);
 
       res.json({
-        message: 'User upgraded to premium successfully - all restrictions removed',
+        message: 'User upgraded to premium successfully',
         user: updatedUser,
         subscription: {
           tier: 'premium',
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
           duration
-        },
-        newLimits: {
-          maxRestaurants: 3,
-          maxMenuItems: 'unlimited',
-          adsRemoved: true
         }
       });
     } catch (error) {
@@ -4507,90 +4499,6 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     
     next();
   };
-
-  // Admin statistics endpoint
-  app.get('/api/admin/stats', adminOnly, async (req, res) => {
-    try {
-      const totalUsers = await storage.countUsers();
-      const totalRestaurants = await storage.countRestaurants();
-      const premiumUsers = await storage.countUsersBySubscriptionTier('premium');
-      
-      res.json({
-        totalUsers,
-        totalRestaurants,
-        premiumUsers,
-        totalRevenue: premiumUsers * 10 // Estimate based on premium users
-      });
-    } catch (error) {
-      console.error('Error fetching admin stats:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
-
-  // Admin users management
-  app.get('/api/admin/users', adminOnly, async (req, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      // Remove sensitive data
-      const sanitizedUsers = users.map(user => {
-        const { password, ...rest } = user;
-        return rest;
-      });
-      res.json(sanitizedUsers);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
-
-  // Upgrade user to premium
-  app.post('/api/admin/users/:id/upgrade', adminOnly, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const { tier, duration } = req.body;
-      
-      // Calculate expiry date
-      const now = new Date();
-      const expiryDate = new Date(now);
-      if (duration === '1 month') {
-        expiryDate.setMonth(expiryDate.getMonth() + 1);
-      } else if (duration === '3 months') {
-        expiryDate.setMonth(expiryDate.getMonth() + 3);
-      } else if (duration === '1 year') {
-        expiryDate.setFullYear(expiryDate.getFullYear() + 1);
-      }
-
-      const updatedUser = await storage.updateUserSubscription(userId, tier, expiryDate);
-      
-      if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      res.json({ success: true, user: updatedUser });
-    } catch (error) {
-      console.error('Error upgrading user:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
-
-  // Toggle user active status
-  app.post('/api/admin/users/:id/toggle', adminOnly, async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      const { isActive } = req.body;
-      
-      const updatedUser = await storage.updateUserStatus(userId, isActive);
-      
-      if (!updatedUser) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      res.json({ success: true, user: updatedUser });
-    } catch (error) {
-      console.error('Error updating user status:', error);
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
 
   // Menu Examples Management Routes
   app.get('/api/admin/menu-examples', adminOnly, async (req, res) => {

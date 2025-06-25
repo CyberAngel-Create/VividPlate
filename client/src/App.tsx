@@ -1,10 +1,10 @@
 import { Switch, Route, RouteComponentProps } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-// import { Toaster } from "@/components/ui/toaster";
-// import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
-// // import { InstallPrompt } from "@/components/InstallPrompt";
+import { InstallBanner } from "@/components/pwa/InstallBanner";
 import NotFound from "./pages/not-found";
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -37,11 +37,15 @@ import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/reset-password";
 import PrivacyPolicy from "./pages/privacy-policy";
-// import CookieConsent from "@/components/ui/cookie-consent";
+import CookieConsent from "@/components/ui/cookie-consent";
 import { useState, useEffect, lazy } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
-import { useAuth } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { SubscriptionProvider } from "@/hooks/use-subscription";
+import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
+import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
+import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -99,7 +103,6 @@ function Router() {
       <Switch>
         <PublicRoute path="/" component={Home} />
         <PublicRoute path="/login" component={Login} />
-        <PublicRoute path="/fast-login" component={lazy(() => import("./pages/fast-login"))} />
         <PublicRoute path="/admin-login" component={AdminLogin} />
         <PublicRoute path="/register" component={Register} />
         <PublicRoute path="/forgot-password" component={ForgotPassword} />
@@ -150,9 +153,25 @@ function Router() {
 
 function App() {
   return (
-    <HelmetProvider>
-      <Router />
-    </HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <HelmetProvider>
+        <TooltipProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <SubscriptionStatusProvider>
+                <DietaryPreferencesProvider>
+                  <Toaster />
+                  <AdSense />
+                  <Router />
+                  <InstallBanner />
+                  <CookieConsent />
+                </DietaryPreferencesProvider>
+              </SubscriptionStatusProvider>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </HelmetProvider>
+    </QueryClientProvider>
   );
 }
 

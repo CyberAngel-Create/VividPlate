@@ -1,19 +1,13 @@
-const CACHE_NAME = 'vividplate-v1.2.0';
-const STATIC_CACHE = 'vividplate-static-v1.2.0';
-const DYNAMIC_CACHE = 'vividplate-dynamic-v1.2.0';
+const CACHE_NAME = 'menumate-v1.0.0';
+const STATIC_CACHE = 'menumate-static-v1.0.0';
+const DYNAMIC_CACHE = 'menumate-dynamic-v1.0.0';
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/icon-192x192.png',
-  '/icon-512x512.png',
-  '/icon-72x72.png',
-  '/icon-96x96.png',
-  '/icon-128x128.png',
-  '/icon-144x144.png',
-  '/icon-152x152.png',
-  '/icon-384x384.png'
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
 // API endpoints to cache

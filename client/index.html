@@ -2,57 +2,48 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
     <meta name="google-adsense-account" content="ca-pub-8447200389101391">
     
     <!-- PWA Meta Tags -->
-    <title>VividPlate - MenuMate</title>
-    <meta name="description" content="Digital menu platform for restaurants with QR codes and contactless dining">
-    <meta name="keywords" content="digital menu, restaurant menu, QR code menu, mobile menu, contactless dining, VividPlate">
-    <meta name="author" content="VividPlate">
+    <title>MenuMate - Digital Restaurant Menu Platform</title>
+    <meta name="description" content="Dynamic digital menu platform that empowers restaurants to create interactive, mobile-responsive menus with advanced administrative tools.">
+    <meta name="keywords" content="digital menu, restaurant menu, QR code menu, mobile menu, contactless dining">
+    <meta name="author" content="MenuMate">
     
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
     
-    <!-- Preload critical PWA files -->
-    <link rel="preload" href="/sw.js" as="script">
-    <link rel="preload" href="/manifest.json" as="fetch" crossorigin>
-    
     <!-- Theme Colors -->
-    <meta name="theme-color" content="#f59e0b">
-    <meta name="msapplication-TileColor" content="#f59e0b">
-    <meta name="msapplication-navbutton-color" content="#f59e0b">
+    <meta name="theme-color" content="#2563eb">
+    <meta name="msapplication-TileColor" content="#2563eb">
+    <meta name="msapplication-navbutton-color" content="#2563eb">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     
     <!-- Mobile Web App Capable -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="VividPlate">
-    <meta name="application-name" content="VividPlate">
+    <meta name="apple-mobile-web-app-title" content="MenuMate">
+    <meta name="application-name" content="MenuMate">
     
     <!-- Disable automatic phone number detection -->
     <meta name="format-detection" content="telephone=no">
     
-    <!-- VividPlate Icons for various devices -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/icon-192x192.png">
-    <link rel="icon" href="/favicon.png">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="/icon-72x72.png">
-    <link rel="apple-touch-icon" sizes="96x96" href="/icon-96x96.png">
-    <link rel="apple-touch-icon" sizes="128x128" href="/icon-128x128.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png">
-    <link rel="apple-touch-icon" sizes="384x384" href="/icon-384x384.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.png">
+    <!-- Icons for various devices -->
+    <link rel="icon" type="image/svg+xml" href="/icons/menumate-icon.svg">
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png">
     
     <!-- Microsoft Tile Icons -->
-    <meta name="msapplication-TileImage" content="/icon-144x144.png">
-    <meta name="msapplication-square70x70logo" content="/icon-72x72.png">
-    <meta name="msapplication-square150x150logo" content="/icon-152x152.png">
-    <meta name="msapplication-wide310x150logo" content="/icon-192x192.png">
-    <meta name="msapplication-square310x310logo" content="/icon-384x384.png">
+    <meta name="msapplication-TileImage" content="/icons/icon-192x192.png">
+    <meta name="msapplication-square70x70logo" content="/icons/icon-192x192.png">
+    <meta name="msapplication-square150x150logo" content="/icons/icon-192x192.png">
+    <meta name="msapplication-wide310x150logo" content="/icons/icon-192x192.png">
+    <meta name="msapplication-square310x310logo" content="/icons/icon-192x192.png">
     
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,42 +59,8 @@
      crossorigin="anonymous"></script>
   </head>
   <body>
-    <!-- Initial loader -->
-    <div id="initial-loader" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-         background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%); 
-         display: flex; flex-direction: column; align-items: center; justify-content: center; 
-         z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-      
-      <div style="text-align: center; max-width: 400px; padding: 20px;">
-        <h1 style="color: #f59e0b; font-size: 2.5rem; font-weight: bold; margin: 0 0 0.5rem 0; 
-                   text-shadow: 0 2px 4px rgba(0,0,0,0.1);">VividPlate</h1>
-        
-        <div style="width: 40px; height: 40px; border: 3px solid #f59e0b; border-top: 3px solid transparent; 
-                    border-radius: 50%; animation: spin 1s linear infinite; margin: 1.5rem auto;"></div>
-        
-        <p style="color: #374151; font-size: 1.1rem; margin: 0.5rem 0 0 0; font-weight: 500;">Loading MenuMate...</p>
-        <p style="color: #6b7280; font-size: 0.9rem; margin: 0.25rem 0 0 0;">Digital menu platform for restaurants</p>
-      </div>
-      
-      <style>
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      </style>
-    </div>
-
     <div id="root"></div>
-    <noscript>
-      <div style="text-align: center; margin-top: 50px; font-family: system-ui;">
-        <h1 style="color: #f59e0b;">VividPlate</h1>
-        <p>Please enable JavaScript to use this application.</p>
-        <p style="color: #6b7280; font-size: 14px;">VividPlate requires JavaScript to function properly.</p>
-      </div>
-    </noscript>
     <script type="module" src="/src/main.tsx"></script>
-    
-
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>

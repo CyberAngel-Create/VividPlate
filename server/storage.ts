@@ -41,9 +41,7 @@ export interface IStorage {
   getRecentUsers(limit: number): Promise<User[]>;
   toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
   upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
-  updateUserSubscription(id: number, tier: string, expiryDate: Date): Promise<User | undefined>;
-  updateUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
-  countRestaurants(): Promise<number>;
+  updateUserSubscription(id: number, updates: Partial<User>): Promise<User | undefined>;
   updateUserPremiumStatus(userId: number, subscriptionData: { 
     subscriptionTier: string; 
     premiumStartDate?: Date | null; 
@@ -684,33 +682,6 @@ export class MemStorage implements IStorage {
   // Admin methods
   async getAllRestaurants(): Promise<Restaurant[]> {
     return Array.from(this.restaurants.values());
-  }
-
-  async countRestaurants(): Promise<number> {
-    return this.restaurants.size;
-  }
-
-  async updateUserSubscription(id: number, tier: string, expiryDate: Date): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-
-    const updatedUser = { 
-      ...user, 
-      subscriptionTier: tier,
-      premiumStartDate: tier === 'premium' ? new Date() : null,
-      premiumEndDate: tier === 'premium' ? expiryDate : null
-    };
-    this.users.set(id, updatedUser);
-    return updatedUser;
-  }
-
-  async updateUserStatus(id: number, isActive: boolean): Promise<User | undefined> {
-    const user = this.users.get(id);
-    if (!user) return undefined;
-
-    const updatedUser = { ...user, isActive };
-    this.users.set(id, updatedUser);
-    return updatedUser;
   }
 
   // Feedback operations

@@ -4,12 +4,12 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["jq", "imagemagick"]
+packages = ["jq"]
 
 [deployment]
 deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm run build"]
-run = ["sh", "-c", "npm start"]
+run = ["sh", "-c", "npm run start"]
 
 [workflows]
 runButton = "Dev Server"
@@ -44,7 +44,3 @@ args = "npm run dev"
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 5001
-externalPort = 3000
