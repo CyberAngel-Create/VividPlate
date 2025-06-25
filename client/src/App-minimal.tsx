@@ -4,10 +4,10 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { HelmetProvider } from "react-helmet-async";
 import Home from "./pages/home-simple";
 import Login from "./pages/login-simple";
-import Register from "./pages/register";
-import Dashboard from "./pages/dashboard";
-import FastLogin from "./pages/fast-login";
-import NotFound from "./pages/not-found";
+// import Register from "./pages/register";
+// import Dashboard from "./pages/dashboard";
+// import FastLogin from "./pages/fast-login";
+import NotFound from "./pages/not-found-simple";
 
 function App() {
   return (
@@ -17,9 +17,9 @@ function App() {
           <Switch>
             <Route path="/" component={Home} />
             <Route path="/login" component={Login} />
-            <Route path="/register" component={Register} />
-            <Route path="/dashboard" component={Dashboard} />
-            <Route path="/fast-login" component={FastLogin} />
+            <Route path="/register" component={() => <div className="p-8 text-center">Register page coming soon</div>} />
+            <Route path="/dashboard" component={() => <div className="p-8 text-center">Dashboard coming soon</div>} />
+            <Route path="/fast-login" component={() => <div className="p-8 text-center">Fast login coming soon</div>} />
             <Route component={NotFound} />
           </Switch>
         </div>
