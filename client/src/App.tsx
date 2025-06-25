@@ -41,11 +41,11 @@ import PrivacyPolicy from "./pages/privacy-policy";
 import { useState, useEffect, lazy } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
-import { AuthProvider, useAuth } from "@/hooks/use-auth";
-import { SubscriptionProvider } from "@/hooks/use-subscription";
-import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
-import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
-import AdSense from "@/components/ads/AdSense";
+// import { AuthProvider, useAuth } from "@/hooks/use-auth";
+// import { SubscriptionProvider } from "@/hooks/use-subscription";
+// import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
+// import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
+// import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -157,21 +157,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
         <div>
-          <AuthProvider>
-            <SubscriptionProvider>
-              <SubscriptionStatusProvider>
-                <DietaryPreferencesProvider>
-                  {/* <TooltipProvider>
-                    <Toaster />
-                  </TooltipProvider> */}
-                  <AdSense />
-                  <Router />
-                  {/* <InstallPrompt /> */}
-                  {/* <CookieConsent /> */}
-                </DietaryPreferencesProvider>
-              </SubscriptionStatusProvider>
-            </SubscriptionProvider>
-          </AuthProvider>
+          <Router />
         </div>
       </HelmetProvider>
     </QueryClientProvider>
