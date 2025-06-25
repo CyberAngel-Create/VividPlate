@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { PWAEngagementTrigger } from "@/components/PWAEngagementTrigger";
 import NotFound from "./pages/not-found";
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -164,6 +165,7 @@ function App() {
                   <AdSense />
                   <Router />
                   <InstallPrompt />
+                  <PWAEngagementTrigger />
                   <CookieConsent />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
