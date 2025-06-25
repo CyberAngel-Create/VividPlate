@@ -34,6 +34,9 @@ if ('serviceWorker' in navigator) {
 
 const root = document.getElementById("root");
 if (root) {
+  // Clear loading content
+  root.innerHTML = '';
+  
   createRoot(root).render(
     <ErrorBoundary>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
@@ -41,4 +44,6 @@ if (root) {
       </ThemeProvider>
     </ErrorBoundary>
   );
+} else {
+  console.error('Failed to find root element for VividPlate');
 }

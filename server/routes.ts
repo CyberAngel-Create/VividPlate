@@ -3597,16 +3597,21 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         notificationSent: false
       });
 
-      console.log(`Admin ${adminUser.username} upgraded user ${user.username} to premium for ${duration}`);
+      console.log(`Admin ${adminUser.username} upgraded user ${user.username} to premium for ${duration} - restrictions removed`);
 
       res.json({
-        message: 'User upgraded to premium successfully',
+        message: 'User upgraded to premium successfully - all restrictions removed',
         user: updatedUser,
         subscription: {
           tier: 'premium',
           startDate: startDate.toISOString(),
           endDate: endDate.toISOString(),
           duration
+        },
+        newLimits: {
+          maxRestaurants: 3,
+          maxMenuItems: 'unlimited',
+          adsRemoved: true
         }
       });
     } catch (error) {
