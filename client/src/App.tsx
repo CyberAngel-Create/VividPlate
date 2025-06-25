@@ -1,10 +1,10 @@
 import { Switch, Route, RouteComponentProps } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+// import { Toaster } from "@/components/ui/toaster";
+// import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
-import { InstallPrompt } from "@/components/InstallPrompt";
+// import { InstallPrompt } from "@/components/InstallPrompt";
 import NotFound from "./pages/not-found";
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -37,7 +37,7 @@ import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/reset-password";
 import PrivacyPolicy from "./pages/privacy-policy";
-import CookieConsent from "@/components/ui/cookie-consent";
+// import CookieConsent from "@/components/ui/cookie-consent";
 import { useState, useEffect, lazy } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
@@ -161,13 +161,13 @@ function App() {
             <SubscriptionProvider>
               <SubscriptionStatusProvider>
                 <DietaryPreferencesProvider>
-                  <TooltipProvider>
+                  {/* <TooltipProvider>
                     <Toaster />
-                  </TooltipProvider>
+                  </TooltipProvider> */}
                   <AdSense />
                   <Router />
-                  <InstallPrompt />
-                  <CookieConsent />
+                  {/* <InstallPrompt /> */}
+                  {/* <CookieConsent /> */}
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
             </SubscriptionProvider>
