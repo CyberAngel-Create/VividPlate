@@ -7,55 +7,11 @@ import "./i18n";
 // PWA debug utilities (disabled to prevent crashes)
 // import "./utils/pwa-debug";
 
-// PWA installation event handling
-console.log('Setting up PWA installation listeners');
-
-// Enhanced beforeinstallprompt event
-window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('🎉 BROWSER PWA INSTALL PROMPT DETECTED!');
-  console.log('📍 Install icon (⊞) should now be visible in Chrome address bar');
-  console.log('📍 Click it to install VividPlate as a desktop app');
-  e.preventDefault();
-  (window as any).deferredPrompt = e;
-  window.dispatchEvent(new CustomEvent('pwa-installable', { detail: { prompt: e } }));
-});
-
-// App installation success
-window.addEventListener('appinstalled', (e) => {
-  console.log('✓ VividPlate installed successfully');
-  (window as any).deferredPrompt = null;
-});
-
-// Check if already installed
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-if (isStandalone) {
-  console.log('✓ PWA already installed and running in standalone mode');
-}
-
-// Register service worker for PWA functionality
+// Simple service worker registration for Chrome compatibility
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js', {
-        scope: '/'
-      });
-      console.log('✓ Service Worker registered successfully');
-      console.log('✓ PWA requirements met - install icon should appear in address bar');
-      
-      // Force update if needed
-      if (registration.waiting) {
-        registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-      }
-      
-      registration.addEventListener('updatefound', () => {
-        console.log('✓ Service Worker update detected');
-      });
-    } catch (error) {
-      console.error('✗ Service Worker registration failed:', error);
-    }
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
-} else {
-  console.warn('✗ Service Worker not supported in this browser');
 }
 
 createRoot(document.getElementById("root")!).render(
