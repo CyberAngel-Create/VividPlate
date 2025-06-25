@@ -3585,7 +3585,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           break;
       }
 
-      // Update user subscription
+      // Update user subscription using the correct method
       const updatedUser = await storage.updateUserPremiumStatus(userId, {
         subscriptionTier: 'premium',
         premiumStartDate: startDate,

@@ -1590,6 +1590,37 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
+  async updateUserPremiumStatus(userId: number, subscriptionData: { 
+    subscriptionTier: string; 
+    premiumStartDate?: Date | null; 
+    premiumEndDate?: Date | null;
+    premiumDuration?: string | null;
+    notificationSent?: boolean;
+  }): Promise<User> {
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const [updatedUser] = await db.update(users)
+      .set({
+        subscriptionTier: subscriptionData.subscriptionTier,
+        premiumStartDate: subscriptionData.premiumStartDate,
+        premiumEndDate: subscriptionData.premiumEndDate,
+        premiumDuration: subscriptionData.premiumDuration,
+        notificationSent: subscriptionData.notificationSent ?? false
+      })
+      .where(eq(users.id, userId))
+      .returning();
+
+    if (!updatedUser) {
+      throw new Error('Failed to update user subscription');
+    }
+
+    console.log(`DatabaseStorage: Updated user ${userId} subscription:`, subscriptionData);
+    return updatedUser;
+  }
+
   // Restaurant operations
   async getRestaurant(id: number): Promise<Restaurant | undefined> {
     try {
