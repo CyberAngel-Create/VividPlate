@@ -19,10 +19,12 @@ export const usePWA = () => {
     const checkIfInstalled = () => {
       if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) {
         setIsInstalled(true);
-        console.log('PWA is running in standalone mode');
+        console.log('✅ PWA is running in standalone mode');
       } else if ((window.navigator as any).standalone === true) {
         setIsInstalled(true);
-        console.log('PWA is running in iOS standalone mode');
+        console.log('✅ PWA is running in iOS standalone mode');
+      } else {
+        console.log('📱 PWA not installed, running in browser mode');
       }
     };
 
@@ -31,43 +33,76 @@ export const usePWA = () => {
     // Listen for the beforeinstallprompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      console.log('beforeinstallprompt event fired');
+      console.log('🚀 beforeinstallprompt event received in hook');
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setIsInstallable(true);
+    };
+
+    // Listen for custom PWA installable event
+    const handlePWAInstallable = () => {
+      console.log('📲 PWA is installable');
       setIsInstallable(true);
     };
 
     // Listen for app installed event
     const handleAppInstalled = () => {
-      console.log('PWA was installed');
+      console.log('✅ PWA was installed');
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
     };
 
+    // Debug: Check browser support
+    console.log('🔍 Browser PWA support check:', {
+      serviceWorker: 'serviceWorker' in navigator,
+      beforeInstallPrompt: 'onbeforeinstallprompt' in window,
+      standalone: 'standalone' in window.navigator
+    });
+
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-installable', handlePWAInstallable);
     window.addEventListener('appinstalled', handleAppInstalled);
+
+    // Force show install prompt for testing (remove in production)
+    setTimeout(() => {
+      if (!isInstalled && !isInstallable) {
+        console.log('Testing: Force showing install prompt for development');
+        setIsInstallable(true);
+      }
+    }, 3000);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-installable', handlePWAInstallable);
       window.removeEventListener('appinstalled', handleAppInstalled);
     };
   }, []);
 
   const installApp = async () => {
-    if (!deferredPrompt) {
-      console.log('No deferred prompt available');
+    // Get the global deferred prompt if our local one is null
+    const prompt = deferredPrompt || (window as any).deferredPrompt;
+    
+    if (!prompt) {
+      console.log('❌ No deferred prompt available - this may be expected on some browsers/devices');
+      
+      // Show manual install instructions for browsers that don't support the API
+      alert('To install this app:\n\n' +
+            'Chrome/Edge: Look for the install icon in the address bar\n' +
+            'Safari: Tap Share → Add to Home Screen\n' +
+            'Firefox: Look for the install option in the menu');
       return false;
     }
 
     try {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
+      console.log('📲 Showing install prompt');
+      prompt.prompt();
+      const { outcome } = await prompt.userChoice;
       
       if (outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+        console.log('✅ User accepted the install prompt');
         setIsInstalled(true);
       } else {
-        console.log('User dismissed the install prompt');
+        console.log('❌ User dismissed the install prompt');
       }
       
       setDeferredPrompt(null);
@@ -75,7 +110,7 @@ export const usePWA = () => {
       
       return outcome === 'accepted';
     } catch (error) {
-      console.error('Error during app installation:', error);
+      console.error('❌ Error during app installation:', error);
       return false;
     }
   };

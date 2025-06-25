@@ -11,9 +11,16 @@ export const PWAInstallPrompt = () => {
     // Show prompt after a short delay if app is installable and not dismissed
     const timer = setTimeout(() => {
       if (isInstallable && !isInstalled && !dismissed) {
+        console.log('📲 Showing PWA install prompt');
         setShowPrompt(true);
+      } else {
+        console.log('🔍 PWA install prompt conditions not met:', {
+          isInstallable,
+          isInstalled,
+          dismissed
+        });
       }
-    }, 3000);
+    }, 2000); // Reduced delay for testing
 
     return () => clearTimeout(timer);
   }, [isInstallable, isInstalled, dismissed]);
