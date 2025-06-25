@@ -9,7 +9,7 @@ packages = ["jq", "imagemagick"]
 [deployment]
 deploymentTarget = "autoscale"
 build = ["sh", "-c", "npm run build"]
-run = ["sh", "-c", "npm run start"]
+run = ["sh", "-c", "npm start"]
 
 [workflows]
 runButton = "Dev Server"
@@ -44,3 +44,7 @@ args = "npm run dev"
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[[ports]]
+localPort = 5001
+externalPort = 3000
