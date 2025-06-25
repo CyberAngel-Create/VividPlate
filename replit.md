@@ -5,18 +5,17 @@ MenuMate is a comprehensive digital menu platform for restaurants that enables c
 
 ## Recent Changes (June 2025)
 
-### Complete Rollback to Yesterday's State (Latest - June 25, 2025)
-- ✅ **FULL ROLLBACK COMPLETED** - All today's changes completely removed
-- ✅ **Yesterday's Simple App** - Pure HTML/CSS styling, minimal dependencies
-- ✅ **No Authentication System** - Removed all auth calls and complex features
-- ✅ **Static Pages Only** - Simple login forms without backend integration
-- ✅ **Clean Build** - Fixed main.tsx and component imports
-- ✅ **Pure Yesterday State** - Working static app with basic routing
-- ✅ **Zero Complex Features** - No PWA, no auth, no admin panel complexity
-- ✅ **Fixed Imports** - Restored wouter routing for basic navigation
-- ✅ **Static Forms** - Login forms preventDefault to avoid backend calls
-- ✅ **No API Calls** - Completely removed authentication endpoints
-- ✅ **Simple Static App** - Pure frontend without admin or restaurant features
+### Complete Rollback to Static Demo Version (Latest - June 25, 2025)
+- ✅ **STATIC DEMO CREATED** - Completely removed all complex functionality
+- ✅ **No Authentication** - Login buttons show alert messages instead of actual login
+- ✅ **No Admin Panel** - Admin functionality completely disabled
+- ✅ **No Restaurant Management** - All restaurant owner features removed
+- ✅ **No API Calls** - Zero backend dependencies or network requests
+- ✅ **Pure Static React** - Single component with inline styles only
+- ✅ **Demo Alerts** - Buttons show explanatory messages about rollback state
+- ✅ **Visual Design** - Clean VividPlate homepage with feature showcase
+- ✅ **No Routing** - Single page application without complex navigation
+- ✅ **Warning Messages** - Clear indication this is a rollback/demo version
 
 ### Adaptive UI Components
 - ✅ Implemented responsive design system with useResponsive hook
