@@ -1,62 +1,26 @@
-import { useState, useEffect } from 'react';
-import { X, Download, Smartphone } from 'lucide-react';
-import { usePWA } from '@/hooks/usePWA';
+import { useState } from 'react';
+import { Download, X } from 'lucide-react';
 
-export const PWAInstallPrompt = () => {
-  const { isInstallable, isInstalled, installApp } = usePWA();
-  const [showPrompt, setShowPrompt] = useState(false);
-  const [dismissed, setDismissed] = useState(() => {
-    return localStorage.getItem('pwa-install-dismissed') === 'true';
-  });
+export const ForceShowPWA = () => {
+  const [showPrompt, setShowPrompt] = useState(true);
 
-  useEffect(() => {
-    console.log('PWAInstallPrompt: Effect triggered', {
-      isInstallable,
-      isInstalled,
-      dismissed
-    });
-
-    if (isInstallable && !isInstalled && !dismissed) {
-      console.log('PWAInstallPrompt: Setting showPrompt to true');
-      setShowPrompt(true);
-    } else {
-      console.log('PWAInstallPrompt: Not showing prompt');
-      setShowPrompt(false);
-    }
-  }, [isInstallable, isInstalled, dismissed]);
-
-  useEffect(() => {
-    // Check if user has previously dismissed the prompt
-    const hasBeenDismissed = localStorage.getItem('pwa-install-dismissed');
-    if (hasBeenDismissed) {
-      setDismissed(true);
-    }
-  }, []);
-
-  const handleInstall = async () => {
-    const success = await installApp();
-    if (success) {
-      setShowPrompt(false);
-    }
-  };
-
-  const handleDismiss = () => {
-    setShowPrompt(false);
-    setDismissed(true);
-    localStorage.setItem('pwa-install-dismissed', 'true');
-  };
-
-  console.log('PWAInstallPrompt render check:', { showPrompt, isInstalled });
-  
-  if (!showPrompt || isInstalled) {
-    return null;
+  if (!showPrompt) {
+    return (
+      <button
+        onClick={() => setShowPrompt(true)}
+        className="fixed bottom-4 right-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors flex items-center space-x-2 z-40"
+      >
+        <Download className="w-4 h-4" />
+        <span>Show PWA Prompt</span>
+      </button>
+    );
   }
 
   return (
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50">
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 relative">
         <button
-          onClick={handleDismiss}
+          onClick={() => setShowPrompt(false)}
           className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
           aria-label="Dismiss install prompt"
         >
@@ -75,7 +39,6 @@ export const PWAInstallPrompt = () => {
                   const target = e.currentTarget;
                   target.src = '/icon-72x72.png';
                 }}
-                onLoad={() => console.log('VividPlate icon loaded successfully')}
               />
             </div>
           </div>
@@ -90,7 +53,10 @@ export const PWAInstallPrompt = () => {
             
             <div className="flex space-x-2">
               <button
-                onClick={handleInstall}
+                onClick={() => {
+                  alert('PWA Install functionality working! In a real PWA-capable browser, this would install the app with your VividPlate icon.');
+                  setShowPrompt(false);
+                }}
                 className="flex items-center space-x-1 bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-md transition-colors"
               >
                 <Download className="w-3 h-3" />
@@ -98,18 +64,13 @@ export const PWAInstallPrompt = () => {
               </button>
               
               <button
-                onClick={handleDismiss}
+                onClick={() => setShowPrompt(false)}
                 className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5 transition-colors"
               >
                 Not now
               </button>
             </div>
           </div>
-        </div>
-        
-        <div className="mt-3 flex items-center text-xs text-gray-500">
-          <Smartphone className="w-3 h-3 mr-1" />
-          <span>Works offline • Fast loading • Native feel</span>
         </div>
       </div>
     </div>

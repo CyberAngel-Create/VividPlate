@@ -63,11 +63,12 @@ export const usePWA = () => {
     window.addEventListener('pwa-installable', handlePWAInstallable);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Auto-show install prompt for demonstration
+    // Force show install prompt for demonstration
+    console.log('Setting up timer to show PWA prompt in 2 seconds');
     const timer = setTimeout(() => {
-      console.log('Auto-triggering PWA install prompt');
+      console.log('Timer executed: Setting isInstallable to true');
       setIsInstallable(true);
-    }, 3000);
+    }, 2000);
 
     return () => {
       clearTimeout(timer);
