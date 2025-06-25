@@ -206,7 +206,7 @@ export default function SubscriptionManagement() {
                       </p>
                       
                       {user.subscriptionTier === "premium" && user.premiumStartDate && (
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-muted-foreground mt-2">
                           <div className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             <span>Start: {formatDate(user.premiumStartDate)}</span>

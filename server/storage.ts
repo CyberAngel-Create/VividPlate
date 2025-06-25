@@ -932,15 +932,20 @@ export class MemStorage implements IStorage {
   }
 
   async getUserMenuItemImageCount(userId: number): Promise<number> {
-    const restaurants = await this.getRestaurantsByUserId(userId);
-    let totalImages = 0;
-    
-    for (const restaurant of restaurants) {
-      const menuItems = await this.getMenuItemsByRestaurantId(restaurant.id);
-      totalImages += menuItems.filter(item => item.imageUrl).length;
+    try {
+      const restaurants = await this.getRestaurantsByUserId(userId);
+      let totalImages = 0;
+      
+      for (const restaurant of restaurants) {
+        const menuItems = await this.getMenuItemsByRestaurantId(restaurant.id);
+        totalImages += menuItems.filter(item => item.imageUrl && item.imageUrl.trim() !== '').length;
+      }
+      
+      return totalImages;
+    } catch (error) {
+      console.error('Error counting user menu item images:', error);
+      return 0;
     }
-    
-    return totalImages;
   }
 
   async getAllRestaurants(): Promise<Restaurant[]> {

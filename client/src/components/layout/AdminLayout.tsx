@@ -75,9 +75,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <Building className="h-5 w-5" />,
     },
     {
+      title: "Subscriptions",
+      href: "/admin/subscriptions",
+      icon: <Crown className="h-5 w-5" />,
+    },
+    {
       title: "Pricing",
       href: "/admin/pricing",
-      icon: <Crown className="h-5 w-5" />,
+      icon: <DollarSign className="h-5 w-5" />,
     },
     {
       title: "Logs",
