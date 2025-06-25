@@ -47,7 +47,6 @@ import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
-import SubscriptionManagement from "./pages/admin/subscription-management";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const { user, isLoading } = useAuth();

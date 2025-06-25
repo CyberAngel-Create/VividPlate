@@ -3511,16 +3511,19 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Admin route to upgrade user to premium with specified duration
   app.post('/api/admin/upgrade-user/:userId', isAuthenticated, async (req, res) => {
     try {
+      console.log('Admin upgrade check - User:', req.user);
+      console.log('Admin upgrade check - Is Admin:', req.user?.isAdmin);
+      
       const adminUser = req.user as any;
-      if (adminUser.role !== 'admin') {
+      if (!adminUser || !adminUser.isAdmin) {
         return res.status(403).json({ message: 'Admin access required' });
       }
 
       const userId = parseInt(req.params.userId, 10);
       const { duration } = req.body; // '1_month', '3_months', '1_year'
 
-      if (!duration || !['1_month', '3_months', '1_year'].includes(duration)) {
-        return res.status(400).json({ message: 'Invalid duration. Must be 1_month, 3_months, or 1_year' });
+      if (!duration || !['1_month', '3_months', '6_months', '1_year'].includes(duration)) {
+        return res.status(400).json({ message: 'Invalid duration. Must be 1_month, 3_months, 6_months, or 1_year' });
       }
 
       const user = await storage.getUser(userId);
@@ -3538,6 +3541,9 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           break;
         case '3_months':
           endDate.setMonth(endDate.getMonth() + 3);
+          break;
+        case '6_months':
+          endDate.setMonth(endDate.getMonth() + 6);
           break;
         case '1_year':
           endDate.setFullYear(endDate.getFullYear() + 1);
@@ -3574,8 +3580,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Admin route to downgrade user from premium 
   app.post('/api/admin/downgrade-user/:userId', isAuthenticated, async (req, res) => {
     try {
+      console.log('Admin downgrade check - User:', req.user);
+      console.log('Admin downgrade check - Is Admin:', req.user?.isAdmin);
+      
       const adminUser = req.user as any;
-      if (adminUser.role !== 'admin') {
+      if (!adminUser || !adminUser.isAdmin) {
         return res.status(403).json({ message: 'Admin access required' });
       }
 
