@@ -63,15 +63,19 @@ export const usePWA = () => {
     window.addEventListener('pwa-installable', handlePWAInstallable);
     window.addEventListener('appinstalled', handleAppInstalled);
 
-    // Show install prompt after delay for demonstration
-    setTimeout(() => {
-      if (!isInstalled && !isInstallable) {
-        console.log('Showing PWA install prompt');
+    // Show install prompt after delay - force show for demo
+    const timer = setTimeout(() => {
+      console.log('Timer: Checking PWA conditions after 2 seconds');
+      console.log('Timer: isInstalled:', isInstalled, 'isInstallable:', isInstallable);
+      
+      if (!isInstalled) {
+        console.log('Timer: Setting isInstallable to true');
         setIsInstallable(true);
       }
-    }, 1500);
+    }, 2000);
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('pwa-installable', handlePWAInstallable);
       window.removeEventListener('appinstalled', handleAppInstalled);

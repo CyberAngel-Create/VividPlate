@@ -8,21 +8,23 @@ export const PWAInstallPrompt = () => {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Show prompt after a short delay if app is installable and not dismissed
-    const timer = setTimeout(() => {
-      if (isInstallable && !isInstalled && !dismissed) {
-        console.log('📲 Showing PWA install prompt');
-        setShowPrompt(true);
-      } else {
-        console.log('🔍 PWA install prompt conditions not met:', {
-          isInstallable,
-          isInstalled,
-          dismissed
-        });
-      }
-    }, 2000); // Reduced delay for testing
+    console.log('PWAInstallPrompt effect triggered with:', {
+      isInstallable,
+      isInstalled,
+      dismissed
+    });
 
-    return () => clearTimeout(timer);
+    // Show prompt if installable and not dismissed
+    if (isInstallable && !isInstalled && !dismissed) {
+      console.log('Showing PWA install prompt');
+      setShowPrompt(true);
+    } else {
+      console.log('PWA install prompt conditions not met:', {
+        isInstallable,
+        isInstalled,
+        dismissed
+      });
+    }
   }, [isInstallable, isInstalled, dismissed]);
 
   useEffect(() => {
@@ -46,6 +48,8 @@ export const PWAInstallPrompt = () => {
     localStorage.setItem('pwa-install-dismissed', 'true');
   };
 
+  console.log('PWAInstallPrompt render check:', { showPrompt, isInstalled });
+  
   if (!showPrompt || isInstalled) {
     return null;
   }
