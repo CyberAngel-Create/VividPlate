@@ -1,75 +1,72 @@
 import { useState, useEffect } from 'react';
 import { Download, X } from 'lucide-react';
-
-declare global {
-  interface WindowEventMap {
-    beforeinstallprompt: BeforeInstallPromptEvent;
-  }
-}
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
-}
+import { usePWAInstallability } from '@/hooks/usePWAInstallability';
 
 export const InstallPrompt = () => {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+  const { isInstallable, isInstalled, installPWA, canInstall } = usePWAInstallability();
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [hasShownPrompt, setHasShownPrompt] = useState(false);
 
   useEffect(() => {
-    const handler = (e: BeforeInstallPromptEvent) => {
-      console.log('Browser PWA install prompt available');
-      e.preventDefault();
-      setDeferredPrompt(e);
-      setShowInstallPrompt(true);
-    };
+    if (isInstalled) {
+      setShowPrompt(false);
+      return;
+    }
 
-    window.addEventListener('beforeinstallprompt', handler);
-
-    // Force show after 3 seconds for demo
-    const timer = setTimeout(() => {
-      if (!deferredPrompt) {
-        console.log('No native install prompt, showing manual prompt');
-        setShowInstallPrompt(true);
-      }
-    }, 3000);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      clearTimeout(timer);
-    };
-  }, [deferredPrompt]);
+    // Show prompt when installable or after 3 seconds for demo
+    if (isInstallable && !hasShownPrompt) {
+      setShowPrompt(true);
+      setHasShownPrompt(true);
+    } else if (!isInstallable && !hasShownPrompt) {
+      const timer = setTimeout(() => {
+        console.log('Showing manual install prompt - look for install icon in address bar');
+        setShowPrompt(true);
+        setHasShownPrompt(true);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [isInstallable, isInstalled, hasShownPrompt]);
 
   const handleInstall = async () => {
-    if (deferredPrompt) {
-      console.log('Triggering native PWA install');
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        console.log('User accepted PWA install');
-        setShowInstallPrompt(false);
+    if (canInstall) {
+      const success = await installPWA();
+      if (success) {
+        setShowPrompt(false);
+        return;
       }
-      setDeferredPrompt(null);
-    } else {
-      // Manual instructions
-      const userAgent = navigator.userAgent;
-      let message = '';
-      
-      if (userAgent.includes('Chrome')) {
-        message = 'To install VividPlate:\n\n1. Look for the install icon (⊞) in the address bar\n2. OR click the menu (⋮) → "Install VividPlate"\n3. The app will be added to your desktop';
-      } else if (userAgent.includes('Edge')) {
-        message = 'To install VividPlate:\n\n1. Click the menu (...) → "Apps" → "Install VividPlate"\n2. The app will be added to your desktop';
-      } else {
-        message = 'To install VividPlate as an app:\n\n1. Look for install options in your browser menu\n2. Check the address bar for install icons\n3. This will add VividPlate to your desktop';
-      }
-      
-      alert(message);
-      setShowInstallPrompt(false);
     }
+    
+    // Show manual instructions
+    const userAgent = navigator.userAgent;
+    let instructions = '';
+    
+    if (userAgent.includes('Chrome') || userAgent.includes('Chromium')) {
+      instructions = `Chrome Installation:
+
+✓ Look for the install icon (⊞) in the address bar
+✓ OR click menu (⋮) → "Install VividPlate"
+✓ Click "Install" to add to desktop
+
+The VividPlate app will appear with your custom icon!`;
+    } else if (userAgent.includes('Edge')) {
+      instructions = `Edge Installation:
+
+✓ Click menu (...) → "Apps" → "Install VividPlate"
+✓ The app will be added to your desktop`;
+    } else {
+      instructions = `Install VividPlate:
+
+✓ Look for install options in browser menu
+✓ Check address bar for install icons
+✓ Add to desktop for quick access`;
+    }
+    
+    alert(instructions);
+    setShowPrompt(false);
   };
 
-  if (!showInstallPrompt) {
+  if (!showPrompt || isInstalled) {
     return null;
   }
 
@@ -77,7 +74,7 @@ export const InstallPrompt = () => {
     <div className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:max-w-sm z-50">
       <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-4 relative">
         <button
-          onClick={() => setShowInstallPrompt(false)}
+          onClick={() => setShowPrompt(false)}
           className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
         >
           <X className="w-4 h-4" />
@@ -111,7 +108,7 @@ export const InstallPrompt = () => {
               </button>
               
               <button
-                onClick={() => setShowInstallPrompt(false)}
+                onClick={() => setShowPrompt(false)}
                 className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5"
               >
                 Not now
