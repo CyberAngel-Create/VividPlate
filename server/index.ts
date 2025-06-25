@@ -98,12 +98,9 @@ import { testBackblazeConnection } from './backblaze-config';
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
         await new Promise((resolve, reject) => {
-          server.listen({
-            port: process.env.PORT || port,
-            host: "0.0.0.0",
-            reusePort: true,
-          }, async () => {
-            log(`serving on port ${port}`);
+          const serverPort = process.env.PORT || port;
+          server.listen(serverPort, "0.0.0.0", async () => {
+            log(`serving on port ${serverPort}`);
             try {
               await testBackblazeConnection();
             } catch (err) {
