@@ -126,8 +126,8 @@ function App() {
       <Route path="/login" component={Login} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Admin features coming soon</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
-      <Route path="/admin/dashboard" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Admin features coming soon</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
+      <Route path="/admin" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Yesterday's simple admin panel</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
+      <Route path="/admin/dashboard" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Yesterday's simple admin panel</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
       <Route path="/fast-login" component={FastLogin} />
       <Route component={NotFound} />
     </Switch>
