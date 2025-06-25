@@ -5,16 +5,16 @@ MenuMate is a comprehensive digital menu platform for restaurants that enables c
 
 ## Recent Changes (June 2025)
 
-### Full Functionality Restoration (Latest - June 25, 2025)
-- ✅ **RESTORED COMPLETE APP** - Full MenuMate functionality with all components
-- ✅ **Admin Login Fixed** - Working admin authentication at /admin-login route
-- ✅ **All UI Components** - Restored Toaster, TooltipProvider, InstallPrompt
-- ✅ **Complete Feature Set** - Dashboard, menu management, subscription system
-- ✅ **PWA Functionality** - Install prompt and service worker operational
-- ✅ **Original Loading Screen** - Restored branded loading experience
-- ✅ **Authentication System** - Full login/register with session management
-- ✅ **Mobile Responsive** - All adaptive components functional
-- ✅ **Production Ready** - Full build process working with all features
+### Rollback to Stable Version (Latest - June 25, 2025)
+- ✅ **ROLLBACK COMPLETED** - Reverted to yesterday's stable working version
+- ✅ **Basic App Restored** - Core functionality operational without complex components
+- ✅ **Admin Login Active** - Working admin authentication at /admin-login route
+- ✅ **Simplified UI** - Removed problematic InstallPrompt and complex dependencies
+- ✅ **Core Features Working** - Basic authentication and routing functional
+- ✅ **Stable Build** - Clean production build without component errors
+- ⚠️ **Admin Panel Simplified** - Advanced admin features temporarily disabled
+- ⚠️ **PWA Features Disabled** - Install prompt and complex PWA features removed
+- ✅ **Test Accounts Available** - All login credentials accessible on home page
 
 ### Adaptive UI Components
 - ✅ Implemented responsive design system with useResponsive hook
