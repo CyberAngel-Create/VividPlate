@@ -3,7 +3,7 @@ import { Switch, Route } from "wouter";
 const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.target as HTMLFormElement);
     const credentials = {
       identifier: formData.get('username'),
       password: formData.get('password')

@@ -25,9 +25,9 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="max-w-md mx-auto text-center p-6">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">VividPlate</h1>
+        <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fef3c7 0%, #ffffff 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ textAlign: "center", padding: "2rem", maxWidth: "400px" }}>
+            <h1 style={{ color: "#f59e0b", fontSize: "2rem", fontWeight: "bold", marginBottom: "1rem" }}>VividPlate</h1>
             <p className="text-gray-600 mb-4">Loading application...</p>
             <button 
               onClick={() => window.location.reload()} 
