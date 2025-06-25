@@ -36,7 +36,6 @@ import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/reset-password";
 import PrivacyPolicy from "./pages/privacy-policy";
 import CookieConsent from "@/components/ui/cookie-consent";
-import { InstallBanner } from "@/components/InstallBanner";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
@@ -161,7 +160,6 @@ function App() {
                   <Toaster />
                   <AdSense />
                   <Router />
-                  <InstallBanner />
                   <CookieConsent />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
