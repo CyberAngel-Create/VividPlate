@@ -69,11 +69,12 @@
   </head>
   <body>
     <div id="root">
-      <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui;">
+      <div id="initial-loader" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: system-ui;">
         <div style="text-align: center;">
-          <h1 style="color: #f59e0b; margin-bottom: 16px;">VividPlate</h1>
+          <h1 style="color: #f59e0b; margin-bottom: 16px; font-size: 24px; font-weight: bold;">VividPlate</h1>
           <div style="width: 32px; height: 32px; border: 3px solid #f3f4f6; border-top: 3px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
           <p style="margin-top: 16px; color: #6b7280;">Loading digital menu platform...</p>
+          <p style="margin-top: 8px; color: #9ca3af; font-size: 14px;">If this takes too long, please refresh the page</p>
         </div>
       </div>
       <style>
@@ -81,12 +82,18 @@
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
+        body {
+          margin: 0;
+          padding: 0;
+          background-color: #ffffff;
+        }
       </style>
     </div>
     <noscript>
-      <div style="text-align: center; margin-top: 50px;">
-        <h1>VividPlate</h1>
+      <div style="text-align: center; margin-top: 50px; font-family: system-ui;">
+        <h1 style="color: #f59e0b;">VividPlate</h1>
         <p>Please enable JavaScript to use this application.</p>
+        <p style="color: #6b7280; font-size: 14px;">VividPlate requires JavaScript to function properly.</p>
       </div>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
