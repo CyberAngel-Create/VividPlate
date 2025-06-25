@@ -14,6 +14,10 @@ import { useRestaurant } from "@/hooks/use-restaurant";
 import { useMenu } from "@/hooks/use-menu";
 import AdBanner from "@/components/ads/AdBanner";
 import { useLocation } from "wouter";
+import { AdaptiveGrid } from "@/components/adaptive/AdaptiveGrid";
+import { AdaptiveContainer } from "@/components/adaptive/AdaptiveContainer";
+import { AdaptiveCard } from "@/components/adaptive/AdaptiveCard";
+import { useResponsive } from "@/hooks/use-responsive";
 
 interface Stats {
   viewCount: number;
@@ -44,6 +48,7 @@ interface SubscriptionStatus {
 const Dashboard = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { isMobile, isTablet } = useResponsive();
   
   // Get restaurant data
   const { 
