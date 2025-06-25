@@ -1,8 +1,8 @@
 import { Switch, Route, RouteComponentProps } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+// import { Toaster } from "@/components/ui/toaster";
+// import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import NotFound from "./pages/not-found";
@@ -156,12 +156,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <HelmetProvider>
-        <TooltipProvider>
+        <div>
           <AuthProvider>
             <SubscriptionProvider>
               <SubscriptionStatusProvider>
                 <DietaryPreferencesProvider>
-                  <Toaster />
+                  {/* <Toaster /> */}
                   <AdSense />
                   <Router />
                   <InstallPrompt />
@@ -170,7 +170,7 @@ function App() {
               </SubscriptionStatusProvider>
             </SubscriptionProvider>
           </AuthProvider>
-        </TooltipProvider>
+        </div>
       </HelmetProvider>
     </QueryClientProvider>
   );
