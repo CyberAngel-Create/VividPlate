@@ -1,60 +1,60 @@
 {
-  "name": "MenuMate - Digital Menu Platform",
-  "short_name": "MenuMate",
-  "description": "Dynamic digital menu platform that empowers restaurants to create interactive, mobile-responsive menus",
+  "name": "VividPlate - MenuMate",
+  "short_name": "VividPlate",
+  "description": "Digital menu platform for restaurants with QR codes and contactless dining",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "theme_color": "#f59e0b",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
-  "categories": ["food", "business", "restaurants"],
+  "categories": ["food", "business", "productivity"],
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
+      "src": "/icon-72x72.png",
       "sizes": "72x72",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-96x96.png",
+      "src": "/icon-96x96.png",
       "sizes": "96x96",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-128x128.png",
+      "src": "/icon-128x128.png",
       "sizes": "128x128",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-144x144.png",
+      "src": "/icon-144x144.png",
       "sizes": "144x144",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-152x152.png",
+      "src": "/icon-152x152.png",
       "sizes": "152x152",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-384x384.png",
+      "src": "/icon-384x384.png",
       "sizes": "384x384",
       "type": "image/png",
       "purpose": "maskable any"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable any"
@@ -62,36 +62,20 @@
   ],
   "shortcuts": [
     {
-      "name": "View Menu",
-      "short_name": "Menu",
-      "description": "Browse restaurant menus",
-      "url": "/menu",
-      "icons": [
-        {
-          "src": "/icons/menu-shortcut-192x192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "name": "My Restaurants",
+      "short_name": "Restaurants",
+      "description": "Manage your restaurants",
+      "url": "/restaurants",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Admin Dashboard",
-      "short_name": "Dashboard",
-      "description": "Manage your restaurants",
-      "url": "/admin",
-      "icons": [
-        {
-          "src": "/icons/admin-shortcut-192x192.png",
-          "sizes": "192x192",
-          "type": "image/png"
-        }
-      ]
+      "name": "Menu Builder",
+      "short_name": "Menu",
+      "description": "Create and edit menus",
+      "url": "/menu-builder",
+      "icons": [{ "src": "/icon-96x96.png", "sizes": "96x96" }]
     }
   ],
-  "prefer_related_applications": false,
   "related_applications": [],
-  "display_override": ["window-controls-overlay", "standalone"],
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+  "prefer_related_applications": false
 }
