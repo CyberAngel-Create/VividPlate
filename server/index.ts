@@ -99,8 +99,15 @@ import { testBackblazeConnection } from './backblaze-config';
       try {
         await new Promise((resolve, reject) => {
           const serverPort = process.env.PORT || port;
-          server.listen(serverPort, "0.0.0.0", async () => {
-            log(`serving on port ${serverPort}`);
+          const server_instance = server.listen(serverPort, "0.0.0.0", async () => {
+            log(`serving on port ${serverPort} in ${process.env.NODE_ENV || 'development'} mode`);
+            
+            // Set keepalive timeout for production
+            if (process.env.NODE_ENV === 'production') {
+              server_instance.keepAliveTimeout = 61 * 1000;
+              server_instance.headersTimeout = 65 * 1000;
+            }
+            
             try {
               await testBackblazeConnection();
             } catch (err) {

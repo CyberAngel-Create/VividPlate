@@ -67,24 +67,36 @@ export async function setupVite(app: Express, server: Server) {
   });
 }
 
-export function serveStatic(app: Express) {
-  const distPath = path.resolve(import.meta.dirname, "..", "dist", "public");
-  const publicPath = path.resolve(import.meta.dirname, "..", "public");
+export const serveStatic = (app: Express) => {
+  const distPath = path.resolve("dist/public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
-      `Could not find the build directory: ${distPath}. Please run 'npm run build' first.`,
+      `Could not find the build directory: ${distPath}, make sure to build the client first`,
     );
   }
 
-  // Serve built client files
-  app.use(express.static(distPath));
+  // Serve static files from the dist directory with proper caching
+  app.use(express.static(distPath, {
+    maxAge: process.env.NODE_ENV === 'production' ? '1y' : '0',
+    setHeaders: (res, path) => {
+      // Set proper MIME type for service worker
+      if (path.endsWith('sw.js')) {
+        res.setHeader('Content-Type', 'application/javascript');
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Service-Worker-Allowed', '/');
+      }
+      // Set proper MIME type for manifest
+      if (path.endsWith('manifest.json')) {
+        res.setHeader('Content-Type', 'application/manifest+json');
+      }
+    }
+  }));
 
-  // Serve public files (manifest, service worker, etc.)
-  app.use(express.static(publicPath));
-
-  // SPA fallback
-  app.get("*", (_req, res) => {
+  // Serve index.html for all non-API routes (SPA routing)
+  app.get("*", (req, res) => {
+    // Don't cache the main HTML file
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path.resolve(distPath, "index.html"));
   });
-}
+};

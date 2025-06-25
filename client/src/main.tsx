@@ -13,12 +13,33 @@ window.addEventListener('beforeinstallprompt', (e) => {
   console.log('PWA install prompt ready');
 });
 
-// Service worker registration
+// Register service worker for PWA functionality
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(() => console.log('Service Worker registered'))
-      .catch(() => console.log('Service Worker registration failed'));
+  window.addEventListener('load', async () => {
+    try {
+      const registration = await navigator.serviceWorker.register('/sw.js', {
+        scope: '/'
+      });
+
+      console.log('✓ Service Worker registered successfully');
+
+      // Check for updates
+      registration.addEventListener('updatefound', () => {
+        console.log('✓ Service Worker update detected');
+      });
+
+      // Handle controller change (when a new SW takes control)
+      let refreshing = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+          refreshing = true;
+          window.location.reload();
+        }
+      });
+
+    } catch (error) {
+      console.error('✗ Service Worker registration failed:', error);
+    }
   });
 }
 
@@ -35,7 +56,7 @@ if ('serviceWorker' in navigator) {
 // Enhanced browser compatibility and initialization
 const initApp = () => {
   console.log('Initializing VividPlate...');
-  
+
   try {
     const root = document.getElementById("root");
     if (!root) {
@@ -49,10 +70,10 @@ const initApp = () => {
     } else {
       root.innerHTML = '';
     }
-    
+
     // Create React app
     const reactRoot = createRoot(root);
-    
+
     // Add error handling for React rendering
     setTimeout(() => {
       try {
@@ -89,7 +110,7 @@ const showFallbackUI = () => {
       </div>
     </div>
   `;
-  
+
   document.body.innerHTML = fallbackHTML;
 };
 
