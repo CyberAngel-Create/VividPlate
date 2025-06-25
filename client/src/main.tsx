@@ -53,40 +53,23 @@ if ('serviceWorker' in navigator) {
   }
 };
 
-// Enhanced browser compatibility and initialization
 const initApp = () => {
-  console.log('Initializing VividPlate...');
+  const root = document.getElementById("root");
+  if (!root) return;
 
-  try {
-    const root = document.getElementById("root");
-    if (!root) {
-      throw new Error('Root element not found');
-    }
-
-    // Create React app and render immediately
-    const reactRoot = createRoot(root);
-    
-    // Hide loader first for immediate feedback
-    const loader = document.getElementById('initial-loader');
-    if (loader) {
-      loader.style.display = 'none';
-    }
-    
-    // Render app
-    reactRoot.render(
-      <ErrorBoundary>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
-          <App />
-        </ThemeProvider>
-      </ErrorBoundary>
-    );
-    
-    console.log('VividPlate loaded');
-
-  } catch (error) {
-    console.error('VividPlate initialization error:', error);
-    showFallbackUI();
-  }
+  // Hide loader immediately
+  const loader = document.getElementById('initial-loader');
+  if (loader) loader.style.display = 'none';
+  
+  // Render React app
+  const reactRoot = createRoot(root);
+  reactRoot.render(
+    <ErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
+        <App />
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
 };
 
 const showFallbackUI = () => {
