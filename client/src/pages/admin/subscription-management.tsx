@@ -43,7 +43,10 @@ export default function SubscriptionManagement() {
   // Upgrade user mutation
   const upgradeUserMutation = useMutation({
     mutationFn: async ({ userId, duration }: { userId: number, duration: string }) => {
-      const res = await apiRequest("POST", `/api/admin/upgrade-user/${userId}`, { duration });
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/subscription`, { 
+        subscriptionTier: "premium", 
+        duration 
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -53,6 +56,7 @@ export default function SubscriptionManagement() {
         description: `${selectedUser?.username} has been upgraded to premium.`,
       });
       setSelectedUser(null);
+      setSelectedDuration("");
     },
     onError: (error) => {
       console.error("Upgrade error:", error);
@@ -67,7 +71,9 @@ export default function SubscriptionManagement() {
   // Downgrade user mutation
   const downgradeUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const res = await apiRequest("POST", `/api/admin/downgrade-user/${userId}`, {});
+      const res = await apiRequest("PATCH", `/api/admin/users/${userId}/subscription`, {
+        subscriptionTier: "free"
+      });
       return res.json();
     },
     onSuccess: () => {

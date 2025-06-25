@@ -17,6 +17,8 @@ MenuMate is a comprehensive digital menu platform for restaurants that enables c
 - ✅ Fixed admin subscription management with upgrade/downgrade API endpoints
 - ✅ Added getUserMenuItemImageCount method to database storage
 - ✅ Completed admin ability to switch users between free and premium tiers
+- ✅ Fixed critical subscription upgrade issue by adding missing updateUserPremiumStatus method to DatabaseStorage
+- ✅ Resolved frontend loading state issue by updating mutations to use correct API endpoints
 
 ### PWA Implementation
 - ✅ Complete Progressive Web App functionality with offline support
