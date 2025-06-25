@@ -101,6 +101,27 @@
       </div>
     </noscript>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Fallback for production deployment -->
+    <script>
+      // Detect if main.tsx failed to load and show fallback
+      setTimeout(() => {
+        const loader = document.getElementById('initial-loader');
+        if (loader && loader.style.display !== 'none') {
+          // Main script hasn't loaded after 10 seconds, show error
+          loader.innerHTML = `
+            <div style="text-align: center; max-width: 400px; padding: 24px;">
+              <h1 style="color: #f59e0b; margin: 0 0 24px 0; font-size: 32px; font-weight: bold;">VividPlate</h1>
+              <p style="margin: 0 0 12px 0; color: #374151; font-size: 18px; font-weight: 500;">Loading failed</p>
+              <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">Please refresh the page or try again later</p>
+              <button onclick="window.location.reload()" style="background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                Reload Page
+              </button>
+            </div>
+          `;
+        }
+      }, 10000);
+    </script>
     <!-- This is a replit script which adds a banner on the top of the page when opened in development mode outside the replit environment -->
     <script type="text/javascript" src="https://replit.com/public/js/replit-dev-banner.js"></script>
   </body>
