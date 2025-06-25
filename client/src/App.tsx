@@ -37,7 +37,7 @@ import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/reset-password";
 import PrivacyPolicy from "./pages/privacy-policy";
 import CookieConsent from "@/components/ui/cookie-consent";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
@@ -46,6 +46,7 @@ import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
+import SubscriptionManagement from "./pages/admin/subscription-management";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const { user, isLoading } = useAuth();
@@ -134,6 +135,7 @@ function Router() {
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />
         <AdminRoute path="/admin/users" component={AdminUsers} />
+        <AdminRoute path="/admin/subscriptions" component={SubscriptionManagement} />
         <AdminRoute path="/admin/restaurants" component={AdminRestaurants} />
         <AdminRoute path="/admin/pricing" component={AdminPricing} />
         <AdminRoute path="/admin/logs" component={AdminLogs} />
