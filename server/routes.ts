@@ -334,6 +334,8 @@ const configureFileUpload = () => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup PWA routes first
+  setupPWARoutes(app);
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {

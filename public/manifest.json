@@ -2,7 +2,7 @@
   "name": "VividPlate - MenuMate",
   "short_name": "VividPlate",
   "description": "Digital menu platform for restaurants with QR codes and contactless dining",
-  "start_url": "/",
+  "start_url": "/?utm_source=pwa",
   "display": "standalone",
   "orientation": "any",
   "background_color": "#ffffff", 
@@ -15,6 +15,7 @@
   "edge_side_panel": {
     "preferred_width": 400
   },
+  "iarc_rating_id": "",
   "icons": [
     {
       "src": "/icon-72x72.png",

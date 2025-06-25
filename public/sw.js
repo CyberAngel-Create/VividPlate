@@ -1,6 +1,6 @@
-const CACHE_NAME = 'vividplate-v1.0.0';
-const STATIC_CACHE = 'vividplate-static-v1.0.0';
-const DYNAMIC_CACHE = 'vividplate-dynamic-v1.0.0';
+const CACHE_NAME = 'vividplate-v1.1.0';
+const STATIC_CACHE = 'vividplate-static-v1.1.0';
+const DYNAMIC_CACHE = 'vividplate-dynamic-v1.1.0';
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [

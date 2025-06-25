@@ -4,6 +4,8 @@ import App from "./App";
 import "./index.css";
 // Import i18n configuration
 import "./i18n";
+// Import PWA debug utilities
+import "./utils/pwa-debug";
 
 // PWA installation event handling
 console.log('Setting up PWA installation listeners');
