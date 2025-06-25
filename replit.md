@@ -1,0 +1,72 @@
+# MenuMate - Digital Menu Platform
+
+## Project Overview
+MenuMate is a comprehensive digital menu platform for restaurants that enables contactless dining experiences through QR codes and web links. The platform includes both free and premium subscription tiers with time-based premium subscriptions.
+
+## Recent Changes (January 2025)
+
+### Subscription System Implementation
+- ✅ Added time-based premium subscriptions with 1 month, 3 months, and 1 year duration options
+- ✅ Implemented automatic subscription countdown system with expiration tracking
+- ✅ Created 10-day expiration notification system for premium users
+- ✅ Added automatic downgrade to free tier when premium expires
+- ✅ Implemented image upload limits: free users limited to 5 menu item images maximum
+- ✅ Premium users get unlimited menu item images and ad-free experience
+- ✅ Created admin interface for managing user subscriptions
+- ✅ Added subscription status component showing usage limits and expiry dates
+
+### PWA Implementation
+- ✅ Complete Progressive Web App functionality with offline support
+- ✅ Service worker with caching strategies and background sync
+- ✅ Mobile-optimized layout components and touch interactions
+- ✅ Install banner for "Add to Home Screen" functionality
+- ✅ PWA manifest with proper icons and metadata
+
+### Image Management
+- ✅ Automatic image compression system limiting uploads to 1MB
+- ✅ Smart compression to 70-100KB for storage efficiency
+- ✅ Image upload validation based on subscription tier
+
+## Subscription Tiers
+
+### Free Tier
+- 1 restaurant maximum
+- 5 menu item images maximum
+- Advertisements shown
+- Basic QR code generation
+
+### Premium Tier
+- 3 restaurants maximum
+- Unlimited menu item images
+- Ad-free experience
+- Advanced QR code customization
+- Duration options: 1 month, 3 months, 1 year
+
+## Test Credentials
+- **Admin:** username: admin, password: admin1234
+- **Restaurant Owner:** username: restaurant1, password: password123
+- **Premium User:** email: entotocloudrestaurant@gmail.com, password: cloud123
+
+## Architecture
+- **Frontend:** React with TypeScript, Vite, Tailwind CSS
+- **Backend:** Node.js with Express
+- **Database:** PostgreSQL with Drizzle ORM (using in-memory storage for development)
+- **Authentication:** Passport.js with session-based auth
+- **File Storage:** Local storage with image compression
+- **PWA:** Service worker with offline capabilities
+
+## Key Features
+- Restaurant profile management with logo and banner uploads
+- Menu category and item management with image uploads
+- Dynamic QR code generation with customization
+- Menu view tracking and analytics
+- Multi-language support with i18next
+- Theme customization for menu display
+- Subscription management with time-based expiry
+- Mobile-first PWA design
+
+## User Preferences
+- Focus on practical implementation over theoretical explanations
+- Prefer working code over detailed documentation
+- Mobile-first approach for all UI components
+- Immediate feedback on subscription limits and status
