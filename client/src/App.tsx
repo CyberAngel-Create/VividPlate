@@ -31,6 +31,7 @@ import AdminContactInfo from "./pages/admin-contact-info";
 import AdminAdvertisements from "./pages/admin-advertisements";
 import AdminMenuExamples from "./pages/admin-menu-examples";
 import AdminTestimonials from "./pages/admin-testimonials";
+import SubscriptionManagement from "./pages/admin/subscription-management";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";

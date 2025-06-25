@@ -1,12 +1,14 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "@/hooks/use-toast";
-import { Calendar, Clock, Crown, Users } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Search, Crown, Users, Calendar, DollarSign } from "lucide-react";
 
 interface User {
   id: number;
@@ -14,50 +16,55 @@ interface User {
   email: string;
   fullName: string;
   subscriptionTier: string;
-  premiumStartDate?: string;
-  premiumEndDate?: string;
-  premiumDuration?: string;
+  subscriptionEndDate?: string;
   isActive: boolean;
-  createdAt: string;
 }
 
 export default function SubscriptionManagement() {
-  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
-  const [selectedTier, setSelectedTier] = useState<string>("");
-  const [selectedDuration, setSelectedDuration] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedTier, setSelectedTier] = useState<string>("premium");
+  const [selectedDuration, setSelectedDuration] = useState<string>("1_month");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { data: users, isLoading: usersLoading } = useQuery<User[]>({
+  // Fetch all users
+  const { data: users = [], isLoading } = useQuery<User[]>({
     queryKey: ["/api/admin/users"],
-    queryFn: async () => {
-      const res = await apiRequest("GET", "/api/admin/users");
-      return res.json();
-    },
   });
 
+  // Filter users based on search term
+  const filteredUsers = users.filter(user =>
+    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.fullName.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Upgrade user mutation
   const upgradeUserMutation = useMutation({
-    mutationFn: async ({ userId, duration }: { userId: number; duration: string }) => {
+    mutationFn: async ({ userId, duration }: { userId: number, duration: string }) => {
       const res = await apiRequest("POST", `/api/admin/upgrade-user/${userId}`, { duration });
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({
-        title: "Success",
-        description: "User upgraded to premium successfully",
+        title: "User upgraded",
+        description: `${selectedUser?.username} has been upgraded to premium.`,
       });
-      setSelectedUserId(null);
-      setSelectedTier("");
-      setSelectedDuration("");
+      setSelectedUser(null);
     },
-    onError: (error: any) => {
+    onError: (error) => {
+      console.error("Upgrade error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to upgrade user to premium",
+        description: "Failed to upgrade user. Please try again.",
         variant: "destructive",
       });
     },
   });
 
+  // Downgrade user mutation
   const downgradeUserMutation = useMutation({
     mutationFn: async (userId: number) => {
       const res = await apiRequest("POST", `/api/admin/downgrade-user/${userId}`, {});
@@ -66,200 +73,245 @@ export default function SubscriptionManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       toast({
-        title: "Success",
-        description: "User downgraded to free successfully",
+        title: "User downgraded",
+        description: `${selectedUser?.username} has been downgraded to free.`,
       });
-      setSelectedUserId(null);
-      setSelectedTier("");
-      setSelectedDuration("");
+      setSelectedUser(null);
     },
-    onError: (error: any) => {
+    onError: (error) => {
+      console.error("Downgrade error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to downgrade user",
+        description: "Failed to downgrade user. Please try again.",
         variant: "destructive",
       });
     },
   });
 
   const handleUpdateSubscription = () => {
-    if (!selectedUserId || !selectedTier) return;
+    if (!selectedUser) return;
 
     if (selectedTier === "premium") {
-      if (!selectedDuration) {
-        toast({
-          title: "Error",
-          description: "Please select a duration for premium subscription",
-          variant: "destructive",
-        });
-        return;
-      }
       upgradeUserMutation.mutate({
-        userId: selectedUserId,
+        userId: selectedUser.id,
         duration: selectedDuration,
       });
-    } else if (selectedTier === "free") {
-      downgradeUserMutation.mutate(selectedUserId);
+    } else {
+      downgradeUserMutation.mutate(selectedUser.id);
     }
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const getDaysRemaining = (endDate?: string) => {
-    if (!endDate) return null;
-    const now = new Date();
-    const end = new Date(endDate);
-    const timeDiff = end.getTime() - now.getTime();
-    const daysDiff = Math.ceil(timeDiff / (1000 * 3600 * 24));
-    return daysDiff > 0 ? daysDiff : 0;
-  };
-
-  const getDurationLabel = (duration?: string) => {
+  const formatDuration = (duration: string) => {
     switch (duration) {
       case "1_month": return "1 Month";
       case "3_months": return "3 Months";
+      case "6_months": return "6 Months";
       case "1_year": return "1 Year";
-      default: return "N/A";
+      default: return duration;
     }
   };
 
-  if (usersLoading) {
-    return <div className="p-6">Loading users...</div>;
-  }
+  const isPending = upgradeUserMutation.isPending || downgradeUserMutation.isPending;
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center gap-2">
-        <Crown className="h-6 w-6 text-yellow-500" />
-        <h1 className="text-2xl font-bold">Subscription Management</h1>
-      </div>
-
-      {/* Update Subscription Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Update User Subscription</CardTitle>
-          <CardDescription>
-            Upgrade users to premium or downgrade to free tier
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select value={selectedUserId?.toString() || ""} onValueChange={(value) => setSelectedUserId(parseInt(value))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select User" />
-              </SelectTrigger>
-              <SelectContent>
-                {users?.map((user) => (
-                  <SelectItem key={user.id} value={user.id.toString()}>
-                    {user.username} ({user.email})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedTier} onValueChange={setSelectedTier}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Tier" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="premium">Premium</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {selectedTier === "premium" && (
-              <Select value={selectedDuration} onValueChange={setSelectedDuration}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1_month">1 Month</SelectItem>
-                  <SelectItem value="3_months">3 Months</SelectItem>
-                  <SelectItem value="1_year">1 Year</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-
-            <Button 
-              onClick={handleUpdateSubscription}
-              disabled={!selectedUserId || !selectedTier || (selectedTier === "premium" && !selectedDuration) || upgradeUserMutation.isPending || downgradeUserMutation.isPending}
-            >
-              {upgradeUserMutation.isPending || downgradeUserMutation.isPending ? "Updating..." : "Update Subscription"}
-            </Button>
+    <AdminLayout>
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Subscription Management</h1>
+            <p className="text-muted-foreground">Upgrade users to premium or downgrade to free tier</p>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Users List */}
-      <div className="grid gap-4">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">All Users</h2>
-          <Badge variant="secondary">{users?.length || 0} users</Badge>
         </div>
 
-        <div className="grid gap-3">
-          {users?.map((user) => {
-            const daysRemaining = getDaysRemaining(user.premiumEndDate);
-            const isExpiringSoon = daysRemaining !== null && daysRemaining <= 10;
-            
-            return (
-              <Card key={user.id} className={`${isExpiringSoon ? 'border-yellow-300 bg-yellow-50' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium">{user.fullName}</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* User Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Select User
+              </CardTitle>
+              <CardDescription>
+                Choose a user to manage their subscription
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search users..."
+                  className="pl-8"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              <div className="max-h-80 overflow-y-auto space-y-2">
+                {isLoading ? (
+                  <div className="text-center py-4 text-muted-foreground">Loading users...</div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">No users found</div>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <div
+                      key={user.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedUser?.id === user.id 
+                          ? "border-primary bg-primary/5" 
+                          : "border-border hover:bg-muted/50"
+                      }`}
+                      onClick={() => setSelectedUser(user)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{user.fullName}</div>
+                          <div className="text-sm text-muted-foreground">{user.username} • {user.email}</div>
+                        </div>
                         <Badge variant={user.subscriptionTier === "premium" ? "default" : "secondary"}>
                           {user.subscriptionTier}
                         </Badge>
-                        {!user.isActive && (
-                          <Badge variant="destructive">Inactive</Badge>
-                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {user.username} • {user.email}
-                      </p>
-                      
-                      {user.subscriptionTier === "premium" && user.premiumStartDate && (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm text-muted-foreground mt-2">
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>Start: {formatDate(user.premiumStartDate)}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>End: {formatDate(user.premiumEndDate)}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            <span>Duration: {getDurationLabel(user.premiumDuration)}</span>
-                          </div>
-                          {daysRemaining !== null && (
-                            <div className={`flex items-center gap-1 ${isExpiringSoon ? 'text-yellow-600 font-medium' : ''}`}>
-                              <Clock className="h-3 w-3" />
-                              <span>
-                                {daysRemaining > 0 ? `${daysRemaining} days left` : "Expired"}
-                              </span>
-                            </div>
-                          )}
+                      {user.subscriptionEndDate && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Expires: {new Date(user.subscriptionEndDate).toLocaleDateString()}
                         </div>
                       )}
                     </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-                    <div className="text-sm text-muted-foreground">
-                      Joined: {formatDate(user.createdAt)}
-                    </div>
+          {/* Subscription Update */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5" />
+                Update User Subscription
+              </CardTitle>
+              <CardDescription>
+                {selectedUser 
+                  ? `Manage subscription for ${selectedUser.username}` 
+                  : "Select a user to manage their subscription"
+                }
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {selectedUser ? (
+                <>
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Selected User:</label>
+                    <Select value={selectedUser.email} disabled>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={selectedUser.email}>
+                          {selectedUser.fullName} ({selectedUser.email})
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Subscription Tier:</label>
+                    <Select value={selectedTier} onValueChange={setSelectedTier}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="free">Free</SelectItem>
+                        <SelectItem value="premium">Premium</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {selectedTier === "premium" && (
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Duration:</label>
+                      <Select value={selectedDuration} onValueChange={setSelectedDuration}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="1_month">1 Month</SelectItem>
+                          <SelectItem value="3_months">3 Months</SelectItem>
+                          <SelectItem value="6_months">6 Months</SelectItem>
+                          <SelectItem value="1_year">1 Year</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+
+                  <div className="pt-4 border-t">
+                    <div className="text-sm text-muted-foreground mb-4">
+                      Current Status: 
+                      <Badge className="ml-2" variant={selectedUser.subscriptionTier === "premium" ? "default" : "secondary"}>
+                        {selectedUser.subscriptionTier}
+                      </Badge>
+                      {selectedUser.subscriptionEndDate && (
+                        <span className="ml-2">
+                          (Expires: {new Date(selectedUser.subscriptionEndDate).toLocaleDateString()})
+                        </span>
+                      )}
+                    </div>
+                    <Button 
+                      onClick={handleUpdateSubscription}
+                      disabled={isPending || selectedUser.subscriptionTier === selectedTier}
+                      className="w-full"
+                    >
+                      {isPending ? "Updating..." : `Update Subscription`}
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Please select a user from the list to manage their subscription
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm font-medium">Total Users</span>
+              </div>
+              <div className="text-2xl font-bold mt-1">{users.length}</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-amber-500" />
+                <span className="text-sm font-medium">Premium Users</span>
+              </div>
+              <div className="text-2xl font-bold mt-1">
+                {users.filter(u => u.subscriptionTier === "premium").length}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-green-500" />
+                <span className="text-sm font-medium">Free Users</span>
+              </div>
+              <div className="text-2xl font-bold mt-1">
+                {users.filter(u => u.subscriptionTier === "free").length}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
-    </div>
+    </AdminLayout>
   );
 }

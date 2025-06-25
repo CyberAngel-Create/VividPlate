@@ -595,3 +595,4 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 };
 
 export default AdminLayout;
+export { AdminLayout };
