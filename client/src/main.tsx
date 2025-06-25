@@ -5,16 +5,21 @@ import "./index.css";
 // Import i18n configuration
 import "./i18n";
 
-// Listen for beforeinstallprompt event early
+// Enhanced PWA install prompt handling
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('beforeinstallprompt event fired');
+  console.log('PWA install prompt available');
   e.preventDefault();
   deferredPrompt = e;
-  // Store globally for access
   (window as any).deferredPrompt = e;
-  // Trigger a custom event to notify our hook
   window.dispatchEvent(new CustomEvent('pwa-installable'));
+});
+
+// Listen for successful app installation
+window.addEventListener('appinstalled', (e) => {
+  console.log('VividPlate PWA was installed successfully');
+  deferredPrompt = null;
+  (window as any).deferredPrompt = null;
 });
 
 createRoot(document.getElementById("root")!).render(
