@@ -45,7 +45,6 @@ import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
-import { InstallBanner } from "@/components/pwa/InstallBanner";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const { user, isLoading } = useAuth();
@@ -57,7 +56,12 @@ function AuthenticatedRoute({ component: Component, ...rest }: { component: Reac
     }
   }, [user, isLoading, setLocation]);
 
-  // Skip loading state to prevent app from getting stuck
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
+    </div>;
+  }
+
   return user ? <Route {...rest} component={Component} /> : null;
 }
 
@@ -79,7 +83,12 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
     }
   }, [user, isLoading, setLocation]);
 
-  // Skip loading state to prevent app from getting stuck
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">
+      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
+    </div>;
+  }
+
   return (user && user.isAdmin) ? <Route {...rest} component={Component} /> : null;
 }
 
@@ -151,7 +160,6 @@ function App() {
                   <Toaster />
                   <AdSense />
                   <Router />
-                  <InstallBanner />
                   <CookieConsent />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>

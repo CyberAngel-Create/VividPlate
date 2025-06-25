@@ -5,7 +5,7 @@ import {
   UseMutationResult,
 } from "@tanstack/react-query";
 import { User } from "@shared/schema";
-import { apiRequest, queryClient, getQueryFn } from "../lib/queryClient";
+import { apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -42,23 +42,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isLoading,
   } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
-    queryFn: async () => {
-      try {
-        const res = await fetch("/api/auth/me", {
-          credentials: "include",
-        });
-        if (res.status === 401) {
-          return null;
-        }
-        if (!res.ok) {
-          throw new Error(`${res.status}: ${res.statusText}`);
-        }
-        return await res.json();
-      } catch (error) {
-        console.log("Auth check failed:", error);
-        return null;
-      }
-    },
     gcTime: 0,
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,
