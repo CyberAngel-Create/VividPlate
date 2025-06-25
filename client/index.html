@@ -14,6 +14,10 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
     
+    <!-- Preload critical PWA files -->
+    <link rel="preload" href="/sw.js" as="script">
+    <link rel="preload" href="/manifest.json" as="fetch" crossorigin>
+    
     <!-- Theme Colors -->
     <meta name="theme-color" content="#f59e0b">
     <meta name="msapplication-TileColor" content="#f59e0b">
