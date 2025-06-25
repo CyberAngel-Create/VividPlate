@@ -1,20 +1,66 @@
 import { Switch, Route } from "wouter";
 
-const AdminLogin = () => (
-  <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-    <div style={{ backgroundColor: "white", padding: "2rem", borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", width: "100%", maxWidth: "400px", border: "2px solid #fecaca" }}>
-      <h1 style={{ color: "#dc2626", fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1.5rem", textAlign: "center" }}>Admin Login</h1>
-      <form style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-        <input type="text" placeholder="Admin Username (admin)" style={{ padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: "0.375rem", fontSize: "1rem" }} />
-        <input type="password" placeholder="Admin Password (admin1234)" style={{ padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: "0.375rem", fontSize: "1rem" }} />
-        <button type="submit" style={{ backgroundColor: "#dc2626", color: "white", padding: "0.75rem", borderRadius: "0.375rem", border: "none", fontWeight: "500", cursor: "pointer" }}>Admin Login</button>
-      </form>
-      <div style={{ textAlign: "center", marginTop: "1rem" }}>
-        <a href="/" style={{ color: "#6b7280", textDecoration: "none" }}>Back to Home</a>
+const AdminLogin = () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const credentials = {
+      identifier: formData.get('username'),
+      password: formData.get('password')
+    };
+    
+    try {
+      const response = await fetch('/api/auth/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentials)
+      });
+      
+      if (response.ok) {
+        window.location.href = '/admin/dashboard';
+      } else {
+        alert('Admin login failed');
+      }
+    } catch (error) {
+      alert('Login error');
+    }
+  };
+
+  const handleQuickLogin = async () => {
+    try {
+      const response = await fetch('/api/auth/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: 'admin', password: 'admin1234' })
+      });
+      
+      if (response.ok) {
+        window.location.href = '/admin/dashboard';
+      } else {
+        alert('Admin login failed');
+      }
+    } catch (error) {
+      alert('Login error');
+    }
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ backgroundColor: "white", padding: "2rem", borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", width: "100%", maxWidth: "400px", border: "2px solid #fecaca" }}>
+        <h1 style={{ color: "#dc2626", fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1.5rem", textAlign: "center" }}>Admin Login</h1>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <input name="username" type="text" placeholder="Admin Username (admin)" style={{ padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: "0.375rem", fontSize: "1rem" }} />
+          <input name="password" type="password" placeholder="Admin Password (admin1234)" style={{ padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: "0.375rem", fontSize: "1rem" }} />
+          <button type="submit" style={{ backgroundColor: "#dc2626", color: "white", padding: "0.75rem", borderRadius: "0.375rem", border: "none", fontWeight: "500", cursor: "pointer" }}>Admin Login</button>
+        </form>
+        <div style={{ textAlign: "center", marginTop: "1rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <button onClick={handleQuickLogin} style={{ backgroundColor: "#b91c1c", color: "white", padding: "0.5rem 1rem", borderRadius: "0.375rem", border: "none", fontSize: "0.875rem", cursor: "pointer" }}>Quick Admin Login</button>
+          <a href="/" style={{ color: "#6b7280", textDecoration: "none" }}>Back to Home</a>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 const Home = () => (
   <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fef3c7 0%, #ffffff 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -79,6 +125,8 @@ function App() {
       <Route path="/login" component={Login} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Admin features coming soon</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
+      <Route path="/admin/dashboard" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Admin features coming soon</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
       <Route path="/fast-login" component={FastLogin} />
       <Route component={NotFound} />
     </Switch>
