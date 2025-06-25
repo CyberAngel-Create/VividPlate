@@ -6,7 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { TestPWAButton } from "@/components/TestPWAButton";
-import { ForceShowPWA } from "@/components/ForceShowPWA";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import NotFound from "./pages/not-found";
 import Home from "./pages/home";
 import Login from "./pages/login";
@@ -165,8 +165,7 @@ function App() {
                   <Toaster />
                   <AdSense />
                   <Router />
-                  <PWAInstallPrompt />
-                  <ForceShowPWA />
+                  <InstallPrompt />
                   <CookieConsent />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
