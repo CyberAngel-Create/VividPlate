@@ -77,7 +77,7 @@ export const PWAInstallPrompt = () => {
               Install VividPlate
             </h3>
             <p className="text-xs text-gray-600 mb-3">
-              Get the full app experience with offline access and quick launch from your home screen.
+              Install VividPlate as an app for quick access, offline functionality, and a native mobile experience.
             </p>
             
             <div className="flex space-x-2">
