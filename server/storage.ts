@@ -42,6 +42,7 @@ export interface IStorage {
   toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
   upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
   updateUserSubscription(id: number, updates: Partial<User>): Promise<User | undefined>;
+  updateUserPremiumStatus(userId: number, subscriptionData: { subscriptionTier: string; premiumStartDate?: Date; premiumEndDate?: Date }): Promise<User>;
   getUsersNearExpiry(): Promise<User[]>;
   getUserMenuItemImageCount(userId: number): Promise<number>;
 
