@@ -949,6 +949,21 @@ export class MemStorage implements IStorage {
     }
   }
 
+  async updateUserPremiumStatus(userId: number, subscriptionData: { subscriptionTier: string; premiumStartDate?: Date; premiumEndDate?: Date }): Promise<User> {
+    const user = this.users.get(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updatedUser = {
+      ...user,
+      ...subscriptionData
+    };
+
+    this.users.set(userId, updatedUser);
+    return updatedUser;
+  }
+
   async getAllRestaurants(): Promise<Restaurant[]> {
     return Array.from(this.restaurants.values());
   }
