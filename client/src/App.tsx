@@ -41,11 +41,7 @@ import PrivacyPolicy from "./pages/privacy-policy";
 import { useState, useEffect, lazy } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
-// import { AuthProvider, useAuth } from "@/hooks/use-auth";
-// import { SubscriptionProvider } from "@/hooks/use-subscription";
-// import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
-// import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
-// import AdSense from "@/components/ads/AdSense";
+import { useAuth } from "@/hooks/use-auth";
 import TermsOfService from "./pages/terms";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -154,11 +150,9 @@ function Router() {
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <HelmetProvider>
-        <Router />
-      </HelmetProvider>
-    </QueryClientProvider>
+    <HelmetProvider>
+      <Router />
+    </HelmetProvider>
   );
 }
 
