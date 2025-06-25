@@ -30,7 +30,8 @@ export function usePWAInstallability() {
 
     // Listen for beforeinstallprompt
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
-      console.log('PWA install prompt available - install icon should appear in address bar');
+      console.log('✓ PWA install prompt available - install icon should appear in address bar');
+      console.log('✓ Look for install icon (⊞) in Chrome address bar or menu → "Install VividPlate"');
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);

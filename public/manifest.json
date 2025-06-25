@@ -12,6 +12,9 @@
   "id": "/",
   "lang": "en",
   "categories": ["food", "business", "productivity"],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
   "icons": [
     {
       "src": "/icon-72x72.png",

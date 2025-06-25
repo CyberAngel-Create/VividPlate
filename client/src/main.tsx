@@ -5,22 +5,28 @@ import "./index.css";
 // Import i18n configuration
 import "./i18n";
 
-// Enhanced PWA install prompt handling
-let deferredPrompt;
+// PWA installation event handling
+console.log('Setting up PWA installation listeners');
+
+// Enhanced beforeinstallprompt event
 window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('PWA install prompt available');
+  console.log('✓ PWA install prompt detected - install icon should appear in address bar');
   e.preventDefault();
-  deferredPrompt = e;
   (window as any).deferredPrompt = e;
-  window.dispatchEvent(new CustomEvent('pwa-installable'));
+  window.dispatchEvent(new CustomEvent('pwa-installable', { detail: { prompt: e } }));
 });
 
-// Listen for successful app installation
+// App installation success
 window.addEventListener('appinstalled', (e) => {
-  console.log('VividPlate PWA was installed successfully');
-  deferredPrompt = null;
+  console.log('✓ VividPlate installed successfully');
   (window as any).deferredPrompt = null;
 });
+
+// Check if already installed
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+if (isStandalone) {
+  console.log('✓ PWA already installed and running in standalone mode');
+}
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>

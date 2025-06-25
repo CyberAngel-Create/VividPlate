@@ -104,7 +104,7 @@ The VividPlate app will appear with your custom icon!`;
                 className="flex items-center space-x-1 bg-amber-500 hover:bg-amber-600 text-white text-xs px-3 py-1.5 rounded-md transition-colors"
               >
                 <Download className="w-3 h-3" />
-                <span>Install</span>
+                <span>Install VividPlate</span>
               </button>
               
               <button

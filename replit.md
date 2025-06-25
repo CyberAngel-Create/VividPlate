@@ -30,6 +30,8 @@ MenuMate is a comprehensive digital menu platform for restaurants that enables c
 - ✅ Updated manifest.json with VividPlate branding and theme colors
 - ✅ Enhanced desktop PWA installation with browser-specific instructions
 - ✅ Native PWA install prompt integration with fallback manual instructions
+- ✅ Button text changed from "Show PWA Prompt" to "Install VividPlate"
+- ✅ Improved PWA manifest and service worker for browser install icon visibility
 
 ### Image Management
 - ✅ Automatic image compression system limiting uploads to 1MB

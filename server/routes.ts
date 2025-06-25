@@ -18,6 +18,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
+import { setupPWARoutes } from "./pwa-routes";
 import memorystore from 'memorystore';
 import path from 'path';
 import os from 'os';
