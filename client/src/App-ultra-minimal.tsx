@@ -1,4 +1,5 @@
 import { Switch, Route } from "wouter";
+import React from "react";
 
 const AdminLogin = () => {
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,8 +126,42 @@ function App() {
       <Route path="/login" component={Login} />
       <Route path="/admin-login" component={AdminLogin} />
       <Route path="/admin/login" component={AdminLogin} />
-      <Route path="/admin" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Admin features coming soon</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
-      <Route path="/admin/dashboard" component={() => <div style={{ padding: "2rem", textAlign: "center" }}><h1>Admin Dashboard</h1><p>Admin features coming soon</p><a href="/" style={{ color: "#dc2626" }}>Back to Home</a></div>} />
+      <Route path="/admin" component={() => {
+        try {
+          const AdminDashboard = require('./pages/admin-dashboard-simple').default;
+          return React.createElement(AdminDashboard);
+        } catch (e) {
+          return React.createElement('div', { style: { padding: '2rem', textAlign: 'center' } }, 
+            React.createElement('h1', null, 'Admin Dashboard'),
+            React.createElement('p', null, 'Loading admin features...'),
+            React.createElement('a', { href: '/', style: { color: '#dc2626' } }, 'Back to Home')
+          );
+        }
+      }} />
+      <Route path="/admin/dashboard" component={() => {
+        try {
+          const AdminDashboard = require('./pages/admin-dashboard-simple').default;
+          return React.createElement(AdminDashboard);
+        } catch (e) {
+          return React.createElement('div', { style: { padding: '2rem', textAlign: 'center' } }, 
+            React.createElement('h1', null, 'Admin Dashboard'),
+            React.createElement('p', null, 'Loading admin features...'),
+            React.createElement('a', { href: '/', style: { color: '#dc2626' } }, 'Back to Home')
+          );
+        }
+      }} />
+      <Route path="/admin/users" component={() => {
+        try {
+          const AdminUsers = require('./pages/admin-users-simple').default;
+          return React.createElement(AdminUsers);
+        } catch (e) {
+          return React.createElement('div', { style: { padding: '2rem', textAlign: 'center' } }, 
+            React.createElement('h1', null, 'User Management'),
+            React.createElement('p', null, 'Loading user features...'),
+            React.createElement('a', { href: '/admin', style: { color: '#dc2626' } }, 'Back to Admin')
+          );
+        }
+      }} />
       <Route path="/fast-login" component={FastLogin} />
       <Route component={NotFound} />
     </Switch>
