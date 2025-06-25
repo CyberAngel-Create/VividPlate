@@ -10,13 +10,10 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
   subscriptionTier: text("subscription_tier").default("free"),
-  premiumStartDate: timestamp("premium_start_date"),
-  premiumEndDate: timestamp("premium_end_date"),
-  premiumDuration: text("premium_duration"), // "1_month", "3_months", "1_year"
-  notificationSent: boolean("notification_sent").default(false), // For 10-day expiry notification
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   telebirrCustomerId: text("telebirr_customer_id"),
+  subscriptionExpiry: timestamp("subscription_expiry"),
   resetPasswordToken: text("reset_password_token"),
   resetPasswordExpires: timestamp("reset_password_expires"),
   isAdmin: boolean("is_admin").default(false),

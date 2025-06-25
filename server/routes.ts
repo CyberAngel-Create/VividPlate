@@ -27,7 +27,6 @@ import { promisify } from "util";
 import { scrypt, timingSafeEqual } from "crypto";
 import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
 import { compressImageSmart } from './smart-image-compression';
-import { SubscriptionService } from './subscription-service';
 
 // Password comparison utility for authentication
 const scryptAsync = promisify(scrypt);
@@ -762,16 +761,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const subscriptionStatus = await SubscriptionService.getSubscriptionStatus(userId);
+      
+      // Check if user has an active subscription
+      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
       
       // Count restaurants to enforce limits
       const restaurantCount = await storage.countRestaurantsByUserId(userId);
       
-      res.json({
-        ...subscriptionStatus,
-        currentRestaurants: restaurantCount,
-        currentMenuItemImages: await storage.getUserMenuItemImageCount(userId)
-      });
+      if (activeSubscription && activeSubscription.tier === "premium") {
+        return res.json({
+          tier: activeSubscription.tier,
+          isPaid: true,
+          maxRestaurants: 3,
+          currentRestaurants: restaurantCount,
+          expiresAt: activeSubscription.endDate
+        });
+      } else {
+        return res.json({
+          tier: "free",
+          isPaid: false,
+          maxRestaurants: 1,
+          currentRestaurants: restaurantCount,
+          expiresAt: null
+        });
+      }
     } catch (error) {
       console.error("Error getting subscription status:", error);
       res.status(500).json({ message: 'Server error' });
@@ -1791,14 +1804,6 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       if (!req.file) {
         console.warn(`Upload attempt with no file included for menu item by user ${userId}`);
         return res.status(400).json({ message: 'No file uploaded' });
-      }
-
-      // Check image upload limits for free users
-      const canUpload = await SubscriptionService.validateImageUpload(userId);
-      if (!canUpload) {
-        return res.status(403).json({ 
-          message: 'Upload limit reached. Free users can upload maximum 5 menu item images. Upgrade to premium for unlimited uploads.' 
-        });
       }
       
       const itemId = parseInt(req.params.itemId);
@@ -3477,61 +3482,26 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   app.patch('/api/admin/users/:id/subscription', isAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const { subscriptionTier, duration } = req.body;
-      
-      console.log(`Admin subscription update request for user ${userId}:`, { subscriptionTier, duration });
+      const { subscriptionTier } = req.body;
       
       if (!['free', 'premium'].includes(subscriptionTier)) {
         return res.status(400).json({ message: 'Invalid subscription tier' });
       }
       
-      if (subscriptionTier === 'premium' && !['1_month', '3_months', '6_months', '1_year'].includes(duration)) {
-        return res.status(400).json({ message: 'Invalid premium duration' });
-      }
+      const updatedUser = await storage.upgradeUserSubscription(userId, subscriptionTier);
       
-      if (subscriptionTier === 'premium') {
-        // Calculate dates for premium subscription
-        const startDate = new Date();
-        const endDate = new Date(startDate);
-        
-        switch (duration) {
-          case '1_month':
-            endDate.setMonth(endDate.getMonth() + 1);
-            break;
-          case '3_months':
-            endDate.setMonth(endDate.getMonth() + 3);
-            break;
-          case '6_months':
-            endDate.setMonth(endDate.getMonth() + 6);
-            break;
-          case '1_year':
-            endDate.setFullYear(endDate.getFullYear() + 1);
-            break;
-        }
-        
-        await storage.updateUserPremiumStatus(userId, {
-          subscriptionTier: 'premium',
-          premiumStartDate: startDate,
-          premiumEndDate: endDate,
-          premiumDuration: duration,
-          notificationSent: false
-        });
-      } else {
-        await storage.updateUserPremiumStatus(userId, {
-          subscriptionTier: 'free',
-          premiumStartDate: null,
-          premiumEndDate: null,
-          premiumDuration: null,
-          notificationSent: false
-        });
-      }
-      
-      const updatedUser = await storage.getUser(userId);
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
       }
       
-      console.log(`Successfully updated user ${userId} subscription to ${subscriptionTier}`);
+      // Create admin log for this action
+      await storage.createAdminLog({
+        adminId: (req.user as any).id,
+        action: 'update_subscription',
+        entityType: 'user',
+        entityId: updatedUser.id,
+        details: `Changed user ${updatedUser.username} subscription to ${subscriptionTier} from IP ${req.ip}`,
+      });
       
       // Exclude sensitive data
       const { password, resetPasswordToken, resetPasswordExpires, ...sanitizedUser } = updatedUser;
@@ -3539,114 +3509,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.json(sanitizedUser);
     } catch (error) {
       console.error('Error updating user subscription:', error);
-      res.status(500).json({ message: 'Failed to upgrade user. Please try again.' });
-    }
-  });
-
-  // Admin route to upgrade user to premium with specified duration
-  app.post('/api/admin/upgrade-user/:userId', isAuthenticated, async (req, res) => {
-    try {
-      console.log('Admin upgrade check - User:', req.user);
-      console.log('Admin upgrade check - Is Admin:', req.user?.isAdmin);
-      
-      const adminUser = req.user as any;
-      if (!adminUser || !adminUser.isAdmin) {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
-
-      const userId = parseInt(req.params.userId, 10);
-      const { duration } = req.body; // '1_month', '3_months', '1_year'
-
-      if (!duration || !['1_month', '3_months', '6_months', '1_year'].includes(duration)) {
-        return res.status(400).json({ message: 'Invalid duration. Must be 1_month, 3_months, 6_months, or 1_year' });
-      }
-
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      // Calculate end date based on duration
-      const startDate = new Date();
-      const endDate = new Date(startDate);
-      
-      switch (duration) {
-        case '1_month':
-          endDate.setMonth(endDate.getMonth() + 1);
-          break;
-        case '3_months':
-          endDate.setMonth(endDate.getMonth() + 3);
-          break;
-        case '6_months':
-          endDate.setMonth(endDate.getMonth() + 6);
-          break;
-        case '1_year':
-          endDate.setFullYear(endDate.getFullYear() + 1);
-          break;
-      }
-
-      // Update user subscription using the correct method
-      const updatedUser = await storage.updateUserPremiumStatus(userId, {
-        subscriptionTier: 'premium',
-        premiumStartDate: startDate,
-        premiumEndDate: endDate,
-        premiumDuration: duration,
-        notificationSent: false
-      });
-
-      console.log(`Admin ${adminUser.username} upgraded user ${user.username} to premium for ${duration}`);
-
-      res.json({
-        message: 'User upgraded to premium successfully',
-        user: updatedUser,
-        subscription: {
-          tier: 'premium',
-          startDate: startDate.toISOString(),
-          endDate: endDate.toISOString(),
-          duration
-        }
-      });
-    } catch (error) {
-      console.error('Error upgrading user to premium:', error);
-      res.status(500).json({ message: 'Error upgrading user to premium' });
-    }
-  });
-
-  // Admin route to downgrade user from premium 
-  app.post('/api/admin/downgrade-user/:userId', isAuthenticated, async (req, res) => {
-    try {
-      console.log('Admin downgrade check - User:', req.user);
-      console.log('Admin downgrade check - Is Admin:', req.user?.isAdmin);
-      
-      const adminUser = req.user as any;
-      if (!adminUser || !adminUser.isAdmin) {
-        return res.status(403).json({ message: 'Admin access required' });
-      }
-
-      const userId = parseInt(req.params.userId, 10);
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-
-      // Update user subscription to free
-      const updatedUser = await storage.updateUserPremiumStatus(userId, {
-        subscriptionTier: 'free',
-        premiumStartDate: null,
-        premiumEndDate: null,
-        premiumDuration: null,
-        notificationSent: false
-      });
-
-      console.log(`Admin ${adminUser.username} downgraded user ${user.username} to free tier`);
-
-      res.json({
-        message: 'User downgraded to free tier successfully',
-        user: updatedUser
-      });
-    } catch (error) {
-      console.error('Error downgrading user:', error);
-      res.status(500).json({ message: 'Error downgrading user' });
+      res.status(500).json({ message: 'Server error' });
     }
   });
 

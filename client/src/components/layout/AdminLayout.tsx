@@ -5,7 +5,7 @@ import {
   Menu, X, Building, FileText,
   UserCircle, User, Crown, Mail, ImageIcon,
   Moon, Sun, ChevronDown, ChevronRight, Globe,
-  Star, BookOpen, DollarSign
+  Star, BookOpen
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -75,14 +75,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <Building className="h-5 w-5" />,
     },
     {
-      title: "Subscriptions",
-      href: "/admin/subscriptions",
-      icon: <Crown className="h-5 w-5" />,
-    },
-    {
       title: "Pricing",
       href: "/admin/pricing",
-      icon: <DollarSign className="h-5 w-5" />,
+      icon: <Crown className="h-5 w-5" />,
     },
     {
       title: "Logs",
@@ -595,4 +590,3 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 };
 
 export default AdminLayout;
-export { AdminLayout };

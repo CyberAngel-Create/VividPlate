@@ -65,8 +65,8 @@ export function usePWA() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Register service worker (only in production or when explicitly enabled)
-    if ('serviceWorker' in navigator && (import.meta.env.PROD || import.meta.env.VITE_ENABLE_SW)) {
+    // Register service worker
+    if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js')
         .then(registration => {
           console.log('Service Worker registered successfully:', registration);
@@ -84,7 +84,7 @@ export function usePWA() {
           });
         })
         .catch(error => {
-          console.log('Service Worker not available in development mode');
+          console.error('Service Worker registration failed:', error);
         });
     }
 
