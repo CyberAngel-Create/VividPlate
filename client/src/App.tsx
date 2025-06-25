@@ -57,12 +57,7 @@ function AuthenticatedRoute({ component: Component, ...rest }: { component: Reac
     }
   }, [user, isLoading, setLocation]);
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
-    </div>;
-  }
-
+  // Skip loading state to prevent app from getting stuck
   return user ? <Route {...rest} component={Component} /> : null;
 }
 
@@ -84,12 +79,7 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
     }
   }, [user, isLoading, setLocation]);
 
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
-    </div>;
-  }
-
+  // Skip loading state to prevent app from getting stuck
   return (user && user.isAdmin) ? <Route {...rest} component={Component} /> : null;
 }
 
