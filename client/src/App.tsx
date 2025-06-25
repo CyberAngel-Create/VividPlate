@@ -45,6 +45,7 @@ import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
+import { InstallBanner } from "@/components/pwa/InstallBanner";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
   const { user, isLoading } = useAuth();
@@ -160,6 +161,7 @@ function App() {
                   <Toaster />
                   <AdSense />
                   <Router />
+                  <InstallBanner />
                   <CookieConsent />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
