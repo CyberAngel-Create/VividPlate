@@ -1,7 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
-import App from "./App-ultra-minimal";
-import "./index-minimal.css";
+import App from "./App";
+import "./index.css";
 import "./i18n";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 
