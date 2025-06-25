@@ -4,7 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HelmetProvider } from "react-helmet-async";
-import { InstallBanner } from "@/components/pwa/InstallBanner";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import NotFound from "./pages/not-found";
 import Home from "./pages/home";
 import Login from "./pages/login";

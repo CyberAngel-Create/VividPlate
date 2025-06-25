@@ -3,7 +3,7 @@
 ## Project Overview
 MenuMate is a comprehensive digital menu platform for restaurants that enables contactless dining experiences through QR codes and web links. The platform includes both free and premium subscription tiers with time-based premium subscriptions.
 
-## Recent Changes (January 2025)
+## Recent Changes (June 2025)
 
 ### Subscription System Implementation
 - ✅ Added time-based premium subscriptions with 1 month, 3 months, and 1 year duration options
@@ -24,6 +24,10 @@ MenuMate is a comprehensive digital menu platform for restaurants that enables c
 - ✅ Mobile-optimized layout components and touch interactions
 - ✅ Install banner for "Add to Home Screen" functionality
 - ✅ PWA manifest with proper icons and metadata
+- ✅ Custom VividPlate icon implementation with all required sizes (72x72 to 512x512)
+- ✅ PWA install prompt component with user-friendly interface
+- ✅ Service worker registration in main.tsx with proper error handling
+- ✅ Updated manifest.json with VividPlate branding and theme colors
 
 ### Image Management
 - ✅ Automatic image compression system limiting uploads to 1MB
