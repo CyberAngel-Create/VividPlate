@@ -1,5 +1,21 @@
 import { Switch, Route } from "wouter";
 
+const AdminLogin = () => (
+  <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+    <div style={{ backgroundColor: "white", padding: "2rem", borderRadius: "0.5rem", boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)", width: "100%", maxWidth: "400px", border: "2px solid #fecaca" }}>
+      <h1 style={{ color: "#dc2626", fontSize: "1.5rem", fontWeight: "bold", marginBottom: "1.5rem", textAlign: "center" }}>Admin Login</h1>
+      <form style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+        <input type="text" placeholder="Admin Username (admin)" style={{ padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: "0.375rem", fontSize: "1rem" }} />
+        <input type="password" placeholder="Admin Password (admin1234)" style={{ padding: "0.75rem", border: "1px solid #d1d5db", borderRadius: "0.375rem", fontSize: "1rem" }} />
+        <button type="submit" style={{ backgroundColor: "#dc2626", color: "white", padding: "0.75rem", borderRadius: "0.375rem", border: "none", fontWeight: "500", cursor: "pointer" }}>Admin Login</button>
+      </form>
+      <div style={{ textAlign: "center", marginTop: "1rem" }}>
+        <a href="/" style={{ color: "#6b7280", textDecoration: "none" }}>Back to Home</a>
+      </div>
+    </div>
+  </div>
+);
+
 const Home = () => (
   <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fef3c7 0%, #ffffff 100%)", display: "flex", alignItems: "center", justifyContent: "center" }}>
     <div style={{ textAlign: "center", padding: "2rem" }}>
@@ -7,6 +23,7 @@ const Home = () => (
       <p style={{ color: "#6b7280", fontSize: "1.25rem", marginBottom: "2rem" }}>Digital Menu Platform for Restaurants</p>
       <div style={{ display: "flex", gap: "1rem", justifyContent: "center", flexWrap: "wrap" }}>
         <a href="/login" style={{ backgroundColor: "#f59e0b", color: "white", padding: "0.75rem 1.5rem", borderRadius: "0.5rem", textDecoration: "none", fontWeight: "500" }}>Login</a>
+        <a href="/admin-login" style={{ backgroundColor: "#dc2626", color: "white", padding: "0.75rem 1.5rem", borderRadius: "0.5rem", textDecoration: "none", fontWeight: "500" }}>Admin</a>
         <a href="/fast-login" style={{ backgroundColor: "#3b82f6", color: "white", padding: "0.75rem 1.5rem", borderRadius: "0.5rem", textDecoration: "none", fontWeight: "500" }}>Quick Login</a>
       </div>
     </div>
@@ -60,6 +77,8 @@ function App() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
+      <Route path="/admin-login" component={AdminLogin} />
+      <Route path="/admin/login" component={AdminLogin} />
       <Route path="/fast-login" component={FastLogin} />
       <Route component={NotFound} />
     </Switch>
