@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
-import App from "./App";
+import App from "./App-minimal";
 import "./index.css";
 import "./i18n";
 import { ErrorBoundary } from "./components/ErrorBoundary";

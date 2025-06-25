@@ -13,7 +13,7 @@ const Home = () => {
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // Check if user is authenticated
+  // Check if user is authenticated without loading delays
   useEffect(() => {
     const checkAuth = async () => {
       try {
