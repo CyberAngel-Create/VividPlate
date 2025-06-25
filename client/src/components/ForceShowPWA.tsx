@@ -11,7 +11,7 @@ export const ForceShowPWA = () => {
         className="fixed bottom-4 right-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-lg transition-colors flex items-center space-x-2 z-40"
       >
         <Download className="w-4 h-4" />
-        <span>Show PWA Prompt</span>
+        <span>Install VividPlate</span>
       </button>
     );
   }
