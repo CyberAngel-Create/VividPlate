@@ -74,7 +74,7 @@ const RestaurantOwnerHeader = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3">
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 mt-0 lg:mt-0">
       <div className="lg:pl-52">
         <div className="flex flex-col">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Current Restaurant</p>

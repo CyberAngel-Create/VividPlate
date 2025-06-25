@@ -35,7 +35,7 @@ const RestaurantOwnerLayout = ({ children }: RestaurantOwnerLayoutProps) => {
       {/* Main content area */}
       <main className="flex-1 w-full min-h-screen">
         {/* Restaurant Switcher Header - with mobile spacing */}
-        <div className="sticky top-0 z-10 pt-16 lg:pt-0">
+        <div className="sticky top-0 z-10 pt-20 lg:pt-0">
           <RestaurantOwnerHeader />
         </div>
         
