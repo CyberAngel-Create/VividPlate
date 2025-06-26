@@ -57,9 +57,7 @@ const Login = () => {
     try {
       await apiRequest("POST", "/api/auth/login", data);
 
-      // Invalidate auth cache and verify login
-      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-      
+      // Verify the user is actually logged in before redirecting
       try {
         await apiRequest("GET", "/api/auth/me");
         
@@ -69,8 +67,11 @@ const Login = () => {
           description: t('common.successLogin'),
         });
         
-        // Use wouter's client-side routing
-        setLocation("/dashboard");
+        // Invalidate queries to refresh auth state
+        await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+        
+        // Use direct navigation for reliable redirect
+        window.location.href = "/dashboard";
         
         // Don't set isLoading to false as we're redirecting
       } catch (authError) {

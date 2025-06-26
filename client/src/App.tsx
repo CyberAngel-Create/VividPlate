@@ -56,8 +56,7 @@ function AuthenticatedRoute({ component: Component, ...rest }: { component: Reac
     }
   }, [user, setLocation]);
 
-  // Always render the route to prevent loading states
-  return <Route {...rest} component={user ? Component : () => null} />;
+  return user ? <Route {...rest} component={Component} /> : null;
 }
 
 function PublicRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -76,13 +75,24 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
     }
   }, [user, setLocation]);
 
-  // Always render the route to prevent loading states
-  return <Route {...rest} component={(user && user.isAdmin) ? Component : () => null} />;
+  return (user && user.isAdmin) ? <Route {...rest} component={Component} /> : null;
 }
 
 function Router() {
+  const { isLoading } = useAuth();
   const [location] = useLocation();
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading VividPlate...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
