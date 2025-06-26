@@ -306,6 +306,18 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
 
   // Filter items based on selected category and main category
   const filteredMenuData = useMemo(() => {
+    console.log("CustomerMenuPreview - Filtering menu data:", {
+      totalCategories: menuData.length,
+      activeCategory,
+      activeMainCategory,
+      menuData: menuData.map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        mainCategory: cat.mainCategory,
+        itemCount: cat.items?.length || 0
+      }))
+    });
+
     // First filter by main category if selected
     let filtered = menuData;
 
@@ -313,6 +325,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       filtered = menuData.filter(category => 
         category.mainCategory === activeMainCategory
       );
+      console.log("After main category filter:", filtered.length, "categories");
     }
 
     // Then filter by specific category if not "all"
@@ -320,7 +333,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       filtered = filtered.filter(category => 
         category.id.toString() === activeCategory
       );
+      console.log("After category filter:", filtered.length, "categories");
     }
+
+    console.log("Final filtered data:", filtered.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      itemCount: cat.items?.length || 0
+    })));
 
     return filtered;
   }, [menuData, activeCategory, activeMainCategory]);
