@@ -48,6 +48,7 @@ export const restaurants = pgTable("restaurants", {
   hoursOfOperation: jsonb("hours_of_operation"),
   tags: text("tags").array(),
   qrCodeScans: integer("qr_code_scans").notNull().default(0), // Track QR code scans
+  isActive: boolean("is_active").default(true), // Track if restaurant is active based on subscription
   // Theme customization
   themeSettings: jsonb("theme_settings").default({
     backgroundColor: "#ffffff",
@@ -76,6 +77,7 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   hoursOfOperation: true,
   tags: true,
   themeSettings: true,
+  isActive: true,
 });
 
 // Menu categories

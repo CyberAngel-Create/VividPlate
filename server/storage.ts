@@ -67,6 +67,8 @@ export interface IStorage {
   updateRestaurant(id: number, restaurant: Partial<InsertRestaurant>): Promise<Restaurant | undefined>;
   countRestaurantsByUserId(userId: number): Promise<number>;
   getAllRestaurants(): Promise<Restaurant[]>;
+  updateRestaurantActiveStatus(id: number, isActive: boolean): Promise<Restaurant | undefined>;
+  manageRestaurantsBySubscription(userId: number, maxRestaurants: number): Promise<void>;
 
   // Menu category operations
   getMenuCategory(id: number): Promise<MenuCategory | undefined>;
