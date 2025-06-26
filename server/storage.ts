@@ -1835,29 +1835,29 @@ export class DatabaseStorage implements IStorage {
 
   async getMenuItemsByCategoryId(categoryId: number): Promise<MenuItem[]> {
     try {
-      // Use a raw query to avoid schema mismatch issues
-      const { pool } = await import('./db');
-      const result = await pool.query(
-        'SELECT id, category_id, name, description, price, currency, image_url, tags, is_available, display_order, dietary_info, calories, allergens FROM menu_items WHERE category_id = $1 ORDER BY COALESCE(display_order, 0)',
-        [categoryId]
-      );
+      // Use Drizzle ORM for proper type safety
+      const { db } = await import('./db');
+      const { menuItems } = await import('../shared/schema');
+      const { eq } = await import('drizzle-orm');
       
-      // Map the raw results to match our schema
-      return result.rows.map(row => ({
-        id: row.id,
-        categoryId: row.category_id,
-        name: row.name,
-        description: row.description,
-        price: row.price,
-        currency: row.currency,
-        imageUrl: row.image_url,
-        tags: row.tags || [],
-        isAvailable: row.is_available,
-        displayOrder: row.display_order || 0,
-        dietaryInfo: row.dietary_info,
-        calories: row.calories,
-        allergens: row.allergens || [],
-        clickCount: 0
+      const items = await db.select().from(menuItems).where(eq(menuItems.categoryId, categoryId));
+      
+      // Ensure we return a proper array with all required fields
+      return items.map(item => ({
+        id: item.id,
+        categoryId: item.categoryId,
+        name: item.name,
+        description: item.description,
+        price: item.price,
+        currency: item.currency,
+        imageUrl: item.imageUrl,
+        tags: item.tags || [],
+        isAvailable: item.isAvailable,
+        displayOrder: item.displayOrder || 0,
+        dietaryInfo: item.dietaryInfo,
+        calories: item.calories,
+        allergens: item.allergens || [],
+        clickCount: item.clickCount || 0
       }));
     } catch (error) {
       console.error('Error fetching menu items:', error);
