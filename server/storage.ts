@@ -1591,17 +1591,23 @@ export class DatabaseStorage implements IStorage {
         qrCodeScans: row.qr_code_scans || 0
       }));
     } catch (error) {
+      console.error('Error in getRestaurantsByUserId:', error);
 
       // Fallback: use a raw SQL query that doesn't depend on the full schema
-      // This helps when there are schema version mismatches between code and database
-      const { pool } = await import('./db');
-      const result = await pool.query(
-        'SELECT * FROM restaurants WHERE user_id = $1',
-        [userId]
-      );
+      try {
+        const { pool } = await import('./db');
+        const result = await pool.query(
+          'SELECT * FROM restaurants WHERE user_id = $1',
+          [userId]
+        );
 
-      // Map the raw results to match our schema
-      return result.rows.map(row => ({
+        if (!result || !result.rows) {
+          console.error('No result or rows from database query');
+          return [];
+        }
+
+        // Map the raw results to match our schema
+        return result.rows.map(row => ({
         id: row.id,
         userId: row.user_id,
         name: row.name,
@@ -1616,8 +1622,13 @@ export class DatabaseStorage implements IStorage {
         address: row.address,
         hoursOfOperation: row.hours_of_operation,
         tags: row.tags || [],
-        themeSettings: row.theme_settings || {}
+        themeSettings: row.theme_settings || {},
+        qrCodeScans: row.qr_code_scans || 0
       }));
+      } catch (fallbackError) {
+        console.error('Fallback query also failed:', fallbackError);
+        return [];
+      }
     }
   }
 
