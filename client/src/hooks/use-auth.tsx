@@ -62,13 +62,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return await res.json();
     },
-    onSuccess: (user: User) => {
+    onSuccess: async (user: User) => {
       queryClient.setQueryData(["/api/auth/me"], user);
-      setLocation("/dashboard");
+      await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/user/subscription-status"] });
+      
       toast({
         title: "Login successful",
         description: `Welcome back, ${user.fullName || user.username}!`,
       });
+      
+      // Use setTimeout to ensure state updates have propagated
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({

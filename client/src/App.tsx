@@ -47,14 +47,18 @@ import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!user) {
+    if (!isLoading && !user) {
       setLocation("/login");
     }
-  }, [user, setLocation]);
+  }, [user, isLoading, setLocation]);
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
 
   return user ? <Route {...rest} component={Component} /> : null;
 }
