@@ -82,18 +82,7 @@ const MenuPreview = () => {
     );
   }
 
-  if (isLoading) {
-    return (
-      <RestaurantOwnerLayout>
-        <div className="px-4 py-6">
-          <h1 className="text-2xl font-heading font-bold mb-6">Menu Preview</h1>
-          <div className="flex justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-          </div>
-        </div>
-      </RestaurantOwnerLayout>
-    );
-  }
+  // Skip loading state
 
   return (
     <RestaurantOwnerLayout>

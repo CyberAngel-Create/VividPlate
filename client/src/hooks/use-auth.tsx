@@ -39,7 +39,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const {
     data: user,
     error,
-    isLoading,
   } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
     gcTime: 0,
@@ -47,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refetchOnWindowFocus: true,
     retry: false,
   });
+
+  const isLoading = false; // Disable loading state to prevent stuck loading
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData): Promise<User> => {
