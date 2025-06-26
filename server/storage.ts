@@ -1564,17 +1564,24 @@ export class DatabaseStorage implements IStorage {
 
   async getRestaurantsByUserId(userId: number): Promise<Restaurant[]> {
     try {
-      // Use raw query to get restaurant data
-      const { pool } = await import('./db');
-      const result = await pool.query(
-        'SELECT id, user_id, name, description, cuisine, logo_url, banner_url, phone, email, address, hours_of_operation FROM restaurants WHERE user_id = $1',
-        [userId]
-      );
+      // Use Drizzle ORM with proper error handling
+      const restaurantResults = await db.select().from(restaurants).where(eq(restaurants.userId, userId));
       
-      if (!result || !result.rows) {
+      console.log('Restaurants found for user', userId, ':', restaurantResults.length);
+      
+      if (!restaurantResults || restaurantResults.length === 0) {
         console.log('No restaurants found for user:', userId);
         return [];
       }
+      
+      // Return properly formatted restaurant data
+      return restaurantResults.map(restaurant => ({
+        ...restaurant,
+        qrCodeScans: restaurant.qrCodeScans || 0,
+        customCuisine: restaurant.customCuisine || null,
+        tags: restaurant.tags || [],
+        themeSettings: restaurant.themeSettings || {}
+      }));
       
       // Map the raw results to match our schema
       return result.rows.map(row => ({
@@ -1583,17 +1590,17 @@ export class DatabaseStorage implements IStorage {
         name: row.name,
         description: row.description,
         cuisine: row.cuisine,
+        customCuisine: null,
         logoUrl: row.logo_url,
         bannerUrl: row.banner_url,
-        bannerUrls: Array.isArray(row.banner_urls) ? row.banner_urls : 
-                  (row.banner_url ? [row.banner_url] : []),
+        bannerUrls: [],
         phone: row.phone,
         email: row.email,
         address: row.address,
         hoursOfOperation: row.hours_of_operation,
-        tags: row.tags || [],
-        themeSettings: row.theme_settings || {},
-        qrCodeScans: row.qr_code_scans || 0
+        tags: [],
+        themeSettings: {},
+        qrCodeScans: 0
       }));
     } catch (error) {
       console.error('Error in getRestaurantsByUserId:', error);
