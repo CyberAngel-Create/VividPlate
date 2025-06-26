@@ -90,7 +90,7 @@ import { testBackblazeConnection } from './backblaze-config';
     serveStatic(app);
   }
 
-  const port = process.env.PORT || 5173;
+  const port = 5000;
   
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
