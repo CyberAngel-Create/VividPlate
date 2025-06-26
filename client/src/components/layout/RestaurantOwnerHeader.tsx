@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Store, ChevronRight, PlusCircle } from "lucide-react";
+import { Store, ChevronRight, PlusCircle, Lock } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
@@ -28,6 +28,15 @@ const RestaurantOwnerHeader = () => {
 
   // Handle restaurant change with proper cache invalidation and page reload
   const handleRestaurantSwitch = useCallback((restaurantId: number) => {
+    // Find the restaurant to check if it's active
+    const targetRestaurant = restaurants?.find(r => r.id === restaurantId);
+    
+    // Prevent switching to inactive restaurants
+    if (!targetRestaurant?.isActive) {
+      console.log(`Cannot switch to inactive restaurant: ${targetRestaurant?.name}`);
+      return;
+    }
+    
     // Only update if it's different from current
     if (activeRestaurant?.id !== restaurantId) {
       console.log(`Switching to restaurant ID: ${restaurantId}`);
