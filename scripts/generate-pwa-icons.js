@@ -1,5 +1,9 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create simple SVG icons and convert to base64 data URLs for PWA
 const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
