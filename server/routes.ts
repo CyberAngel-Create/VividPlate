@@ -625,6 +625,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           u.username.toLowerCase() === identifier.toLowerCase() || 
           u.email.toLowerCase() === identifier.toLowerCase()
         );
+        
+        if (user) {
+          console.log(`Found test user: ${user.username} (ID: ${user.id})`);
+        } else {
+          console.log('No test user found with that identifier');
+        }
       }
       
       if (!user) {
@@ -637,6 +643,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For test users, use direct password comparison
       let isPasswordValid = false;
       if (user.id <= 11) { // Test users have IDs 1, 2, 5, 11
+        console.log(`Test user - Stored password: "${user.password}"`);
+        console.log(`Test user - Provided password: "${password}"`);
+        console.log(`Test user - Password types: stored=${typeof user.password}, provided=${typeof password}`);
         isPasswordValid = user.password === password;
         console.log(`Test user password check: ${isPasswordValid}`);
       } else {
