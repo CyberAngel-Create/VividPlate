@@ -1596,6 +1596,14 @@ export class DatabaseStorage implements IStorage {
     return updatedUser;
   }
 
+  async updateUserPassword(id: number, hashedPassword: string): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set({ password: hashedPassword })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
   // Restaurant operations
   async getRestaurant(id: number): Promise<Restaurant | undefined> {
     try {
