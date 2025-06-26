@@ -15,7 +15,8 @@ import {
   Eye,
   EyeOff,
   Clock,
-  CircleDot
+  CircleDot,
+  Key
 } from "lucide-react";
 import { SubscriptionManager } from "@/components/admin/SubscriptionManager";
 import { Badge } from "@/components/ui/badge";
@@ -108,11 +109,13 @@ const UsersAdminPage = () => {
   const [subscriptionFilter, setSubscriptionFilter] = useState<"all" | "free" | "premium">("all");
   const [onlineFilter, setOnlineFilter] = useState<"all" | "online" | "offline">("all");
   const [userToModify, setUserToModify] = useState<User | null>(null);
-  const [actionType, setActionType] = useState<"status" | "subscription" | null>(null);
+  const [actionType, setActionType] = useState<"status" | "subscription" | "password-reset" | null>(null);
   const [actionValue, setActionValue] = useState<boolean | string | null>(null);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showCreateAdminDialog, setShowCreateAdminDialog] = useState(false);
+  const [showPasswordResetDialog, setShowPasswordResetDialog] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -157,6 +160,31 @@ const UsersAdminPage = () => {
   const onSubmitAdminForm = (data: AdminFormData) => {
     createAdminMutation.mutate(data);
   };
+  
+  // Password reset mutation
+  const passwordResetMutation = useMutation({
+    mutationFn: async ({ userId, newPassword }: { userId: number; newPassword: string }) => {
+      const res = await apiRequest("PUT", `/api/admin/users/${userId}/reset-password`, { newPassword });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      toast({
+        title: "Password reset",
+        description: "User password has been reset successfully",
+      });
+      setShowPasswordResetDialog(false);
+      setNewPassword("");
+      setUserToModify(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reset password. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const { data: users, isLoading, error } = useQuery<User[]>({
     queryKey: ["/api/admin/users", page],
@@ -302,6 +330,12 @@ const UsersAdminPage = () => {
     setShowConfirmDialog(true);
   };
 
+  const handlePasswordReset = (user: User) => {
+    setUserToModify(user);
+    setNewPassword("");
+    setShowPasswordResetDialog(true);
+  };
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -321,6 +355,10 @@ const UsersAdminPage = () => {
 
     if (actionType === "subscription") {
       return `Are you sure you want to change the subscription tier for "${userToModify.username}" to ${actionValue}?`;
+    }
+
+    if (actionType === "password-reset") {
+      return `Are you sure you want to reset the password for user "${userToModify.username}"?`;
     }
 
     return "";
@@ -505,6 +543,10 @@ const UsersAdminPage = () => {
                                 <span>Activate</span>
                               </DropdownMenuItem>
                             )}
+                            <DropdownMenuItem onClick={() => handlePasswordReset(user)}>
+                              <Key className="mr-2 h-4 w-4" />
+                              <span>Reset Password</span>
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
