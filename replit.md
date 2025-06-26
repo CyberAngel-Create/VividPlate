@@ -138,8 +138,12 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
-- June 26, 2025: Automatic Restaurant Management System
+- June 26, 2025: Complete Restaurant Management System with Visual Indicators
   - Implemented automatic restaurant activation/deactivation based on subscription status
+  - Added comprehensive visual indicators for inactive restaurants in dropdown menu
+  - Inactive restaurants show lock icon, strikethrough text, and "Inactive" label
+  - Users cannot switch to inactive restaurants (click protection implemented)
+  - Dashboard displays warning banner when viewing inactive restaurant
   - Free users: Only first restaurant remains active, others become inactive
   - Premium users: All restaurants (up to 3) are automatically activated
   - System triggers on subscription status checks and admin subscription changes
