@@ -158,16 +158,7 @@ const AdminRestaurants = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const formattedName = restaurant.name.toLowerCase().replace(/\s+/g, '-');
-                                window.open(`/view-menu/${formattedName}`, '_blank');
-                              }}
-                            >
-                              View Menu
-                            </Button>
+
 
                           </div>
                         </TableCell>

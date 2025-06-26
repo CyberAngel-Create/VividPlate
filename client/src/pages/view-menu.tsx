@@ -227,7 +227,6 @@ const ViewMenu = () => {
 
             {/* Main menu content - takes full width when ads are not shown */}
             <div className={`${showAds ? 'lg:w-3/4' : 'w-full'} order-1 lg:order-2`}>
-              {console.log("About to render CustomerMenuPreview with:", { restaurant: restaurant?.name, menuLength: menu?.length })}
               <CustomerMenuPreview 
                 restaurant={restaurant}
                 menuData={menu}
