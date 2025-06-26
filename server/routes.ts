@@ -120,13 +120,24 @@ const configurePassport = (app: Express) => {
           createdAt: new Date()
         },
         { 
-          id: 3, 
-          username: 'Entoto Cloud', 
+          id: 5, 
+          username: 'entotocloud', 
           password: 'cloud123',
-          email: 'entoto@example.com',
+          email: 'entotocloudrestaurant@gmail.com',
           fullName: 'Entoto Cloud',
           isAdmin: false,
           subscriptionTier: 'premium',
+          isActive: true,
+          createdAt: new Date()
+        },
+        { 
+          id: 11, 
+          username: 'freleg', 
+          password: 'freleg123',
+          email: 'freleg@example.com',
+          fullName: 'Free User',
+          isAdmin: false,
+          subscriptionTier: 'free',
           isActive: true,
           createdAt: new Date()
         }
@@ -144,6 +155,9 @@ const configurePassport = (app: Express) => {
       }
 
       console.log(`User found: ${user.username}, checking password...`);
+      console.log(`Stored password: "${user.password}"`);
+      console.log(`Provided password: "${password}"`);
+      console.log(`Password match: ${user.password === password}`);
       
       // Direct password matching for test users
       if (user.password === password) {
@@ -151,7 +165,7 @@ const configurePassport = (app: Express) => {
         return done(null, user);
       }
       
-      console.log('Password did not match');
+      console.log('Password validation failed');
       return done(null, false, { message: 'Incorrect password.' });
     } catch (err) {
       console.error('Authentication error:', err);
@@ -551,10 +565,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { identifier, password } = req.body;
       console.log(`Login attempt for identifier: ${identifier}`);
       
-      // Try to find user by username or email in the database
+      // Try to find user by username or email in the database first
       let user = await storage.getUserByUsername(identifier);
       if (!user) {
         user = await storage.getUserByEmail(identifier);
+      }
+      
+      // If not found in database, check test users
+      if (!user) {
+        console.log('User not found in database, checking test users...');
+        const testUsers = [
+          { 
+            id: 1, 
+            username: 'admin', 
+            password: 'admin1234',
+            email: 'admin@example.com',
+            fullName: 'Admin User',
+            isAdmin: true,
+            subscriptionTier: 'admin',
+            isActive: true,
+            createdAt: new Date()
+          },
+          { 
+            id: 2, 
+            username: 'restaurant1', 
+            password: 'password123',
+            email: 'restaurant1@example.com',
+            fullName: 'Restaurant Owner',
+            isAdmin: false,
+            subscriptionTier: 'free',
+            isActive: true,
+            createdAt: new Date()
+          },
+          { 
+            id: 5, 
+            username: 'entotocloud', 
+            password: 'cloud123',
+            email: 'entotocloudrestaurant@gmail.com',
+            fullName: 'Entoto Cloud',
+            isAdmin: false,
+            subscriptionTier: 'premium',
+            isActive: true,
+            createdAt: new Date()
+          },
+          { 
+            id: 11, 
+            username: 'freleg', 
+            password: 'freleg123',
+            email: 'freleg@example.com',
+            fullName: 'Free User',
+            isAdmin: false,
+            subscriptionTier: 'free',
+            isActive: true,
+            createdAt: new Date()
+          }
+        ];
+        
+        user = testUsers.find(u => 
+          u.username.toLowerCase() === identifier.toLowerCase() || 
+          u.email.toLowerCase() === identifier.toLowerCase()
+        );
       }
       
       if (!user) {
@@ -564,8 +634,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`User found: ${user.username}, checking password...`);
       
-      // Compare the provided password with the stored hashed password
-      const isPasswordValid = await comparePasswords(password, user.password);
+      // For test users, use direct password comparison
+      let isPasswordValid = false;
+      if (user.id <= 11) { // Test users have IDs 1, 2, 5, 11
+        isPasswordValid = user.password === password;
+        console.log(`Test user password check: ${isPasswordValid}`);
+      } else {
+        // For database users, use bcrypt comparison
+        isPasswordValid = await comparePasswords(password, user.password);
+      }
       
       if (!isPasswordValid) {
         console.log('Password validation failed');
