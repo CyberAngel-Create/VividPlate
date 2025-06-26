@@ -547,9 +547,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/auth/login', async (req, res, next) => {
-    // Import our fixed memory-based authentication handler
-    const { handleLogin } = await import('./fixed-login');
-    return handleLogin(req, res, next);
+    try {
+      const { identifier, password } = req.body;
+      console.log(`Login attempt for identifier: ${identifier}`);
+      
+      // Try to find user by username or email in the database
+      let user = await storage.getUserByUsername(identifier);
+      if (!user) {
+        user = await storage.getUserByEmail(identifier);
+      }
+      
+      if (!user) {
+        console.log(`Authentication failed: No user found with identifier "${identifier}"`);
+        return res.status(401).json({ message: 'Invalid username/email or password' });
+      }
+      
+      console.log(`User found: ${user.username}, checking password...`);
+      
+      // Compare the provided password with the stored hashed password
+      const isPasswordValid = await comparePasswords(password, user.password);
+      
+      if (!isPasswordValid) {
+        console.log('Password validation failed');
+        return res.status(401).json({ message: 'Invalid username/email or password' });
+      }
+      
+      // Check if user is active
+      if (!user.isActive) {
+        console.log('User account is inactive');
+        return res.status(401).json({ message: 'Account is inactive' });
+      }
+      
+      console.log('Password matched successfully');
+      
+      // Login the user via session
+      req.login(user, (loginErr) => {
+        if (loginErr) {
+          console.error('Session error during login:', loginErr);
+          return res.status(500).json({ message: 'Error establishing session' });
+        }
+        
+        console.log(`User ${user.username} (ID: ${user.id}) logged in successfully`);
+        
+        // Return user data without password
+        const { password: _, resetPasswordToken, resetPasswordExpires, ...userWithoutPassword } = user;
+        res.json(userWithoutPassword);
+      });
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
   });
   
   // Admin login endpoint
