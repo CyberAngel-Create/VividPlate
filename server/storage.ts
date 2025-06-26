@@ -444,12 +444,14 @@ export class MemStorage implements IStorage {
       customCuisine: insertRestaurant.customCuisine || null,
       logoUrl: insertRestaurant.logoUrl || null,
       bannerUrl: insertRestaurant.bannerUrl || null,
+      bannerUrls: insertRestaurant.bannerUrls || [],
       phone: insertRestaurant.phone || null,
       email: insertRestaurant.email || null,
       address: insertRestaurant.address || null,
       hoursOfOperation: insertRestaurant.hoursOfOperation || null,
       tags: insertRestaurant.tags || null,
-      qrCodeScans: 0
+      qrCodeScans: 0,
+      themeSettings: insertRestaurant.themeSettings || {}
     };
     this.restaurants.set(id, restaurant);
     return restaurant;

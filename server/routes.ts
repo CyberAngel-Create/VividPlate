@@ -3447,16 +3447,26 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
-  app.patch('/api/admin/users/:id/subscription', isAdmin, async (req, res) => {
+  app.post('/api/admin/users/:id/subscription', isAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const { subscriptionTier } = req.body;
+      const { duration, subscriptionTier } = req.body;
       
       if (!['free', 'premium'].includes(subscriptionTier)) {
         return res.status(400).json({ message: 'Invalid subscription tier' });
       }
       
-      const updatedUser = await storage.upgradeUserSubscription(userId, subscriptionTier);
+      let subscriptionEndDate = null;
+      if (subscriptionTier === 'premium' && duration > 0) {
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + duration);
+        subscriptionEndDate = endDate.toISOString();
+      }
+      
+      const updatedUser = await storage.updateUserSubscription(userId, {
+        subscriptionTier,
+        subscriptionEndDate
+      });
       
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
@@ -3468,7 +3478,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         action: 'update_subscription',
         entityType: 'user',
         entityId: updatedUser.id,
-        details: `Changed user ${updatedUser.username} subscription to ${subscriptionTier} from IP ${req.ip}`,
+        details: `Changed user ${updatedUser.username} subscription to ${subscriptionTier}${duration > 0 ? ` for ${duration} days` : ''} from IP ${req.ip}`,
       });
       
       // Exclude sensitive data
