@@ -640,18 +640,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`User found: ${user.username}, checking password...`);
       
-      // For test users, use direct password comparison
-      let isPasswordValid = false;
-      if (user.id <= 11) { // Test users have IDs 1, 2, 5, 11
-        console.log(`Test user - Stored password: "${user.password}"`);
-        console.log(`Test user - Provided password: "${password}"`);
-        console.log(`Test user - Password types: stored=${typeof user.password}, provided=${typeof password}`);
-        isPasswordValid = user.password === password;
-        console.log(`Test user password check: ${isPasswordValid}`);
-      } else {
-        // For database users, use bcrypt comparison
-        isPasswordValid = await comparePasswords(password, user.password);
-      }
+      // All users (including test users) now use bcrypt hashed passwords
+      console.log(`Authenticating user ID ${user.id} with bcrypt`);
+      const isPasswordValid = await comparePasswords(password, user.password);
+      console.log(`Password validation result: ${isPasswordValid}`);
       
       if (!isPasswordValid) {
         console.log('Password validation failed');
