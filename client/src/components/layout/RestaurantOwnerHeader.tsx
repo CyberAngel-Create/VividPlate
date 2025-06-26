@@ -83,12 +83,15 @@ const RestaurantOwnerHeader = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 block">
-      <div className="pl-0 lg:pl-52 w-full">
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 block lg:block">
+      <div className="w-full lg:pl-52">
         <div className="flex flex-col w-full">
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Current Restaurant</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">Current Restaurant</p>
           <DropdownMenu>
-            <DropdownMenuTrigger disabled={isRestaurantSwitching} className="flex items-center justify-between p-2 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full max-w-full lg:max-w-[calc(100%-52px)]">
+            <DropdownMenuTrigger 
+              disabled={isRestaurantSwitching} 
+              className="flex items-center justify-between p-3 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full min-h-[44px] touch-manipulation"
+            >
               <div className="flex items-center gap-2 truncate">
                 {isRestaurantSwitching ? (
                   <div className="h-4 w-4 flex-shrink-0 animate-spin rounded-full border-b-2 border-primary"></div>

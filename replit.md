@@ -138,6 +138,13 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- June 26, 2025: Authentication and Mobile UI Fixes
+  - Fixed logout functionality to properly redirect to login page instead of home
+  - Enhanced mobile restaurant switcher visibility with improved responsive design
+  - Added proper touch targets and mobile-friendly styling for restaurant selection
+  - Fixed "Entoto Cloud" login authentication by updating password hash for "cloud123"
+  - Resolved authentication flow to work with database users and bcrypt password validation
+
 - June 26, 2025: Complete Restaurant Management System with Visual Indicators
   - Implemented automatic restaurant activation/deactivation based on subscription status
   - Added comprehensive visual indicators for inactive restaurants in dropdown menu
