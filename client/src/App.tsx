@@ -87,7 +87,10 @@ function Router() {
   const [location] = useLocation();
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
 
-  // Remove loading state that causes app to be stuck
+  // Force proper home page rendering instead of any test interfaces
+  if (location === "/") {
+    return <Home />;
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
