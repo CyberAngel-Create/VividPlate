@@ -29,7 +29,7 @@ interface User {
   email: string;
   fullName: string;
   subscriptionTier: string;
-  subscriptionEndDate?: string;
+  subscriptionExpiry?: string | null;
   isActive: boolean;
 }
 
@@ -96,7 +96,7 @@ export const SubscriptionManager = ({ user }: SubscriptionManagerProps) => {
 
   const getSubscriptionStatus = () => {
     if (user.subscriptionTier === "premium") {
-      const endDate = user.subscriptionEndDate ? new Date(user.subscriptionEndDate) : null;
+      const endDate = user.subscriptionExpiry ? new Date(user.subscriptionExpiry) : null;
       const isExpired = endDate && endDate < new Date();
       
       return {

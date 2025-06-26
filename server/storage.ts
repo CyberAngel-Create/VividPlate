@@ -918,7 +918,7 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
 
     user.subscriptionTier = subscription.subscriptionTier;
-    user.subscriptionEndDate = subscription.subscriptionEndDate;
+    user.subscriptionExpiry = subscription.subscriptionEndDate ? new Date(subscription.subscriptionEndDate) : null;
     this.users.set(id, user);
     return user;
   }
@@ -1533,6 +1533,56 @@ export class DatabaseStorage implements IStorage {
       throw new Error('Failed to update user');
     }
 
+    return updatedUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async countUsers(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users);
+    return result[0]?.count || 0;
+  }
+
+  async countActiveUsers(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users).where(eq(users.isActive, true));
+    return result[0]?.count || 0;
+  }
+
+  async countUsersBySubscriptionTier(tier: string): Promise<number> {
+    const result = await db.select({ count: count() }).from(users).where(eq(users.subscriptionTier, tier));
+    return result[0]?.count || 0;
+  }
+
+  async getRecentUsers(limit: number): Promise<User[]> {
+    return await db.select().from(users).orderBy(desc(users.createdAt)).limit(limit);
+  }
+
+  async toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set({ isActive })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async upgradeUserSubscription(id: number, tier: string): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set({ subscriptionTier: tier })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async updateUserSubscription(id: number, subscription: { subscriptionTier: string; subscriptionEndDate: string | null }): Promise<User | undefined> {
+    const [updatedUser] = await db.update(users)
+      .set({
+        subscriptionTier: subscription.subscriptionTier,
+        subscriptionExpiry: subscription.subscriptionEndDate ? new Date(subscription.subscriptionEndDate) : null
+      })
+      .where(eq(users.id, id))
+      .returning();
     return updatedUser;
   }
 
