@@ -184,23 +184,23 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard 
             icon={<Eye className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.viewCount ?? defaultStats.viewCount)} 
+            value={stats?.viewCount ?? defaultStats.viewCount} 
             label="Menu Views" 
           />
           <StatCard 
             icon={<QrCode className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.directQrScans ?? defaultStats.directQrScans)} 
+            value={stats?.directQrScans ?? defaultStats.directQrScans} 
             label="QR Code Scans" 
             tooltip="Number of times your QR code has been scanned"
           />
           <StatCard 
             icon={<Utensils className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.menuItemCount ?? defaultStats.menuItemCount)} 
+            value={stats?.menuItemCount ?? defaultStats.menuItemCount} 
             label="Menu Items" 
           />
           <StatCard 
             icon={<Calendar className="h-6 w-6" />} 
-            value={isLoadingStats ? "..." : (stats?.daysActive ?? defaultStats.daysActive)} 
+            value={stats?.daysActive ?? defaultStats.daysActive} 
             label="Days Active" 
           />
         </div>

@@ -47,20 +47,14 @@ import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!user) {
       setLocation("/login");
     }
-  }, [user, isLoading, setLocation]);
-
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
-    </div>;
-  }
+  }, [user, setLocation]);
 
   return user ? <Route {...rest} component={Component} /> : null;
 }
@@ -70,24 +64,16 @@ function PublicRoute({ component: Component, ...rest }: { component: React.Compo
 }
 
 function AdminRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
-  const { user, isLoading } = useAuth();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
-    if (!isLoading) {
-      if (!user) {
-        setLocation("/admin-login");
-      } else if (!user.isAdmin) {
-        setLocation("/login");
-      }
+    if (!user) {
+      setLocation("/admin-login");
+    } else if (!user.isAdmin) {
+      setLocation("/login");
     }
-  }, [user, isLoading, setLocation]);
-
-  if (isLoading) {
-    return <div className="flex justify-center items-center h-screen">
-      <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" aria-label="Loading" />
-    </div>;
-  }
+  }, [user, setLocation]);
 
   return (user && user.isAdmin) ? <Route {...rest} component={Component} /> : null;
 }
