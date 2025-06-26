@@ -200,6 +200,21 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   previewMode = false
 }) => {
   const { t } = useTranslation();
+  
+  // Debug logging at component entry
+  console.log("CustomerMenuPreview component rendered with:", {
+    restaurantId: restaurant?.id,
+    restaurantName: restaurant?.name,
+    menuDataLength: menuData?.length,
+    menuData: menuData?.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      itemCount: cat.items?.length || 0,
+      items: cat.items?.map(item => ({ id: item.id, name: item.name }))
+    })),
+    previewMode
+  });
+  
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid'); // Grid view as default
@@ -381,44 +396,75 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       {/* Restaurant header with banner slideshow */}
       <div className="relative">
         <div className="h-40 bg-gray-300 relative">
-          {restaurant.bannerUrls && Array.isArray(restaurant.bannerUrls) && restaurant.bannerUrls.length > 0 ? (
-            <BannerSlideshow 
-              bannerUrls={restaurant.bannerUrls as string[]} 
-              restaurantName={restaurant.name}
-              logoUrl={restaurant.logoUrl}
-              autoSlide={!previewMode} // Only auto-slide for real customers, not in preview mode
-            />
-          ) : restaurant.bannerUrl ? (
-            <>
-              {/* Fallback to legacy single banner image */}
-              <ResponsiveImage 
-                src={restaurant.bannerUrl}
-                alt={`${restaurant.name} banner`}
-                fallbackType="banner"
-                className="w-full h-full"
-                imgClassName="object-cover w-full h-full"
-                onError={() => {
-                  console.error("Failed to load banner image:", restaurant.bannerUrl);
-                }}
-              />
+          {(() => {
+            // Check for valid banner URLs array
+            const hasValidBannerUrls = restaurant.bannerUrls && 
+              Array.isArray(restaurant.bannerUrls) && 
+              restaurant.bannerUrls.length > 0 && 
+              restaurant.bannerUrls.some(url => url && url.trim() !== '' && url !== 'null' && url !== 'undefined');
 
-              {/* Restaurant logo overlay for single banner image */}
-              {restaurant.logoUrl && (
-                <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full p-1 shadow-md">
-                  <ResponsiveImage
-                    src={restaurant.logoUrl}
-                    alt={`${restaurant.name} logo`}
-                    fallbackType="logo"
-                    className="w-full h-full rounded-full overflow-hidden"
+            // Check for valid single banner URL
+            const hasValidBannerUrl = restaurant.bannerUrl && 
+              restaurant.bannerUrl.trim() !== '' && 
+              restaurant.bannerUrl !== 'null' && 
+              restaurant.bannerUrl !== 'undefined';
+
+            if (hasValidBannerUrls) {
+              // Filter out empty/invalid URLs
+              const validUrls = restaurant.bannerUrls.filter(url => 
+                url && url.trim() !== '' && url !== 'null' && url !== 'undefined'
+              );
+              
+              return (
+                <BannerSlideshow 
+                  bannerUrls={validUrls as string[]} 
+                  restaurantName={restaurant.name}
+                  logoUrl={restaurant.logoUrl}
+                  autoSlide={!previewMode}
+                />
+              );
+            } else if (hasValidBannerUrl) {
+              return (
+                <>
+                  <ResponsiveImage 
+                    src={restaurant.bannerUrl}
+                    alt={`${restaurant.name} banner`}
+                    fallbackType="banner"
+                    className="w-full h-full"
                     imgClassName="object-cover w-full h-full"
                     onError={() => {
-                      console.error("Failed to load logo image:", restaurant.logoUrl);
+                      console.error("Failed to load banner image:", restaurant.bannerUrl);
                     }}
                   />
+
+                  {restaurant.logoUrl && (
+                    <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full p-1 shadow-md">
+                      <ResponsiveImage
+                        src={restaurant.logoUrl}
+                        alt={`${restaurant.name} logo`}
+                        fallbackType="logo"
+                        className="w-full h-full rounded-full overflow-hidden"
+                        imgClassName="object-cover w-full h-full"
+                        onError={() => {
+                          console.error("Failed to load logo image:", restaurant.logoUrl);
+                        }}
+                      />
+                    </div>
+                  )}
+                </>
+              );
+            } else {
+              // No valid banners - show default background with restaurant info
+              return (
+                <div className="w-full h-full bg-gradient-to-br from-gray-500 to-gray-700 flex items-center justify-center">
+                  <div className="text-center text-white">
+                    <h3 className="text-lg font-semibold">{restaurant.name}</h3>
+                    <p className="text-sm opacity-80">{restaurant.cuisine || "Restaurant Menu"}</p>
+                  </div>
                 </div>
-              )}
-            </>
-          ) : null}
+              );
+            }
+          })()}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
         </div>
         <div className="absolute bottom-4 left-4 text-white">
