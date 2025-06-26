@@ -31,9 +31,46 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add CORS headers for custom domain support
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://digitalmenumate.replit.app',
+    'https://vividplate.com',
+    'http://localhost:5000',
+    'http://127.0.0.1:5000'
+  ];
+  
+  if (allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
 // Add health check endpoint while preserving SPA routing
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
+});
+
+// Add domain-specific handling for custom domain
+app.use((req, res, next) => {
+  const host = req.headers.host;
+  
+  // Log requests to help debug domain issues
+  if (host === 'vividplate.com' || host === 'www.vividplate.com') {
+    console.log(`Custom domain request: ${req.method} ${req.url} from ${host}`);
+  }
+  
+  next();
 });
 
 app.use((req, res, next) => {

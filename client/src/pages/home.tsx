@@ -17,8 +17,19 @@ const Home = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await apiRequest("GET", "/api/auth/me");
-        setIsAuthenticated(true);
+        const response = await fetch("/api/auth/me", {
+          credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
       } catch (error) {
         setIsAuthenticated(false);
       }

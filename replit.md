@@ -165,6 +165,9 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
   - Enhanced file serving with fallback SVG placeholders
   - Fixed infinite loading loop in dashboard caused by useEffect dependency array
   - Added premium subscription deadline display for restaurant owners
+  - Fixed domain-specific loading issues with vividplate.com custom domain
+  - Enhanced authentication flow to handle both Replit and custom domains
+  - Added CORS headers for proper cross-domain functionality
 
 - June 25, 2025: Initial setup
 
