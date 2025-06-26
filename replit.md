@@ -163,6 +163,8 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
   - Fixed empty banner validation logic
   - Improved error handling for missing images
   - Enhanced file serving with fallback SVG placeholders
+  - Fixed infinite loading loop in dashboard caused by useEffect dependency array
+  - Added premium subscription deadline display for restaurant owners
 
 - June 25, 2025: Initial setup
 

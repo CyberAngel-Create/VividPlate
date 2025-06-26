@@ -72,7 +72,7 @@ const Dashboard = () => {
     if (restaurants && restaurants.length > 0 && !activeRestaurant) {
       refetchActiveRestaurant();
     }
-  }, [restaurants, activeRestaurant, refetchActiveRestaurant]);
+  }, [restaurants?.length, activeRestaurant?.id]);
 
   // Loading and empty state handlers
   if (isLoadingRestaurants) {
@@ -157,6 +157,25 @@ const Dashboard = () => {
                     <span className="text-red-500 dark:text-red-400 font-medium">Limit reached</span>
                   )}
                 </div>
+                {/* Premium Subscription Deadline */}
+                {subscriptionStatus.isPaid && subscriptionStatus.expiresAt && (
+                  <div className="mt-2 flex items-center gap-2 text-sm">
+                    <Calendar className="h-4 w-4 text-green-600 dark:text-green-300" />
+                    <span className="text-gray-600 dark:text-gray-300">
+                      Premium expires: {new Date(subscriptionStatus.expiresAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}
+                    </span>
+                    {/* Show warning if expiring soon (within 7 days) */}
+                    {new Date(subscriptionStatus.expiresAt).getTime() - new Date().getTime() < 7 * 24 * 60 * 60 * 1000 && (
+                      <span className="text-amber-600 dark:text-amber-400 font-medium">
+                        (Expires soon)
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="mt-2 sm:mt-0 sm:ml-auto flex flex-col sm:flex-row gap-2">
                 {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && (
