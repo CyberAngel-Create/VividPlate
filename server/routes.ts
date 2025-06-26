@@ -3331,6 +3331,56 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Admin password reset endpoint
+  app.put('/api/admin/users/:userId/reset-password', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { newPassword } = req.body;
+      
+      if (!userId || isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      if (!newPassword || newPassword.length < 8) {
+        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+      }
+      
+      // Get the user to verify they exist
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Hash the new password using bcrypt
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Update the user's password
+      const updatedUser = await storage.updateUserPassword(userId, hashedPassword);
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: 'Failed to reset password' });
+      }
+      
+      // Log the admin action
+      const adminUser = req.user as any;
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'PASSWORD_RESET',
+        entityType: 'user',
+        entityId: userId,
+        details: { username: user.username }
+      });
+      
+      res.json({
+        success: true,
+        message: `Password reset successfully for user "${user.username}"`
+      });
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      res.status(500).json({ message: 'Failed to reset password' });
+    }
+  });
+
   app.get('/api/admin/restaurants', isAdmin, async (req, res) => {
     try {
       const restaurants = await storage.getAllRestaurants();

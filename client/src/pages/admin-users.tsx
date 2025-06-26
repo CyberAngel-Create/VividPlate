@@ -734,6 +734,79 @@ const UsersAdminPage = () => {
           </Form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={showPasswordResetDialog} onOpenChange={setShowPasswordResetDialog}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Reset User Password</DialogTitle>
+            <DialogDescription>
+              Enter a new password for user "{userToModify?.username}". The user will need to use this new password to log in.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="newPassword" className="text-sm font-medium">
+                New Password
+              </label>
+              <div className="relative">
+                <Input
+                  id="newPassword"
+                  type={showPassword ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              {newPassword && newPassword.length < 8 && (
+                <p className="text-sm text-red-500">Password must be at least 8 characters long</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setShowPasswordResetDialog(false);
+                setNewPassword("");
+                setUserToModify(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (userToModify && newPassword.length >= 8) {
+                  passwordResetMutation.mutate({
+                    userId: userToModify.id,
+                    newPassword: newPassword
+                  });
+                }
+              }}
+              disabled={!newPassword || newPassword.length < 8 || passwordResetMutation.isPending}
+            >
+              {passwordResetMutation.isPending && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Reset Password
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

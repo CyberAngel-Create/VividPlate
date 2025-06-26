@@ -42,6 +42,7 @@ export interface IStorage {
   toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
   upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
   updateUserSubscription(id: number, subscription: { subscriptionTier: string; subscriptionEndDate: string | null }): Promise<User | undefined>;
+  updateUserPassword(id: number, hashedPassword: string): Promise<User | undefined>;
 
   // Admin operations
   createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
@@ -417,6 +418,15 @@ export class MemStorage implements IStorage {
     // In the MemStorage implementation, we'll assume password comparison
     // is done by the comparePasswords function in routes.ts
     return true;
+  }
+
+  async updateUserPassword(id: number, hashedPassword: string): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+
+    const updatedUser = { ...user, password: hashedPassword };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   // Restaurant operations
