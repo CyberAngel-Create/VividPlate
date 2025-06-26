@@ -810,29 +810,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = (req.user as any).id;
       
-      // Check if user has an active subscription
+      // Get user details to check subscription tier
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Check if user has an active subscription record
       const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
       
       // Count restaurants to enforce limits
       const restaurantCount = await storage.countRestaurantsByUserId(userId);
       
-      if (activeSubscription && activeSubscription.tier === "premium") {
-        return res.json({
-          tier: activeSubscription.tier,
-          isPaid: true,
-          maxRestaurants: 3,
-          currentRestaurants: restaurantCount,
-          expiresAt: activeSubscription.endDate
-        });
-      } else {
-        return res.json({
-          tier: "free",
-          isPaid: false,
-          maxRestaurants: 1,
-          currentRestaurants: restaurantCount,
-          expiresAt: null
-        });
-      }
+      // Determine tier from user's subscription_tier field OR active subscription
+      const userTier = user.subscriptionTier || "free";
+      const subscriptionTier = activeSubscription?.tier || "free";
+      
+      // Use the highest tier available (premium takes precedence)
+      const effectiveTier = (userTier === "premium" || subscriptionTier === "premium") ? "premium" : "free";
+      const isPaid = effectiveTier === "premium";
+      
+      console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}`);
+      
+      return res.json({
+        tier: effectiveTier,
+        isPaid: isPaid,
+        maxRestaurants: isPaid ? 3 : 1,
+        currentRestaurants: restaurantCount,
+        expiresAt: activeSubscription?.endDate || null
+      });
     } catch (error) {
       console.error("Error getting subscription status:", error);
       res.status(500).json({ message: 'Server error' });
@@ -2113,28 +2119,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
-  // Subscription status routes
-  app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
-    try {
-      const userId = (req.user as any).id;
-      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
-      const restaurantCount = await storage.countRestaurantsByUserId(userId);
-      
-      // Determine if user is on a paid plan
-      const isPaid = activeSubscription?.tier === "premium";
-      const maxRestaurants = isPaid ? 3 : 1;
-      
-      res.json({
-        tier: isPaid ? "premium" : "free",
-        isPaid,
-        maxRestaurants,
-        currentRestaurants: restaurantCount,
-        expiresAt: activeSubscription?.endDate || null
-      });
-    } catch (error) {
-      res.status(500).json({ message: 'Server error' });
-    }
-  });
+
   
   // Keep compatibility with both versions
   app.post('/api/create-subscription', isAuthenticated, async (req, res) => {
