@@ -80,7 +80,7 @@
       "url": "/dashboard?action=add-item",
       "icons": [
         {
-          "src": "/icons/icon-96x96.png",
+          "src": "/icon-96x96.png",
           "sizes": "96x96"
         }
       ]
