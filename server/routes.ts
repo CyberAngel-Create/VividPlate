@@ -830,14 +830,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const effectiveTier = (userTier === "premium" || subscriptionTier === "premium") ? "premium" : "free";
       const isPaid = effectiveTier === "premium";
       
-      console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}`);
+      // Determine expiration date
+      let expiresAt = null;
+      if (isPaid) {
+        if (activeSubscription?.endDate) {
+          // Use active subscription end date if available
+          expiresAt = activeSubscription.endDate;
+        } else if (userTier === "premium") {
+          // For users with premium tier but no subscription record, 
+          // provide a default expiration date (1 year from now)
+          const defaultExpiration = new Date();
+          defaultExpiration.setFullYear(defaultExpiration.getFullYear() + 1);
+          expiresAt = defaultExpiration.toISOString();
+        }
+      }
+      
+      console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}, expiresAt=${expiresAt}`);
       
       return res.json({
         tier: effectiveTier,
         isPaid: isPaid,
         maxRestaurants: isPaid ? 3 : 1,
         currentRestaurants: restaurantCount,
-        expiresAt: activeSubscription?.endDate || null
+        expiresAt: expiresAt
       });
     } catch (error) {
       console.error("Error getting subscription status:", error);
