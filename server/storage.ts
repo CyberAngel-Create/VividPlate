@@ -441,13 +441,15 @@ export class MemStorage implements IStorage {
       id,
       description: insertRestaurant.description || null,
       cuisine: insertRestaurant.cuisine || null,
+      customCuisine: insertRestaurant.customCuisine || null,
       logoUrl: insertRestaurant.logoUrl || null,
       bannerUrl: insertRestaurant.bannerUrl || null,
       phone: insertRestaurant.phone || null,
       email: insertRestaurant.email || null,
       address: insertRestaurant.address || null,
       hoursOfOperation: insertRestaurant.hoursOfOperation || null,
-      tags: insertRestaurant.tags || null
+      tags: insertRestaurant.tags || null,
+      qrCodeScans: 0
     };
     this.restaurants.set(id, restaurant);
     return restaurant;
@@ -526,7 +528,11 @@ export class MemStorage implements IStorage {
       displayOrder: insertItem.displayOrder ?? 0,
       currency: insertItem.currency || null,
       imageUrl: insertItem.imageUrl || null,
-      isAvailable: insertItem.isAvailable ?? true
+      isAvailable: insertItem.isAvailable ?? true,
+      dietaryInfo: insertItem.dietaryInfo || null,
+      calories: insertItem.calories || null,
+      allergens: insertItem.allergens || null,
+      clickCount: 0
     };
     this.menuItems.set(id, item);
     return item;
@@ -901,6 +907,16 @@ export class MemStorage implements IStorage {
     if (!user) return undefined;
 
     user.subscriptionTier = tier;
+    this.users.set(id, user);
+    return user;
+  }
+
+  async updateUserSubscription(id: number, subscription: { subscriptionTier: string; subscriptionEndDate: string | null }): Promise<User | undefined> {
+    const user = await this.getUser(id);
+    if (!user) return undefined;
+
+    user.subscriptionTier = subscription.subscriptionTier;
+    user.subscriptionEndDate = subscription.subscriptionEndDate;
     this.users.set(id, user);
     return user;
   }
