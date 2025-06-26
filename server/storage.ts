@@ -1881,6 +1881,55 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateRestaurantActiveStatus(id: number, isActive: boolean): Promise<Restaurant | undefined> {
+    try {
+      const [updatedRestaurant] = await db.update(restaurants)
+        .set({ isActive })
+        .where(eq(restaurants.id, id))
+        .returning();
+      return updatedRestaurant;
+    } catch (error) {
+      console.error('Error updating restaurant active status:', error);
+      return undefined;
+    }
+  }
+
+  async manageRestaurantsBySubscription(userId: number, maxRestaurants: number): Promise<void> {
+    try {
+      // Get all restaurants for the user, ordered by creation (oldest first)
+      const userRestaurants = await db.select()
+        .from(restaurants)
+        .where(eq(restaurants.userId, userId))
+        .orderBy(restaurants.id);
+
+      console.log(`Managing restaurants for user ${userId}: found ${userRestaurants.length} restaurants, max allowed: ${maxRestaurants}`);
+
+      if (userRestaurants.length <= maxRestaurants) {
+        // User has equal or fewer restaurants than allowed, activate all
+        for (const restaurant of userRestaurants) {
+          if (!restaurant.isActive) {
+            await this.updateRestaurantActiveStatus(restaurant.id, true);
+            console.log(`Activated restaurant: ${restaurant.name} (ID: ${restaurant.id})`);
+          }
+        }
+      } else {
+        // User has more restaurants than allowed
+        // Keep the first N restaurants active, deactivate the rest
+        for (let i = 0; i < userRestaurants.length; i++) {
+          const restaurant = userRestaurants[i];
+          const shouldBeActive = i < maxRestaurants;
+          
+          if (restaurant.isActive !== shouldBeActive) {
+            await this.updateRestaurantActiveStatus(restaurant.id, shouldBeActive);
+            console.log(`${shouldBeActive ? 'Activated' : 'Deactivated'} restaurant: ${restaurant.name} (ID: ${restaurant.id})`);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error managing restaurants by subscription:', error);
+    }
+  }
+
   // Menu category operations
   async getMenuCategory(id: number): Promise<MenuCategory | undefined> {
     const [category] = await db.select().from(menuCategories).where(eq(menuCategories.id, id));

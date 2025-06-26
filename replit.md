@@ -138,6 +138,14 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- June 26, 2025: Automatic Restaurant Management System
+  - Implemented automatic restaurant activation/deactivation based on subscription status
+  - Free users: Only first restaurant remains active, others become inactive
+  - Premium users: All restaurants (up to 3) are automatically activated
+  - System triggers on subscription status checks and admin subscription changes
+  - Added isActive field to restaurants table for tracking activation status
+  - Premium users now show 1-month expiration dates instead of 1-year defaults
+
 - June 26, 2025: Comprehensive PWA Implementation
   - Added complete Progressive Web App functionality for all devices
   - Integrated custom VividPlate logo as PWA icons (72x72 to 512x512) replacing generic SVG icons

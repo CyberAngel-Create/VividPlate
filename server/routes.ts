@@ -847,10 +847,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}, expiresAt=${expiresAt}`);
       
+      // Automatically manage restaurant active status based on subscription
+      const maxRestaurants = isPaid ? 3 : 1;
+      await storage.manageRestaurantsBySubscription(userId, maxRestaurants);
+      
       return res.json({
         tier: effectiveTier,
         isPaid: isPaid,
-        maxRestaurants: isPaid ? 3 : 1,
+        maxRestaurants: maxRestaurants,
         currentRestaurants: restaurantCount,
         expiresAt: expiresAt
       });
@@ -3576,6 +3580,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
       }
+      
+      // Automatically manage restaurant active status based on new subscription
+      const maxRestaurants = subscriptionTier === 'premium' ? 3 : 1;
+      await storage.manageRestaurantsBySubscription(userId, maxRestaurants);
       
       // Create admin log for this action
       await storage.createAdminLog({
