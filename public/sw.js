@@ -1,6 +1,6 @@
-const CACHE_NAME = 'menumate-v1.0.0';
-const STATIC_CACHE = 'menumate-static-v1.0.0';
-const DYNAMIC_CACHE = 'menumate-dynamic-v1.0.0';
+const CACHE_NAME = 'menumate-v1.0.1';
+const STATIC_CACHE = 'menumate-static-v1.0.1';
+const DYNAMIC_CACHE = 'menumate-dynamic-v1.0.1';
 
 // Files to cache for offline functionality
 const STATIC_ASSETS = [

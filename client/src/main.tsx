@@ -1,12 +1,12 @@
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "next-themes";
-import App from "./App";
+import TestComponent from "./TestComponent";
 import "./index.css";
 // Import i18n configuration
 import "./i18n";
 
 createRoot(document.getElementById("root")!).render(
   <ThemeProvider attribute="class" defaultTheme="light" enableSystem={true}>
-    <App />
+    <TestComponent />
   </ThemeProvider>
 );

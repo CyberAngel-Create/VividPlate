@@ -87,19 +87,10 @@ function Router() {
   const [location] = useLocation();
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
 
-  // Debug: Log current location to identify routing issues
-  console.log('Current location:', location);
-  
-  // Force render Home component for root path to eliminate test interface
-  if (location === "/" || location === "") {
-    console.log('Rendering Home component for root path');
-    return <Home />;
-  }
-
   return (
     <div className="flex flex-col min-h-screen">
       <Switch>
-        <Route path="/" component={Home} />
+        <PublicRoute path="/" component={Home} />
         <PublicRoute path="/login" component={Login} />
         <PublicRoute path="/admin-login" component={AdminLogin} />
         <PublicRoute path="/register" component={Register} />
