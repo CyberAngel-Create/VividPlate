@@ -1,5 +1,5 @@
-import { Pool } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-serverless';
+import { neon, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from "@shared/schema";
 
 if (!process.env.DATABASE_URL) {
@@ -8,12 +8,16 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Create pool with simple configuration for reliability
-export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  max: 3,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
-});
+// Configure neon for HTTP-only connections (no WebSocket)
+neonConfig.fetchConnectionCache = true;
 
-export const db = drizzle({ client: pool, schema });
+// Use HTTP adapter instead of WebSocket for better Replit compatibility
+const sql = neon(process.env.DATABASE_URL);
+export const db = drizzle(sql, { schema });
+
+// Create a simple pool interface for backward compatibility
+export const pool = {
+  query: sql,
+  connect: () => ({ query: sql, release: () => {} }),
+  end: () => Promise.resolve()
+};

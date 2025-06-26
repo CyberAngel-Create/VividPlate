@@ -90,49 +90,9 @@ import { testBackblazeConnection } from './backblaze-config';
     serveStatic(app);
   }
 
-  // Try to start server with retries and port fallback
-  const startServer = async (initialPort = 5000) => {
-    let port = initialPort;
-    const maxRetries = 3;
-
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        await new Promise((resolve, reject) => {
-          server.listen({
-            port,
-            host: "0.0.0.0",
-            reusePort: true,
-          }, async () => {
-            log(`serving on port ${port}`);
-            try {
-              await testBackblazeConnection();
-            } catch (err) {
-              log('Warning: Backblaze connection failed, continuing without it');
-            }
-            resolve(true);
-          }).on('error', (err: any) => {
-            if (err.code === 'EADDRINUSE') {
-              port++;
-              reject(err);
-            } else {
-              reject(err);
-            }
-          });
-        });
-        break; // If successful, exit loop
-      } catch (err) {
-        if (attempt === maxRetries - 1) {
-          throw err; // If all retries failed, throw error
-        }
-        log(`Port ${port-1} in use, trying ${port}...`);
-      }
-    }
-  };
-
-  try {
-    await startServer();
-  } catch (err) {
-    log(`Failed to start server: ${err.message}`);
-    process.exit(1);
-  }
+  const port = process.env.PORT || 5173;
+  
+  server.listen(port, "0.0.0.0", () => {
+    log(`serving on port ${port}`);
+  });
 })();
