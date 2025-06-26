@@ -153,14 +153,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/me"], null);
-      // Also clear any other user-related queries from the cache
-      queryClient.removeQueries({ queryKey: ["/api/profile"] });
-      queryClient.removeQueries({ queryKey: ["/api/restaurants"] });
-      setLocation("/");
+      queryClient.clear();
+      
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",
       });
+      
+      // Use setTimeout to ensure cache is cleared before redirect
+      setTimeout(() => {
+        setLocation("/");
+      }, 100);
     },
     onError: (error: Error) => {
       toast({
