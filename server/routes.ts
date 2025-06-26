@@ -3600,6 +3600,54 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.status(500).json({ message: 'Failed to delete pricing plan' });
     }
   });
+
+  // Admin subscription management routes
+  app.post('/api/admin/users/:userId/subscription', isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      const { duration, subscriptionTier } = req.body;
+      
+      if (!userId || isNaN(userId)) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+      }
+      
+      if (!subscriptionTier || !['free', 'premium'].includes(subscriptionTier)) {
+        return res.status(400).json({ message: 'Invalid subscription tier' });
+      }
+      
+      // Get the user
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Calculate end date based on duration
+      let subscriptionEndDate = null;
+      if (subscriptionTier === 'premium' && duration > 0) {
+        subscriptionEndDate = new Date();
+        subscriptionEndDate.setDate(subscriptionEndDate.getDate() + duration);
+      }
+      
+      // Update user subscription
+      const updatedUser = await storage.updateUserSubscription(userId, {
+        subscriptionTier,
+        subscriptionEndDate: subscriptionEndDate ? subscriptionEndDate.toISOString() : null
+      });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: 'Failed to update subscription' });
+      }
+      
+      res.json({
+        success: true,
+        user: updatedUser,
+        message: `Subscription updated successfully`
+      });
+    } catch (error) {
+      console.error('Error updating user subscription:', error);
+      res.status(500).json({ message: 'Failed to update subscription' });
+    }
+  });
   
   // Contact information management
   app.get('/api/admin/contact-info', isAdmin, async (req, res) => {

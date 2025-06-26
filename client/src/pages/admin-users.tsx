@@ -17,6 +17,7 @@ import {
   Clock,
   CircleDot
 } from "lucide-react";
+import { SubscriptionManager } from "@/components/admin/SubscriptionManager";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -481,40 +482,32 @@ const UsersAdminPage = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Open menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {user.isActive ? (
-                            <DropdownMenuItem onClick={() => handleToggleStatus(user, false)}>
-                              <UserX className="mr-2 h-4 w-4" />
-                              <span>Deactivate</span>
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem onClick={() => handleToggleStatus(user, true)}>
-                              <UserCheck className="mr-2 h-4 w-4" />
-                              <span>Activate</span>
-                            </DropdownMenuItem>
-                          )}
-                          {user.subscriptionTier === 'free' ? (
-                            <DropdownMenuItem onClick={() => handleUpdateSubscription(user, 'premium')}>
-                              <Crown className="mr-2 h-4 w-4" />
-                              <span>Upgrade to Premium</span>
-                            </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem onClick={() => handleUpdateSubscription(user, 'free')}>
-                              <Trash className="mr-2 h-4 w-4" />
-                              <span>Downgrade to Free</span>
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      <div className="flex items-center justify-end space-x-2">
+                        <SubscriptionManager user={user} />
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Open menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            {user.isActive ? (
+                              <DropdownMenuItem onClick={() => handleToggleStatus(user, false)}>
+                                <UserX className="mr-2 h-4 w-4" />
+                                <span>Deactivate</span>
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => handleToggleStatus(user, true)}>
+                                <UserCheck className="mr-2 h-4 w-4" />
+                                <span>Activate</span>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

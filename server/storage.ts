@@ -41,6 +41,7 @@ export interface IStorage {
   getRecentUsers(limit: number): Promise<User[]>;
   toggleUserStatus(id: number, isActive: boolean): Promise<User | undefined>;
   upgradeUserSubscription(id: number, tier: string): Promise<User | undefined>;
+  updateUserSubscription(id: number, subscription: { subscriptionTier: string; subscriptionEndDate: string | null }): Promise<User | undefined>;
 
   // Admin operations
   createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
