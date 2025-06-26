@@ -2,9 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useLocation } from "wouter";
-import { apiRequest, queryClient } from "../lib/queryClient";
-import { useToast } from "../hooks/use-toast";
+import { useAuth } from "../hooks/use-auth";
 import { useTranslation } from "react-i18next";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import {
@@ -37,10 +35,8 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 const Login = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const { loginMutation } = useAuth();
   const { t } = useTranslation();
 
   // User Login Form
@@ -53,45 +49,10 @@ const Login = () => {
   });
 
   const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
-    try {
-      await apiRequest("POST", "/api/auth/login", data);
-
-      // Verify the user is actually logged in before redirecting
-      try {
-        await apiRequest("GET", "/api/auth/me");
-        
-        // If we get here, the user is authenticated
-        toast({
-          title: "Success", 
-          description: t('common.successLogin'),
-        });
-        
-        // Invalidate queries to refresh auth state
-        await queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
-        
-        // Use direct navigation for reliable redirect
-        window.location.href = "/dashboard";
-        
-        // Don't set isLoading to false as we're redirecting
-      } catch (authError) {
-        // If /api/auth/me fails, the session wasn't properly established
-        console.error("Login succeeded but session verification failed", authError);
-        toast({
-          title: "Error",
-          description: "Login successful but session could not be established. Please try again.",
-          variant: "destructive",
-        });
-        setIsLoading(false);
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: t('common.invalidCredentials'),
-        variant: "destructive",
-      });
-      setIsLoading(false);
-    }
+    loginMutation.mutate({
+      username: data.identifier,
+      password: data.password,
+    });
   };
 
   return (
