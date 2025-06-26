@@ -867,40 +867,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Attempt to fetch restaurants with error handling for schema issues
-      let restaurants;
-      try {
-        restaurants = await storage.getRestaurantsByUserId(userId);
-        console.log("Restaurants fetched successfully:", restaurants);
-      } catch (fetchError) {
-        console.error("Error in first restaurant fetch attempt:", fetchError);
-        
-        // Fallback: Try to execute a direct SQL query to get basic restaurant data
-        try {
-          const { pool } = await import('./db');
-          const result = await pool.query('SELECT id, user_id, name, description, cuisine, logo_url, banner_url FROM restaurants WHERE user_id = $1', [userId]);
-          
-          // Map results to match our expected schema
-          restaurants = result.rows.map(row => ({
-            id: row.id,
-            userId: row.user_id,
-            name: row.name,
-            description: row.description,
-            cuisine: row.cuisine,
-            logoUrl: row.logo_url,
-            bannerUrl: row.banner_url,
-            bannerUrls: [],  // Default empty array since column may be missing
-            themeSettings: {}, // Default empty object for theme settings
-            tags: []  // Default empty array for tags
-          }));
-          
-          console.log("Restaurants fetched with fallback method:", restaurants);
-        } catch (fallbackError) {
-          console.error("Error in fallback restaurant fetch:", fallbackError);
-          throw fallbackError; // Re-throw to be caught by outer catch
-        }
-      }
-      
-      // Return the restaurant data to the client
+      const restaurants = await storage.getRestaurantsByUserId(userId);
+      console.log("Restaurants fetched successfully:", restaurants);
       res.json(restaurants || []);
     } catch (error) {
       console.error("Error fetching restaurants:", error);

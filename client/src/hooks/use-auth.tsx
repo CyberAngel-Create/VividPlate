@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Also clear any other user-related queries from the cache
       queryClient.removeQueries({ queryKey: ["/api/profile"] });
       queryClient.removeQueries({ queryKey: ["/api/restaurants"] });
-      setLocation("/login");
+      setLocation("/");
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",

@@ -1564,12 +1564,17 @@ export class DatabaseStorage implements IStorage {
 
   async getRestaurantsByUserId(userId: number): Promise<Restaurant[]> {
     try {
-      // Use raw query to avoid schema mismatch issues
+      // Use raw query to get restaurant data
       const { pool } = await import('./db');
       const result = await pool.query(
-        'SELECT id, user_id, name, description, cuisine, logo_url, banner_url, banner_urls, phone, email, address, hours_of_operation, tags, theme_settings, qr_code_scans FROM restaurants WHERE user_id = $1',
+        'SELECT id, user_id, name, description, cuisine, logo_url, banner_url, phone, email, address, hours_of_operation FROM restaurants WHERE user_id = $1',
         [userId]
       );
+      
+      if (!result || !result.rows) {
+        console.log('No restaurants found for user:', userId);
+        return [];
+      }
       
       // Map the raw results to match our schema
       return result.rows.map(row => ({
