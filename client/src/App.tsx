@@ -153,6 +153,7 @@ function App() {
                   <AdSense />
                   <Router />
                   <CookieConsent />
+                  <PWAInstaller />
                 </DietaryPreferencesProvider>
               </SubscriptionStatusProvider>
             </SubscriptionProvider>

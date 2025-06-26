@@ -828,18 +828,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                   menuItemId={item.id}
                                   restaurantId={restaurant.id}
                                 >
-                                  <Button
-                                    size="sm"
-                                    className="h-6 px-2 text-xs"
-                                    style={{ 
-                                      backgroundColor: menuTheme.accentColor, 
-                                      color: 'white',
-                                      fontSize: '10px'
-                                    }}
+                                  <div 
+                                    className="cursor-pointer"
                                     onClick={() => trackMenuItemClick(item.id)}
                                   >
-                                    {t('menu.view', 'View')}
-                                  </Button>
+                                    {/* Clicking the entire image area opens the dialog - no button needed */}
+                                  </div>
                                 </ImageViewDialog>
                               </div>
 
