@@ -164,6 +164,18 @@ const ViewMenu = () => {
 
   const { restaurant, menu } = data;
 
+  // Debug logging for menu data flow
+  console.log("ViewMenu - Menu data received:", {
+    restaurantId: restaurant?.id,
+    restaurantName: restaurant?.name,
+    menuLength: menu?.length,
+    menuCategories: menu?.map(cat => ({
+      id: cat.id,
+      name: cat.name,
+      itemCount: cat.items?.length || 0
+    }))
+  });
+
   // Import the useSubscription hook for ad display control
   const { isPaid: isCurrentUserPaid } = useSubscription();
 
