@@ -46,6 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 1000 * 60 * 5, // 5 minutes
     refetchOnWindowFocus: true,
     retry: false,
+    queryFn: async () => {
+      try {
+        const response = await fetch("/api/auth/me", {
+          credentials: 'include'
+        });
+        if (response.status === 401) {
+          return null; // Not authenticated, return null instead of throwing
+        }
+        if (!response.ok) {
+          throw new Error('Authentication check failed');
+        }
+        return await response.json();
+      } catch (error) {
+        return null; // Return null for any authentication errors
+      }
+    }
   });
 
   const loginMutation = useMutation({
