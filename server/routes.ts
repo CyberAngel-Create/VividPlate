@@ -838,9 +838,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           expiresAt = activeSubscription.endDate;
         } else if (userTier === "premium") {
           // For users with premium tier but no subscription record, 
-          // provide a default expiration date (1 year from now)
+          // provide a default expiration date (1 month from now)
           const defaultExpiration = new Date();
-          defaultExpiration.setFullYear(defaultExpiration.getFullYear() + 1);
+          defaultExpiration.setMonth(defaultExpiration.getMonth() + 1);
           expiresAt = defaultExpiration.toISOString();
         }
       }
