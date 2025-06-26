@@ -3373,7 +3373,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       res.json({
         success: true,
-        message: `Password reset successfully for user "${user.username}"`
+        message: `Password reset successfully for user "${user.username}" (${user.email}). Use these credentials to login.`
       });
     } catch (error) {
       console.error('Error resetting password:', error);
