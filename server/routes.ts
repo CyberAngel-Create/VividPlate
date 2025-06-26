@@ -4494,6 +4494,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Note: Frontend routing is handled by Vite middleware in development
+
   const httpServer = createServer(app);
   return httpServer;
 }
