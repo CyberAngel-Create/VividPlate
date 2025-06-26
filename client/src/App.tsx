@@ -83,16 +83,7 @@ function Router() {
   const [location] = useLocation();
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p>Loading VividPlate...</p>
-        </div>
-      </div>
-    );
-  }
+  // Remove loading state that causes app to be stuck
 
   return (
     <div className="flex flex-col min-h-screen">
