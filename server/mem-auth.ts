@@ -39,12 +39,23 @@ export const testUsers: MemUser[] = [
   },
   { 
     id: 5, 
-    username: 'Entoto Cloud', 
+    username: 'entotocloud', 
     password: 'cloud123',
     email: 'entotocloudrestaurant@gmail.com',
     fullName: 'Entoto Cloud',
     isAdmin: false,
     subscriptionTier: 'premium',
+    isActive: true,
+    createdAt: new Date()
+  },
+  { 
+    id: 11, 
+    username: 'freleg', 
+    password: 'freleg123',
+    email: 'freleg@example.com',
+    fullName: 'Free User',
+    isAdmin: false,
+    subscriptionTier: 'free',
     isActive: true,
     createdAt: new Date()
   }

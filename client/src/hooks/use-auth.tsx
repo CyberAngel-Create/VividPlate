@@ -178,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Use setTimeout to ensure cache is cleared before redirect
       setTimeout(() => {
-        setLocation("/");
+        setLocation("/login");
       }, 100);
     },
     onError: (error: Error) => {
