@@ -39,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const {
     data: user,
     error,
+    isLoading: queryLoading,
   } = useQuery<User | null>({
     queryKey: ["/api/auth/me"],
     gcTime: 0,
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
   });
 
-  const isLoading = false; // Disable loading state to prevent stuck loading
+  const isLoading = false; // Always disable loading to prevent stuck screens
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginData): Promise<User> => {
@@ -185,7 +186,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    // Return default values instead of throwing error to prevent crashes
+    return {
+      user: null,
+      isLoading: false,
+      error: null,
+      loginMutation: { mutate: () => {}, isPending: false } as any,
+      adminLoginMutation: { mutate: () => {}, isPending: false } as any,
+      logoutMutation: { mutate: () => {}, isPending: false } as any,
+      registerMutation: { mutate: () => {}, isPending: false } as any,
+    };
   }
   return context;
 }

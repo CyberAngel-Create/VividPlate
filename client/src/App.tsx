@@ -56,7 +56,8 @@ function AuthenticatedRoute({ component: Component, ...rest }: { component: Reac
     }
   }, [user, setLocation]);
 
-  return user ? <Route {...rest} component={Component} /> : null;
+  // Always render the route to prevent loading states
+  return <Route {...rest} component={user ? Component : () => null} />;
 }
 
 function PublicRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -75,7 +76,8 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
     }
   }, [user, setLocation]);
 
-  return (user && user.isAdmin) ? <Route {...rest} component={Component} /> : null;
+  // Always render the route to prevent loading states
+  return <Route {...rest} component={(user && user.isAdmin) ? Component : () => null} />;
 }
 
 function Router() {
