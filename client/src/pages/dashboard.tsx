@@ -9,7 +9,7 @@ import FeedbackSummary from "@/components/dashboard/FeedbackSummary";
 import GlobalMenuSearch from "@/components/ui/global-menu-search";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import { PremiumBadge } from "@/components/ui/premium-badge";
-import { Eye, QrCode, Utensils, Calendar, CreditCard, AlertCircle } from "lucide-react";
+import { Eye, QrCode, Utensils, Calendar, CreditCard, AlertCircle, Lock } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useMenu } from "@/hooks/use-menu";
 import AdBanner from "@/components/ads/AdBanner";
@@ -194,6 +194,30 @@ const Dashboard = () => {
                     Upgrade Now
                   </button>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Inactive Restaurant Warning */}
+        {activeRestaurant && !activeRestaurant.isActive && (
+          <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Lock className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  Restaurant Inactive
+                </h3>
+                <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                  This restaurant is currently inactive due to your subscription plan. 
+                  Free users can only access their first restaurant. 
+                  <button 
+                    onClick={() => window.location.href = "/subscribe"}
+                    className="underline hover:no-underline ml-1"
+                  >
+                    Upgrade to premium
+                  </button> to activate all your restaurants.
+                </p>
               </div>
             </div>
           </div>

@@ -110,13 +110,30 @@ const RestaurantOwnerHeader = () => {
                 <DropdownMenuItem 
                   key={restaurant.id}
                   onClick={() => handleRestaurantSwitch(restaurant.id)}
-                  className={`cursor-pointer ${
+                  disabled={!restaurant.isActive}
+                  className={`${
+                    !restaurant.isActive 
+                      ? 'opacity-50 cursor-not-allowed text-gray-400 dark:text-gray-500' 
+                      : 'cursor-pointer dark:hover:bg-gray-700'
+                  } ${
                     activeRestaurant?.id === restaurant.id 
                       ? 'bg-gray-100 dark:bg-gray-700 font-medium' 
                       : 'dark:text-gray-200'
-                  } cursor-pointer dark:hover:bg-gray-700`}
+                  }`}
                 >
-                  <span className="truncate max-w-[250px]">{restaurant.name}</span>
+                  <div className="flex items-center justify-between w-full">
+                    <span className={`truncate max-w-[200px] ${
+                      !restaurant.isActive ? 'line-through' : ''
+                    }`}>
+                      {restaurant.name}
+                    </span>
+                    {!restaurant.isActive && (
+                      <div className="flex items-center gap-1 text-xs text-gray-400 ml-2">
+                        <Lock className="h-3 w-3" />
+                        <span>Inactive</span>
+                      </div>
+                    )}
+                  </div>
                 </DropdownMenuItem>
               ))}
               {canAddRestaurant && (
