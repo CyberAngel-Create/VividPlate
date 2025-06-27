@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import SidebarNavigation from "./SidebarNavigation";
@@ -10,6 +11,7 @@ interface RestaurantOwnerLayoutProps {
 
 const RestaurantOwnerLayout = ({ children }: RestaurantOwnerLayoutProps) => {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
 
   const handleLogout = async () => {
     try {
@@ -18,7 +20,7 @@ const RestaurantOwnerLayout = ({ children }: RestaurantOwnerLayoutProps) => {
         title: "Success",
         description: "Logged out successfully",
       });
-      window.location.href = "/";
+      setLocation("/login");
     } catch (error) {
       toast({
         title: "Error",

@@ -48,9 +48,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retry: false,
     queryFn: async () => {
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
         const response = await fetch("/api/auth/me", {
-          credentials: 'include'
+          credentials: 'include',
+          signal: controller.signal,
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
+        
+        clearTimeout(timeoutId);
+        
         if (response.status === 401) {
           return null; // Not authenticated, return null instead of throwing
         }
@@ -59,6 +70,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return await response.json();
       } catch (error) {
+        if (error.name === 'AbortError') {
+          console.warn('Authentication check timed out');
+        }
         return null; // Return null for any authentication errors
       }
     }

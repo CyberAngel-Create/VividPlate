@@ -40,6 +40,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { apiRequest } from "./lib/queryClient";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
@@ -86,7 +87,47 @@ function AdminRoute({ component: Component, ...rest }: { component: React.Compon
 function Router() {
   const { isLoading } = useAuth();
   const [location] = useLocation();
+  const [showLoadingTimeout, setShowLoadingTimeout] = useState(false);
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
+
+  // Add timeout for loading state to prevent infinite loading
+  useEffect(() => {
+    if (isLoading) {
+      const timer = setTimeout(() => {
+        setShowLoadingTimeout(true);
+      }, 15000); // 15 second timeout
+      
+      return () => clearTimeout(timer);
+    } else {
+      setShowLoadingTimeout(false);
+    }
+  }, [isLoading]);
+
+  // Show timeout message if loading takes too long
+  if (isLoading && showLoadingTimeout) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <h2 className="text-xl font-semibold mb-2">Loading VividPlate...</h2>
+          <p className="text-muted-foreground mb-4">This is taking longer than expected.</p>
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+            className="mr-2"
+          >
+            Refresh Page
+          </Button>
+          <Button 
+            onClick={() => window.location.href = "/login"} 
+            variant="default"
+          >
+            Go to Login
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
