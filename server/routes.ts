@@ -3850,7 +3850,31 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
   
+  // Contact information management
+  app.get('/api/admin/contact-info', isAdmin, async (req, res) => {
+    try {
+      const contactInfo = await storage.getContactInfo();
+      res.json(contactInfo || {
+        address: 'Ethiopia, Addis Abeba',
+        email: 'menumate.spp@gmail.com',
+        phone: '+251-913-690-687'
+      });
+    } catch (error) {
+      console.error('Error fetching contact info:', error);
+      res.status(500).json({ message: 'Failed to load contact information' });
+    }
+  });
 
+  app.patch('/api/admin/contact-info', isAdmin, async (req, res) => {
+    try {
+      const { address, email, phone } = req.body;
+      const updatedInfo = await storage.updateContactInfo({ address, email, phone });
+      res.json(updatedInfo);
+    } catch (error) {
+      console.error('Error updating contact info:', error);
+      res.status(500).json({ message: 'Failed to update contact information' });
+    }
+  });
 
   // Advertisement routes
   app.get('/api/admin/advertisements', isAdmin, async (req, res) => {
