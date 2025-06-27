@@ -111,19 +111,18 @@ function Router() {
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold mb-2">Loading VividPlate...</h2>
           <p className="text-muted-foreground mb-4">This is taking longer than expected.</p>
-          <Button 
+          <button 
             onClick={() => window.location.reload()} 
-            variant="outline"
-            className="mr-2"
+            className="mr-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
           >
             Refresh Page
-          </Button>
-          <Button 
+          </button>
+          <button 
             onClick={() => window.location.href = "/login"} 
-            variant="default"
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90"
           >
             Go to Login
-          </Button>
+          </button>
         </div>
       </div>
     );

@@ -138,6 +138,15 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- June 27, 2025: Critical Authentication and Loading Fixes
+  - Fixed restaurant owner logout to redirect to login page instead of homepage
+  - Resolved infinite loading states when typing URLs directly in browser
+  - Added 10-second timeout to authentication requests with cache-busting headers
+  - Implemented loading timeout screen with recovery options after 15 seconds
+  - Fixed admin panel Contact Info API authentication using proper middleware
+  - Added public API endpoints for homepage content (menu examples, testimonials, contact info)
+  - All three admin components (Menu Examples, Testimonials, Contact Info) fully functional
+
 - June 26, 2025: Authentication and Mobile UI Fixes
   - Fixed logout functionality to properly redirect to login page instead of home
   - Enhanced mobile restaurant switcher visibility with improved responsive design
