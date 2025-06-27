@@ -329,7 +329,7 @@ const TestimonialsManager = () => {
               Add Testimonial
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Testimonial</DialogTitle>
               <DialogDescription>
@@ -406,7 +406,7 @@ const TestimonialsManager = () => {
       {/* Edit Dialog */}
       {editingTestimonial && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Testimonial</DialogTitle>
               <DialogDescription>

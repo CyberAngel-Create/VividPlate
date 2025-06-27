@@ -191,7 +191,7 @@ const AdminContactInfoPage = () => {
           <h1 className="text-2xl sm:text-3xl font-bold">Contact Information</h1>
         </div>
 
-        <Card className="w-full max-w-3xl mx-auto">
+        <Card className="w-full max-w-2xl mx-auto">
           <CardHeader className="p-4 sm:p-6">
             <CardTitle className="text-xl">Update Company Contact Information</CardTitle>
           </CardHeader>

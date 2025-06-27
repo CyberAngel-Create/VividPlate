@@ -352,7 +352,7 @@ const MenuExamplesManager = () => {
               Add Example
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Add New Menu Example</DialogTitle>
               <DialogDescription>
@@ -420,7 +420,7 @@ const MenuExamplesManager = () => {
       {/* Edit Dialog */}
       {editingExample && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Menu Example</DialogTitle>
               <DialogDescription>
