@@ -3876,6 +3876,41 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Public endpoints for homepage content
+  app.get('/api/menu-examples', async (req, res) => {
+    try {
+      const examples = await storage.getActiveMenuExamples();
+      res.json(examples);
+    } catch (error) {
+      console.error('Error fetching menu examples:', error);
+      res.status(500).json({ message: 'Failed to fetch menu examples' });
+    }
+  });
+
+  app.get('/api/testimonials', async (req, res) => {
+    try {
+      const testimonials = await storage.getActiveTestimonials();
+      res.json(testimonials);
+    } catch (error) {
+      console.error('Error fetching testimonials:', error);
+      res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
+  });
+
+  app.get('/api/contact-info', async (req, res) => {
+    try {
+      const contactInfo = await storage.getContactInfo();
+      res.json(contactInfo || {
+        address: 'Ethiopia, Addis Abeba',
+        email: 'menumate.spp@gmail.com',
+        phone: '+251-913-690-687'
+      });
+    } catch (error) {
+      console.error('Error fetching contact info:', error);
+      res.status(500).json({ message: 'Failed to fetch contact information' });
+    }
+  });
+
   // Advertisement routes
   app.get('/api/admin/advertisements', isAdmin, async (req, res) => {
     try {
