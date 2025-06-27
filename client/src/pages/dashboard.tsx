@@ -67,12 +67,12 @@ const Dashboard = () => {
     queryKey: ['/api/user/subscription-status'],
   });
 
-  // Effect for auto-select restaurant
+  // Effect for auto-select restaurant - only run when restaurants length changes
   useEffect(() => {
     if (restaurants && restaurants.length > 0 && !activeRestaurant) {
       refetchActiveRestaurant();
     }
-  }, [restaurants?.length, activeRestaurant?.id]);
+  }, [restaurants?.length]);
 
   // Loading and empty state handlers
   if (isLoadingRestaurants) {
