@@ -140,6 +140,7 @@ export interface IStorage {
   getAdvertisement(id: number): Promise<Advertisement | undefined>;
   getAdvertisements(): Promise<Advertisement[]>;
   getActiveAdvertisementByPosition(position: string): Promise<Advertisement | undefined>;
+  getTargetedAdvertisement(position: string, restaurant: Restaurant | null): Promise<Advertisement | undefined>;
   createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement>;
   updateAdvertisement(id: number, ad: Partial<InsertAdvertisement>): Promise<Advertisement | undefined>;
   deleteAdvertisement(id: number): Promise<boolean>;

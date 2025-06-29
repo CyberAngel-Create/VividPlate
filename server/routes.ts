@@ -4032,10 +4032,12 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(400).json({ message: 'Position parameter is required' });
       }
       
+      let restaurant = null;
+      
       // Check if this is for a premium restaurant
       if (restaurantId) {
         try {
-          const restaurant = await storage.getRestaurant(parseInt(restaurantId as string));
+          restaurant = await storage.getRestaurant(parseInt(restaurantId as string));
           
           if (restaurant) {
             // Check restaurant owner's subscription
@@ -4053,8 +4055,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         }
       }
       
-      // Get a single active advertisement for the specified position
-      const advertisement = await storage.getActiveAdvertisementByPosition(position as string);
+      // Get advertisements for the specified position with targeting
+      const advertisement = await storage.getTargetedAdvertisement(position as string, restaurant);
       res.json(advertisement);
     } catch (error) {
       console.error('Error fetching advertisement:', error);
