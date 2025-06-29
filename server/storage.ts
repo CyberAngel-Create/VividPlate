@@ -791,6 +791,36 @@ export class MemStorage implements IStorage {
     );
   }
 
+  async getTargetedAdvertisement(position: string, restaurant: Restaurant | null): Promise<Advertisement | undefined> {
+    const now = new Date();
+    
+    return Array.from(this.advertisements.values()).find((ad) => {
+      // Basic advertisement conditions
+      const isValidAd = ad.position === position && 
+        ad.isActive && 
+        (!ad.startDate || new Date(ad.startDate) <= now) && 
+        (!ad.endDate || new Date(ad.endDate) >= now);
+      
+      if (!isValidAd) return false;
+      
+      // Apply alcoholic targeting
+      if (restaurant) {
+        const isAlcoholicRestaurant = restaurant.alcoholStatus === 'alcoholic';
+        
+        if (isAlcoholicRestaurant) {
+          // For alcoholic restaurants, show both alcoholic and non-alcoholic ads
+          return true;
+        } else {
+          // For non-alcoholic restaurants, only show non-alcoholic ads
+          return !ad.isAlcoholic;
+        }
+      } else {
+        // If no restaurant context, only show non-alcoholic ads (safer default)
+        return !ad.isAlcoholic;
+      }
+    });
+  }
+
   async createAdvertisement(insertAd: InsertAdvertisement): Promise<Advertisement> {
     const id = this.currentIds.advertisements++;
     const now = new Date();
@@ -1321,6 +1351,47 @@ export class DatabaseStorage implements IStorage {
     return ad;
   }
 
+  async getTargetedAdvertisement(position: string, restaurant: Restaurant | null): Promise<Advertisement | undefined> {
+    const now = new Date();
+    
+    // Build the base query conditions
+    const baseConditions = [
+      eq(advertisements.position, position),
+      eq(advertisements.isActive, true),
+      or(
+        isNull(advertisements.startDate),
+        lte(advertisements.startDate, now)
+      ),
+      or(
+        isNull(advertisements.endDate),
+        gte(advertisements.endDate, now)
+      )
+    ];
+
+    // If we have restaurant info, apply alcoholic targeting
+    if (restaurant) {
+      const isAlcoholicRestaurant = restaurant.alcoholStatus === 'alcoholic';
+      
+      if (isAlcoholicRestaurant) {
+        // For alcoholic restaurants, show both alcoholic and non-alcoholic ads
+        // No additional filtering needed
+      } else {
+        // For non-alcoholic restaurants, only show non-alcoholic ads
+        baseConditions.push(eq(advertisements.isAlcoholic, false));
+      }
+    } else {
+      // If no restaurant context, only show non-alcoholic ads (safer default)
+      baseConditions.push(eq(advertisements.isAlcoholic, false));
+    }
+
+    const [ad] = await db.select()
+      .from(advertisements)
+      .where(and(...baseConditions))
+      .limit(1);
+    
+    return ad;
+  }
+
   async createAdvertisement(ad: InsertAdvertisement): Promise<Advertisement> {
     const [newAd] = await db.insert(advertisements)
       .values({
@@ -1348,6 +1419,47 @@ export class DatabaseStorage implements IStorage {
       .where(eq(advertisements.id, id))
       .returning();
     return !!deletedAd;
+  }
+
+  async getTargetedAdvertisement(position: string, restaurant: Restaurant | null): Promise<Advertisement | undefined> {
+    const now = new Date();
+    
+    // Build the base query conditions
+    const baseConditions = [
+      eq(advertisements.position, position),
+      eq(advertisements.isActive, true),
+      or(
+        isNull(advertisements.startDate),
+        lte(advertisements.startDate, now)
+      ),
+      or(
+        isNull(advertisements.endDate),
+        gte(advertisements.endDate, now)
+      )
+    ];
+
+    // If we have restaurant info, apply alcoholic targeting
+    if (restaurant) {
+      const isAlcoholicRestaurant = restaurant.alcoholStatus === 'alcoholic';
+      
+      if (isAlcoholicRestaurant) {
+        // For alcoholic restaurants, show both alcoholic and non-alcoholic ads
+        // No additional filtering needed
+      } else {
+        // For non-alcoholic restaurants, only show non-alcoholic ads
+        baseConditions.push(eq(advertisements.isAlcoholic, false));
+      }
+    } else {
+      // If no restaurant context, only show non-alcoholic ads (safer default)
+      baseConditions.push(eq(advertisements.isAlcoholic, false));
+    }
+
+    const [ad] = await db.select()
+      .from(advertisements)
+      .where(and(...baseConditions))
+      .limit(1);
+    
+    return ad;
   }
 
   // File upload operations

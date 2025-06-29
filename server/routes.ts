@@ -4056,7 +4056,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
       
       // Get advertisements for the specified position with targeting
-      const advertisement = await storage.getTargetedAdvertisement(position as string, restaurant);
+      const advertisement = await storage.getTargetedAdvertisement(position as string, restaurant || null);
       res.json(advertisement);
     } catch (error) {
       console.error('Error fetching advertisement:', error);
