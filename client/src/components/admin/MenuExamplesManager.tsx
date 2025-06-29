@@ -420,7 +420,7 @@ const MenuExamplesManager = () => {
       {/* Edit Dialog */}
       {editingExample && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Menu Example</DialogTitle>
               <DialogDescription>
