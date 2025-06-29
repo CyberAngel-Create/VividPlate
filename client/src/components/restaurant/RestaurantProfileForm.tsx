@@ -201,11 +201,11 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
         hoursOfOperation: hours,
       };
       
-      // If "Other" cuisine is selected, store the custom cuisine value
+      // If "Other" cuisine is selected, use the custom cuisine value as the cuisine
       if (rest.cuisine === "Other" && customCuisine) {
         finalData = {
           ...finalData,
-          customCuisine: customCuisine,
+          cuisine: customCuisine,
         };
       }
       

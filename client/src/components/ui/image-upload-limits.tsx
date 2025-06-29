@@ -44,12 +44,15 @@ const ImageUploadLimits = ({ className = "" }: ImageUploadLimitsProps) => {
     );
   }
 
-  const usage: ImageUsageData = imageUsage || {
+  const defaultUsage: ImageUsageData = {
     uploadedImages: 0,
     maxImages: user.subscriptionTier === 'free' ? 10 : 100,
     remainingImages: user.subscriptionTier === 'free' ? 10 : 100,
     subscriptionTier: user.subscriptionTier || 'free'
   };
+
+  const usage: ImageUsageData = imageUsage && typeof imageUsage === 'object' && imageUsage !== null ? 
+    imageUsage as ImageUsageData : defaultUsage;
 
   const percentageUsed = (usage.uploadedImages / usage.maxImages) * 100;
   const isNearLimit = percentageUsed > 80;
@@ -76,8 +79,7 @@ const ImageUploadLimits = ({ className = "" }: ImageUploadLimitsProps) => {
           </div>
           <Progress 
             value={percentageUsed} 
-            className="h-2"
-            indicatorClassName={isAtLimit ? "bg-red-500" : isNearLimit ? "bg-yellow-500" : "bg-green-500"}
+            className={`h-2 ${isAtLimit ? "[&>div]:bg-red-500" : isNearLimit ? "[&>div]:bg-yellow-500" : "[&>div]:bg-green-500"}`}
           />
         </div>
 
