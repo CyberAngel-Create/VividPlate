@@ -49,6 +49,7 @@ export const restaurants = pgTable("restaurants", {
   tags: text("tags").array(),
   qrCodeScans: integer("qr_code_scans").notNull().default(0), // Track QR code scans
   isActive: boolean("is_active").default(true), // Track if restaurant is active based on subscription
+  alcoholStatus: text("alcohol_status", { enum: ["alcoholic", "non-alcoholic"] }).default("non-alcoholic"), // Whether restaurant serves alcohol
   // Theme customization
   themeSettings: jsonb("theme_settings").default({
     backgroundColor: "#ffffff",
@@ -78,6 +79,7 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   tags: true,
   themeSettings: true,
   isActive: true,
+  alcoholStatus: true,
 });
 
 // Menu categories

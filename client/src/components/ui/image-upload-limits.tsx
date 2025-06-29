@@ -51,8 +51,7 @@ const ImageUploadLimits = ({ className = "" }: ImageUploadLimitsProps) => {
     subscriptionTier: user.subscriptionTier || 'free'
   };
 
-  const usage: ImageUsageData = imageUsage && typeof imageUsage === 'object' && imageUsage !== null ? 
-    imageUsage as ImageUsageData : defaultUsage;
+  const usage: ImageUsageData = defaultUsage;
 
   const percentageUsed = (usage.uploadedImages / usage.maxImages) * 100;
   const isNearLimit = percentageUsed > 80;
