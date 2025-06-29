@@ -371,6 +371,7 @@ export const advertisements = pgTable("advertisements", {
   endDate: timestamp("end_date"),
   createdAt: timestamp("created_at").defaultNow(),
   createdBy: integer("created_by").notNull(),
+  isAlcoholic: boolean("is_alcoholic").default(false), // Target alcoholic restaurants only
 });
 
 export const insertAdvertisementSchema = createInsertSchema(advertisements).pick({
@@ -383,6 +384,7 @@ export const insertAdvertisementSchema = createInsertSchema(advertisements).pick
   startDate: true,
   endDate: true,
   createdBy: true,
+  isAlcoholic: true,
 });
 
 export type Advertisement = typeof advertisements.$inferSelect;

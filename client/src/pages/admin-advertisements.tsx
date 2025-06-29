@@ -99,6 +99,7 @@ const advertisementFormSchema = z.object({
   position: z.enum(["top", "bottom", "sidebar"]).default("bottom"),
   startDate: z.date().optional(),
   endDate: z.date().optional().nullish(),
+  isAlcoholic: z.boolean().default(false),
 });
 
 type AdvertisementFormData = z.infer<typeof advertisementFormSchema>;
@@ -135,6 +136,7 @@ const AdminAdvertisementsPage = () => {
       position: "bottom",
       startDate: new Date(),
       endDate: undefined,
+      isAlcoholic: false,
     },
   });
 
@@ -278,6 +280,7 @@ const AdminAdvertisementsPage = () => {
       position: "bottom",
       startDate: new Date(),
       endDate: undefined,
+      isAlcoholic: false,
     });
     setShowCreateDialog(true);
   };
