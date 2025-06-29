@@ -1421,47 +1421,6 @@ export class DatabaseStorage implements IStorage {
     return !!deletedAd;
   }
 
-  async getTargetedAdvertisement(position: string, restaurant: Restaurant | null): Promise<Advertisement | undefined> {
-    const now = new Date();
-    
-    // Build the base query conditions
-    const baseConditions = [
-      eq(advertisements.position, position),
-      eq(advertisements.isActive, true),
-      or(
-        isNull(advertisements.startDate),
-        lte(advertisements.startDate, now)
-      ),
-      or(
-        isNull(advertisements.endDate),
-        gte(advertisements.endDate, now)
-      )
-    ];
-
-    // If we have restaurant info, apply alcoholic targeting
-    if (restaurant) {
-      const isAlcoholicRestaurant = restaurant.alcoholStatus === 'alcoholic';
-      
-      if (isAlcoholicRestaurant) {
-        // For alcoholic restaurants, show both alcoholic and non-alcoholic ads
-        // No additional filtering needed
-      } else {
-        // For non-alcoholic restaurants, only show non-alcoholic ads
-        baseConditions.push(eq(advertisements.isAlcoholic, false));
-      }
-    } else {
-      // If no restaurant context, only show non-alcoholic ads (safer default)
-      baseConditions.push(eq(advertisements.isAlcoholic, false));
-    }
-
-    const [ad] = await db.select()
-      .from(advertisements)
-      .where(and(...baseConditions))
-      .limit(1);
-    
-    return ad;
-  }
-
   // File upload operations
   async createFileUpload(fileUpload: InsertFileUpload): Promise<FileUpload> {
     const [newUpload] = await db.insert(fileUploads)
