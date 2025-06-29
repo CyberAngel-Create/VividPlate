@@ -152,6 +152,8 @@ export interface IStorage {
   getFileUploadsByRestaurantId(restaurantId: number): Promise<FileUpload[]>;
   getFileUploadsByCategory(category: string): Promise<FileUpload[]>;
   updateFileUploadStatus(id: number, status: string): Promise<FileUpload | undefined>;
+  deleteFileUpload(id: number): Promise<boolean>;
+  getUserImageCount(userId: number): Promise<number>;
 
   // Menu examples operations
   getMenuExamples(): Promise<MenuExample[]>;
@@ -880,6 +882,13 @@ export class MemStorage implements IStorage {
     return this.fileUploads.delete(id);
   }
 
+  async getUserImageCount(userId: number): Promise<number> {
+    return Array.from(this.fileUploads.values())
+      .filter(upload => upload.userId === userId && 
+        (upload.fileCategory === 'menu-items' || upload.fileCategory === 'logos' || upload.fileCategory === 'banners'))
+      .length;
+  }
+
   // Admin methods
   async getAllUsers(): Promise<User[]> {
     return Array.from(this.users.values());
@@ -1403,6 +1412,20 @@ export class DatabaseStorage implements IStorage {
       .where(eq(fileUploads.id, id))
       .returning();
     return !!deletedUpload;
+  }
+
+  async getUserImageCount(userId: number): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(fileUploads)
+      .where(and(
+        eq(fileUploads.userId, userId),
+        or(
+          eq(fileUploads.fileCategory, 'menu-items'),
+          eq(fileUploads.fileCategory, 'logos'),
+          eq(fileUploads.fileCategory, 'banners')
+        )
+      ));
+    return result[0]?.count || 0;
   }
 
   // Contact info operations

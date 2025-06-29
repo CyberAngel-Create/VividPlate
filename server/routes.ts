@@ -2998,6 +2998,35 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.status(500).json({ message: errorMsg });
     }
   });
+
+  // Get user image usage statistics
+  app.get('/api/user/image-usage', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Count uploaded images for this user
+      const uploadedImages = await storage.getUserImageCount(userId);
+      
+      // Determine limits based on subscription tier
+      const maxImages = user.subscriptionTier === 'premium' ? 1000 : 10; // Free: 10, Premium: 1000
+      const remainingImages = Math.max(0, maxImages - uploadedImages);
+
+      res.json({
+        uploadedImages,
+        maxImages,
+        remainingImages,
+        subscriptionTier: user.subscriptionTier || 'free'
+      });
+    } catch (error) {
+      console.error('Error fetching image usage:', error);
+      res.status(500).json({ message: 'Failed to fetch image usage' });
+    }
+  });
   
   // Customer feedback submission endpoint (no auth required)
   app.post('/api/restaurants/:restaurantId/feedback/submit', async (req, res) => {
