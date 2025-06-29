@@ -102,6 +102,7 @@ const restaurantSchema = z.object({
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   address: z.string().optional(),
   tagInput: z.string().optional(),
+  alcoholStatus: z.enum(["alcoholic", "non-alcoholic"]).optional(),
 });
 
 type FormValues = z.infer<typeof restaurantSchema>;
@@ -127,6 +128,7 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
       email: restaurant?.email || "",
       address: restaurant?.address || "",
       tagInput: "",
+      alcoholStatus: (restaurant as any)?.alcoholStatus || "non-alcoholic",
     },
   });
   
@@ -321,6 +323,31 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
             )}
           />
         </div>
+        
+        <FormField
+          control={form.control}
+          name="alcoholStatus"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Restaurant Type</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select restaurant type" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="non-alcoholic">Non-Alcoholic Restaurant</SelectItem>
+                  <SelectItem value="alcoholic">Alcoholic Restaurant</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Specify whether your restaurant serves alcoholic beverages
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         
         <FormField
           control={form.control}

@@ -171,7 +171,7 @@ const FixedSearch: React.FC<FixedSearchProps> = ({ menuItems }) => {
                           <h4 className="font-medium text-base truncate">{item.name}</h4>
                           <div className="flex justify-between items-center mt-1">
                             <span className="text-primary text-sm font-medium">
-                              {formatCurrency(item.price)}
+                              {formatCurrency(parseFloat(item.price), item.currency || "ETB")}
                             </span>
                             {item.tags && item.tags.length > 0 && (
                               <span className="text-xs text-gray-500 truncate">
