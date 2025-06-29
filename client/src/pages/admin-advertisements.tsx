@@ -330,6 +330,7 @@ const AdminAdvertisementsPage = () => {
                 <TableHead>Title</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Position</TableHead>
+                <TableHead>Targeting</TableHead>
                 <TableHead>Image</TableHead>
                 <TableHead>Link</TableHead>
                 <TableHead>Start Date</TableHead>
@@ -357,6 +358,11 @@ const AdminAdvertisementsPage = () => {
                       </Badge>
                     </TableCell>
                     <TableCell className="capitalize">{ad.position}</TableCell>
+                    <TableCell>
+                      <Badge variant={ad.isAlcoholic ? "destructive" : "secondary"}>
+                        {ad.isAlcoholic ? "Alcoholic Only" : "All Free"}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       {ad.imageUrl ? (
                         <div className="flex items-center">
@@ -426,7 +432,7 @@ const AdminAdvertisementsPage = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={9} className="text-center py-8">
                     {searchTerm ? "No advertisements found matching your search" : "No advertisements found"}
                   </TableCell>
                 </TableRow>
@@ -624,6 +630,27 @@ const AdminAdvertisementsPage = () => {
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="isAlcoholic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between space-x-3 space-y-0 rounded-md border p-4">
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Alcoholic Targeting</FormLabel>
+                      <FormDescription>
+                        If checked, this ad will only show on alcoholic restaurants. If unchecked, shows on all free restaurants.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
