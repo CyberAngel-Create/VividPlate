@@ -710,7 +710,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                               <div className="flex justify-between items-start">
                                 <h4 className="font-medium" style={menuItemNameStyle}>{item.name}</h4>
                                 <span className="font-medium" style={menuItemPriceStyle}>
-                                  {formatCurrency(item.price, item.currency || (restaurant as any).currency || "USD")}
+                                  {formatCurrency(item.price, item.currency || "ETB")}
                                 </span>
                               </div>
                               <p className="text-sm mt-2" style={menuItemDescriptionStyle}>
