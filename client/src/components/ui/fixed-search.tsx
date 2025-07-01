@@ -49,7 +49,7 @@ const DetailedItemView = ({ item, onClose }: DetailedItemViewProps) => {
           {/* Price */}
           <div className="mb-4 bg-gray-50 p-3 rounded-lg inline-block">
             <span className="text-primary font-semibold text-xl">
-              {formatCurrency(item.price)}
+              {formatCurrency(item.price, item.currency || "ETB")}
             </span>
           </div>
           

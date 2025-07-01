@@ -219,7 +219,7 @@ const GlobalMenuSearch = ({ categories, menuItems, onEditItem, onDeleteItem }: G
                     {categoryMap[item.categoryId] || "Uncategorized"}
                   </TableCell>
                   <TableCell>
-                    {formatCurrency(parseFloat(item.price), item.currency || "USD")}
+                    {formatCurrency(parseFloat(item.price), item.currency || "ETB")}
                   </TableCell>
                   <TableCell>
                     {item.tags && item.tags.length > 0 ? (
