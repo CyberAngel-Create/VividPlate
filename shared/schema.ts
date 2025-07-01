@@ -289,6 +289,34 @@ export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Feedback = typeof feedbacks.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
 
+export type PermanentImage = typeof permanentImages.$inferSelect;
+export type InsertPermanentImage = z.infer<typeof insertPermanentImageSchema>;
+
+// Permanent image storage table
+export const permanentImages = pgTable("permanent_images", {
+  id: serial("id").primaryKey(),
+  filename: text("filename").notNull().unique(),
+  originalName: text("original_name").notNull(),
+  mimeType: text("mime_type").notNull(),
+  imageData: text("image_data").notNull(), // Base64 encoded image data
+  fileSize: integer("file_size").notNull(),
+  userId: integer("user_id").notNull(),
+  restaurantId: integer("restaurant_id"),
+  category: text("category").notNull(), // "logo", "banner", "menu-item"
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertPermanentImageSchema = createInsertSchema(permanentImages).pick({
+  filename: true,
+  originalName: true,
+  mimeType: true,
+  imageData: true,
+  fileSize: true,
+  userId: true,
+  restaurantId: true,
+  category: true,
+});
+
 // Admin activity logs
 export const adminLogs = pgTable("admin_logs", {
   id: serial("id").primaryKey(),

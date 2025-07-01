@@ -16,7 +16,8 @@ import {
   fileUploads, FileUpload, InsertFileUpload,
   adSettings, AdSettings, InsertAdSettings,
   menuExamples, MenuExample, InsertMenuExample,
-  testimonials, Testimonial, InsertTestimonial
+  testimonials, Testimonial, InsertTestimonial,
+  permanentImages, PermanentImage, InsertPermanentImage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, lte, gte } from "drizzle-orm";
