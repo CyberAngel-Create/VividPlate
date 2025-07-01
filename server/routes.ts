@@ -346,6 +346,20 @@ const configureFileUpload = () => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Helper function to convert relative URLs to absolute URLs
+  const makeAbsoluteUrl = (url: string | null, req: Request): string | null => {
+    if (!url) return null;
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url; // Already absolute
+    }
+    if (url.startsWith('/')) {
+      // Convert relative URL to absolute
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      return baseUrl + url;
+    }
+    return url;
+  };
+
   // Middleware to check if user is authenticated
   const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
     if (req.isAuthenticated()) {
@@ -2703,11 +2717,16 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         // Continue with default free tier if there's an error
       }
       
-      // Add subscription tier to the restaurant object
+      // Convert restaurant image URLs to absolute URLs and add subscription tier
       const restaurantWithSub = {
         ...restaurant,
         subscriptionTier,
-        isPremium: isPremiumRestaurant
+        isPremium: isPremiumRestaurant,
+        logoUrl: makeAbsoluteUrl(restaurant.logoUrl, req),
+        bannerUrl: makeAbsoluteUrl(restaurant.bannerUrl, req),
+        bannerUrls: Array.isArray(restaurant.bannerUrls) 
+          ? restaurant.bannerUrls.map(url => makeAbsoluteUrl(url, req))
+          : restaurant.bannerUrls
       };
       
       const categories = await storage.getMenuCategoriesByRestaurantId(restaurantId);
@@ -2716,7 +2735,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         const items = await storage.getMenuItemsByCategoryId(category.id);
         return {
           ...category,
-          items
+          items: items.map(item => ({
+            ...item,
+            imageUrl: makeAbsoluteUrl(item.imageUrl, req)
+          }))
         };
       }));
       
