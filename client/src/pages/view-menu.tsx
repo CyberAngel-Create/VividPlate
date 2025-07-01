@@ -7,6 +7,7 @@ import CustomerMenuPreview from "@/components/preview/CustomerMenuPreview";
 import { apiRequest } from "@/lib/queryClient";
 import { Restaurant, MenuCategory, MenuItem } from "@shared/schema";
 import AdBanner from "@/components/ads/AdBanner";
+import ContentValidator from "@/components/ads/ContentValidator";
 
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -30,7 +31,7 @@ interface MenuData {
 
 const ViewMenu = () => {
   const { restaurantName } = useParams();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
@@ -205,24 +206,33 @@ const ViewMenu = () => {
 
       <div className="flex flex-col items-center flex-grow pt-4">
         {/* Top advertisement from advertisement management system - only shown if restaurant is not premium */}
+        {/* AdSense Policy Compliance: Ads only displayed on pages with sufficient content */}
         {showAds && (
-          <div className="w-full max-w-screen-md px-4">
-            <MenuAdvertisement position="top" restaurantId={restaurant.id} />
-          </div>
+          <ContentValidator route={window.location.pathname}>
+            <div className="w-full max-w-screen-md px-4">
+              <MenuAdvertisement position="top" restaurantId={restaurant.id} />
+            </div>
+          </ContentValidator>
         )}
 
         {/* Top ad banner for free users - only shown if restaurant is not premium */}
+        {/* AdSense Policy Compliance: Content validation ensures meaningful page content */}
         {showAds && (
-          <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+          <ContentValidator route={window.location.pathname}>
+            <AdBanner format="horizontal" className="w-full max-w-screen-md my-3" />
+          </ContentValidator>
         )}
 
         <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full max-w-screen-xl">
           <div className="flex flex-col lg:flex-row w-full gap-6">
             {/* Sidebar advertisement (left side on larger screens) - only shown if restaurant is not premium */}
+            {/* AdSense Policy Compliance: Sidebar ads require content validation */}
             {showAds && (
-              <div className="lg:w-1/4 order-2 lg:order-1">
-                <MenuAdvertisement position="sidebar" restaurantId={restaurant.id} />
-              </div>
+              <ContentValidator route={window.location.pathname}>
+                <div className="lg:w-1/4 order-2 lg:order-1">
+                  <MenuAdvertisement position="sidebar" restaurantId={restaurant.id} />
+                </div>
+              </ContentValidator>
             )}
 
             {/* Main menu content - takes full width when ads are not shown */}
@@ -237,15 +247,21 @@ const ViewMenu = () => {
         </div>
 
         {/* Bottom advertisement from advertisement management system - only shown if restaurant is not premium */}
+        {/* AdSense Policy Compliance: Bottom ads require content validation */}
         {showAds && (
-          <div className="w-full max-w-screen-md px-4 mt-6">
-            <MenuAdvertisement position="bottom" restaurantId={restaurant.id} />
-          </div>
+          <ContentValidator route={window.location.pathname}>
+            <div className="w-full max-w-screen-md px-4 mt-6">
+              <MenuAdvertisement position="bottom" restaurantId={restaurant.id} />
+            </div>
+          </ContentValidator>
         )}
 
         {/* Bottom ad banner for free users - only shown if restaurant is not premium */}
+        {/* AdSense Policy Compliance: Rectangle ads need sufficient content */}
         {showAds && (
-          <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
+          <ContentValidator route={window.location.pathname}>
+            <AdBanner format="rectangle" className="w-full max-w-screen-md my-3" />
+          </ContentValidator>
         )}
       </div>
 
