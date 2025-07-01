@@ -1153,7 +1153,17 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(404).json({ message: 'Restaurant not found' });
       }
       
-      res.json(restaurant);
+      // Convert image URLs to absolute URLs before sending
+      const restaurantWithAbsoluteUrls = {
+        ...restaurant,
+        logoUrl: makeAbsoluteUrl(restaurant.logoUrl, req),
+        bannerUrl: makeAbsoluteUrl(restaurant.bannerUrl, req),
+        bannerUrls: Array.isArray(restaurant.bannerUrls) 
+          ? restaurant.bannerUrls.map(url => makeAbsoluteUrl(url, req))
+          : restaurant.bannerUrls
+      };
+      
+      res.json(restaurantWithAbsoluteUrls);
     } catch (error) {
       console.error("Error fetching restaurant:", error);
       res.status(500).json({ message: 'Server error', details: String(error) });

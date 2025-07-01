@@ -138,6 +138,14 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- June 29, 2025: Cross-Device Image Accessibility Fix
+  - Fixed critical image accessibility issue where images uploaded from one PC weren't visible when menu links were accessed from different PCs or domains
+  - Implemented absolute URL conversion for all image references (restaurant logos, banners, menu item images)
+  - Added makeAbsoluteUrl helper function to convert relative paths (like /uploads/filename.jpg) to absolute URLs (like http://domain.com/uploads/filename.jpg)
+  - Updated customer menu API route and restaurant data API route to serve absolute URLs
+  - Images now work consistently across different devices, browsers, and network locations when sharing menu links
+  - Fixed bannerUrls array to properly convert multiple banner images to absolute URLs
+
 - June 27, 2025: Critical Authentication and Loading Fixes
   - Fixed restaurant owner logout to redirect to login page instead of homepage
   - Resolved infinite loading states when typing URLs directly in browser
