@@ -138,6 +138,21 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- July 1, 2025: Currency Fix and AdSense Policy Compliance Implementation
+  - Fixed currency display issue: Updated all Ethiopian restaurant menu items from USD to ETB currency (375 items updated)
+  - Currency now correctly displays as "270.00 Birr" instead of "$270.00" for Ethiopian restaurants
+  - Implemented comprehensive AdSense Policy Compliance system to meet Google requirements:
+    * Created content validation module (adsense-compliance.ts) with 300+ word minimum content requirement
+    * Added ContentValidator component that checks page content before displaying ads
+    * Enhanced AdBanner and AdSense components with policy compliance validation
+    * Updated MenuAdvertisement component with content validation
+    * Added automatic ad blocking for excluded pages (login, register, thank-you, utility pages)
+    * Implemented dynamic content detection to ensure meaningful, original content
+    * Added detailed logging for compliance tracking and debugging
+    * Wrapped all ad placements in view-menu.tsx with ContentValidator for policy compliance
+  - AdSense ads now only display on pages with sufficient, meaningful content meeting Google's standards
+  - System automatically excludes ads from navigation-only, empty, or utility pages as required by AdSense policy
+
 - July 1, 2025: Permanent Image Storage Implementation
   - Implemented comprehensive permanent image storage solution using PostgreSQL database
   - Created permanent_images table to store image data as base64 strings with metadata
