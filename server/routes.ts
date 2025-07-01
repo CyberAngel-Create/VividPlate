@@ -2663,6 +2663,35 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Serve permanent images from database
+  app.get('/api/images/:filename', async (req, res) => {
+    try {
+      const { PermanentImageService } = await import('./permanent-image-service');
+      const filename = req.params.filename;
+      
+      const image = await PermanentImageService.getImage(filename);
+      if (!image) {
+        return res.status(404).json({ message: 'Image not found' });
+      }
+      
+      // Convert base64 back to buffer
+      const imageBuffer = Buffer.from(image.imageData, 'base64');
+      
+      // Set appropriate headers
+      res.set({
+        'Content-Type': image.mimeType,
+        'Content-Length': imageBuffer.length,
+        'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        'Content-Disposition': `inline; filename="${image.originalName}"`
+      });
+      
+      res.send(imageBuffer);
+    } catch (error) {
+      console.error('Error serving permanent image:', error);
+      res.status(500).json({ message: 'Error serving image' });
+    }
+  });
+
   // Get all menu data for a restaurant (for public view)
   app.get('/api/restaurants/:restaurantId/menu', async (req, res) => {
     try {

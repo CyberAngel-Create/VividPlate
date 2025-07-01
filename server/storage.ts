@@ -157,6 +157,13 @@ export interface IStorage {
   deleteFileUpload(id: number): Promise<boolean>;
   getUserImageCount(userId: number): Promise<number>;
 
+  // Permanent image operations
+  savePermanentImage(image: InsertPermanentImage): Promise<PermanentImage>;
+  getPermanentImage(filename: string): Promise<PermanentImage | undefined>;
+  getPermanentImagesByUserId(userId: number): Promise<PermanentImage[]>;
+  getPermanentImagesByRestaurantId(restaurantId: number): Promise<PermanentImage[]>;
+  deletePermanentImage(filename: string): Promise<boolean>;
+
   // Menu examples operations
   getMenuExamples(): Promise<MenuExample[]>;
   getActiveMenuExamples(): Promise<MenuExample[]>;
@@ -2593,6 +2600,39 @@ export class DatabaseStorage implements IStorage {
   async deleteTestimonial(id: number): Promise<boolean> {
     const result = await db.delete(testimonials)
       .where(eq(testimonials.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  // Permanent image operations
+  async savePermanentImage(image: InsertPermanentImage): Promise<PermanentImage> {
+    const [saved] = await db.insert(permanentImages)
+      .values(image)
+      .returning();
+    return saved;
+  }
+
+  async getPermanentImage(filename: string): Promise<PermanentImage | undefined> {
+    const [image] = await db.select().from(permanentImages)
+      .where(eq(permanentImages.filename, filename));
+    return image;
+  }
+
+  async getPermanentImagesByUserId(userId: number): Promise<PermanentImage[]> {
+    return await db.select().from(permanentImages)
+      .where(eq(permanentImages.userId, userId))
+      .orderBy(desc(permanentImages.createdAt));
+  }
+
+  async getPermanentImagesByRestaurantId(restaurantId: number): Promise<PermanentImage[]> {
+    return await db.select().from(permanentImages)
+      .where(eq(permanentImages.restaurantId, restaurantId))
+      .orderBy(desc(permanentImages.createdAt));
+  }
+
+  async deletePermanentImage(filename: string): Promise<boolean> {
+    const result = await db.delete(permanentImages)
+      .where(eq(permanentImages.filename, filename))
       .returning();
     return result.length > 0;
   }
