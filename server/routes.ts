@@ -1213,31 +1213,30 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       console.log(`Processing logo for local storage for restaurant ID: ${restaurantId}`);
       
       let logoUrl;
-      let finalFilePath = originalFilePath;
-      let finalFileName = req.file.filename;
       
       try {
-        // Process and compress the logo image to appropriate dimensions and quality
-        const processedFilePath = await processLogoImage(originalFilePath);
+        // Save the image permanently to database storage
+        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const permanentFilename = await PermanentImageHelpers.saveLogoImage(
+          originalFilePath, 
+          userId, 
+          restaurantId
+        );
         
-        if (fs.existsSync(processedFilePath)) {
-          finalFilePath = processedFilePath;
-          finalFileName = path.basename(processedFilePath);
-          
-          // Delete the original file if it's different from the processed one
-          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
-            fs.unlinkSync(originalFilePath);
-            console.log(`Deleted original file after successful processing: ${originalFilePath}`);
-          }
+        // Use permanent image URL
+        logoUrl = `/api/images/${permanentFilename}`;
+        console.log(`Saved logo permanently to database: ${logoUrl}`);
+        
+        // Clean up temporary file
+        if (fs.existsSync(originalFilePath)) {
+          fs.unlinkSync(originalFilePath);
+          console.log(`Cleaned up temporary file: ${originalFilePath}`);
         }
-        
-        // Use local URL for the logo
-        logoUrl = `/uploads/${finalFileName}`;
-        console.log(`Processed and stored logo locally: ${logoUrl}`);
       } catch (processingError) {
-        // If processing fails, use the original file
-        console.error(`Logo image processing failed, using original image: ${processingError}`);
+        console.error(`Logo permanent storage failed: ${processingError}`);
+        // Fallback to local storage if permanent storage fails
         logoUrl = `/uploads/${req.file.filename}`;
+        console.log(`Fallback to local storage: ${logoUrl}`);
       }
       
       // Update restaurant with new logo URL
@@ -1316,38 +1315,32 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       console.log(`Confirmed banner file exists at: ${originalFilePath}, now processing for optimization`);
       
-      // Process and compress the image
-      let finalFilePath = originalFilePath;
-      let finalFileName = req.file.filename;
+      // Save the image permanently to database storage
+      let bannerUrl;
       
       try {
-        // Process and compress the banner image to max 200KB and appropriate dimensions
-        const processedFilePath = await processBannerImage(originalFilePath);
+        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const permanentFilename = await PermanentImageHelpers.saveBannerImage(
+          originalFilePath, 
+          userId, 
+          restaurantId
+        );
         
-        // Check if processing was successful
-        if (fs.existsSync(processedFilePath)) {
-          // Get the processed file stats
-          const processedStats = fs.statSync(processedFilePath);
-          console.log(`Processed banner stats - Size: ${processedStats.size} bytes, Path: ${processedFilePath}`);
-          
-          // Update the filename and path to use the processed version
-          finalFilePath = processedFilePath;
-          finalFileName = path.basename(processedFilePath);
-          
-          // Delete the original file if it's different from the processed one
-          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
-            fs.unlinkSync(originalFilePath);
-            console.log(`Deleted original banner file after successful processing: ${originalFilePath}`);
-          }
+        // Use permanent image URL
+        bannerUrl = `/api/images/${permanentFilename}`;
+        console.log(`Saved banner permanently to database: ${bannerUrl}`);
+        
+        // Clean up temporary file
+        if (fs.existsSync(originalFilePath)) {
+          fs.unlinkSync(originalFilePath);
+          console.log(`Cleaned up temporary file: ${originalFilePath}`);
         }
       } catch (processingError) {
-        // Log error but continue with original file if processing fails
-        console.error(`Banner image processing failed, using original image: ${processingError}`);
+        console.error(`Banner permanent storage failed: ${processingError}`);
+        // Fallback to local storage if permanent storage fails
+        bannerUrl = `/uploads/${req.file.filename}`;
+        console.log(`Fallback to local storage: ${bannerUrl}`);
       }
-      
-      // Set the correct banner URL to use (either original or processed)
-      const bannerUrl = `/uploads/${finalFileName}`;
-      console.log(`Using banner URL: ${bannerUrl}`);
       
       // Get the restaurant and its current banner URLs
       const restaurant = await storage.getRestaurant(restaurantId);
@@ -1849,49 +1842,36 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       console.log(`Confirmed file exists at: ${originalFilePath}, applying smart compression`);
       
       let imageUrl;
-      let finalFilePath = originalFilePath;
-      let finalFileName = req.file.filename;
       
       try {
-        // Apply smart compression to achieve 70-100KB target size
-        const compressedFilePath = await compressImageSmart(originalFilePath);
-        imageUrl = `/uploads/${path.basename(compressedFilePath)}`;
-        finalFilePath = compressedFilePath;
-        finalFileName = path.basename(compressedFilePath);
-        console.log(`✅ Smart compression completed: ${imageUrl}`);
+        // Save the image permanently to database storage
+        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const permanentFilename = await PermanentImageHelpers.saveMenuItemImage(
+          originalFilePath, 
+          userId, 
+          null // No specific restaurant ID for general menu item uploads
+        );
         
-        // Delete the original file since we have the compressed version
-        if (compressedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+        // Use permanent image URL
+        imageUrl = `/api/images/${permanentFilename}`;
+        console.log(`Saved menu item image permanently to database: ${imageUrl}`);
+        
+        // Clean up temporary file
+        if (fs.existsSync(originalFilePath)) {
           fs.unlinkSync(originalFilePath);
-          console.log(`🗑️ Deleted original file after compression: ${originalFilePath}`);
+          console.log(`Cleaned up temporary file: ${originalFilePath}`);
         }
-      } catch (compressionError) {
-        // If smart compression fails, try standard processing as fallback
-        console.error(`⚠️ Smart compression failed, trying standard processing: ${compressionError}`);
-        try {
-          const { processMenuItemImage } = await import('./image-utils');
-          const processedFilePath = await processMenuItemImage(originalFilePath);
-          imageUrl = `/uploads/${path.basename(processedFilePath)}`;
-          finalFilePath = processedFilePath;
-          finalFileName = path.basename(processedFilePath);
-          console.log(`📸 Standard processing completed as fallback: ${imageUrl}`);
-          
-          if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
-            fs.unlinkSync(originalFilePath);
-          }
-        } catch (fallbackError) {
-          // If both fail, use the original file
-          console.error(`❌ Both compression methods failed, using original: ${fallbackError}`);
-          imageUrl = `/uploads/${req.file.filename}`;
-          finalFilePath = originalFilePath;
-          finalFileName = req.file.filename;
+      } catch (processingError) {
+        console.error(`Menu item permanent storage failed: ${processingError}`);
+        // Fallback to local storage if permanent storage fails
+        imageUrl = `/uploads/${req.file.filename}`;
         }
       }
       
       console.log(`Using image URL: ${imageUrl}`);
       
       // Get final file stats for the response
-      const fileSize = fs.existsSync(finalFilePath) ? fs.statSync(finalFilePath).size : req.file.size;
+      const fileSize = req.file.size;
       
       // Create a file upload record in the database
       const fileUpload = await storage.createFileUpload({
@@ -1987,28 +1967,29 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const { processMenuItemImage } = await import('./image-utils');
       
       let imageUrl;
-      let finalFilePath = originalFilePath;
-      let finalFileName = req.file.filename;
       
       try {
-        // Process the image locally for optimization
-        const processedFilePath = await processMenuItemImage(originalFilePath);
-        imageUrl = `/uploads/${path.basename(processedFilePath)}`;
-        finalFilePath = processedFilePath;
-        finalFileName = path.basename(processedFilePath);
-        console.log(`Processed and stored image locally: ${imageUrl}`);
+        // Save the image permanently to database storage
+        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const permanentFilename = await PermanentImageHelpers.saveMenuItemImage(
+          originalFilePath, 
+          userId, 
+          category.restaurantId
+        );
         
-        // Delete the original file if it's different from the processed one
-        if (processedFilePath !== originalFilePath && fs.existsSync(originalFilePath)) {
+        // Use permanent image URL
+        imageUrl = `/api/images/${permanentFilename}`;
+        console.log(`Saved menu item image permanently to database: ${imageUrl}`);
+        
+        // Clean up temporary file
+        if (fs.existsSync(originalFilePath)) {
           fs.unlinkSync(originalFilePath);
-          console.log(`Deleted original file after successful processing: ${originalFilePath}`);
+          console.log(`Cleaned up temporary file: ${originalFilePath}`);
         }
       } catch (processingError) {
-        // If processing fails, use the original file
-        console.error(`Image processing failed, using original image: ${processingError}`);
+        console.error(`Menu item permanent storage failed: ${processingError}`);
+        // Fallback to local storage if permanent storage fails
         imageUrl = `/uploads/${req.file.filename}`;
-        finalFilePath = originalFilePath;
-        finalFileName = req.file.filename;
       }
       
       console.log(`Using image URL: ${imageUrl}`);

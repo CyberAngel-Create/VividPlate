@@ -138,6 +138,17 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- July 1, 2025: Permanent Image Storage Implementation
+  - Implemented comprehensive permanent image storage solution using PostgreSQL database
+  - Created permanent_images table to store image data as base64 strings with metadata
+  - Developed PermanentImageService and PermanentImageHelpers for image management
+  - Updated all image upload routes (logos, banners, menu items) to use permanent storage
+  - Added /api/images/:filename route to serve images directly from database
+  - Images now persist permanently across all devices and environments (no more disappearing after few hours)
+  - Automatic image optimization and compression during storage (70-100KB target for menu items)
+  - Fallback to local storage if permanent storage fails (graceful degradation)
+  - Complete cross-device accessibility with absolute URLs maintained
+
 - June 29, 2025: Cross-Device Image Accessibility Fix
   - Fixed critical image accessibility issue where images uploaded from one PC weren't visible when menu links were accessed from different PCs or domains
   - Implemented absolute URL conversion for all image references (restaurant logos, banners, menu item images)
