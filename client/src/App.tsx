@@ -89,10 +89,15 @@ function Router() {
   const [location] = useLocation();
   const [showLoadingTimeout, setShowLoadingTimeout] = useState(false);
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
+  const isPublicRoute = location === "/" || location.startsWith("/login") || location.startsWith("/register") || 
+                       location.startsWith("/pricing") || location.startsWith("/contact") || 
+                       location.startsWith("/privacy-policy") || location.startsWith("/terms") ||
+                       location.startsWith("/forgot-password") || location.startsWith("/reset-password") ||
+                       location.startsWith("/admin-login") || isPublicMenuView;
 
-  // Add timeout for loading state to prevent infinite loading
+  // Add timeout for loading state to prevent infinite loading, but skip for public routes
   useEffect(() => {
-    if (isLoading) {
+    if (isLoading && !isPublicRoute) {
       const timer = setTimeout(() => {
         setShowLoadingTimeout(true);
       }, 15000); // 15 second timeout
@@ -101,10 +106,10 @@ function Router() {
     } else {
       setShowLoadingTimeout(false);
     }
-  }, [isLoading]);
+  }, [isLoading, isPublicRoute]);
 
-  // Show timeout message if loading takes too long
-  if (isLoading && showLoadingTimeout) {
+  // Show timeout message if loading takes too long (but not on public routes)
+  if (isLoading && showLoadingTimeout && !isPublicRoute) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center max-w-md mx-auto p-8">
