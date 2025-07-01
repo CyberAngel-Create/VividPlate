@@ -1865,7 +1865,6 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         console.error(`Menu item permanent storage failed: ${processingError}`);
         // Fallback to local storage if permanent storage fails
         imageUrl = `/uploads/${req.file.filename}`;
-        }
       }
       
       console.log(`Using image URL: ${imageUrl}`);
@@ -1878,8 +1877,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         userId,
         restaurantId: null, // Will be assigned when the menu item is created
         originalFilename: req.file.originalname,
-        storedFilename: finalFileName,
-        filePath: finalFilePath,
+        storedFilename: req.file.filename,
+        filePath: req.file.path,
         fileUrl: imageUrl,
         fileType: req.file.mimetype,
         fileSize: fileSize,
@@ -1887,7 +1886,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         fileCategory: 'menu_item',
         uploadedAt: new Date(),
         metadata: {
-          provider: 'local',
+          provider: 'permanent',
           compressed: true // We always optimize images
         }
       });
@@ -1900,10 +1899,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         imageUrl, 
         success: true,
         fileDetails: {
-          name: finalFileName,
+          name: req.file.filename,
           size: fileSize,
           type: req.file.mimetype,
-          provider: imageUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local'
+          provider: imageUrl.includes('/api/images/') ? 'permanent' : 'local'
         },
         fileUpload
       });
@@ -2006,16 +2005,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(404).json({ message: 'Item not found after upload' });
       }
       
-      // Get final file stats for the response
-      const stats = fs.statSync(finalFilePath);
-      
       // Get the restaurant ID for this menu item through the category
       const restaurantId = category ? category.restaurantId : null;
       
       // Get final file stats for the response
-      const fileSize = imageUrl.includes('ik.imagekit.io') 
-        ? req.file.size  // Use original file size for ImageKit uploads
-        : fs.existsSync(finalFilePath) ? fs.statSync(finalFilePath).size : req.file.size;
+      const fileSize = req.file.size;
       
       // Create a file upload record in the database
       const fileUpload = await storage.createFileUpload({
