@@ -1,12 +1,20 @@
 import React, { useEffect } from 'react';
 import { useSubscription } from '@/hooks/use-subscription';
+import { useLocation } from 'wouter';
+import { shouldDisplayAds } from '@/lib/adsense-compliance';
 
 const AdSense: React.FC = () => {
   const { isPaid } = useSubscription();
+  const [location] = useLocation();
   
   useEffect(() => {
-    // Skip loading AdSense for paid users
-    if (isPaid) return;
+    // AdSense Policy Compliance: Only load AdSense script for valid pages
+    const shouldLoadAds = shouldDisplayAds(isPaid, location);
+    
+    if (!shouldLoadAds) {
+      console.log('AdSense Policy: Script not loaded - page validation failed');
+      return;
+    }
     
     // Only add the script if it doesn't already exist
     if (!document.getElementById('google-adsense-script')) {
@@ -35,7 +43,7 @@ const AdSense: React.FC = () => {
       // Cleanup function - in practice, we wouldn't remove the script
       // But we could handle other cleanup if needed
     };
-  }, [isPaid]);
+  }, [isPaid, location]);
 
   // This component doesn't render anything visible
   return null;

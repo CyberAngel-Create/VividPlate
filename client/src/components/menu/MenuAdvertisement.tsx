@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Advertisement } from "@shared/schema";
 import { ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
+import { shouldDisplayAds } from "@/lib/adsense-compliance";
+import { useSubscription } from "@/hooks/use-subscription";
 
 interface MenuAdvertisementProps {
   position: "top" | "bottom" | "sidebar";
@@ -13,10 +15,20 @@ interface MenuAdvertisementProps {
 
 const MenuAdvertisement = ({ position, restaurantId }: MenuAdvertisementProps) => {
   const params = useParams();
+  const [location] = useLocation();
+  const { isPaid } = useSubscription();
   const activeRestaurantId = restaurantId || params.restaurantId;
   
   const [imageUrl, setImageUrl] = useState<string>("");
   const [linkUrl, setLinkUrl] = useState<string>("");
+  
+  // AdSense Policy Compliance: Check if ads should be displayed
+  const shouldShowAds = shouldDisplayAds(isPaid, location);
+  
+  // Don't render advertisement if compliance validation fails
+  if (!shouldShowAds) {
+    return null;
+  }
   
   const { data: advertisement, isLoading } = useQuery<Advertisement>({
     queryKey: ["/api/advertisements", position, activeRestaurantId],

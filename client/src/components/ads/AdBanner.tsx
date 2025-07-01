@@ -1,5 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSubscription } from '@/hooks/use-subscription';
+import { useLocation } from 'wouter';
+import { shouldDisplayAds, validatePageForAds } from '@/lib/adsense-compliance';
 
 declare global {
   interface Window {
@@ -15,9 +17,32 @@ interface AdBannerProps {
 
 const AdBanner: React.FC<AdBannerProps> = ({ format = 'horizontal', position, className = '' }) => {
   const { isPaid } = useSubscription();
+  const [location] = useLocation();
+  const [contentValidated, setContentValidated] = useState(false);
   
-  // Skip rendering for paid users
-  if (isPaid) {
+  // AdSense Policy Compliance: Validate content before showing ads
+  useEffect(() => {
+    // Wait for content to load before validation
+    const timer = setTimeout(() => {
+      const validation = validatePageForAds(location);
+      setContentValidated(validation.isValid);
+      
+      // Debug logging for compliance tracking
+      if (!validation.isValid) {
+        console.log('AdSense Policy: Ad blocked -', validation.reason);
+      }
+    }, 2000); // Allow time for dynamic content to render
+    
+    return () => clearTimeout(timer);
+  }, [location]);
+  
+  // AdSense Policy Compliance: Multi-level validation
+  // 1. Never show ads to paid users (subscription-based)
+  // 2. Only show ads on pages with sufficient, meaningful content
+  // 3. Exclude utility pages, forms, and thank-you pages
+  const shouldShowAds = shouldDisplayAds(isPaid, location) && contentValidated;
+  
+  if (!shouldShowAds) {
     return null;
   }
 
