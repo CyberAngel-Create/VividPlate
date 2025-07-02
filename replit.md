@@ -138,6 +138,26 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- July 2, 2025: Banner Caching Optimization and Slideshow Enhancement Implementation
+  - **Fixed Banner Loading Performance**: Removed cache-busting parameters that caused repeated image downloads
+    * Eliminated `Date.now()` cache-busting from BannerSlideshow component
+    * Added comprehensive HTTP caching headers with ETag support for permanent images (1-year cache)
+    * Enhanced static file caching for uploads directory (24-hour cache with immutable flag)
+    * Implemented 304 Not Modified responses for better bandwidth efficiency
+  - **Enhanced Banner Management System**:
+    * Added maximum 3 banner limit per restaurant with proper validation
+    * Improved banner filtering to remove empty placeholders and invalid URLs
+    * Enhanced slideshow functionality with proper browser caching
+    * Fixed BannerSlideshow component to only render when valid banners exist
+    * Added automatic slideshow pausing on hover for better user experience
+  - **Optimized Image Serving**:
+    * Added ETag generation for better browser cache validation
+    * Implemented Last-Modified headers for conditional requests
+    * Added immutable cache directive for permanent images
+    * Enhanced CORS headers for cross-origin image access
+  - **Reduced Data Usage**: Images now cache properly in browsers, preventing repeated downloads and reducing outbound data consumption
+  - **Improved User Experience**: Empty banner placeholders no longer display, slideshow works smoothly with 1-3 images maximum
+
 - July 1, 2025: Currency Fix and AdSense Policy Compliance Implementation
   - Fixed currency display issue: Updated all Ethiopian restaurant menu items from USD to ETB currency (375 items updated)
   - Currency now correctly displays as "270.00 Birr" instead of "$270.00" for Ethiopian restaurants

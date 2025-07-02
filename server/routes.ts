@@ -393,12 +393,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Enhanced cross-origin headers for better mobile compatibility
-    // Using shorter max-age to prevent long caching of images that might change
+    // Improved caching for permanent images to reduce data usage
     const options = {
       root: uploadDir,
       dotfiles: 'deny' as const,
       headers: {
-        'Cache-Control': 'public, max-age=3600', // Cache for 1 hour instead of 1 year
+        'Cache-Control': 'public, max-age=86400, immutable', // Cache for 24 hours, immutable
         'X-Content-Type-Options': 'nosniff', // Security header
         'Access-Control-Allow-Origin': '*', // Allow cross-origin access
         'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
@@ -1359,6 +1359,26 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Otherwise, if there's a legacy single bannerUrl, use that as the first item
       else if (restaurant.bannerUrl) {
         bannerUrls = [restaurant.bannerUrl];
+      }
+      
+      // Filter out empty/invalid URLs
+      bannerUrls = bannerUrls.filter(url => 
+        url && 
+        url.trim() !== '' && 
+        url !== 'null' && 
+        url !== 'undefined' &&
+        !url.includes('placeholder') &&
+        !url.includes('fallback')
+      );
+      
+      // Check maximum banner limit (3 banners max)
+      if (bannerUrls.length >= 3) {
+        console.warn(`Restaurant ${restaurantId} already has maximum banners (${bannerUrls.length})`);
+        return res.status(400).json({ 
+          message: 'Maximum number of banner images reached. You can upload up to 3 banner images. Please delete an existing banner before uploading a new one.',
+          currentCount: bannerUrls.length,
+          maxCount: 3
+        });
       }
       
       // Add the new banner URL to the array
@@ -2635,7 +2655,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
-  // Serve permanent images from database
+  // Serve permanent images from database with optimized caching
   app.get('/api/images/:filename', async (req, res) => {
     try {
       const { PermanentImageService } = await import('./permanent-image-service');
@@ -2649,11 +2669,23 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Convert base64 back to buffer
       const imageBuffer = Buffer.from(image.imageData, 'base64');
       
-      // Set appropriate headers
+      // Generate ETag for better caching
+      const crypto = require('crypto');
+      const etag = crypto.createHash('md5').update(imageBuffer).digest('hex');
+      
+      // Check if client has cached version
+      if (req.headers['if-none-match'] === etag) {
+        return res.status(304).end();
+      }
+      
+      // Set comprehensive caching headers
       res.set({
         'Content-Type': image.mimeType,
         'Content-Length': imageBuffer.length,
-        'Cache-Control': 'public, max-age=31536000', // Cache for 1 year
+        'Cache-Control': 'public, max-age=31536000, immutable', // Cache for 1 year, immutable
+        'ETag': etag,
+        'Last-Modified': new Date(image.uploadedAt).toUTCString(),
+        'Expires': new Date(Date.now() + 31536000000).toUTCString(), // 1 year from now
         'Content-Disposition': `inline; filename="${image.originalName}"`
       });
       
