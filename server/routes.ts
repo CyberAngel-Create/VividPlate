@@ -1380,24 +1380,21 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       console.log(`Restaurant ${restaurantId} banners successfully updated, latest: ${bannerUrl}`);
       
-      // Get final file stats for the response
-      const stats = fs.statSync(finalFilePath);
-      
       // Create a file upload record in the database
       const fileUpload = await storage.createFileUpload({
         userId,
         restaurantId,
         originalFilename: req.file.originalname,
-        storedFilename: finalFileName,
-        filePath: finalFilePath,
+        storedFilename: req.file.filename,
+        filePath: originalFilePath,
         fileUrl: bannerUrl,
         fileType: req.file.mimetype,
-        fileSize: stats.size,
+        fileSize: req.file.size,
         status: 'active',
         fileCategory: 'banner',
         uploadedAt: new Date(),
         metadata: {
-          compressed: finalFilePath !== originalFilePath,
+          compressed: true, // Since we use permanent image storage compression
           bannerIndex: bannerUrls.length - 1 // Store the index of this banner in the array
         }
       });
@@ -1409,10 +1406,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         bannerUrls,        // Return the full array of banner URLs
         success: true,
         fileDetails: {
-          name: finalFileName,
-          size: stats.size,
+          name: req.file.filename,
+          size: req.file.size,
           type: req.file.mimetype,
-          compressed: finalFilePath !== originalFilePath
+          compressed: true // Since we use permanent image storage compression
         },
         fileUpload
       });
@@ -2016,8 +2013,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         userId,
         restaurantId,
         originalFilename: req.file.originalname,
-        storedFilename: finalFileName,
-        filePath: finalFilePath, // Empty path for ImageKit uploads
+        storedFilename: req.file.filename,
+        filePath: originalFilePath,
         fileUrl: imageUrl,
         fileType: req.file.mimetype,
         fileSize: fileSize,
@@ -2025,7 +2022,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         fileCategory: 'menu_item',
         uploadedAt: new Date(),
         metadata: {
-          provider: imageUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local',
+          provider: imageUrl.includes('/api/images/') ? 'permanent' : 'local',
           compressed: true, // We always optimize images
           menuItemId: itemId,
           menuItemName: item.name
@@ -2037,10 +2034,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         imageUrl, 
         success: true,
         fileDetails: {
-          name: finalFileName,
+          name: req.file.filename,
           size: fileSize,
           type: req.file.mimetype,
-          provider: imageUrl.includes('ik.imagekit.io') ? 'imagekit' : 'local'
+          provider: imageUrl.includes('/api/images/') ? 'permanent' : 'local'
         },
         fileUpload
       });
