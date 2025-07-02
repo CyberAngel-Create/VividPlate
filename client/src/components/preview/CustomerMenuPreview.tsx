@@ -46,38 +46,39 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovering, setIsHovering] = useState(false);
 
-  // Process the banner URLs
+  // Process the banner URLs - filter out empty/invalid URLs
   const processedBannerUrls = useMemo(() => {
     if (!bannerUrls || bannerUrls.length === 0) {
-      console.warn('No banner URLs provided to BannerSlideshow');
-      return [getFallbackImage('banner')];
+      return [];
     }
-    // Filter out empty URLs
-    return bannerUrls.filter(url => !!url);
+    // Filter out empty, null, undefined, and placeholder URLs
+    const validUrls = bannerUrls.filter(url => 
+      url && 
+      url.trim() !== '' && 
+      url !== 'null' && 
+      url !== 'undefined' &&
+      !url.includes('placeholder') &&
+      !url.includes('fallback')
+    );
+    
+    // Limit to maximum 3 banner images
+    return validUrls.slice(0, 3);
   }, [bannerUrls]);
 
-  // Automatic slideshow - only runs when not hovering and autoSlide is enabled
+  // Don't render if no valid banners
+  if (processedBannerUrls.length === 0) {
+    return null;
+  }
+
+  // Automatic slideshow - only runs when not hovering, autoSlide is enabled, and multiple banners
   useEffect(() => {
     if (processedBannerUrls.length <= 1 || isHovering || !autoSlide) return;
 
-    console.log('Banner slideshow initiated with interval:', interval);
-    console.log('Available banner URLs:', processedBannerUrls);
-
-    // Force initial banner to be visible
-    setActiveIndex(0);
-
     const timer = setInterval(() => {
-      setActiveIndex((prev) => {
-        const nextIndex = prev === processedBannerUrls.length - 1 ? 0 : prev + 1;
-        console.log(`Sliding banner from index ${prev} to ${nextIndex}`);
-        return nextIndex;
-      });
+      setActiveIndex((prev) => (prev === processedBannerUrls.length - 1 ? 0 : prev + 1));
     }, interval);
 
-    return () => {
-      console.log('Clearing banner slideshow interval');
-      clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, [processedBannerUrls.length, interval, isHovering, autoSlide]);
 
   const prevSlide = () => {
@@ -102,36 +103,25 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {/* Banner images */}
-      {processedBannerUrls.map((url, index) => {
-        const normalizedUrl = normalizeImageUrl(url);
-        console.log(`Banner image ${index}: ${normalizedUrl}, active: ${index === activeIndex}`);
-
-        // Add a cache-busting parameter to prevent caching issues
-        const urlWithCacheBust = `${url}${url.includes('?') ? '&' : '?'}cb=${Date.now()}`;
-
-        return (
+      {/* Banner images - optimized for browser caching */}
+      {processedBannerUrls.map((url, index) => (
+        <div
+          key={`banner-${index}-${url}`}
+          className={`w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ${
+            index === activeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
+          }`}
+        >
           <ResponsiveImage
-            key={`banner-${index}-${Date.now()}`}
-            src={urlWithCacheBust}
+            src={normalizeImageUrl(url)}
             alt={`${restaurantName} banner ${index + 1}`}
             fallbackType="banner"
-            className={`w-full h-full absolute top-0 left-0 transition-opacity duration-1000 ${
-              index === activeIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'
-            }`}
-            imgClassName="object-cover w-full h-full"
-            onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
+            className="w-full h-full object-cover"
+            onError={() => {
               console.error("Failed to load banner image:", url);
-              // Try to load the image again with a different cache parameter
-              const imgElement = e.target as HTMLImageElement;
-              if (!imgElement.dataset.retried) {
-                imgElement.dataset.retried = 'true';
-                imgElement.src = `${url}${url.includes('?') ? '&' : '?'}retry=${Date.now()}`;
-              }
             }}
           />
-        );
-      })}
+        </div>
+      ))}
 
       {/* Restaurant logo overlay */}
       {logoUrl && (
@@ -140,8 +130,7 @@ const BannerSlideshow: React.FC<BannerSlideshowProps> = ({
             src={logoUrl}
             alt={`${restaurantName} logo`}
             fallbackType="logo"
-            className="w-full h-full rounded-full overflow-hidden"
-            imgClassName="object-cover w-full h-full"
+            className="w-full h-full rounded-full overflow-hidden object-cover"
             onError={() => {
               console.error("Failed to load logo image:", logoUrl);
             }}
@@ -401,23 +390,37 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
             const hasValidBannerUrls = restaurant.bannerUrls && 
               Array.isArray(restaurant.bannerUrls) && 
               restaurant.bannerUrls.length > 0 && 
-              restaurant.bannerUrls.some(url => url && url.trim() !== '' && url !== 'null' && url !== 'undefined');
+              restaurant.bannerUrls.some((url: any) => 
+                url && 
+                url.trim() !== '' && 
+                url !== 'null' && 
+                url !== 'undefined' &&
+                !url.includes('placeholder') &&
+                !url.includes('fallback')
+              );
 
             // Check for valid single banner URL
             const hasValidBannerUrl = restaurant.bannerUrl && 
               restaurant.bannerUrl.trim() !== '' && 
               restaurant.bannerUrl !== 'null' && 
-              restaurant.bannerUrl !== 'undefined';
+              restaurant.bannerUrl !== 'undefined' &&
+              !restaurant.bannerUrl.includes('placeholder') &&
+              !restaurant.bannerUrl.includes('fallback');
 
             if (hasValidBannerUrls) {
-              // Filter out empty/invalid URLs
-              const validUrls = restaurant.bannerUrls.filter(url => 
-                url && url.trim() !== '' && url !== 'null' && url !== 'undefined'
-              );
+              // Filter out empty/invalid URLs and limit to 3
+              const validUrls = (restaurant.bannerUrls as string[]).filter((url: any) => 
+                url && 
+                url.trim() !== '' && 
+                url !== 'null' && 
+                url !== 'undefined' &&
+                !url.includes('placeholder') &&
+                !url.includes('fallback')
+              ).slice(0, 3);
               
               return (
                 <BannerSlideshow 
-                  bannerUrls={validUrls as string[]} 
+                  bannerUrls={validUrls} 
                   restaurantName={restaurant.name}
                   logoUrl={restaurant.logoUrl}
                   autoSlide={!previewMode}
@@ -425,13 +428,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               );
             } else if (hasValidBannerUrl) {
               return (
-                <>
+                <div className="w-full h-full relative">
                   <ResponsiveImage 
                     src={restaurant.bannerUrl}
                     alt={`${restaurant.name} banner`}
                     fallbackType="banner"
-                    className="w-full h-full"
-                    imgClassName="object-cover w-full h-full"
+                    className="w-full h-full object-cover"
                     onError={() => {
                       console.error("Failed to load banner image:", restaurant.bannerUrl);
                     }}
@@ -443,15 +445,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                         src={restaurant.logoUrl}
                         alt={`${restaurant.name} logo`}
                         fallbackType="logo"
-                        className="w-full h-full rounded-full overflow-hidden"
-                        imgClassName="object-cover w-full h-full"
+                        className="w-full h-full rounded-full overflow-hidden object-cover"
                         onError={() => {
                           console.error("Failed to load logo image:", restaurant.logoUrl);
                         }}
                       />
                     </div>
                   )}
-                </>
+                </div>
               );
             } else {
               // No valid banners - show default background with restaurant info
@@ -461,6 +462,19 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                     <h3 className="text-lg font-semibold">{restaurant.name}</h3>
                     <p className="text-sm opacity-80">{restaurant.cuisine || "Restaurant Menu"}</p>
                   </div>
+                  {restaurant.logoUrl && (
+                    <div className="absolute top-4 right-4 z-20 w-16 h-16 md:w-20 md:h-20 bg-white rounded-full p-1 shadow-md">
+                      <ResponsiveImage
+                        src={restaurant.logoUrl}
+                        alt={`${restaurant.name} logo`}
+                        fallbackType="logo"
+                        className="w-full h-full rounded-full overflow-hidden object-cover"
+                        onError={() => {
+                          console.error("Failed to load logo image:", restaurant.logoUrl);
+                        }}
+                      />
+                    </div>
+                  )}
                 </div>
               );
             }
