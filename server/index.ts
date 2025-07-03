@@ -41,7 +41,7 @@ app.use((req, res, next) => {
     'http://127.0.0.1:5000'
   ];
   
-  if (allowedOrigins.includes(origin)) {
+  if (origin && allowedOrigins.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   }
   
@@ -103,11 +103,30 @@ app.use((req, res, next) => {
   next();
 });
 
-// Import routes
+// Import routes and database health check
 import { registerRoutes } from "./routes";
 import { testBackblazeConnection } from './backblaze-config';
+import { DatabaseHealth } from './database-health';
 
 (async () => {
+  // Validate environment variables first
+  console.log('🔍 Validating environment configuration...');
+  const envCheck = DatabaseHealth.validateEnvironment();
+  if (!envCheck.valid) {
+    console.error('❌ Missing required environment variables:', envCheck.missing);
+    process.exit(1);
+  }
+  console.log('✅ Environment variables validated');
+
+  // Test database connection with retry logic
+  console.log('🔍 Testing database connection...');
+  const dbReady = await DatabaseHealth.waitForDatabase(5, 2000);
+  if (!dbReady) {
+    console.error('❌ Failed to establish database connection');
+    process.exit(1);
+  }
+  console.log('✅ Database connection established');
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -131,5 +150,46 @@ import { testBackblazeConnection } from './backblaze-config';
   
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
+    console.log('🚀 Application started successfully');
   });
-})();
+
+  // Graceful shutdown handling
+  const gracefulShutdown = (signal: string) => {
+    console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
+    
+    server.close((err) => {
+      if (err) {
+        console.error('❌ Error during server shutdown:', err);
+        process.exit(1);
+      }
+      
+      console.log('✅ Server closed successfully');
+      process.exit(0);
+    });
+
+    // Force close after 10 seconds
+    setTimeout(() => {
+      console.error('⚠️ Forcing shutdown after timeout');
+      process.exit(1);
+    }, 10000);
+  };
+
+  // Handle shutdown signals
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+  // Handle uncaught exceptions
+  process.on('uncaughtException', (error) => {
+    console.error('💥 Uncaught Exception:', error);
+    gracefulShutdown('uncaughtException');
+  });
+
+  process.on('unhandledRejection', (reason, promise) => {
+    console.error('💥 Unhandled Rejection at:', promise, 'reason:', reason);
+    gracefulShutdown('unhandledRejection');
+  });
+
+})().catch((error) => {
+  console.error('💥 Failed to start application:', error);
+  process.exit(1);
+});
