@@ -410,8 +410,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     const fileName = req.path.substring(1); // Remove leading slash
     
-    if (!fileName || fileName.includes('..') || fileName.includes('/')) {
+    // Security check: prevent directory traversal but allow safe subdirectories
+    if (!fileName || fileName.includes('..') || fileName.startsWith('/') || fileName.endsWith('/')) {
       console.warn(`Suspicious file path requested: ${fileName}`);
+      return res.status(403).send('Forbidden');
+    }
+    
+    // Allow only specific safe subdirectories for menu items, logos, and banners
+    const allowedPaths = /^(menu-items|logos|banners)\/[^\/]+$|^[^\/]+$/;
+    if (!allowedPaths.test(fileName)) {
+      console.warn(`Unauthorized file path requested: ${fileName}`);
       return res.status(403).send('Forbidden');
     }
     

@@ -20,16 +20,24 @@ export function normalizeImageUrl(url: string | null | undefined): string {
     return url.startsWith('/') ? url : `/${url}`;
   }
   
-  // Handle cases where the URL might be missing uploads prefix for user-uploaded content
-  if (!url.includes('/uploads/') && !url.startsWith('/uploads/')) {
-    console.warn(`Possible malformed image URL: ${url}, adding /uploads/ prefix`);
-    // Add /uploads/ prefix if missing
-    const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
-    return `/uploads/${cleanUrl}`;
+  // Handle permanent image URLs (new database storage system)
+  if (url.includes('/api/images/') || url.startsWith('/api/images/')) {
+    // These are permanent image URLs served from database, return as is
+    return url.startsWith('/') ? url : `/${url}`;
   }
   
-  // Ensure URLs start with a slash for server paths
-  return url.startsWith('/') ? url : `/${url}`;
+  // Handle legacy uploads URLs
+  if (url.includes('/uploads/') || url.startsWith('/uploads/')) {
+    // These are legacy file upload URLs, return as is
+    return url.startsWith('/') ? url : `/${url}`;
+  }
+  
+  // Handle cases where the URL might be missing uploads prefix for user-uploaded content
+  // This is for backward compatibility with old URL formats
+  console.warn(`Possible legacy image URL: ${url}, adding /uploads/ prefix for compatibility`);
+  // Add /uploads/ prefix if missing
+  const cleanUrl = url.startsWith('/') ? url.substring(1) : url;
+  return `/uploads/${cleanUrl}`;
 }
 
 /**
@@ -56,15 +64,8 @@ export function getFallbackImage(type: 'menu' | 'logo' | 'banner' = 'menu'): str
       break;
   }
   
-  // Check if the fallback exists, if not use the generic placeholder as final fallback
-  const finalFallback = '/placeholder-image.svg';
-  
-  // We're adding a cache-busting parameter to avoid browser caching issues
-  // This ensures the browser doesn't serve a cached image that might be missing
-  const cacheBuster = `?t=${Date.now()}`;
-  
   console.log(`Using fallback image for ${type}: ${fallbackUrl}`);
   
-  // Return with cache buster to prevent cached 404 responses
-  return `${fallbackUrl}${cacheBuster}`;
+  // Return fallback URL without cache busting to allow proper browser caching
+  return fallbackUrl;
 }
