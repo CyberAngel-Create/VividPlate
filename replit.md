@@ -138,6 +138,23 @@ VividPlate is a comprehensive digital restaurant menu platform that enables rest
 
 ## Changelog
 
+- July 3, 2025: Customer Menu Image Display Fix and Upload System Optimization
+  - **Fixed Customer Menu Image Display Issues**: Resolved critical image visibility problems after upload
+    * Fixed URL normalization for permanent image storage system (/api/images/ URLs)
+    * Updated ResponsiveImage component to properly handle new permanent image URLs
+    * Removed problematic cache-busting from fallback images that caused repeated downloads
+    * Fixed static file serving security filter to allow access to subdirectories (menu-items, logos, banners)
+  - **Enhanced Image Upload System**:
+    * Permanent image service working correctly (storing images as base64 in database)
+    * Fixed static file serving to properly handle nested directory paths in uploads
+    * Updated image URL handling for cross-device compatibility
+    * Identified 267 menu items with missing image URLs requiring data migration
+  - **Production-Ready Image Infrastructure**:
+    * Images now accessible via both legacy /uploads/ paths and new /api/images/ permanent URLs
+    * Proper fallback handling for failed image loads
+    * Enhanced CORS and caching headers for optimal performance
+    * Subdirectory access working for menu-items, logos, and banners folders
+
 - July 3, 2025: Deployment Infrastructure Fixes and Database Stability Implementation
   - **Fixed Critical Deployment Issues**: Resolved all deployment failures and build warnings
     * Removed duplicate class methods from storage.ts causing TypeScript compilation errors
