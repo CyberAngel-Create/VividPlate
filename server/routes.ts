@@ -1735,6 +1735,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   app.post('/api/categories/:categoryId/items', isAuthenticated, async (req, res) => {
     try {
       const categoryId = parseInt(req.params.categoryId);
+      const userId = (req.user as any).id;
+      
+      console.log(`🍽️ Creating menu item for category ${categoryId}, user ${userId}`);
+      console.log(`📋 Request body:`, JSON.stringify(req.body, null, 2));
+      
       const category = await storage.getMenuCategory(categoryId);
       if (!category) {
         return res.status(404).json({ message: 'Category not found' });
@@ -1742,7 +1747,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       // Check if user owns the restaurant
       const restaurant = await storage.getRestaurant(category.restaurantId);
-      if (!restaurant || restaurant.userId !== (req.user as any).id) {
+      if (!restaurant || restaurant.userId !== userId) {
         return res.status(403).json({ message: 'Access denied' });
       }
       
@@ -1751,10 +1756,19 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         categoryId
       });
       
+      console.log(`✅ Parsed item data:`, JSON.stringify(itemData, null, 2));
+      console.log(`🖼️ Image URL in parsed data: "${itemData.imageUrl}"`);
+      
       const item = await storage.createMenuItem(itemData);
+      
+      console.log(`🎉 Created menu item:`, JSON.stringify(item, null, 2));
+      console.log(`🖼️ Final image URL: "${item.imageUrl}"`);
+      
       res.status(201).json(item);
     } catch (error) {
+      console.error(`❌ Menu item creation error:`, error);
       if (error instanceof z.ZodError) {
+        console.error(`❌ Validation errors:`, error.errors);
         res.status(400).json({ message: 'Validation error', errors: error.errors });
       } else {
         res.status(500).json({ message: 'Server error' });
@@ -2016,11 +2030,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         imageUrl = `/uploads/${req.file.filename}`;
       }
       
-      console.log(`Using image URL: ${imageUrl}`);
+      console.log(`🖼️ Using image URL: ${imageUrl}`);
       
       // If item has an existing image, make note for debugging
       if (item.imageUrl) {
-        console.log(`Menu item ${itemId} already had image: ${item.imageUrl}, replacing with: ${imageUrl}`);
+        console.log(`📸 Menu item ${itemId} already had image: ${item.imageUrl}, replacing with: ${imageUrl}`);
       }
       
       // Update menu item with new image URL
@@ -2057,7 +2071,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         }
       });
       
-      console.log(`Menu item ${itemId} successfully updated with new image URL: ${imageUrl}, file record ID: ${fileUpload.id}`);
+      console.log(`✅ Menu item ${itemId} successfully updated with new image URL: ${imageUrl}, file record ID: ${fileUpload.id}`);
       res.json({ 
         imageUrl, 
         success: true,
