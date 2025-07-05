@@ -364,10 +364,11 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
                               <TableCell className="w-16 text-center">
                                 <div
                                   {...provided.dragHandleProps}
-                                  className="cursor-grab hover:cursor-grabbing p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                                  className="cursor-grab hover:cursor-grabbing p-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center border-2 border-gray-400 dark:border-gray-500 bg-gray-50 dark:bg-gray-700"
                                   title="Drag to reorder"
+                                  style={{ minHeight: '32px', minWidth: '32px' }}
                                 >
-                                  <GripVertical className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                                  <span className="text-gray-700 dark:text-gray-300 text-xl font-black select-none">⋮⋮</span>
                                 </div>
                               </TableCell>
                               <TableCell className="font-medium dark:text-gray-200">
