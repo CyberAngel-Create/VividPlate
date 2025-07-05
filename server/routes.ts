@@ -2692,8 +2692,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const imageBuffer = Buffer.from(image.imageData, 'base64');
       
       // Generate ETag for better caching
-      const crypto = require('crypto');
-      const etag = crypto.createHash('md5').update(imageBuffer).digest('hex');
+      const { createHash } = await import('crypto');
+      const etag = createHash('md5').update(imageBuffer).digest('hex');
       
       // Check if client has cached version
       if (req.headers['if-none-match'] === etag) {
