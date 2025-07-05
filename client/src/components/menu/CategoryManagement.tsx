@@ -305,11 +305,13 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
     setIsAddDialogOpen(true);
   };
 
+  console.log('CategoryManagement rendered with', categories?.length, 'categories');
+  
   return (
     <Card className="w-full dark:bg-gray-800 dark:border-gray-700">
       <CardHeader className="flex flex-row items-center justify-between pb-2 dark:border-gray-700">
         <div>
-          <CardTitle className="dark:text-gray-100">{t("Menu Categories")}</CardTitle>
+          <CardTitle className="dark:text-gray-100">{t("Menu Categories")} ({categories?.length || 0})</CardTitle>
           <CardDescription className="dark:text-gray-300">
             {t("Manage your restaurant's menu categories. Drag using the handle (⋮⋮) or use arrow buttons to reorder them.")}
           </CardDescription>

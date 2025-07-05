@@ -46,6 +46,7 @@ import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
+import CategoriesPage from "./pages/categories";
 import { PWAInstaller } from "@/components/PWAInstaller";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -151,6 +152,7 @@ function Router() {
 
         <AuthenticatedRoute path="/dashboard" component={Dashboard} />
         <AuthenticatedRoute path="/profile" component={Profile} />
+        <AuthenticatedRoute path="/categories" component={CategoriesPage} />
         <AuthenticatedRoute path="/create-menu" component={CreateMenu} />
         <AuthenticatedRoute path="/edit-restaurant" component={EditRestaurant} />
         <AuthenticatedRoute path="/edit-restaurant/:restaurantId" component={EditRestaurant} />
