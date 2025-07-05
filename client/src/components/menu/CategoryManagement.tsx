@@ -45,12 +45,11 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MenuCategory } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { useRestaurant } from "@/hooks/use-restaurant";
 
-interface CategoryManagementProps {
-  restaurantId: number;
-}
-
-const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId }) => {
+const CategoryManagement: React.FC = () => {
+  const { activeRestaurant } = useRestaurant();
+  const restaurantId = activeRestaurant?.id;
   const { t } = useTranslation();
   const { toast } = useToast();
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -63,6 +62,22 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
     displayOrder: 0,
   });
 
+  // Early return if no restaurant is selected
+  if (!restaurantId) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center space-y-3">
+          <div className="text-lg font-medium text-muted-foreground">
+            {t("Select a restaurant to manage categories")}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {t("Please choose a restaurant from the dropdown above")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Fetch categories
   const { data: categories = [], isLoading } = useQuery<MenuCategory[]>({
     queryKey: ["/api/restaurants", restaurantId, "categories"],
@@ -73,6 +88,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
       }
       return response.json();
     },
+    enabled: !!restaurantId,
   });
 
   // Add category mutation

@@ -98,11 +98,6 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
     return false;
   });
 
-  // Debug logging
-  console.log("Total nav items:", navItems.length);
-  console.log("Filtered nav items:", filteredNavItems.length);
-  console.log("Categories item:", navItems.find(item => item.id === 'categories'));
-
   const isActive = (path: string) => {
     return location === path;
   };
