@@ -25,7 +25,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   const { subscription, isPaid } = useSubscription();
   const { t } = useTranslation();
   
-  // Define navigation items
+  // Define navigation items with Categories
   const navItems: NavItem[] = [
     { 
       id: 'dashboard', 
@@ -97,6 +97,11 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
     if (item.showFor === "free" && !isPaid) return true;
     return false;
   });
+
+  // Debug logging
+  console.log("Total nav items:", navItems.length);
+  console.log("Filtered nav items:", filteredNavItems.length);
+  console.log("Categories item:", navItems.find(item => item.id === 'categories'));
 
   const isActive = (path: string) => {
     return location === path;
