@@ -39,7 +39,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Edit, Trash2, Plus, GripVertical } from "lucide-react";
+import { Edit, Trash2, Plus, GripVertical, ChevronUp, ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MenuCategory } from "@shared/schema";
@@ -204,6 +204,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
 
   // Handle drag and drop reordering
   const handleDragEnd = useCallback((result: DropResult) => {
+    console.log('Drag ended:', result);
     if (!result.destination) return;
 
     const sourceIndex = result.source.index;
@@ -222,7 +223,31 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
       displayOrder: index + 1
     }));
 
+    console.log('Reordering categories:', categoryOrders);
+    
     // Apply the reordering
+    reorderCategoriesMutation.mutate(categoryOrders);
+  }, [categories, reorderCategoriesMutation]);
+
+  // Handle move category up/down for backup
+  const handleMoveCategory = useCallback((categoryId: number, direction: 'up' | 'down') => {
+    const categoryIndex = categories.findIndex(cat => cat.id === categoryId);
+    if (categoryIndex === -1) return;
+
+    const newIndex = direction === 'up' ? categoryIndex - 1 : categoryIndex + 1;
+    if (newIndex < 0 || newIndex >= categories.length) return;
+
+    // Create reordered array
+    const reorderedCategories = [...categories];
+    const [removed] = reorderedCategories.splice(categoryIndex, 1);
+    reorderedCategories.splice(newIndex, 0, removed);
+
+    // Create new display orders
+    const categoryOrders = reorderedCategories.map((category, index) => ({
+      id: category.id,
+      displayOrder: index + 1
+    }));
+
     reorderCategoriesMutation.mutate(categoryOrders);
   }, [categories, reorderCategoriesMutation]);
 
@@ -286,7 +311,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
         <div>
           <CardTitle className="dark:text-gray-100">{t("Menu Categories")}</CardTitle>
           <CardDescription className="dark:text-gray-300">
-            {t("Manage your restaurant's menu categories. Drag to reorder them.")}
+            {t("Manage your restaurant's menu categories. Drag using the handle (⋮⋮) or use arrow buttons to reorder them.")}
           </CardDescription>
         </div>
         <Button onClick={openAddDialog} className="space-x-1">
@@ -312,7 +337,9 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
                   <Table className="dark:bg-gray-800 dark:border-gray-700">
                     <TableHeader className="dark:bg-gray-800">
                       <TableRow className="dark:border-gray-700">
-                        <TableHead className="w-10 dark:text-gray-300"></TableHead>
+                        <TableHead className="w-16 text-center dark:text-gray-300">
+                          <span className="text-xs text-gray-500">Drag</span>
+                        </TableHead>
                         <TableHead className="dark:text-gray-300">{t("Name")}</TableHead>
                         <TableHead className="hidden md:table-cell dark:text-gray-300">{t("Description")}</TableHead>
                         <TableHead className="dark:text-gray-300">{t("Order")}</TableHead>
@@ -334,12 +361,13 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
                                 snapshot.isDragging ? 'bg-gray-100 dark:bg-gray-600 shadow-md' : ''
                               }`}
                             >
-                              <TableCell className="w-10">
+                              <TableCell className="w-16 text-center">
                                 <div
                                   {...provided.dragHandleProps}
-                                  className="cursor-grab hover:cursor-grabbing p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                  className="cursor-grab hover:cursor-grabbing p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors flex items-center justify-center"
+                                  title="Drag to reorder"
                                 >
-                                  <GripVertical className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                  <GripVertical className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                                 </div>
                               </TableCell>
                               <TableCell className="font-medium dark:text-gray-200">
@@ -352,18 +380,39 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
                                 {category.displayOrder}
                               </TableCell>
                               <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
+                                <div className="flex justify-end gap-1">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handleMoveCategory(category.id, 'up')}
+                                    disabled={index === 0}
+                                    className="h-8 w-8"
+                                    title="Move up"
+                                  >
+                                    <ChevronUp className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handleMoveCategory(category.id, 'down')}
+                                    disabled={index === categories.length - 1}
+                                    className="h-8 w-8"
+                                    title="Move down"
+                                  >
+                                    <ChevronDown className="h-4 w-4" />
+                                  </Button>
                                   <Button
                                     variant="outline"
                                     size="icon"
                                     onClick={() => handleEditClick(category)}
+                                    className="h-8 w-8"
                                   >
                                     <Edit className="h-4 w-4" />
                                   </Button>
                                   <Button
                                     variant="outline"
                                     size="icon"
-                                    className="text-destructive hover:bg-destructive/10"
+                                    className="text-destructive hover:bg-destructive/10 h-8 w-8"
                                     onClick={() => handleDeleteClick(category)}
                                   >
                                     <Trash2 className="h-4 w-4" />
