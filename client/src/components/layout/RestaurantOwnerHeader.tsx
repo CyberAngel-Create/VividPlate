@@ -83,8 +83,8 @@ const RestaurantOwnerHeader = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 block lg:block">
-      <div className="w-full lg:pl-52">
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 block lg:block relative">
+      <div className="w-full lg:pl-60">
         <div className="flex flex-col w-full">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">Current Restaurant</p>
           <DropdownMenu>
@@ -106,7 +106,7 @@ const RestaurantOwnerHeader = () => {
               </div>
               <ChevronRight className="h-4 w-4 flex-shrink-0" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 dark:bg-gray-800 dark:border-gray-700">
+            <DropdownMenuContent align="start" className="w-56 dark:bg-gray-800 dark:border-gray-700 z-50">
               <DropdownMenuLabel className="dark:text-gray-300">{t("Your Restaurants")}</DropdownMenuLabel>
               <DropdownMenuSeparator className="dark:border-gray-700" />
               {restaurants.map((restaurant) => (
