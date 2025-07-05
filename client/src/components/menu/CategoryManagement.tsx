@@ -62,23 +62,7 @@ const CategoryManagement: React.FC = () => {
     displayOrder: 0,
   });
 
-  // Early return if no restaurant is selected
-  if (!restaurantId) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center space-y-3">
-          <div className="text-lg font-medium text-muted-foreground">
-            {t("Select a restaurant to manage categories")}
-          </div>
-          <div className="text-sm text-muted-foreground">
-            {t("Please choose a restaurant from the dropdown above")}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Fetch categories
+  // Fetch categories (always call this hook)
   const { data: categories = [], isLoading } = useQuery<MenuCategory[]>({
     queryKey: ["/api/restaurants", restaurantId, "categories"],
     queryFn: async () => {
@@ -322,6 +306,22 @@ const CategoryManagement: React.FC = () => {
   };
 
   console.log('CategoryManagement rendered with', categories?.length, 'categories');
+  
+  // Show message if no restaurant is selected
+  if (!restaurantId) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-center space-y-3">
+          <div className="text-lg font-medium text-muted-foreground">
+            {t("Select a restaurant to manage categories")}
+          </div>
+          <div className="text-sm text-muted-foreground">
+            {t("Please choose a restaurant from the dropdown above")}
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <Card className="w-full dark:bg-gray-800 dark:border-gray-700">
