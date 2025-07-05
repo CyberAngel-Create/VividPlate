@@ -146,7 +146,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
                           }`}
                         >
                           {item.icon}
-                          <span>{item.label}</span>
+                          <span className="whitespace-nowrap">{item.label}</span>
                         </button>
                       </li>
                     ))}
@@ -171,7 +171,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       </div>
     
       {/* Desktop Sidebar - Fixed at the left side */}
-      <aside className="hidden lg:flex flex-col w-52 h-screen fixed left-0 top-0 bottom-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-40">
+      <aside className="hidden lg:flex flex-col w-60 h-screen fixed left-0 top-0 bottom-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-40">
         {/* Logo */}
         <div className="p-4 border-b dark:border-gray-800">
           <Link href="/dashboard">
@@ -194,7 +194,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
                   }`}
                 >
                   {item.icon}
-                  <span>{item.label}</span>
+                  <span className="whitespace-nowrap">{item.label}</span>
                 </button>
               </li>
             ))}

@@ -42,7 +42,7 @@ const RestaurantOwnerLayout = ({ children }: RestaurantOwnerLayoutProps) => {
         </div>
         
         {/* Page Content */}
-        <div className="pt-2 lg:pl-52">
+        <div className="pt-2 lg:pl-60">
           {children}
         </div>
       </main>
