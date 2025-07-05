@@ -39,11 +39,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
-import { Edit, Trash2, Plus, ArrowUp, ArrowDown, GripVertical } from "lucide-react";
+import { Edit, Trash2, Plus, GripVertical } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { MenuCategory } from "@shared/schema";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 
 interface CategoryManagementProps {
   restaurantId: number;
@@ -171,61 +172,59 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
     },
   });
   
-  // Move category mutation
-  const moveCategoryMutation = useMutation({
-    mutationFn: async ({ id, direction }: { id: number; direction: "up" | "down" }) => {
-      const categoryToMove = categories.find(cat => cat.id === id);
-      if (!categoryToMove) return;
-      
-      // Sort categories by display order to find adjacent categories
-      const sortedCategories = [...categories].sort((a, b) => 
-        (a.displayOrder || 0) - (b.displayOrder || 0)
+  // Reorder categories mutation
+  const reorderCategoriesMutation = useMutation({
+    mutationFn: async (categoryOrders: { id: number; displayOrder: number }[]) => {
+      const response = await apiRequest(
+        "PUT",
+        `/api/restaurants/${restaurantId}/categories/reorder`,
+        { categoryOrders }
       );
-      const currentIndex = sortedCategories.findIndex(cat => cat.id === id);
-      
-      if (
-        (direction === "up" && currentIndex <= 0) || 
-        (direction === "down" && currentIndex >= sortedCategories.length - 1)
-      ) {
-        return; // Already at the top/bottom
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to reorder categories");
       }
-      
-      const adjacentIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1;
-      const adjacentCategory = sortedCategories[adjacentIndex];
-      
-      // Swap display orders
-      const newOrder = adjacentCategory.displayOrder || 0;
-      const adjacentNewOrder = categoryToMove.displayOrder || 0;
-      
-      // Update the category's display order
-      await apiRequest(
-        "PUT",
-        `/api/categories/${categoryToMove.id}`,
-        { ...categoryToMove, displayOrder: newOrder }
-      );
-      
-      // Update the adjacent category's display order
-      return apiRequest(
-        "PUT",
-        `/api/categories/${adjacentCategory.id}`,
-        { ...adjacentCategory, displayOrder: adjacentNewOrder }
-      );
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/restaurants", restaurantId, "categories"] });
       toast({
-        title: t("Category Order Updated"),
-        description: t("The category order has been updated successfully"),
+        title: t("Categories Reordered"),
+        description: t("The categories have been reordered successfully"),
       });
     },
     onError: (error) => {
       toast({
-        title: t("Failed to Update Order"),
+        title: t("Failed to Reorder Categories"),
         description: error instanceof Error ? error.message : String(error),
         variant: "destructive",
       });
     },
   });
+
+  // Handle drag and drop reordering
+  const handleDragEnd = useCallback((result: DropResult) => {
+    if (!result.destination) return;
+
+    const sourceIndex = result.source.index;
+    const destinationIndex = result.destination.index;
+
+    if (sourceIndex === destinationIndex) return;
+
+    // Create a new array with reordered categories
+    const reorderedCategories = Array.from(categories);
+    const [removed] = reorderedCategories.splice(sourceIndex, 1);
+    reorderedCategories.splice(destinationIndex, 0, removed);
+
+    // Create new display orders based on new positions
+    const categoryOrders = reorderedCategories.map((category, index) => ({
+      id: category.id,
+      displayOrder: index + 1
+    }));
+
+    // Apply the reordering
+    reorderCategoriesMutation.mutate(categoryOrders);
+  }, [categories, reorderCategoriesMutation]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -287,7 +286,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
         <div>
           <CardTitle className="dark:text-gray-100">{t("Menu Categories")}</CardTitle>
           <CardDescription className="dark:text-gray-300">
-            {t("Manage your restaurant's menu categories")}
+            {t("Manage your restaurant's menu categories. Drag to reorder them.")}
           </CardDescription>
         </div>
         <Button onClick={openAddDialog} className="space-x-1">
@@ -306,66 +305,82 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
             <p>{t("Add a category to get started")}</p>
           </div>
         ) : (
-          <Table className="dark:bg-gray-800 dark:border-gray-700">
-            <TableHeader className="dark:bg-gray-800">
-              <TableRow className="dark:border-gray-700">
-                <TableHead className="dark:text-gray-300">{t("Name")}</TableHead>
-                <TableHead className="hidden md:table-cell dark:text-gray-300">{t("Description")}</TableHead>
-                <TableHead className="dark:text-gray-300">{t("Order")}</TableHead>
-                <TableHead className="text-right dark:text-gray-300">{t("Actions")}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="dark:bg-gray-800">
-              {categories.map((category) => (
-                <TableRow key={category.id} className="dark:border-gray-700 dark:hover:bg-gray-700">
-                  <TableCell className="font-medium dark:text-gray-200">{category.name}</TableCell>
-                  <TableCell className="hidden md:table-cell dark:text-gray-300">
-                    {category.description || t("No description")}
-                  </TableCell>
-                  <TableCell className="dark:text-gray-300">{category.displayOrder}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <div className="flex space-x-1 mr-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => moveCategoryMutation.mutate({ id: category.id, direction: "up" })}
-                          disabled={moveCategoryMutation.isPending}
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="categories">
+              {(provided) => (
+                <div {...provided.droppableProps} ref={provided.innerRef}>
+                  <Table className="dark:bg-gray-800 dark:border-gray-700">
+                    <TableHeader className="dark:bg-gray-800">
+                      <TableRow className="dark:border-gray-700">
+                        <TableHead className="w-10 dark:text-gray-300"></TableHead>
+                        <TableHead className="dark:text-gray-300">{t("Name")}</TableHead>
+                        <TableHead className="hidden md:table-cell dark:text-gray-300">{t("Description")}</TableHead>
+                        <TableHead className="dark:text-gray-300">{t("Order")}</TableHead>
+                        <TableHead className="text-right dark:text-gray-300">{t("Actions")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="dark:bg-gray-800">
+                      {categories.map((category, index) => (
+                        <Draggable
+                          key={category.id}
+                          draggableId={category.id.toString()}
+                          index={index}
                         >
-                          <ArrowUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => moveCategoryMutation.mutate({ id: category.id, direction: "down" })}
-                          disabled={moveCategoryMutation.isPending}
-                        >
-                          <ArrowDown className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => handleEditClick(category)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => handleDeleteClick(category)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                          {(provided, snapshot) => (
+                            <TableRow
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              className={`dark:border-gray-700 dark:hover:bg-gray-700 ${
+                                snapshot.isDragging ? 'bg-gray-100 dark:bg-gray-600 shadow-md' : ''
+                              }`}
+                            >
+                              <TableCell className="w-10">
+                                <div
+                                  {...provided.dragHandleProps}
+                                  className="cursor-grab hover:cursor-grabbing p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                >
+                                  <GripVertical className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-medium dark:text-gray-200">
+                                {category.name}
+                              </TableCell>
+                              <TableCell className="hidden md:table-cell dark:text-gray-300">
+                                {category.description || t("No description")}
+                              </TableCell>
+                              <TableCell className="dark:text-gray-300">
+                                {category.displayOrder}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handleEditClick(category)}
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="text-destructive hover:bg-destructive/10"
+                                    onClick={() => handleDeleteClick(category)}
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </Draggable>
+                      ))}
+                      {provided.placeholder}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
         )}
 
         {/* Add Category Dialog */}
@@ -406,22 +421,11 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
                     type="number"
                     value={categoryForm.displayOrder}
                     onChange={handleChange}
-                    min="0"
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsAddDialogOpen(false)}
-                >
-                  {t("Cancel")}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={addCategoryMutation.isPending || !categoryForm.name}
-                >
+                <Button type="submit" disabled={addCategoryMutation.isPending}>
                   {addCategoryMutation.isPending ? t("Adding...") : t("Add Category")}
                 </Button>
               </DialogFooter>
@@ -435,7 +439,7 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
             <DialogHeader>
               <DialogTitle className="dark:text-gray-100">{t("Edit Category")}</DialogTitle>
               <DialogDescription className="dark:text-gray-300">
-                {t("Update the details of this menu category")}
+                {t("Update the category information")}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleUpdateCategory}>
@@ -467,22 +471,11 @@ const CategoryManagement: React.FC<CategoryManagementProps> = ({ restaurantId })
                     type="number"
                     value={categoryForm.displayOrder}
                     onChange={handleChange}
-                    min="0"
                   />
                 </div>
               </div>
               <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
-                  {t("Cancel")}
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={updateCategoryMutation.isPending || !categoryForm.name}
-                >
+                <Button type="submit" disabled={updateCategoryMutation.isPending}>
                   {updateCategoryMutation.isPending ? t("Updating...") : t("Update Category")}
                 </Button>
               </DialogFooter>

@@ -1709,6 +1709,32 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Reorder categories
+  app.put('/api/restaurants/:restaurantId/categories/reorder', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const { categoryOrders } = req.body;
+      const restaurantId = parseInt(req.params.restaurantId);
+      
+      if (!Array.isArray(categoryOrders)) {
+        return res.status(400).json({ message: 'Category orders must be an array' });
+      }
+      
+      // Update each category's display order
+      const updatePromises = categoryOrders.map(async ({ id, displayOrder }) => {
+        return await storage.updateMenuCategory(id, { displayOrder });
+      });
+      
+      await Promise.all(updatePromises);
+      
+      // Return updated categories
+      const updatedCategories = await storage.getMenuCategoriesByRestaurantId(restaurantId);
+      res.json(updatedCategories);
+    } catch (error) {
+      console.error("Error reordering categories:", error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
   // Menu item routes
   app.get('/api/categories/:categoryId/items', async (req, res) => {
     try {
