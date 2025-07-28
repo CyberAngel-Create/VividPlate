@@ -7,9 +7,11 @@ export const menuItemTranslations = {
     'Main Course': 'Main Course',
     'Breakfast': 'Breakfast',
     'Burger': 'Burger',
+    'Burger ': 'Burger',
     'Pizza': 'Pizza',
     'Snack & Sandwiches': 'Snack & Sandwiches',
     'Bakery': 'Bakery',
+    'Bakery ': 'Bakery',
     'Appetizers': 'Appetizers',
     'Desserts': 'Desserts',
     'Beverages': 'Beverages',
@@ -110,9 +112,11 @@ export const menuItemTranslations = {
     'Main Course': 'ዋና ምግብ',
     'Breakfast': 'የቁርስ ምግብ',
     'Burger': 'በርገር',
+    'Burger ': 'በርገር',
     'Pizza': 'ፒዛ',
     'Snack & Sandwiches': 'መክሰስ እና ሳንድዊች',
     'Bakery': 'የዳቦ ቤት',
+    'Bakery ': 'የዳቦ ቤት',
     'Appetizers': 'መክሰስ',
     'Desserts': 'ጣፋጭ ምግቦች',
     'Beverages': 'መጠጦች',
@@ -213,9 +217,11 @@ export const menuItemTranslations = {
     'Main Course': 'Plat Principal',
     'Breakfast': 'Petit Déjeuner',
     'Burger': 'Burger',
+    'Burger ': 'Burger',
     'Pizza': 'Pizza',
     'Snack & Sandwiches': 'Collations et Sandwiches',
     'Bakery': 'Boulangerie',
+    'Bakery ': 'Boulangerie',
     'Appetizers': 'Apéritifs',
     'Desserts': 'Desserts',
     'Beverages': 'Boissons',
@@ -291,9 +297,11 @@ export const menuItemTranslations = {
     'Main Course': 'الطبق الرئيسي',
     'Breakfast': 'الإفطار',
     'Burger': 'برجر',
+    'Burger ': 'برجر',
     'Pizza': 'بيتزا',
     'Snack & Sandwiches': 'وجبات خفيفة وساندويتش',
     'Bakery': 'المخبز',
+    'Bakery ': 'المخبز',
     'Appetizers': 'المقبلات',
     'Desserts': 'الحلويات',
     'Beverages': 'المشروبات',
@@ -369,9 +377,11 @@ export const menuItemTranslations = {
     'Main Course': '主菜',
     'Breakfast': '早餐',
     'Burger': '汉堡',
+    'Burger ': '汉堡',
     'Pizza': '披萨',
     'Snack & Sandwiches': '小食和三明治',
     'Bakery': '烘焙',
+    'Bakery ': '烘焙',
     'Appetizers': '开胃菜',
     'Desserts': '甜点',
     'Beverages': '饮料',
@@ -450,15 +460,21 @@ export const translateMenuText = (text: string, language: string): string => {
   const translations = menuItemTranslations[language as keyof typeof menuItemTranslations];
   if (!translations) return text;
   
-  // Check for exact match first
+  // Check for exact match first (including with trailing spaces)
   if (translations[text as keyof typeof translations]) {
     return translations[text as keyof typeof translations];
   }
   
+  // Check for trimmed version match
+  const trimmedText = text.trim();
+  if (translations[trimmedText as keyof typeof translations]) {
+    return translations[trimmedText as keyof typeof translations];
+  }
+  
   // Check for partial matches (case insensitive)
-  const lowerText = text.toLowerCase();
+  const lowerText = text.toLowerCase().trim();
   for (const [key, value] of Object.entries(translations)) {
-    if (key.toLowerCase() === lowerText) {
+    if (key.toLowerCase().trim() === lowerText) {
       return value;
     }
   }
