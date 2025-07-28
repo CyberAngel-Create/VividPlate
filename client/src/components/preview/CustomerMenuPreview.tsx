@@ -378,7 +378,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
 
   return (
     <div 
-      className="w-full max-w-2xl mx-auto rounded-xl overflow-hidden menu-preview-shadow"
+      className="w-full md:max-w-none lg:max-w-2xl mx-auto md:rounded-none lg:rounded-xl overflow-hidden menu-preview-shadow md:min-h-screen lg:min-h-0"
       style={containerStyle}
     >
       <div ref={topRef} className="absolute top-0 left-0"></div>
@@ -493,7 +493,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         className={`fixed top-0 left-0 right-0 z-50 shadow-md transition-all duration-300 ${
           headerFixed ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
         }`}
-        style={{ maxWidth: '42rem', margin: '0 auto' }}
+        style={{ maxWidth: '100vw', margin: '0 auto' }}
       >
         <div className="p-3 flex justify-between items-center rounded-b-lg" style={{ backgroundColor: menuTheme.headerColor }}>
           <div className="flex items-center">
@@ -660,7 +660,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
       )}
 
       {/* Menu Items with List/Grid View */}
-      <div className="p-4">
+      <div className="p-4 md:p-6 lg:p-4">
         {menuData.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-midgray">{t('menu.noMenuItems', 'No menu items yet')}</p>

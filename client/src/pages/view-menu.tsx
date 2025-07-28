@@ -223,8 +223,8 @@ const ViewMenu = () => {
           </ContentValidator>
         )}
 
-        <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 w-full max-w-screen-xl">
-          <div className="flex flex-col lg:flex-row w-full gap-6">
+        <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 md:px-0 md:py-0 w-full md:max-w-none lg:max-w-screen-xl">
+          <div className="flex flex-col lg:flex-row w-full gap-0 md:gap-0 lg:gap-6">
             {/* Sidebar advertisement (left side on larger screens) - only shown if restaurant is not premium */}
             {/* AdSense Policy Compliance: Sidebar ads require content validation */}
             {showAds && (
