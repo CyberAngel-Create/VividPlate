@@ -26,6 +26,7 @@ import ItemFeedbackDialog from "@/components/feedback/ItemFeedbackDialog";
 import CompactSearch from "@/components/ui/compact-search";
 import MenuLanguageSwitcher from "@/components/ui/menu-language-switcher";
 import ResponsiveImage from "@/components/ui/responsive-image";
+import { useMenuTranslation } from "@/lib/menuTranslations";
 
 // Banner slideshow component
 interface BannerSlideshowProps {
@@ -189,6 +190,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   previewMode = false
 }) => {
   const { t } = useTranslation();
+  const { translateMenu } = useMenuTranslation();
   
   // Debug logging at component entry
   console.log("CustomerMenuPreview component rendered with:", {
@@ -645,7 +647,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                 }}
                 onClick={() => handleCategoryClick(category.id.toString())}
               >
-                {category.name}
+                {translateMenu(category.name)}
               </button>
             ))}
           </div>
@@ -673,7 +675,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                 className="text-lg font-heading font-semibold mb-3" 
                 style={categoryNameStyle}
               >
-                {category.name}
+                {translateMenu(category.name)}
               </h3>
 
               {category.items.length === 0 ? (
@@ -722,13 +724,13 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                       <div className="flex-grow w-2/3">
                         <div className="flex flex-col cursor-pointer relative group">
                               <div className="flex justify-between items-start">
-                                <h4 className="font-medium" style={menuItemNameStyle}>{item.name}</h4>
+                                <h4 className="font-medium" style={menuItemNameStyle}>{translateMenu(item.name)}</h4>
                                 <span className="font-medium" style={menuItemPriceStyle}>
                                   {formatCurrency(item.price, item.currency || "ETB")}
                                 </span>
                               </div>
                               <p className="text-sm mt-2" style={menuItemDescriptionStyle}>
-                                {item.description || ""}
+                                {item.description ? translateMenu(item.description) : ""}
                               </p>
                               {item.tags && item.tags.length > 0 && (
                                 <div className="mt-2 flex flex-wrap">
@@ -738,7 +740,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                       variant="outline" 
                                       className="inline-block mr-1 mb-1 px-2 py-0.5 bg-neutral text-xs text-midgray"
                                     >
-                                      {tag}
+                                      {translateMenu(tag)}
                                     </Badge>
                                   ))}
                                 </div>
@@ -773,7 +775,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                     className="text-lg font-heading font-semibold" 
                     style={categoryNameStyle}
                   >
-                    {category.name}
+                    {translateMenu(category.name)}
                   </h3>
                   <ChevronUp className="h-4 w-4 text-gray-400" />
                 </div>
@@ -820,12 +822,12 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                           {/* Grid item details */}
                           <div className="flex flex-col">
                             <h4 className="font-medium text-sm mb-1 line-clamp-2" style={menuItemNameStyle}>
-                              {item.name}
+                              {translateMenu(item.name)}
                             </h4>
 
                             {item.description && (
                               <p className="text-xs mb-2 line-clamp-2" style={menuItemDescriptionStyle}>
-                                {item.description}
+                                {translateMenu(item.description)}
                               </p>
                             )}
 
