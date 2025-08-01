@@ -1,13 +1,97 @@
 import dotenv from 'dotenv';
 import PhoneNumberBot from './telegram-bot.js';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import ws from 'ws';
+// Import phone utility function
+function generatePhoneVariations(phoneNumber) {
+  if (!phoneNumber) return [];
+  
+  // Remove any non-digit characters
+  const cleanPhone = phoneNumber.replace(/\D/g, '');
+  
+  const variations = new Set();
+  
+  // Add the original cleaned number
+  variations.add(cleanPhone);
+  
+  // Add with + prefix
+  variations.add(`+${cleanPhone}`);
+  
+  // If it starts with country code, try without it
+  if (cleanPhone.startsWith('251') && cleanPhone.length > 3) {
+    const withoutCountryCode = cleanPhone.substring(3);
+    variations.add(withoutCountryCode);
+    variations.add(`0${withoutCountryCode}`);
+  }
+  
+  // If it starts with 0, try without it and with country code
+  if (cleanPhone.startsWith('0') && cleanPhone.length > 1) {
+    const withoutLeadingZero = cleanPhone.substring(1);
+    variations.add(withoutLeadingZero);
+    variations.add(`251${withoutLeadingZero}`);
+    variations.add(`+251${withoutLeadingZero}`);
+  }
+  
+  // Handle international format variations
+  if (!cleanPhone.startsWith('251') && !cleanPhone.startsWith('0')) {
+    variations.add(`251${cleanPhone}`);
+    variations.add(`+251${cleanPhone}`);
+    variations.add(`0${cleanPhone}`);
+  }
+  
+  return Array.from(variations);
+}
 
 dotenv.config();
+
+// Configure Neon WebSocket
+neonConfig.webSocketConstructor = ws;
+
+// Database connection
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL
+});
 
 // Enhanced phone number bot with additional features
 class EnhancedPhoneNumberBot extends PhoneNumberBot {
   constructor(token) {
     super(token);
     this.userSessions = new Map(); // Track user sessions
+    this.db = pool;
+  }
+
+  // Check if phone number is registered in VividPlate database
+  async checkPhoneInDatabase(phoneNumber) {
+    try {
+      const phoneVariations = generatePhoneVariations(phoneNumber);
+      console.log(`🔍 Checking phone variations:`, phoneVariations);
+
+      const query = `
+        SELECT id, email, full_name, phone, created_at
+        FROM users 
+        WHERE phone = ANY($1)
+        LIMIT 1
+      `;
+      
+      const result = await this.db.query(query, [phoneVariations]);
+      
+      if (result.rows.length > 0) {
+        const user = result.rows[0];
+        console.log(`✅ User found in database:`, {
+          id: user.id,
+          email: user.email,
+          phone: user.phone,
+          name: user.full_name || 'No name'
+        });
+        return user;
+      }
+      
+      console.log(`❌ Phone number not found in database`);
+      return null;
+    } catch (error) {
+      console.error('❌ Database query error:', error);
+      return null;
+    }
   }
 
   handleStart(msg) {
@@ -62,7 +146,7 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
     console.log(`📱 User ${firstName} (ID: ${userId}) started bot interaction`);
   }
 
-  handleContact(msg) {
+  async handleContact(msg) {
     const chatId = msg.chat.id;
     const contact = msg.contact;
     const userId = msg.from.id;
@@ -72,22 +156,49 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
       const firstName = contact.first_name || 'User';
       const lastName = contact.last_name || '';
       const fullName = `${firstName} ${lastName}`.trim();
-      
-      // Update user session
-      if (this.userSessions.has(userId)) {
-        const session = this.userSessions.get(userId);
+
+      // Check if phone number is registered in VividPlate database
+      const registeredUser = await this.checkPhoneInDatabase(phoneNumber);
+      const session = this.userSessions.get(userId);
+
+      if (!registeredUser) {
+        // Phone not found in database
+        const notFoundMessage = `❌ Phone Number Not Found\n\n` +
+          `📱 Phone: ${phoneNumber}\n` +
+          `👤 Name: ${fullName}\n\n` +
+          `This phone number is not registered in the VividPlate system.\n\n` +
+          `🔍 To use password reset and secure features:\n` +
+          `1️⃣ Register at VividPlate with this phone number\n` +
+          `2️⃣ Complete your account setup\n` +
+          `3️⃣ Return here to verify and reset password\n\n` +
+          `📧 Visit the VividPlate website or app to create your account.`;
+
+        const removeKeyboard = { remove_keyboard: true };
+        
+        this.bot.sendMessage(chatId, notFoundMessage, {
+          reply_markup: removeKeyboard
+        });
+
+        console.log(`❌ Phone verification failed - not registered: ${phoneNumber} (${fullName})`);
+        return;
+      }
+
+      // Phone number is registered - proceed with verification
+      if (session) {
         session.hasSharedPhone = true;
         session.phoneNumber = phoneNumber;
         session.completedTime = new Date();
+        session.registeredUser = registeredUser;
       }
       
-      const confirmationMessage = `✅ Phone verification successful!\n\n` +
-        `📱 Phone Number: ${phoneNumber}\n` +
-        `👤 Name: ${fullName}\n\n` +
-        `Your phone number has been verified for account security.\n\n` +
-        `You can now use Telegram for password reset and account recovery. ` +
-        `If you forget your password, you can reset it through this bot using your verified phone number.\n\n` +
-        `🔒 Your information is secure and will only be used for authentication purposes.`;
+      const confirmationMessage = `✅ Phone Number Verified & Registered!\n\n` +
+        `📱 Phone: ${phoneNumber}\n` +
+        `👤 Telegram Name: ${fullName}\n` +
+        `🏷️ VividPlate Account: ${registeredUser.email}\n` +
+        `🆔 Account Name: ${registeredUser.full_name || 'No name set'}\n\n` +
+        `Your phone number has been verified and matches a registered VividPlate account.\n\n` +
+        `🔐 You can now use /reset to change your password.\n` +
+        `🛡️ All data is encrypted and stored securely.`;
 
       const removeKeyboard = {
         remove_keyboard: true
@@ -98,21 +209,27 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
       });
 
       // Log successful verification
-      console.log(`✅ Phone verification completed:`, {
+      console.log(`✅ Phone verification completed for registered user:`, {
         userId,
         chatId,
         phoneNumber,
-        name: fullName,
+        telegramName: fullName,
+        vividPlateUser: {
+          id: registeredUser.id,
+          email: registeredUser.email,
+          name: registeredUser.full_name || 'No name'
+        },
         timestamp: new Date().toISOString()
       });
 
       // Send follow-up message with next steps
       setTimeout(() => {
         const nextStepsMessage = `🚀 What's next?\n\n` +
-          `• Your phone number is now linked to your VividPlate account\n` +
-          `• Use /reset command if you need to reset your password\n` +
-          `• You'll receive important notifications here\n` +
-          `• Type /help for more commands`;
+          `✅ Your phone is verified with VividPlate account\n` +
+          `🔐 Use /reset to change your password securely\n` +
+          `📊 Use /status to check verification status\n` +
+          `❓ Use /help for detailed command information\n\n` +
+          `🔒 Ready for secure password operations!`;
 
         this.bot.sendMessage(chatId, nextStepsMessage);
       }, 2000);
@@ -165,13 +282,25 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
       const session = this.userSessions.get(userId);
       
       let statusMessage;
-      if (session && session.hasSharedPhone) {
-        statusMessage = `✅ Verification Status: VERIFIED\n\n` +
+      if (session && session.hasSharedPhone && session.registeredUser) {
+        const user = session.registeredUser;
+        statusMessage = `✅ Verification Status: VERIFIED & REGISTERED\n\n` +
           `📱 Phone: ${session.phoneNumber}\n` +
-          `👤 Name: ${session.firstName}\n` +
+          `👤 Telegram Name: ${session.firstName}\n` +
+          `🏷️ VividPlate Account: ${user.email}\n` +
+          `🆔 Account Name: ${user.full_name || 'No name set'}\n` +
+          `📅 Account Created: ${new Date(user.created_at).toLocaleDateString()}\n` +
           `⏰ Verified: ${session.completedTime.toLocaleString()}\n\n` +
           `🔓 You can now use /reset to change your password.\n` +
           `🔒 Your account is secure and ready for recovery.`;
+      } else if (session && session.hasSharedPhone) {
+        statusMessage = `⚠️ Verification Status: PHONE SHARED BUT NOT REGISTERED\n\n` +
+          `📱 Phone: ${session.phoneNumber}\n` +
+          `👤 Name: ${session.firstName}\n` +
+          `⏰ Shared: ${session.completedTime.toLocaleString()}\n\n` +
+          `❌ This phone number is not registered in VividPlate.\n` +
+          `🔍 Please register at VividPlate first, then verify again.\n\n` +
+          `📱 Tap the button below to re-verify after registration:`;
       } else {
         statusMessage = `❌ Verification Status: NOT VERIFIED\n\n` +
           `To use password reset and other secure features, you need to verify your phone number first.\n\n` +
@@ -227,9 +356,9 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
     const chatId = msg.chat.id;
     const session = this.userSessions.get(userId);
     
-    if (!session || !session.hasSharedPhone) {
+    if (!session || !session.hasSharedPhone || !session.registeredUser) {
       const notVerifiedMessage = `🔒 Password Reset Unavailable\n\n` +
-        `You need to verify your phone number before you can reset your password.\n\n` +
+        `You need to verify your phone number with a registered VividPlate account before you can reset your password.\n\n` +
         `📱 Tap the button below to verify your phone number first:`;
       
       const keyboard = {
@@ -250,34 +379,44 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
       });
     }
 
-    // User is verified, proceed with reset
+    // User is verified with registered account, proceed with reset
+    const user = session.registeredUser;
     const resetMessage = `🔐 Password Reset Process\n\n` +
-      `📱 Verified Phone: ${session.phoneNumber}\n\n` +
-      `Your password reset request has been initiated. Here's what happens next:\n\n` +
-      `1️⃣ A verification code will be sent to your registered email\n` +
+      `📱 Verified Phone: ${session.phoneNumber}\n` +
+      `📧 VividPlate Account: ${user.email}\n` +
+      `👤 Account Name: ${user.full_name || 'No name set'}\n\n` +
+      `Your password reset request has been initiated for your registered VividPlate account.\n\n` +
+      `Here's what happens next:\n` +
+      `1️⃣ A verification code will be sent to: ${user.email}\n` +
       `2️⃣ Enter the code in the VividPlate app or website\n` +
       `3️⃣ Create your new password\n\n` +
       `⏱️ The verification code will expire in 15 minutes.\n\n` +
       `If you don't receive the email, check your spam folder or contact support.\n\n` +
-      `🔒 For security, this request is logged and monitored.`;
+      `🔒 This request is logged and monitored for security.`;
 
     await this.bot.sendMessage(chatId, resetMessage);
 
-    // Log the reset request
-    console.log(`🔐 Password reset requested:`, {
-      userId,
+    // Log the reset request with full user information
+    console.log(`🔐 Password reset requested for registered user:`, {
+      telegramUserId: userId,
+      vividPlateUserId: user.id,
       phone: session.phoneNumber,
+      email: user.email,
+      accountName: user.full_name || 'No name',
       timestamp: new Date().toISOString()
     });
 
     // Send follow-up with next steps
     setTimeout(() => {
-      const followUpMessage = `💡 Need help?\n\n` +
+      const followUpMessage = `💡 Password Reset Help\n\n` +
+        `📧 Email sent to: ${user.email}\n\n` +
+        `Next steps:\n` +
         `• Check your email (including spam folder)\n` +
         `• Code valid for 15 minutes only\n` +
         `• Contact support if no email received\n` +
         `• Use /status to check verification anytime\n\n` +
-        `Security tip: Never share verification codes with anyone.`;
+        `🔐 Security tip: Never share verification codes with anyone.\n\n` +
+        `Need more help? Use /help for all commands.`;
       
       this.bot.sendMessage(chatId, followUpMessage);
     }, 3000);

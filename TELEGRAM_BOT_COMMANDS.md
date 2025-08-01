@@ -178,8 +178,50 @@ The bot requires these permissions to function:
 
 1. **Explicit Consent**: Users must tap button and confirm in native dialog
 2. **One-on-One Only**: Bot only works in private chats for privacy
-3. **No Storage**: Phone numbers are logged but not persisted (add your own storage)
-4. **One-Time Keyboard**: Button disappears after successful sharing
+3. **Database Verification**: Phone numbers are checked against VividPlate user database
+4. **Registration Requirement**: Only registered VividPlate users can reset passwords
+5. **One-Time Keyboard**: Button disappears after successful sharing
+6. **Secure Logging**: All verification attempts are logged for security monitoring
+
+## Database Integration
+
+### Phone Number Verification Process
+1. User shares phone number via Telegram
+2. Bot generates multiple phone number format variations (+251, 0-prefix, etc.)
+3. Database query checks all variations against VividPlate users table
+4. If found: User is verified and can reset password
+5. If not found: User receives registration instructions
+
+### Registration Check Results
+
+**For Registered Users:**
+```
+✅ Phone Number Verified & Registered!
+
+📱 Phone: +251912345678
+👤 Telegram Name: John Doe
+🏷️ VividPlate Account: john@example.com
+🆔 Account Name: John Smith
+
+Your phone number has been verified and matches a registered VividPlate account.
+
+🔐 You can now use /reset to change your password.
+```
+
+**For Unregistered Users:**
+```
+❌ Phone Number Not Found
+
+📱 Phone: +251912345678
+👤 Name: John Doe
+
+This phone number is not registered in the VividPlate system.
+
+🔍 To use password reset and secure features:
+1️⃣ Register at VividPlate with this phone number
+2️⃣ Complete your account setup
+3️⃣ Return here to verify and reset password
+```
 
 ## Error Handling
 
