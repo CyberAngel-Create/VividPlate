@@ -108,6 +108,39 @@ import { registerRoutes } from "./routes";
 import { testBackblazeConnection } from './backblaze-config';
 import { DatabaseHealth } from './database-health';
 
+// Telegram bot startup function
+async function startTelegramBot() {
+  if (!process.env.TELEGRAM_BOT_TOKEN) {
+    console.log('⚠️ TELEGRAM_BOT_TOKEN not provided - Telegram bot disabled');
+    return;
+  }
+
+  try {
+    // Import and run the bot as a module
+    const { spawn } = await import('child_process');
+    const botProcess = spawn('node', ['run-telegram-bot.js'], {
+      detached: false,
+      stdio: ['pipe', 'pipe', 'pipe']
+    });
+
+    botProcess.stdout?.on('data', (data) => {
+      console.log(`🤖 Bot: ${data.toString().trim()}`);
+    });
+
+    botProcess.stderr?.on('data', (data) => {
+      console.error(`🤖 Bot Error: ${data.toString().trim()}`);
+    });
+
+    botProcess.on('close', (code) => {
+      console.log(`🤖 Bot process exited with code ${code}`);
+    });
+
+    console.log('🤖 Telegram bot started successfully');
+  } catch (error) {
+    console.error('❌ Failed to start Telegram bot:', error);
+  }
+}
+
 (async () => {
   // Validate environment variables first
   console.log('🔍 Validating environment configuration...');
@@ -151,6 +184,9 @@ import { DatabaseHealth } from './database-health';
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
     console.log('🚀 Application started successfully');
+    
+    // Start Telegram bot
+    startTelegramBot();
   });
 
   // Graceful shutdown handling
