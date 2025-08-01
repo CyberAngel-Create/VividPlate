@@ -58,8 +58,8 @@ function normalizePhoneNumber(phoneNumber: string): string[] {
   return [...new Set(formats)];
 }
 
-// Handle password reset via phone number
-export async function handleTelegramPasswordReset(phoneNumber: string): Promise<{ success: boolean; message: string; newPassword?: string }> {
+// Handle password reset via phone number (with optional chat ID for Telegram sending)
+export async function handleTelegramPasswordReset(phoneNumber: string, chatId?: string): Promise<{ success: boolean; message: string; newPassword?: string }> {
   try {
     console.log('Attempting password reset for phone:', phoneNumber);
     
@@ -97,6 +97,20 @@ export async function handleTelegramPasswordReset(phoneNumber: string): Promise<
         success: false,
         message: 'Failed to update password. Please try again later.'
       };
+    }
+
+    // If chatId is provided, send Telegram message
+    if (chatId) {
+      const telegramMessage = 
+        '✅ <b>Password Reset Successful!</b>\n\n' +
+        `Your new password is: <code>${newPassword}</code>\n\n` +
+        '⚠️ <b>Important:</b>\n' +
+        '• Please login and change this password immediately\n' +
+        '• Keep this password secure\n' +
+        '• Delete this message after logging in\n\n' +
+        '🔗 Login at: https://vividplate.com/login';
+      
+      await sendTelegramMessage(chatId, telegramMessage);
     }
 
     return {
@@ -150,20 +164,10 @@ export async function processTelegramWebhook(update: any): Promise<void> {
           return;
         }
 
-        // Process password reset
-        const resetResult = await handleTelegramPasswordReset(phoneNumber);
+        // Process password reset with chat ID for messaging
+        const resetResult = await handleTelegramPasswordReset(phoneNumber, chatId);
         
-        if (resetResult.success && resetResult.newPassword) {
-          await sendTelegramMessage(chatId,
-            '✅ <b>Password Reset Successful!</b>\n\n' +
-            `Your new password is: <code>${resetResult.newPassword}</code>\n\n` +
-            '⚠️ <b>Important:</b>\n' +
-            '• Please login and change this password immediately\n' +
-            '• Keep this password secure\n' +
-            '• Delete this message after logging in\n\n' +
-            '🔗 Login at: https://vividplate.com/login'
-          );
-        } else {
+        if (!resetResult.success) {
           await sendTelegramMessage(chatId,
             '❌ <b>Password Reset Failed</b>\n\n' +
             resetResult.message + '\n\n' +
