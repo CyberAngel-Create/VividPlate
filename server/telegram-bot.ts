@@ -2,7 +2,7 @@ import axios from 'axios';
 import bcrypt from 'bcryptjs';
 import { storage } from './storage';
 
-const TELEGRAM_BOT_TOKEN = '8489095054:AAGWvYjcHg3L8-JXnhEJo3OGgA9HWuwEIAI';
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8489095054:AAGWvYjcHg3L8-JXnhEJo3OGgA9HWuwEIAI';
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
 // Generate random password
