@@ -135,7 +135,7 @@ export async function processTelegramWebhook(update: any): Promise<void> {
       const chatId = update.message.chat.id;
       const messageText = update.message.text.trim();
       
-      // Check if message starts with /reset command
+      // Check if message starts with /reset command (handles both /reset and /reset-password)
       if (messageText.startsWith('/reset')) {
         const phoneNumber = messageText.replace('/reset', '').trim();
         
@@ -178,13 +178,16 @@ export async function processTelegramWebhook(update: any): Promise<void> {
           );
         }
       } 
-      // Help command
+      // Help and start commands
       else if (messageText.startsWith('/help') || messageText.startsWith('/start')) {
         await sendTelegramMessage(chatId,
           '🤖 <b>VividPlate Password Reset Bot</b>\n\n' +
           '<b>Available Commands:</b>\n' +
+          '• <code>/start</code> - Start conversation with bot\n' +
+          '• <code>/help</code> - Show this help message\n' +
           '• <code>/reset [phone_number]</code> - Reset your password\n' +
-          '• <code>/help</code> - Show this help message\n\n' +
+          '• <code>/register</code> - Get registration information\n' +
+          '• <code>/reset-password</code> - Alternative reset command\n\n' +
           '<b>How to reset your password:</b>\n' +
           '1. Send: <code>/reset [your_phone_number]</code>\n' +
           '2. Use any of these formats:\n' +
@@ -196,12 +199,56 @@ export async function processTelegramWebhook(update: any): Promise<void> {
           '📞 Make sure to use the same phone number you registered with.'
         );
       }
+      // Register command
+      else if (messageText.startsWith('/register')) {
+        await sendTelegramMessage(chatId,
+          '📝 <b>VividPlate Registration</b>\n\n' +
+          'To create a new account on VividPlate:\n\n' +
+          '1. Visit: <a href="https://vividplate.com/register">vividplate.com/register</a>\n' +
+          '2. Fill in your details:\n' +
+          '   • Username\n' +
+          '   • Email address\n' +
+          '   • Phone number (required for password reset)\n' +
+          '   • Password\n' +
+          '3. Complete registration\n' +
+          '4. Start creating your digital restaurant menu\n\n' +
+          '<b>Features Available:</b>\n' +
+          '• Digital menu creation\n' +
+          '• QR code generation\n' +
+          '• Multi-language support\n' +
+          '• Mobile-responsive design\n' +
+          '• Real-time menu updates\n\n' +
+          '💡 <b>Tip:</b> Make sure to add your phone number during registration so you can use this bot for password resets!'
+        );
+      }
+      // Alternative reset-password command
+      else if (messageText.startsWith('/reset-password')) {
+        await sendTelegramMessage(chatId,
+          '🔑 <b>Password Reset Instructions</b>\n\n' +
+          'To reset your password, use this command:\n' +
+          '<code>/reset [your_phone_number]</code>\n\n' +
+          '<b>Examples:</b>\n' +
+          '• <code>/reset +251912345678</code>\n' +
+          '• <code>/reset 0912345678</code>\n' +
+          '• <code>/reset +1234567890</code>\n\n' +
+          '<b>Alternative Methods:</b>\n' +
+          '1. Visit: <a href="https://vividplate.com/forgot-password">vividplate.com/forgot-password</a>\n' +
+          '2. Use email reset option\n' +
+          '3. Contact support if needed\n\n' +
+          '⚠️ <b>Important:</b> Use the same phone number you registered with.'
+        );
+      }
       // Unknown command
       else {
         await sendTelegramMessage(chatId,
           '❓ <b>Unknown Command</b>\n\n' +
-          'Send <code>/help</code> to see available commands.\n\n' +
-          'To reset your password, use: <code>/reset [your_phone_number]</code>'
+          '<b>Available Commands:</b>\n' +
+          '• <code>/start</code> - Start conversation\n' +
+          '• <code>/help</code> - Show help\n' +
+          '• <code>/reset [phone]</code> - Reset password\n' +
+          '• <code>/register</code> - Registration info\n' +
+          '• <code>/reset-password</code> - Password reset help\n\n' +
+          'Send <code>/help</code> for detailed instructions.'
         );
       }
     }

@@ -64,8 +64,11 @@ Test 3: Multiple Phone Formats Supported
 ## 🔧 Technical Details
 
 ### Bot Commands Available
-- `/help` - Show help message
+- `/start` - Start conversation with bot
+- `/help` - Show help message and all commands
 - `/reset [phone_number]` - Reset password for the phone number
+- `/register` - Get registration information and website link
+- `/reset-password` - Alternative command for password reset help
 
 ### Security Features
 - Phone number validation
