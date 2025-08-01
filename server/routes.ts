@@ -161,8 +161,7 @@ const configurePassport = (app: Express) => {
       if (user) {
         console.log('Database user found:', user.username, user.email, user.phone);
         // Verify password against database user
-        const bcrypt = require('bcryptjs');
-        const isValidPassword = await bcrypt.compare(password, user.password);
+        const isValidPassword = await comparePasswords(password, user.password);
         
         if (isValidPassword) {
           console.log('Database user authenticated successfully');
