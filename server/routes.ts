@@ -160,8 +160,12 @@ const configurePassport = (app: Express) => {
       
       if (user) {
         console.log('Database user found:', user.username, user.email, user.phone);
+        console.log('Provided password:', password);
+        console.log('Stored hash:', user.password);
+        
         // Verify password against database user
         const isValidPassword = await comparePasswords(password, user.password);
+        console.log('Password comparison result:', isValidPassword);
         
         if (isValidPassword) {
           console.log('Database user authenticated successfully');
