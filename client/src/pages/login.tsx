@@ -28,7 +28,7 @@ import CustomerHeader from "../components/layout/CustomerHeader";
 import Footer from "../components/layout/Footer";
 
 const loginSchema = z.object({
-  identifier: z.string().min(1, "Username or Email is required"),
+  identifier: z.string().min(1, "Username, Email, or Phone Number is required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -63,7 +63,7 @@ const Login = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-heading text-center">{t('common.login')} - VividPlate</CardTitle>
             <CardDescription className="text-center">
-              Enter your credentials to access your account
+              Enter your username, email, or phone number to access your account
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -74,9 +74,9 @@ const Login = () => {
                   name="identifier"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Username or Email</FormLabel>
+                      <FormLabel>Username, Email, or Phone</FormLabel>
                       <FormControl>
-                        <Input placeholder="Enter your username or email..." {...field} />
+                        <Input placeholder="Enter your username, email, or phone number..." {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

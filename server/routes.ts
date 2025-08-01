@@ -125,6 +125,7 @@ const configurePassport = (app: Express) => {
           username: 'entotocloud', 
           password: 'cloud123',
           email: 'entotocloudrestaurant@gmail.com',
+          phone: '251977816299',
           fullName: 'Entoto Cloud',
           isAdmin: false,
           subscriptionTier: 'premium',
@@ -144,15 +145,16 @@ const configurePassport = (app: Express) => {
         }
       ];
       
-      // Try to find user in test users by username or email
+      // Try to find user in test users by username, email, or phone
       const user = testUsers.find(u => 
         u.username.toLowerCase() === identifier.toLowerCase() || 
-        u.email.toLowerCase() === identifier.toLowerCase()
+        u.email.toLowerCase() === identifier.toLowerCase() ||
+        (u.phone && u.phone === identifier)
       );
       
       if (!user) {
         console.log(`User not found with identifier: ${identifier}`);
-        return done(null, false, { message: 'Incorrect username or email.' });
+        return done(null, false, { message: 'Incorrect username, email, or phone number.' });
       }
 
       console.log(`User found: ${user.username}, checking password...`);

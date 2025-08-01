@@ -220,7 +220,8 @@ const UsersAdminPage = () => {
     const matchesSearch = 
       user.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (user.phone && user.phone.includes(searchTerm));
     
     // Status filter
     const matchesStatus = 
@@ -457,6 +458,7 @@ const UsersAdminPage = () => {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Online</TableHead>
                 <TableHead>Subscription</TableHead>
@@ -478,6 +480,13 @@ const UsersAdminPage = () => {
                       </div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
+                    <TableCell>
+                      {user.phone ? (
+                        <span className="text-sm font-medium">+{user.phone}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No phone</span>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <Badge variant={user.isActive ? "default" : "outline"}>
                         {user.isActive ? "Active" : "Inactive"}
@@ -555,7 +564,7 @@ const UsersAdminPage = () => {
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8">
+                  <TableCell colSpan={9} className="text-center py-8">
                     {searchTerm ? "No users found matching your search" : "No users found"}
                   </TableCell>
                 </TableRow>
