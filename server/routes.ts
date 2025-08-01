@@ -751,7 +751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/user/profile', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
-      const { username, email, fullName } = req.body;
+      const { username, email, fullName, phone } = req.body;
       
       // Check if username already exists (if changing username)
       if (username && username !== (req.user as any).username) {
@@ -769,10 +769,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // Check if phone already exists (if changing phone)
+      if (phone && phone !== (req.user as any).phone) {
+        const existingUser = await storage.getUserByPhone(phone);
+        if (existingUser && existingUser.id !== userId) {
+          return res.status(400).json({ message: 'Phone number already registered to another account' });
+        }
+      }
+      
       const updatedUser = await storage.updateUser(userId, {
         username,
         email,
-        fullName
+        fullName,
+        phone
       });
       
       if (!updatedUser) {

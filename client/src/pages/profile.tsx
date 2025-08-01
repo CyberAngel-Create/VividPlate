@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Redirect } from "wouter";
-import { Loader2, KeyRound, User, Mail, Save } from "lucide-react";
+import { Loader2, KeyRound, User, Mail, Save, Phone } from "lucide-react";
 import { useSubscription } from "@/hooks/use-subscription";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import { PremiumBadge } from "@/components/ui/premium-badge";
@@ -48,11 +48,14 @@ const ProfilePage = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isChangePasswordDialogOpen, setIsChangePasswordDialogOpen] = useState(false);
   
-  // Define the profile update schema
+  // Define the profile update schema - make phone required if user doesn't have one
   const profileUpdateSchema = z.object({
     username: z.string().min(3, t("Username must be at least 3 characters")),
     email: z.string().email(t("Please provide a valid email address")),
     fullName: z.string().optional(),
+    phone: user?.phone 
+      ? z.string().min(10, "Phone number must be at least 10 digits").regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number").optional()
+      : z.string().min(10, "Phone number is required").regex(/^\+?[1-9]\d{1,14}$/, "Please enter a valid phone number"),
   });
 
   // Define the password change schema
@@ -75,6 +78,7 @@ const ProfilePage = () => {
       username: user?.username || "",
       email: user?.email || "",
       fullName: user?.fullName || "",
+      phone: user?.phone || "",
     },
   });
   
@@ -227,6 +231,41 @@ const ProfilePage = () => {
                     )}
                   />
                   
+                  {/* Phone Number Field - Show if user doesn't have a phone number or wants to update it */}
+                  <FormField
+                    control={profileForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>
+                          Phone Number
+                          {!user?.phone && (
+                            <span className="text-red-500 ml-1">*</span>
+                          )}
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <div className="absolute left-3 top-3 text-gray-400">
+                              <Phone className="h-4 w-4" />
+                            </div>
+                            <Input 
+                              className="pl-10" 
+                              type="tel" 
+                              placeholder={!user?.phone ? "Please add your phone number" : "+1234567890"}
+                              {...field} 
+                            />
+                          </div>
+                        </FormControl>
+                        {!user?.phone && (
+                          <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded">
+                            📱 Please add your phone number for password recovery via Telegram bot.
+                          </p>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={profileForm.control}
                     name="fullName"

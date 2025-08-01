@@ -31,12 +31,14 @@ Preferred communication style: Simple, everyday language.
 - **Connection Pooling**: Neon serverless pool
 
 ### Core Features
-- **Authentication System**: Multi-strategy authentication with admin and regular user roles, role-based access control, password reset, and session management.
+- **Authentication System**: Multi-strategy authentication with admin and regular user roles, role-based access control, password reset, session management, and Telegram bot password recovery integration.
 - **Restaurant Management**: Supports multiple restaurants per user based on subscription tier, restaurant profile management, menu categorization, item management, theme customization, and QR code generation.
 - **File Management**: Multi-backend file storage (Local, Backblaze B2, ImageKit, Filen, AWS S3) with smart image compression (70-100KB target), support for various file types, and automatic fallbacks. Permanent image storage using PostgreSQL for base64 encoded images.
 - **Subscription System**: Stripe-powered subscription management with multiple tiers (Free, Premium, Admin) and usage-based limitations.
 - **Admin Dashboard**: User management, restaurant oversight, analytics, system logs, pricing plan management, and content management.
 - **PWA Implementation**: Full Progressive Web App functionality with custom icons, service worker caching, offline support, and install prompts.
+- **Phone Number Management**: Required phone number field on registration with conditional profile management - prompts users to add phone if missing, allows updates if already provided.
+- **Telegram Bot Integration**: Automated password reset system via Telegram bot using phone number verification.
 - **Internationalization**: Comprehensive menu translation system supporting English, Amharic, French, Arabic, and Chinese, including category and item-level translations.
 
 ### System Design Choices
