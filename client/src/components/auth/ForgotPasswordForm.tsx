@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bot } from 'lucide-react';
+import { Link } from 'wouter';
 
 const forgotPasswordSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -102,13 +103,32 @@ export function ForgotPasswordForm() {
             )}
           </Button>
           
-          <div className="text-center">
+          <div className="text-center space-y-2">
             <Button variant="link" onClick={() => window.history.back()}>
               Back to Login
             </Button>
           </div>
         </form>
       </Form>
+      
+      {/* Alternative Password Reset Option */}
+      <div className="border-t pt-6 mt-6">
+        <div className="text-center space-y-3">
+          <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
+            <Bot className="h-4 w-4" />
+            <span>Alternative Reset Method</span>
+          </div>
+          <p className="text-sm text-gray-500">
+            Can't access your email? Use our Telegram bot for instant password reset.
+          </p>
+          <Link href="/password-reset-help">
+            <Button variant="outline" className="w-full">
+              <Bot className="mr-2 h-4 w-4" />
+              Reset via Telegram Bot
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
