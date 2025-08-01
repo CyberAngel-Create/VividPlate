@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link } from "wouter";
 import CustomerHeader from "@/components/layout/CustomerHeader";
 import Footer from "@/components/layout/Footer";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -164,9 +165,14 @@ const Register = () => {
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input type="tel" placeholder="+1234567890" {...field} />
+                        <PhoneInput
+                          label="Phone Number"
+                          placeholder="Enter your phone number"
+                          value={field.value}
+                          onChange={field.onChange}
+                          required
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
