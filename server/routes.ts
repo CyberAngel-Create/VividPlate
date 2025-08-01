@@ -27,6 +27,7 @@ import { promisify } from "util";
 import { scrypt, timingSafeEqual } from "crypto";
 import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
 import { compressImageSmart } from './smart-image-compression';
+import { processTelegramWebhook, handleTelegramPasswordReset } from './telegram-bot';
 
 // Password comparison utility for authentication
 const scryptAsync = promisify(scrypt);
@@ -903,7 +904,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Telegram Password Reset API
+  app.post('/api/auth/telegram-reset', async (req, res) => {
+    try {
+      const { phoneNumber } = req.body;
+      
+      if (!phoneNumber) {
+        return res.status(400).json({ message: 'Phone number is required' });
+      }
+      
+      const result = await handleTelegramPasswordReset(phoneNumber);
+      
+      if (result.success) {
+        res.status(200).json({ 
+          message: result.message,
+          newPassword: result.newPassword
+        });
+      } else {
+        res.status(400).json({ message: result.message });
+      }
+    } catch (error) {
+      console.error('Telegram password reset error:', error);
+      res.status(500).json({ message: 'Failed to process password reset' });
+    }
+  });
 
+  // Telegram Bot Webhook
+  app.post('/webhook/telegram', async (req, res) => {
+    try {
+      await processTelegramWebhook(req.body);
+      res.status(200).json({ ok: true });
+    } catch (error) {
+      console.error('Telegram webhook error:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
 
   // Subscription Status Endpoint
   app.get('/api/user/subscription-status', isAuthenticated, async (req, res) => {
