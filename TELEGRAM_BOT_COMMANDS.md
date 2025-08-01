@@ -40,23 +40,31 @@
 3. Click "START" button
 4. Send: `/start`
 
-### Step 2: Use Commands
+### Step 2: Share Phone Number (NEW!)
+1. When you send `/start`, you'll see a **"📱 Share Phone Number"** button
+2. Click the button to automatically share your contact
+3. The bot will instantly reset your password if your phone number is found
+4. No need to type commands manually!
+
+### Step 3: Alternative Manual Reset
+- Send `/reset +251977816299` to reset password manually
 - Send `/help` to see all options
-- Send `/reset +251977816299` to reset password
 - Send `/register` for registration info
 
-### Step 3: Password Reset
-- Use the exact phone number from your account
+### Step 4: Login
 - Receive temporary password instantly
 - Login and change password immediately
 
 ## ✅ Bot Features:
-- Instant password reset
-- Registration guidance
+- **One-Click Phone Sharing**: Share contact to auto-reset password
+- **Instant Password Reset**: No manual typing required
+- **Smart Phone Detection**: Automatically finds your account
+- Registration guidance with feature highlights
 - Multi-format phone number support
 - Rich HTML formatting with emojis
 - Error handling with helpful suggestions
 - Links to website pages
+- Privacy protection and secure verification
 
 ## 📱 Bot Information:
 - **Username**: @Vividplatebot

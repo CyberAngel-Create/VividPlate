@@ -32,6 +32,35 @@ export async function sendTelegramMessage(chatId: string, message: string): Prom
   }
 }
 
+// Send message with phone number request button
+export async function sendTelegramMessageWithPhoneRequest(chatId: string, text: string, buttonText: string): Promise<boolean> {
+  try {
+    const response = await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
+      chat_id: chatId,
+      text: text,
+      parse_mode: 'HTML',
+      reply_markup: {
+        keyboard: [
+          [
+            {
+              text: buttonText,
+              request_contact: true
+            }
+          ]
+        ],
+        one_time_keyboard: true,
+        resize_keyboard: true
+      }
+    });
+    
+    console.log('Telegram message with phone request sent successfully:', response.data);
+    return true;
+  } catch (error) {
+    console.error('Failed to send Telegram message with phone request:', error);
+    return false;
+  }
+}
+
 // Normalize phone number - try multiple formats to find user
 function normalizePhoneNumber(phoneNumber: string): string[] {
   const cleaned = phoneNumber.replace(/[\s\-\(\)\+]/g, '');
@@ -131,6 +160,42 @@ export async function handleTelegramPasswordReset(phoneNumber: string, chatId?: 
 // Process incoming Telegram webhook
 export async function processTelegramWebhook(update: any): Promise<void> {
   try {
+    // Handle phone number contact sharing
+    if (update.message && update.message.contact) {
+      const chatId = update.message.chat.id;
+      const contact = update.message.contact;
+      const phoneNumber = contact.phone_number;
+      
+      console.log('User shared contact:', { chatId, phoneNumber, firstName: contact.first_name });
+      
+      // Automatically reset password using shared phone number
+      const resetResult = await handleTelegramPasswordReset(phoneNumber, chatId.toString());
+      
+      if (resetResult.success) {
+        await sendTelegramMessage(chatId.toString(),
+          '🎉 <b>Phone Number Registered Successfully!</b>\n\n' +
+          'Your phone number has been verified and your password has been reset automatically.\n\n' +
+          '<b>What\'s next:</b>\n' +
+          '• Check your new temporary password above\n' +
+          '• Login to your VividPlate account\n' +
+          '• Change your password immediately\n\n' +
+          '💡 <b>Future resets:</b> You can now use <code>/reset</code> without typing your phone number!'
+        );
+      } else {
+        await sendTelegramMessage(chatId.toString(),
+          '❌ <b>Phone Number Not Found</b>\n\n' +
+          `We couldn't find a VividPlate account with phone number: <code>${phoneNumber}</code>\n\n` +
+          '<b>Solutions:</b>\n' +
+          '• Make sure you registered with this phone number\n' +
+          '• Try registering a new account if needed\n' +
+          '• Use <code>/register</code> for registration info\n' +
+          '• Contact support if you need help\n\n' +
+          '🔗 Register at: https://vividplate.com/register'
+        );
+      }
+      return;
+    }
+    
     if (update.message && update.message.text) {
       const chatId = update.message.chat.id;
       const messageText = update.message.text.trim();
@@ -140,7 +205,7 @@ export async function processTelegramWebhook(update: any): Promise<void> {
         const phoneNumber = messageText.replace('/reset', '').trim();
         
         if (!phoneNumber) {
-          await sendTelegramMessage(chatId, 
+          await sendTelegramMessage(chatId.toString(), 
             '📱 <b>VividPlate Password Reset</b>\n\n' +
             'Please send your phone number after the /reset command.\n\n' +
             'Example: <code>/reset +1234567890</code>\n\n' +
@@ -152,7 +217,7 @@ export async function processTelegramWebhook(update: any): Promise<void> {
         // Validate phone number format (more flexible validation)
         const phoneRegex = /^\+?[0-9\s\-\(\)]{7,15}$/;
         if (!phoneRegex.test(phoneNumber)) {
-          await sendTelegramMessage(chatId,
+          await sendTelegramMessage(chatId.toString(),
             '❌ <b>Invalid Phone Number Format</b>\n\n' +
             'Please provide a valid phone number in one of these formats:\n' +
             '• <code>/reset +1234567890</code> (International)\n' +
@@ -165,10 +230,10 @@ export async function processTelegramWebhook(update: any): Promise<void> {
         }
 
         // Process password reset with chat ID for messaging
-        const resetResult = await handleTelegramPasswordReset(phoneNumber, chatId);
+        const resetResult = await handleTelegramPasswordReset(phoneNumber, chatId.toString());
         
         if (!resetResult.success) {
-          await sendTelegramMessage(chatId,
+          await sendTelegramMessage(chatId.toString(),
             '❌ <b>Password Reset Failed</b>\n\n' +
             resetResult.message + '\n\n' +
             '<b>Troubleshooting:</b>\n' +
@@ -180,28 +245,44 @@ export async function processTelegramWebhook(update: any): Promise<void> {
       } 
       // Help and start commands
       else if (messageText.startsWith('/help') || messageText.startsWith('/start')) {
-        await sendTelegramMessage(chatId,
-          '🤖 <b>VividPlate Password Reset Bot</b>\n\n' +
-          '<b>Available Commands:</b>\n' +
-          '• <code>/start</code> - Start conversation with bot\n' +
-          '• <code>/help</code> - Show this help message\n' +
-          '• <code>/reset [phone_number]</code> - Reset your password\n' +
-          '• <code>/register</code> - Get registration information\n' +
-          '• <code>/reset-password</code> - Alternative reset command\n\n' +
-          '<b>How to reset your password:</b>\n' +
-          '1. Send: <code>/reset [your_phone_number]</code>\n' +
-          '2. Use any of these formats:\n' +
-          '   • <code>/reset +251912345678</code> (International)\n' +
-          '   • <code>/reset 0912345678</code> (Ethiopian local)\n' +
-          '   • <code>/reset +1234567890</code> (US/International)\n' +
-          '3. You\'ll receive a new temporary password\n' +
-          '4. Login and change your password immediately\n\n' +
-          '📞 Make sure to use the same phone number you registered with.'
-        );
+        // Check if this is the first time user is starting the bot
+        if (messageText.startsWith('/start')) {
+          // Send welcome message with phone number request
+          await sendTelegramMessageWithPhoneRequest(chatId.toString(),
+            '🤖 <b>Welcome to VividPlate Password Reset Bot!</b>\n\n' +
+            'To get started and enable automatic password resets, please share your phone number by clicking the button below.\n\n' +
+            '<b>Why we need your phone number:</b>\n' +
+            '• Automatic password reset without typing commands\n' +
+            '• Secure verification of your VividPlate account\n' +
+            '• Instant access to your account recovery\n\n' +
+            '🔒 <b>Your privacy is protected:</b> We only use your phone number for account verification and password resets.',
+            '📱 Share Phone Number'
+          );
+        } else {
+          // Regular help command
+          await sendTelegramMessage(chatId.toString(),
+            '🤖 <b>VividPlate Password Reset Bot</b>\n\n' +
+            '<b>Available Commands:</b>\n' +
+            '• <code>/start</code> - Start conversation with bot\n' +
+            '• <code>/help</code> - Show this help message\n' +
+            '• <code>/reset [phone_number]</code> - Reset your password\n' +
+            '• <code>/register</code> - Get registration information\n' +
+            '• <code>/reset-password</code> - Alternative reset command\n\n' +
+            '<b>How to reset your password:</b>\n' +
+            '1. Send: <code>/reset [your_phone_number]</code>\n' +
+            '2. Use any of these formats:\n' +
+            '   • <code>/reset +251912345678</code> (International)\n' +
+            '   • <code>/reset 0912345678</code> (Ethiopian local)\n' +
+            '   • <code>/reset +1234567890</code> (US/International)\n' +
+            '3. You\'ll receive a new temporary password\n' +
+            '4. Login and change your password immediately\n\n' +
+            '📞 Make sure to use the same phone number you registered with.'
+          );
+        }
       }
       // Register command
       else if (messageText.startsWith('/register')) {
-        await sendTelegramMessage(chatId,
+        await sendTelegramMessage(chatId.toString(),
           '📝 <b>VividPlate Registration</b>\n\n' +
           'To create a new account on VividPlate:\n\n' +
           '1. Visit: <a href="https://vividplate.com/register">vividplate.com/register</a>\n' +
@@ -223,7 +304,7 @@ export async function processTelegramWebhook(update: any): Promise<void> {
       }
       // Alternative reset-password command
       else if (messageText.startsWith('/reset-password')) {
-        await sendTelegramMessage(chatId,
+        await sendTelegramMessage(chatId.toString(),
           '🔑 <b>Password Reset Instructions</b>\n\n' +
           'To reset your password, use this command:\n' +
           '<code>/reset [your_phone_number]</code>\n\n' +
@@ -240,7 +321,7 @@ export async function processTelegramWebhook(update: any): Promise<void> {
       }
       // Unknown command
       else {
-        await sendTelegramMessage(chatId,
+        await sendTelegramMessage(chatId.toString(),
           '❓ <b>Unknown Command</b>\n\n' +
           '<b>Available Commands:</b>\n' +
           '• <code>/start</code> - Start conversation\n' +
