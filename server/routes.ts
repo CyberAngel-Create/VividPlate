@@ -145,12 +145,46 @@ const configurePassport = (app: Express) => {
         }
       ];
       
-      // Try to find user in test users by username, email, or phone
-      const user = testUsers.find(u => 
+      console.log('Looking for user with identifier:', identifier);
+      
+      // Try to find user from database first
+      let user;
+      try {
+        console.log('Calling storage.getUserByIdentifier...');
+        user = await storage.getUserByIdentifier(identifier);
+        console.log('storage.getUserByIdentifier returned:', user ? 'user found' : 'no user');
+      } catch (error) {
+        console.error('Error calling storage.getUserByIdentifier:', error);
+        user = null;
+      }
+      
+      if (user) {
+        console.log('Database user found:', user.username, user.email, user.phone);
+        // Verify password against database user
+        const bcrypt = require('bcryptjs');
+        const isValidPassword = await bcrypt.compare(password, user.password);
+        
+        if (isValidPassword) {
+          console.log('Database user authenticated successfully');
+          return done(null, user);
+        } else {
+          console.log('Database user found but password mismatch');
+          return done(null, false, { message: 'Incorrect password.' });
+        }
+      }
+      
+      console.log('User not found in database, checking test users...');
+      
+      // Fallback to test users for development
+      user = testUsers.find(u => 
         u.username.toLowerCase() === identifier.toLowerCase() || 
         u.email.toLowerCase() === identifier.toLowerCase() ||
         (u.phone && u.phone === identifier)
       );
+      
+      if (!user) {
+        console.log('No test user found with that identifier');
+      }
       
       if (!user) {
         console.log(`User not found with identifier: ${identifier}`);
@@ -162,9 +196,9 @@ const configurePassport = (app: Express) => {
       console.log(`Provided password: "${password}"`);
       console.log(`Password match: ${user.password === password}`);
       
-      // Direct password matching for test users
-      if (user.password === password) {
-        console.log('Password matched successfully');
+      // Direct password matching for test users (fallback)
+      if (user && user.password === password) {
+        console.log('Test user password matched successfully');
         return done(null, user);
       }
       
@@ -590,11 +624,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { identifier, password } = req.body;
       console.log(`Login attempt for identifier: ${identifier}`);
       
-      // Try to find user by username or email in the database first
-      let user = await storage.getUserByUsername(identifier);
-      if (!user) {
-        user = await storage.getUserByEmail(identifier);
-      }
+      // Try to find user by username, email, or phone number in the database first
+      let user = await storage.getUserByIdentifier(identifier);
       
       // If not found in database, check test users
       if (!user) {
@@ -648,7 +679,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         user = testUsers.find(u => 
           u.username.toLowerCase() === identifier.toLowerCase() || 
-          u.email.toLowerCase() === identifier.toLowerCase()
+          u.email.toLowerCase() === identifier.toLowerCase() ||
+          (u.phone && u.phone === identifier)
         );
         
         if (user) {

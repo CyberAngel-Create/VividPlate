@@ -20,7 +20,8 @@ import {
   permanentImages, PermanentImage, InsertPermanentImage
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, count, desc, or, isNull, lte, gte } from "drizzle-orm";
+import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
+import { phoneNumbersMatch, getPhoneNumberVariations } from "../shared/phone-utils";
 
 export interface IStorage {
   // User operations
@@ -210,15 +211,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByIdentifier(identifier: string): Promise<User | undefined> {
-    // Try to find user by username, email, or phone number
-    const [user] = await db.select().from(users).where(
+    console.log('getUserByIdentifier called with:', identifier);
+    
+    // First try direct match by username or email
+    let [user] = await db.select().from(users).where(
       or(
         eq(users.username, identifier),
-        eq(users.email, identifier),
-        eq(users.phone, identifier)
+        eq(users.email, identifier)
       )
     );
-    return user;
+    
+    if (user) {
+      console.log('Found user by username/email:', user.username);
+      return user;
+    }
+    
+    // If no direct match and identifier might be a phone number, try phone variations
+    if (/^\+?[\d\s\-\(\)]+$/.test(identifier)) {
+      console.log('Identifier looks like phone number, checking variations...');
+      const phoneVariations = getPhoneNumberVariations(identifier);
+      console.log('Phone variations to check:', phoneVariations);
+      
+      // Get all users with phone numbers and check for matches
+      const allUsersWithPhones = await db.select().from(users).where(isNotNull(users.phone));
+      console.log('Users with phone numbers:', allUsersWithPhones.map(u => ({ id: u.id, username: u.username, phone: u.phone })));
+      
+      for (const dbUser of allUsersWithPhones) {
+        if (dbUser.phone) {
+          console.log('Checking user:', dbUser.username, 'with phone:', dbUser.phone);
+          for (const variation of phoneVariations) {
+            console.log('Checking variation:', variation, 'against:', dbUser.phone);
+            if (phoneNumbersMatch(dbUser.phone, variation)) {
+              console.log('Phone number match found!');
+              return dbUser;
+            }
+          }
+        }
+      }
+      
+      console.log('No phone number matches found');
+    }
+    
+    return undefined;
   }
 
   async getUserByResetToken(token: string): Promise<User | undefined> {
