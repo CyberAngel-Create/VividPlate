@@ -38,7 +38,7 @@ Preferred communication style: Simple, everyday language.
 - **Admin Dashboard**: User management, restaurant oversight, analytics, system logs, pricing plan management, and content management.
 - **PWA Implementation**: Full Progressive Web App functionality with custom icons, service worker caching, offline support, and install prompts.
 - **Phone Number Management**: Required phone number field on registration with conditional profile management - prompts users to add phone if missing, allows updates if already provided.
-- **Telegram Bot Integration**: Automated password reset system via Telegram bot using phone number verification.
+- **Telegram Bot Integration**: Complete password reset system via Telegram bot with phone number verification against VividPlate database, secure password generation, and instant database updates.
 - **Internationalization**: Comprehensive menu translation system supporting English, Amharic, French, Arabic, and Chinese, including category and item-level translations.
 
 ### System Design Choices

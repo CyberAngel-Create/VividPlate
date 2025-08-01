@@ -34,28 +34,33 @@ Type any command or tap the verification button below:
 ```
 
 ### `/reset`
-Initiates password reset process for verified users.
+Instantly resets password for verified users with a new secure password.
 
 **Behavior:**
 - Requires phone verification first
-- Shows reset instructions if verified
-- Prompts verification if not verified
-- Logs reset requests for security
+- Generates secure 8-character password immediately
+- Updates VividPlate database with new password
+- Sends new password securely (auto-deleted after 2 minutes)
+- Logs all reset activities for security
 
 **Example (Verified User):**
 ```
 User: /reset
-Bot: 🔐 Password Reset Process
+Bot: ✅ Password Reset Successful!
 
-📱 Verified Phone: +1234567890
+📱 Verified Phone: +251912345678
+📧 VividPlate Account: user@example.com
+👤 Account Name: John Smith
 
-Your password reset request has been initiated. Here's what happens next:
+🔑 Your new password is: `Kp8wN7mQ`
 
-1️⃣ A verification code will be sent to your registered email
-2️⃣ Enter the code in the VividPlate app or website  
-3️⃣ Create your new password
+🔒 Important Security Steps:
+1️⃣ Copy this password immediately
+2️⃣ Log into VividPlate with your new password
+3️⃣ Change to a custom password in your profile
+4️⃣ This message will be deleted in 2 minutes for security
 
-⏱️ The verification code will expire in 15 minutes.
+⚠️ Keep this password secure and change it after logging in.
 ```
 
 **Example (Unverified User):**

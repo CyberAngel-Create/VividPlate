@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 import PhoneNumberBot from './telegram-bot.js';
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
+import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 // Import phone utility function
 function generatePhoneVariations(phoneNumber) {
   if (!phoneNumber) return [];
@@ -350,6 +352,16 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
     return knownCommands.some(cmd => text.startsWith(cmd));
   }
 
+  // Generate a secure random password
+  generateNewPassword() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(crypto.randomInt(0, chars.length));
+    }
+    return password;
+  }
+
   // Handle password reset
   async handlePasswordReset(msg) {
     const userId = msg.from.id;
@@ -379,47 +391,88 @@ class EnhancedPhoneNumberBot extends PhoneNumberBot {
       });
     }
 
-    // User is verified with registered account, proceed with reset
-    const user = session.registeredUser;
-    const resetMessage = `🔐 Password Reset Process\n\n` +
-      `📱 Verified Phone: ${session.phoneNumber}\n` +
-      `📧 VividPlate Account: ${user.email}\n` +
-      `👤 Account Name: ${user.full_name || 'No name set'}\n\n` +
-      `Your password reset request has been initiated for your registered VividPlate account.\n\n` +
-      `Here's what happens next:\n` +
-      `1️⃣ A verification code will be sent to: ${user.email}\n` +
-      `2️⃣ Enter the code in the VividPlate app or website\n` +
-      `3️⃣ Create your new password\n\n` +
-      `⏱️ The verification code will expire in 15 minutes.\n\n` +
-      `If you don't receive the email, check your spam folder or contact support.\n\n` +
-      `🔒 This request is logged and monitored for security.`;
-
-    await this.bot.sendMessage(chatId, resetMessage);
-
-    // Log the reset request with full user information
-    console.log(`🔐 Password reset requested for registered user:`, {
-      telegramUserId: userId,
-      vividPlateUserId: user.id,
-      phone: session.phoneNumber,
-      email: user.email,
-      accountName: user.full_name || 'No name',
-      timestamp: new Date().toISOString()
-    });
-
-    // Send follow-up with next steps
-    setTimeout(() => {
-      const followUpMessage = `💡 Password Reset Help\n\n` +
-        `📧 Email sent to: ${user.email}\n\n` +
-        `Next steps:\n` +
-        `• Check your email (including spam folder)\n` +
-        `• Code valid for 15 minutes only\n` +
-        `• Contact support if no email received\n` +
-        `• Use /status to check verification anytime\n\n` +
-        `🔐 Security tip: Never share verification codes with anyone.\n\n` +
-        `Need more help? Use /help for all commands.`;
+    try {
+      // User is verified with registered account, proceed with actual password reset
+      const user = session.registeredUser;
       
-      this.bot.sendMessage(chatId, followUpMessage);
-    }, 3000);
+      // Generate new password
+      const newPassword = this.generateNewPassword();
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      
+      // Update password in database
+      const updateQuery = `
+        UPDATE users 
+        SET password = $1, 
+            reset_password_token = NULL, 
+            reset_password_expires = NULL 
+        WHERE id = $2
+      `;
+      
+      await this.db.query(updateQuery, [hashedPassword, user.id]);
+      
+      // Send success message with new password
+      const resetSuccessMessage = `✅ Password Reset Successful!\n\n` +
+        `📱 Verified Phone: ${session.phoneNumber}\n` +
+        `📧 VividPlate Account: ${user.email}\n` +
+        `👤 Account Name: ${user.full_name || 'No name set'}\n\n` +
+        `🔑 Your new password is: \`${newPassword}\`\n\n` +
+        `🔒 Important Security Steps:\n` +
+        `1️⃣ Copy this password immediately\n` +
+        `2️⃣ Log into VividPlate with your new password\n` +
+        `3️⃣ Change to a custom password in your profile\n` +
+        `4️⃣ This message will be deleted in 2 minutes for security\n\n` +
+        `⚠️ Keep this password secure and change it after logging in.`;
+
+      const sentMessage = await this.bot.sendMessage(chatId, resetSuccessMessage, {
+        parse_mode: 'Markdown'
+      });
+
+      // Log the successful reset
+      console.log(`✅ Password reset completed for registered user:`, {
+        telegramUserId: userId,
+        vividPlateUserId: user.id,
+        phone: session.phoneNumber,
+        email: user.email,
+        accountName: user.full_name || 'No name',
+        timestamp: new Date().toISOString(),
+        newPasswordLength: newPassword.length
+      });
+
+      // Send follow-up security reminder
+      setTimeout(() => {
+        const securityMessage = `🔐 Security Reminder\n\n` +
+          `Your password has been successfully reset for: ${user.email}\n\n` +
+          `Next steps:\n` +
+          `• Log into VividPlate immediately\n` +
+          `• Change to a personal password\n` +
+          `• Enable two-factor authentication if available\n` +
+          `• Delete this conversation for security\n\n` +
+          `🛡️ This reset was logged and monitored for your security.\n\n` +
+          `If you didn't request this reset, contact support immediately.`;
+        
+        this.bot.sendMessage(chatId, securityMessage);
+      }, 2000);
+
+      // Auto-delete the password message after 2 minutes for security
+      setTimeout(() => {
+        this.bot.deleteMessage(chatId, sentMessage.message_id).catch(err => {
+          console.log('Could not delete password message:', err.message);
+        });
+      }, 120000); // 2 minutes
+
+    } catch (error) {
+      console.error('❌ Password reset failed:', error);
+      
+      const errorMessage = `❌ Password Reset Failed\n\n` +
+        `There was an error resetting your password. Please try again.\n\n` +
+        `If the problem persists:\n` +
+        `• Contact VividPlate support\n` +
+        `• Try logging in with your current password\n` +
+        `• Use the website password reset option\n\n` +
+        `Error details have been logged for review.`;
+      
+      await this.bot.sendMessage(chatId, errorMessage);
+    }
   }
 
   // Request phone verification
