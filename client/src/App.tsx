@@ -47,6 +47,7 @@ import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
 import CategoriesPage from "./pages/categories";
+import PasswordResetHelp from "./pages/password-reset-help";
 import { PWAInstaller } from "@/components/PWAInstaller";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -147,6 +148,7 @@ function Router() {
         <Route path="/terms" component={TermsOfService} />
         <PublicRoute path="/pricing" component={Pricing} />
         <PublicRoute path="/contact" component={Contact} />
+        <PublicRoute path="/password-reset-help" component={PasswordResetHelp} />
         <PublicRoute path="/menu/:restaurantName" component={ViewMenu} />
         <PublicRoute path="/view-menu/:restaurantName" component={ViewMenu} />
 
