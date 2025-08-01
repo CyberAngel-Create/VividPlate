@@ -3,22 +3,118 @@
 ## Available Commands
 
 ### `/start`
-Initiates the bot interaction and shows the phone number request interface.
+Shows welcome message with complete list of available commands and quick access buttons.
 
 **Response:**
 - Welcome message with user's first name
-- Custom keyboard with "📞 Share Phone Number" button
-- Instructions for sharing contact information
+- Complete list of all available commands
+- Custom keyboard with verification and help buttons
+- Overview of bot functionality
 
 **Example:**
 ```
 User: /start
 Bot: Hello John! 👋
 
-Welcome to the Phone Number Bot. To get started, please share your phone number by tapping the button below.
+Welcome to VividPlate Bot - Your restaurant management assistant.
 
-[📞 Share Phone Number]
+Available Commands:
+
+🔹 /start - Show this welcome message and commands
+🔹 /reset - Reset your account password (requires phone verification)
+🔹 /help - Get detailed help information
+🔹 /status - Check your phone verification status
+🔹 /verify - Start phone number verification process
+
+To get started with password reset functionality, you'll need to verify your phone number first.
+
+Type any command or tap the verification button below:
+
+[📞 Verify Phone Number] [/help] [/reset]
 ```
+
+### `/reset`
+Initiates password reset process for verified users.
+
+**Behavior:**
+- Requires phone verification first
+- Shows reset instructions if verified
+- Prompts verification if not verified
+- Logs reset requests for security
+
+**Example (Verified User):**
+```
+User: /reset
+Bot: 🔐 Password Reset Process
+
+📱 Verified Phone: +1234567890
+
+Your password reset request has been initiated. Here's what happens next:
+
+1️⃣ A verification code will be sent to your registered email
+2️⃣ Enter the code in the VividPlate app or website  
+3️⃣ Create your new password
+
+⏱️ The verification code will expire in 15 minutes.
+```
+
+**Example (Unverified User):**
+```
+User: /reset
+Bot: 🔒 Password Reset Unavailable
+
+You need to verify your phone number before you can reset your password.
+
+📱 Tap the button below to verify your phone number first:
+
+[📞 Verify Phone Number]
+```
+
+### `/help`
+Provides detailed help information about all commands and features.
+
+**Response:**
+- Detailed explanation of each command
+- Phone verification process explanation
+- Security information
+- Support contact information
+
+### `/status`
+Shows current phone verification status and account information.
+
+**Example (Verified):**
+```
+User: /status
+Bot: ✅ Verification Status: VERIFIED
+
+📱 Phone: +1234567890
+👤 Name: John Doe
+⏰ Verified: 1/1/2025, 12:00:00 PM
+
+🔓 You can now use /reset to change your password.
+🔒 Your account is secure and ready for recovery.
+```
+
+**Example (Not Verified):**
+```
+User: /status
+Bot: ❌ Verification Status: NOT VERIFIED
+
+To use password reset and other secure features, you need to verify your phone number first.
+
+📱 Tap the button below or send /verify to start:
+
+[📞 Verify Phone Number]
+```
+
+### `/verify`
+Starts or restarts the phone number verification process.
+
+**Response:**
+- Explanation of verification purpose
+- Security information about data handling
+- Custom keyboard with contact sharing button
+- Cancel option
 
 ## Contact Sharing Flow
 
@@ -136,7 +232,12 @@ process.on('SIGINT', () => {
 
 ## Testing Commands
 
-### Run the Example Bot
+### Run the Enhanced Bot
+```bash
+node run-telegram-bot.js
+```
+
+### Run the Basic Example Bot
 ```bash
 node telegram-bot-example.js
 ```
