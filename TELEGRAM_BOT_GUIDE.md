@@ -32,11 +32,22 @@ Send this exact message to the bot:
 
 ## ✅ Testing Results
 
-### Successful Test
+### Successful API Tests
 ```
+Test 1: Direct API call
+Request: POST /api/auth/telegram-reset {"phoneNumber": "0977816299"}
+Response: {"message":"Password reset successful","newPassword":"34p331N0er"}
+
+Test 2: Telegram Webhook  
 Request: /reset 0977816299
-Response: Password reset successful
-New Password: uVOhcSa7Pk
+Response: Password generated successfully: LzkcWlKixd
+Bot Message: "✅ Password Reset Successful! Your new password is: LzkcWlKixd"
+
+Test 3: Multiple Phone Formats Supported
+- 0977816299 ✅
+- +251977816299 ✅ 
+- 251977816299 ✅
+- Various international formats supported
 ```
 
 ### API Endpoints Working

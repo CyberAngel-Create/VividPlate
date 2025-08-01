@@ -4,7 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Redirect } from "wouter";
-import { Loader2, KeyRound, User, Mail, Save, Phone } from "lucide-react";
+import { Loader2, KeyRound, User, Mail, Save } from "lucide-react";
+import PhoneInput from "@/components/ui/phone-input";
 import { useSubscription } from "@/hooks/use-subscription";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import { PremiumBadge } from "@/components/ui/premium-badge";
@@ -237,24 +238,14 @@ const ProfilePage = () => {
                     name="phone"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>
-                          Phone Number
-                          {!user?.phone && (
-                            <span className="text-red-500 ml-1">*</span>
-                          )}
-                        </FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <div className="absolute left-3 top-3 text-gray-400">
-                              <Phone className="h-4 w-4" />
-                            </div>
-                            <Input 
-                              className="pl-10" 
-                              type="tel" 
-                              placeholder={!user?.phone ? "Please add your phone number" : "+1234567890"}
-                              {...field} 
-                            />
-                          </div>
+                          <PhoneInput
+                            label="Phone Number"
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                            placeholder={!user?.phone ? "Please add your phone number" : "Update your phone number"}
+                            required={!user?.phone}
+                          />
                         </FormControl>
                         {!user?.phone && (
                           <p className="text-sm text-amber-600 bg-amber-50 p-2 rounded">

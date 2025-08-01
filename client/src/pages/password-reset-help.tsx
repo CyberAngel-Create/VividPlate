@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Bot, Phone, Key, Copy, ExternalLink } from "lucide-react";
+import { Bot, Key, Copy, ExternalLink } from "lucide-react";
 import CustomerHeader from "@/components/layout/CustomerHeader";
 import Footer from "@/components/layout/Footer";
+import PhoneInput from "@/components/ui/phone-input";
 
 const PasswordResetHelp = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -135,23 +135,13 @@ const PasswordResetHelp = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-3">
-                <div>
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <div className="relative">
-                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="+1234567890"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Enter the phone number you used when registering
-                  </p>
-                </div>
+                <PhoneInput
+                  label="Phone Number"
+                  value={phoneNumber}
+                  onChange={setPhoneNumber}
+                  placeholder="Enter your phone number"
+                  required
+                />
 
                 <Button 
                   onClick={handleTelegramReset} 

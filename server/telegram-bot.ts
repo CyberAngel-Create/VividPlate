@@ -32,14 +32,49 @@ export async function sendTelegramMessage(chatId: string, message: string): Prom
   }
 }
 
+// Normalize phone number - try multiple formats to find user
+function normalizePhoneNumber(phoneNumber: string): string[] {
+  const cleaned = phoneNumber.replace(/[\s\-\(\)\+]/g, '');
+  const formats = [
+    phoneNumber, // Original format
+    cleaned, // Just numbers
+    `+${cleaned}`, // With + prefix
+    `251${cleaned.replace(/^0/, '')}`, // Ethiopia format (+251)
+    `1${cleaned}`, // US format (+1)
+    `44${cleaned.replace(/^0/, '')}`, // UK format (+44)
+    `49${cleaned.replace(/^0/, '')}`, // Germany format (+49)
+    `33${cleaned.replace(/^0/, '')}`, // France format (+33)
+    `39${cleaned.replace(/^0/, '')}`, // Italy format (+39)
+    `86${cleaned}`, // China format (+86)
+    `91${cleaned}`, // India format (+91)
+    `234${cleaned.replace(/^0/, '')}`, // Nigeria format (+234)
+    `27${cleaned.replace(/^0/, '')}`, // South Africa format (+27)
+    `254${cleaned.replace(/^0/, '')}`, // Kenya format (+254)
+    `256${cleaned.replace(/^0/, '')}`, // Uganda format (+256)
+    `255${cleaned.replace(/^0/, '')}`, // Tanzania format (+255)
+  ];
+  
+  // Remove duplicates and return unique formats
+  return [...new Set(formats)];
+}
+
 // Handle password reset via phone number
 export async function handleTelegramPasswordReset(phoneNumber: string): Promise<{ success: boolean; message: string; newPassword?: string }> {
   try {
-    // Clean phone number (remove spaces, dashes, etc.)
-    const cleanedPhone = phoneNumber.replace(/[\s\-\(\)]/g, '');
+    console.log('Attempting password reset for phone:', phoneNumber);
     
-    // Find user by phone number
-    const user = await storage.getUserByPhone(cleanedPhone);
+    // Try multiple phone number formats
+    const phoneFormats = normalizePhoneNumber(phoneNumber);
+    console.log('Trying phone formats:', phoneFormats);
+    
+    let user = null;
+    for (const format of phoneFormats) {
+      user = await storage.getUserByPhone(format);
+      if (user) {
+        console.log('Found user with phone format:', format);
+        break;
+      }
+    }
     
     if (!user) {
       return {
@@ -100,13 +135,17 @@ export async function processTelegramWebhook(update: any): Promise<void> {
           return;
         }
 
-        // Validate phone number format (basic validation)
-        const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+        // Validate phone number format (more flexible validation)
+        const phoneRegex = /^\+?[0-9\s\-\(\)]{7,15}$/;
         if (!phoneRegex.test(phoneNumber)) {
           await sendTelegramMessage(chatId,
-            '❌ <b>Invalid Phone Number</b>\n\n' +
-            'Please provide a valid phone number.\n\n' +
-            'Example: <code>/reset +1234567890</code>'
+            '❌ <b>Invalid Phone Number Format</b>\n\n' +
+            'Please provide a valid phone number in one of these formats:\n' +
+            '• <code>/reset +1234567890</code> (International)\n' +
+            '• <code>/reset 0912345678</code> (Local Ethiopian)\n' +
+            '• <code>/reset +251912345678</code> (Ethiopian with country code)\n' +
+            '• <code>/reset 1234567890</code> (Without symbols)\n\n' +
+            'The bot will try multiple formats to find your account.'
           );
           return;
         }
@@ -127,7 +166,11 @@ export async function processTelegramWebhook(update: any): Promise<void> {
         } else {
           await sendTelegramMessage(chatId,
             '❌ <b>Password Reset Failed</b>\n\n' +
-            resetResult.message
+            resetResult.message + '\n\n' +
+            '<b>Troubleshooting:</b>\n' +
+            '• Make sure you use the same phone number from your account\n' +
+            '• Try different formats: +251912345678 or 0912345678\n' +
+            '• Contact support if the issue persists'
           );
         }
       } 
@@ -139,8 +182,11 @@ export async function processTelegramWebhook(update: any): Promise<void> {
           '• <code>/reset [phone_number]</code> - Reset your password\n' +
           '• <code>/help</code> - Show this help message\n\n' +
           '<b>How to reset your password:</b>\n' +
-          '1. Send: <code>/reset +1234567890</code>\n' +
-          '2. Replace +1234567890 with your registered phone number\n' +
+          '1. Send: <code>/reset [your_phone_number]</code>\n' +
+          '2. Use any of these formats:\n' +
+          '   • <code>/reset +251912345678</code> (International)\n' +
+          '   • <code>/reset 0912345678</code> (Ethiopian local)\n' +
+          '   • <code>/reset +1234567890</code> (US/International)\n' +
           '3. You\'ll receive a new temporary password\n' +
           '4. Login and change your password immediately\n\n' +
           '📞 Make sure to use the same phone number you registered with.'
