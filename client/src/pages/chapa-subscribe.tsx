@@ -17,6 +17,10 @@ interface SubscriptionPlan {
   features: string[];
   maxRestaurants: number;
   maxMenuItems: number;
+  international?: boolean;
+  internationalPricing?: Record<string, number>;
+  originalPrice?: number;
+  originalCurrency?: string;
 }
 
 interface PaymentFormData {
@@ -24,6 +28,8 @@ interface PaymentFormData {
   firstName: string;
   lastName: string;
   phoneNumber: string;
+  currency?: string;
+  countryCode?: string;
 }
 
 const PaymentForm = ({ plan, onSubmit, isProcessing }: { 
@@ -227,12 +233,13 @@ export default function ChapaSubscribe() {
 
         console.log('Fetching plan data for planId:', planId);
         
-        // Fetch plan details from the backend
-        const response = await apiRequest(`/api/subscription-plans/${planId}`);
+        // Get user's currency and location if available
+        const userCountry = navigator.language.split('-')[1] || 'ET';
+        const response = await apiRequest(`/api/chapa/subscription-plans?currency=ETB&country=${userCountry}`);
         console.log('Plan data response:', response);
         
-        if (response && response.name) {
-          setPlanData(response);
+        if (response && response.plans && response.plans[planId]) {
+          setPlanData(response.plans[planId]);
         } else {
           setError('Subscription plan not found');
         }
@@ -255,16 +262,23 @@ export default function ChapaSubscribe() {
     try {
       console.log('Initiating Chapa payment for plan:', planData.name);
       
+      // Get user's currency and location
+      const userCountry = navigator.language.split('-')[1] || 'ET';
+      
       // Call backend to initialize Chapa payment
       const response = await apiRequest(`/api/chapa/initialize-payment/${planId}`, {
         method: 'POST',
-        body: {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           email: formData.email,
           firstName: formData.firstName,
           lastName: formData.lastName,
           phoneNumber: formData.phoneNumber,
-          planId: planId
-        }
+          currency: planData.currency,
+          countryCode: userCountry
+        })
       });
 
       console.log('Chapa initialization response:', response);

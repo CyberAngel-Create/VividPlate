@@ -2363,16 +2363,176 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   // Import Chapa service
-  let chapaService, SUBSCRIPTION_PLANS;
+  let chapaService, SUBSCRIPTION_PLANS, convertPrice, getCurrencyByLocation;
   try {
     const chapaModule = await import('./chapa-service');
     chapaService = chapaModule.chapaService;
     SUBSCRIPTION_PLANS = chapaModule.SUBSCRIPTION_PLANS;
+    convertPrice = chapaModule.convertPrice;
+    getCurrencyByLocation = chapaModule.getCurrencyByLocation;
   } catch (error) {
     console.warn('Chapa service not available:', error.message);
     chapaService = null;
     SUBSCRIPTION_PLANS = {};
+    convertPrice = (price: number) => price;
+    getCurrencyByLocation = () => 'ETB';
   }
+
+  // Get subscription plans with international pricing
+  app.get('/api/chapa/subscription-plans', (req, res) => {
+    try {
+      const userCurrency = req.query.currency as string || 'ETB';
+      const countryCode = req.query.country as string;
+      
+      // Get appropriate currency based on user location
+      const currency = countryCode ? getCurrencyByLocation(countryCode) : userCurrency;
+      
+      // Convert plan prices to user's currency
+      const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS).reduce((acc, [key, plan]) => {
+        let price = plan.price;
+        let planCurrency = currency;
+        
+        // Use international pricing if available, otherwise convert from ETB
+        if (plan.international && plan.internationalPricing && plan.internationalPricing[currency]) {
+          price = plan.internationalPricing[currency];
+        } else if (currency !== 'ETB' && plan.price > 0) {
+          price = convertPrice(plan.price, currency);
+        }
+        
+        acc[key] = {
+          ...plan,
+          price,
+          currency: planCurrency,
+          originalPrice: plan.price,
+          originalCurrency: 'ETB'
+        };
+        return acc;
+      }, {} as any);
+      
+      res.json({
+        plans: plansWithPricing,
+        currency,
+        supportedCurrencies: ['ETB', 'USD', 'EUR', 'GBP', 'KES', 'NGN', 'GHS', 'ZAR']
+      });
+    } catch (error) {
+      console.error('Error fetching subscription plans:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Initialize Chapa payment with international support
+  app.post('/api/chapa/initialize-payment/:planId', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      const planId = req.params.planId.toLowerCase();
+      const { email, firstName, lastName, phoneNumber, currency, countryCode } = req.body;
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (!chapaService) {
+        return res.status(500).json({ message: 'Chapa payment service not configured' });
+      }
+
+      if (!(planId in SUBSCRIPTION_PLANS)) {
+        return res.status(404).json({ message: 'Invalid subscription plan' });
+      }
+
+      const plan = SUBSCRIPTION_PLANS[planId];
+      
+      // Determine currency and price
+      const userCurrency = currency || getCurrencyByLocation(countryCode) || 'ETB';
+      let finalPrice = plan.price;
+      
+      // Use international pricing if available, otherwise convert from ETB
+      if (plan.international && plan.internationalPricing && plan.internationalPricing[userCurrency]) {
+        finalPrice = plan.internationalPricing[userCurrency];
+      } else if (userCurrency !== 'ETB' && plan.price > 0) {
+        finalPrice = convertPrice(plan.price, userCurrency);
+      }
+      
+      // Free plan doesn't require payment
+      if (finalPrice === 0) {
+        const endDate = new Date();
+        endDate.setFullYear(endDate.getFullYear() + 1); // Free for 1 year
+        
+        const newSubscription = await storage.createSubscription({
+          userId,
+          tier: planId,
+          endDate,
+          paymentMethod: "free",
+          isActive: true
+        });
+
+        return res.json({
+          status: 'success',
+          message: 'Free subscription activated',
+          subscription: newSubscription
+        });
+      }
+
+      // Format amount for Chapa
+      const amount = chapaService.formatAmount(finalPrice, userCurrency);
+      
+      // Generate unique transaction reference
+      const txRef = chapaService.generateTxRef(`vividplate_${planId}_${userId}`);
+      
+      // Prepare callback and return URLs
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const callbackUrl = `${baseUrl}/api/chapa/callback`;
+      const returnUrl = `${baseUrl}/payment-success?plan=${planId}&currency=${userCurrency}`;
+
+      const paymentData = {
+        amount,
+        currency: userCurrency,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        phone_number: phoneNumber,
+        tx_ref: txRef,
+        callback_url: callbackUrl,
+        return_url: returnUrl,
+        description: `VividPlate ${plan.name} Plan Subscription (${userCurrency})`,
+        customization: {
+          title: 'VividPlate Subscription',
+          description: `Subscribe to ${plan.name} plan - ${finalPrice} ${userCurrency}`,
+          logo: `${baseUrl}/favicon.ico`
+        }
+      };
+
+      // Validate payment data
+      const validationErrors = chapaService.validatePaymentData(paymentData);
+      if (validationErrors.length > 0) {
+        return res.status(400).json({ 
+          message: 'Invalid payment data', 
+          errors: validationErrors 
+        });
+      }
+
+      // Initialize payment with Chapa
+      const chapaResponse = await chapaService.initializePayment(paymentData);
+      
+      res.json({
+        ...chapaResponse,
+        planDetails: {
+          name: plan.name,
+          price: finalPrice,
+          currency: userCurrency,
+          originalPrice: plan.price,
+          originalCurrency: 'ETB'
+        }
+      });
+      
+    } catch (error) {
+      console.error("Chapa international payment initialization error:", error);
+      res.status(500).json({ 
+        message: 'Error initializing payment', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
 
   // Legacy Stripe endpoints - redirect to Chapa
   app.post('/api/create-subscription', isAuthenticated, async (req, res) => {

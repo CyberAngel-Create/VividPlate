@@ -126,11 +126,23 @@ export class ChapaService {
   }
 
   /**
-   * Format amount for Ethiopian Birr (minimum amount handling)
+   * Format amount for different currencies (minimum amount handling)
    */
-  formatAmount(amount: number): number {
-    // Chapa requires minimum amount of 1 ETB
-    return Math.max(amount, 1);
+  formatAmount(amount: number, currency: string = 'ETB'): number {
+    // Minimum amounts per currency
+    const minimumAmounts: Record<string, number> = {
+      ETB: 1,    // 1 Ethiopian Birr
+      USD: 0.5,  // $0.50 USD
+      EUR: 0.5,  // €0.50 EUR
+      GBP: 0.5,  // £0.50 GBP
+      KES: 50,   // 50 Kenyan Shillings
+      NGN: 100,  // 100 Nigerian Naira
+      GHS: 5,    // 5 Ghanaian Cedi
+      ZAR: 10,   // 10 South African Rand
+    };
+    
+    const minimum = minimumAmounts[currency] || 1;
+    return Math.max(amount, minimum);
   }
 
   /**
@@ -190,7 +202,46 @@ export const chapaService = CHAPA_SECRET_KEY
   ? new ChapaService(CHAPA_SECRET_KEY) 
   : null;
 
-// Subscription plans for VividPlate
+// Currency conversion rates (ETB to other currencies)
+const CURRENCY_RATES = {
+  ETB: 1,
+  USD: 0.018,  // 1 ETB = ~0.018 USD
+  EUR: 0.017,  // 1 ETB = ~0.017 EUR
+  GBP: 0.014,  // 1 ETB = ~0.014 GBP
+  KES: 2.31,   // 1 ETB = ~2.31 KES
+  NGN: 30.5,   // 1 ETB = ~30.5 NGN
+  GHS: 0.27,   // 1 ETB = ~0.27 GHS
+  ZAR: 0.33,   // 1 ETB = ~0.33 ZAR
+};
+
+// Helper function to convert price to different currencies
+export function convertPrice(priceInETB: number, targetCurrency: string): number {
+  const rate = CURRENCY_RATES[targetCurrency as keyof typeof CURRENCY_RATES];
+  if (!rate) return priceInETB; // Default to ETB if currency not supported
+  return Math.round(priceInETB * rate * 100) / 100; // Round to 2 decimal places
+}
+
+// Helper function to get appropriate currency for user location
+export function getCurrencyByLocation(countryCode?: string): string {
+  const currencyMap: Record<string, string> = {
+    'ET': 'ETB', // Ethiopia
+    'US': 'USD', // United States
+    'GB': 'GBP', // United Kingdom
+    'EU': 'EUR', // European Union
+    'DE': 'EUR', // Germany
+    'FR': 'EUR', // France
+    'IT': 'EUR', // Italy
+    'ES': 'EUR', // Spain
+    'KE': 'KES', // Kenya
+    'NG': 'NGN', // Nigeria
+    'GH': 'GHS', // Ghana
+    'ZA': 'ZAR', // South Africa
+  };
+  
+  return currencyMap[countryCode || 'ET'] || 'ETB';
+}
+
+// Subscription plans for VividPlate with international pricing
 export const SUBSCRIPTION_PLANS = {
   free: {
     name: 'Free',
@@ -204,11 +255,12 @@ export const SUBSCRIPTION_PLANS = {
       'Standard Support'
     ],
     maxRestaurants: 1,
-    maxMenuItems: 50
+    maxMenuItems: 50,
+    international: true
   },
   premium: {
     name: 'Premium',
-    price: 500, // 500 ETB per month
+    price: 500, // 500 ETB per month (~$9 USD)
     currency: 'ETB',
     description: 'Advanced features for growing restaurants',
     features: [
@@ -220,11 +272,21 @@ export const SUBSCRIPTION_PLANS = {
       'Advanced QR Codes'
     ],
     maxRestaurants: 3,
-    maxMenuItems: 200
+    maxMenuItems: 200,
+    international: true,
+    internationalPricing: {
+      USD: 9,   // $9 USD
+      EUR: 8,   // €8 EUR
+      GBP: 7,   // £7 GBP
+      KES: 1155, // 1155 KES
+      NGN: 15250, // 15250 NGN
+      GHS: 135,  // 135 GHS
+      ZAR: 165   // 165 ZAR
+    }
   },
   business: {
     name: 'Business',
-    price: 1200, // 1200 ETB per month
+    price: 1200, // 1200 ETB per month (~$22 USD)
     currency: 'ETB',
     description: 'Complete solution for restaurant chains',
     features: [
@@ -237,7 +299,17 @@ export const SUBSCRIPTION_PLANS = {
       'White Label Solution'
     ],
     maxRestaurants: -1, // Unlimited
-    maxMenuItems: -1 // Unlimited
+    maxMenuItems: -1, // Unlimited
+    international: true,
+    internationalPricing: {
+      USD: 22,   // $22 USD
+      EUR: 20,   // €20 EUR
+      GBP: 17,   // £17 GBP
+      KES: 2772, // 2772 KES
+      NGN: 36600, // 36600 NGN
+      GHS: 324,  // 324 GHS
+      ZAR: 396   // 396 ZAR
+    }
   }
 };
 
