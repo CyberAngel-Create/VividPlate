@@ -21,16 +21,18 @@ import { apiRequest } from "@/lib/queryClient";
 import { useTranslation } from "react-i18next";
 
 interface PricingPlan {
-  id: number;
   name: string;
   description: string;
   price: number;
   currency: string;
-  isPopular: boolean;
-  isActive: boolean;
+  popular: boolean;
   features: string[];
-  tier: string;
-  billingPeriod: string;
+  maxRestaurants: number;
+  maxMenuItems: number;
+  international?: boolean;
+  internationalPricing?: Record<string, number>;
+  originalPrice?: number;
+  originalCurrency?: string;
 }
 
 const PricingPage = () => {
@@ -40,7 +42,7 @@ const PricingPage = () => {
   const { subscription, isPaid, isLoading: isSubscriptionLoading } = useSubscription();
   const { t } = useTranslation();
 
-  const { data: plans, isLoading, error } = useQuery<PricingPlan[]>({
+  const { data: plans, isLoading, error } = useQuery<Record<string, PricingPlan>>({
     queryKey: ["/api/pricing"],
     retry: 1,
     gcTime: 0,
@@ -57,7 +59,7 @@ const PricingPage = () => {
     }
   }, [error, toast]);
 
-  const handleSubscribe = async (plan: PricingPlan) => {
+  const handleSubscribe = async (plan: PricingPlan, planKey: string) => {
     if (!user) {
       toast({
         title: t("Authentication required"),
@@ -68,9 +70,9 @@ const PricingPage = () => {
     }
 
     // If user is already on a paid plan and tries to select another paid plan
-    if (isPaid && plan.tier !== 'free') {
+    if (isPaid && planKey !== 'free') {
       // Check if they're trying to select the same plan they already have
-      if (subscription?.tier === plan.tier) {
+      if (subscription?.tier === planKey) {
         toast({
           title: t("Already subscribed"),
           description: t("You are already subscribed to this plan."),
@@ -79,11 +81,11 @@ const PricingPage = () => {
       }
       
       // If it's a different paid plan, allow the change
-      setLocation(`/subscribe?planId=${plan.id}`);
+      setLocation(`/chapa-subscribe/${planKey}`);
       return;
     }
 
-    if (plan.tier === 'free') {
+    if (planKey === 'free') {
       try {
         // For downgrading to free plan, make an API call to update the subscription
         await apiRequest("POST", "/api/subscription/downgrade", {});
@@ -101,8 +103,8 @@ const PricingPage = () => {
         });
       }
     } else {
-      // For upgrading to paid plans, go to subscribe page with the plan ID
-      setLocation(`/subscribe?planId=${plan.id}`);
+      // For upgrading to paid plans, go to Chapa subscribe page
+      setLocation(`/chapa-subscribe/${planKey}`);
     }
   };
 
@@ -145,12 +147,12 @@ const PricingPage = () => {
             </section>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-              {plans?.filter(plan => plan.isActive).map((plan) => (
+              {plans && Object.entries(plans).map(([planKey, plan]: [string, any]) => (
                 <Card 
-                  key={plan.id} 
-                  className={`border-2 flex flex-col ${plan.isPopular ? 'border-primary shadow-lg relative' : 'border-border'}`}
+                  key={planKey} 
+                  className={`border-2 flex flex-col ${plan.popular ? 'border-primary shadow-lg relative' : 'border-border'}`}
                 >
-                  {plan.isPopular && (
+                  {plan.popular && (
                     <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2">
                       <Badge className="bg-primary">Most Popular</Badge>
                     </div>
@@ -160,10 +162,10 @@ const PricingPage = () => {
                     <CardDescription className="mt-2">{plan.description}</CardDescription>
                     <div className="mt-4">
                       <span className="text-4xl font-bold">
-                        {plan.currency === 'USD' ? '$' : plan.currency} {plan.price}
+                        {plan.currency === 'USD' ? '$' : plan.currency === 'EUR' ? '€' : plan.currency === 'GBP' ? '£' : plan.currency + ' '} {plan.price}
                       </span>
                       <span className="text-muted-foreground">
-                        {plan.price > 0 ? `/${plan.billingPeriod}` : ''}
+                        {plan.price > 0 ? '/month' : ''}
                       </span>
                     </div>
                   </CardHeader>
@@ -181,18 +183,18 @@ const PricingPage = () => {
                   <CardFooter className="pt-6">
                     <Button 
                       className="w-full" 
-                      variant={plan.isPopular ? "default" : "outline"}
-                      onClick={() => handleSubscribe(plan)}
+                      variant={plan.popular ? "default" : "outline"}
+                      onClick={() => handleSubscribe(plan, planKey)}
                       disabled={isSubscriptionLoading}
                     >
                       {(() => {
                         // Already subscribed to this specific plan
-                        if (subscription?.tier === plan.tier) {
+                        if (subscription?.tier === planKey) {
                           return t("Current Plan");
                         }
                         
                         // Free plan options
-                        if (plan.tier === 'free') {
+                        if (planKey === 'free') {
                           return isPaid ? t("Downgrade to Free") : t("Get Started");
                         }
                         
