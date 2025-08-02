@@ -135,10 +135,6 @@ export class ChapaService {
       USD: 0.5,  // $0.50 USD
       EUR: 0.5,  // €0.50 EUR
       GBP: 0.5,  // £0.50 GBP
-      KES: 50,   // 50 Kenyan Shillings
-      NGN: 100,  // 100 Nigerian Naira
-      GHS: 5,    // 5 Ghanaian Cedi
-      ZAR: 10,   // 10 South African Rand
     };
     
     const minimum = minimumAmounts[currency] || 1;
@@ -208,10 +204,6 @@ const CURRENCY_RATES = {
   USD: 0.018,  // 1 ETB = ~0.018 USD
   EUR: 0.017,  // 1 ETB = ~0.017 EUR
   GBP: 0.014,  // 1 ETB = ~0.014 GBP
-  KES: 2.31,   // 1 ETB = ~2.31 KES
-  NGN: 30.5,   // 1 ETB = ~30.5 NGN
-  GHS: 0.27,   // 1 ETB = ~0.27 GHS
-  ZAR: 0.33,   // 1 ETB = ~0.33 ZAR
 };
 
 // Helper function to convert price to different currencies
@@ -232,13 +224,18 @@ export function getCurrencyByLocation(countryCode?: string): string {
     'FR': 'EUR', // France
     'IT': 'EUR', // Italy
     'ES': 'EUR', // Spain
-    'KE': 'KES', // Kenya
-    'NG': 'NGN', // Nigeria
-    'GH': 'GHS', // Ghana
-    'ZA': 'ZAR', // South Africa
+    'NL': 'EUR', // Netherlands
+    'BE': 'EUR', // Belgium
+    'AT': 'EUR', // Austria
+    'IE': 'EUR', // Ireland
+    'PT': 'EUR', // Portugal
+    'FI': 'EUR', // Finland
+    'GR': 'EUR', // Greece
+    'CA': 'USD', // Canada (international cards)
+    'AU': 'USD', // Australia (international cards)
   };
   
-  return currencyMap[countryCode || 'ET'] || 'ETB';
+  return currencyMap[countryCode || 'ET'] || 'USD'; // Default to USD for international
 }
 
 // Subscription plans for VividPlate with international pricing
@@ -278,10 +275,6 @@ export const SUBSCRIPTION_PLANS = {
       USD: 9,   // $9 USD
       EUR: 8,   // €8 EUR
       GBP: 7,   // £7 GBP
-      KES: 1155, // 1155 KES
-      NGN: 15250, // 15250 NGN
-      GHS: 135,  // 135 GHS
-      ZAR: 165   // 165 ZAR
     }
   },
   business: {
@@ -305,10 +298,6 @@ export const SUBSCRIPTION_PLANS = {
       USD: 22,   // $22 USD
       EUR: 20,   // €20 EUR
       GBP: 17,   // £17 GBP
-      KES: 2772, // 2772 KES
-      NGN: 36600, // 36600 NGN
-      GHS: 324,  // 324 GHS
-      ZAR: 396   // 396 ZAR
     }
   }
 };

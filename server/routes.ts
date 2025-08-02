@@ -2412,7 +2412,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.json({
         plans: plansWithPricing,
         currency,
-        supportedCurrencies: ['ETB', 'USD', 'EUR', 'GBP', 'KES', 'NGN', 'GHS', 'ZAR']
+        supportedCurrencies: ['ETB', 'USD', 'EUR', 'GBP']
       });
     } catch (error) {
       console.error('Error fetching subscription plans:', error);
@@ -2531,6 +2531,125 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         message: 'Error initializing payment', 
         error: error instanceof Error ? error.message : 'Unknown error' 
       });
+    }
+  });
+
+  // Pricing plans endpoint - serve Chapa pricing with international support
+  app.get('/api/pricing', (req, res) => {
+    try {
+      const userCurrency = req.query.currency as string || 'ETB';
+      const countryCode = req.query.country as string;
+      
+      // Get appropriate currency based on user location if functions are available
+      const currency = (countryCode && getCurrencyByLocation) ? getCurrencyByLocation(countryCode) : userCurrency;
+      
+      if (!SUBSCRIPTION_PLANS || Object.keys(SUBSCRIPTION_PLANS).length === 0) {
+        // Fallback to static plans if Chapa service is not available
+        const fallbackPlans = {
+          free: {
+            name: 'Free',
+            price: 0,
+            currency: 'ETB',
+            description: 'Basic menu management for 1 restaurant',
+            features: [
+              '1 Restaurant',
+              'Basic Menu Management', 
+              'QR Code Generation',
+              'Standard Support'
+            ],
+            maxRestaurants: 1,
+            maxMenuItems: 50,
+            popular: false
+          },
+          premium: {
+            name: 'Premium',
+            price: 500,
+            currency: 'ETB',
+            description: 'Advanced features for growing restaurants',
+            features: [
+              '3 Restaurants',
+              'Advanced Analytics',
+              'Custom Themes',
+              'Priority Support',
+              'Menu Translation',
+              'Advanced QR Codes'
+            ],
+            maxRestaurants: 3,
+            maxMenuItems: 200,
+            popular: true
+          },
+          business: {
+            name: 'Business',
+            price: 1200,
+            currency: 'ETB',
+            description: 'Complete solution for restaurant chains',
+            features: [
+              'Unlimited Restaurants',
+              'Advanced Analytics & Reports',
+              'Custom Branding',
+              '24/7 Support',
+              'API Access',
+              'Multi-language Support',
+              'White Label Solution'
+            ],
+            maxRestaurants: -1,
+            maxMenuItems: -1,
+            popular: false
+          }
+        };
+        return res.json(fallbackPlans);
+      }
+      
+      // Convert plan prices to user's currency
+      const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS).reduce((acc, [key, plan]) => {
+        let price = plan.price;
+        let planCurrency = currency;
+        
+        // Use international pricing if available, otherwise convert from ETB
+        if (plan.international && plan.internationalPricing && plan.internationalPricing[currency]) {
+          price = plan.internationalPricing[currency];
+        } else if (currency !== 'ETB' && plan.price > 0 && convertPrice) {
+          price = convertPrice(plan.price, currency);
+        }
+        
+        acc[key] = {
+          ...plan,
+          price,
+          currency: planCurrency,
+          originalPrice: plan.price,
+          originalCurrency: 'ETB',
+          popular: key === 'premium'
+        };
+        return acc;
+      }, {} as any);
+      
+      res.json(plansWithPricing);
+    } catch (error) {
+      console.error('Error fetching pricing plans:', error);
+      // Return basic fallback plans on error
+      const basicPlans = {
+        free: {
+          name: 'Free',
+          price: 0,
+          currency: 'ETB',
+          description: 'Basic menu management',
+          features: ['1 Restaurant', 'Basic Features'],
+          maxRestaurants: 1,
+          maxMenuItems: 50,
+          popular: false
+        },
+        premium: {
+          name: 'Premium', 
+          price: 500,
+          currency: 'ETB',
+          description: 'Advanced features',
+          features: ['3 Restaurants', 'Advanced Features'],
+          maxRestaurants: 3,
+          maxMenuItems: 200,
+          popular: true
+        }
+      };
+      res.json(basicPlans);
     }
   });
 
