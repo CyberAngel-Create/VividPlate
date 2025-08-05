@@ -48,6 +48,7 @@ import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
 import CategoriesPage from "./pages/categories";
 import PasswordResetHelp from "./pages/password-reset-help";
+import ChapaSubscribe from "./pages/chapa-subscribe";
 import { PWAInstaller } from "@/components/PWAInstaller";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -169,6 +170,7 @@ function Router() {
         <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
         <AuthenticatedRoute path="/subscribe/:planId" component={Subscribe} />
         <AuthenticatedRoute path="/subscribe" component={Subscribe} />
+        <AuthenticatedRoute path="/chapa-subscribe/:planId" component={ChapaSubscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
 
         {/* Admin Routes */}
