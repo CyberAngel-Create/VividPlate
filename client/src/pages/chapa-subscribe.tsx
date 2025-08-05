@@ -30,6 +30,7 @@ interface PaymentFormData {
   phoneNumber: string;
   currency?: string;
   countryCode?: string;
+  paymentMethod?: string;
 }
 
 const PaymentForm = ({ plan, onSubmit, isProcessing }: { 
@@ -41,7 +42,8 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
     email: '',
     firstName: '',
     lastName: '',
-    phoneNumber: ''
+    phoneNumber: '',
+    paymentMethod: 'local'
   });
 
   const [errors, setErrors] = useState<Partial<PaymentFormData>>({});
@@ -108,13 +110,98 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
         </div>
       </div>
 
+      {/* Payment Method Selection */}
+      <div className="space-y-4">
+        <h4 className="font-medium">Choose Payment Method</h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Local Ethiopian Payments */}
+          <div 
+            className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+              formData.paymentMethod === 'local' 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted hover:border-primary/50'
+            }`}
+            onClick={() => handleInputChange('paymentMethod', 'local')}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <input 
+                type="radio" 
+                checked={formData.paymentMethod === 'local'} 
+                onChange={() => handleInputChange('paymentMethod', 'local')}
+                className="text-primary"
+              />
+              <h5 className="font-semibold">🇪🇹 Local Payment (ETB)</h5>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium mb-1">Available methods:</p>
+              <ul className="space-y-1">
+                <li>• Telebirr Mobile Payment</li>
+                <li>• CBE Birr</li>
+                <li>• Bank Transfer</li>
+                <li>• Mobile Banking</li>
+              </ul>
+              <p className="mt-2 font-medium text-primary">
+                Price: {plan.originalPrice || plan.price} ETB/month
+              </p>
+            </div>
+          </div>
+
+          {/* International Card Payments */}
+          <div 
+            className={`border-2 rounded-lg p-4 cursor-pointer transition-all ${
+              formData.paymentMethod === 'international' 
+                ? 'border-primary bg-primary/5' 
+                : 'border-muted hover:border-primary/50'
+            }`}
+            onClick={() => handleInputChange('paymentMethod', 'international')}
+          >
+            <div className="flex items-center gap-3 mb-2">
+              <input 
+                type="radio" 
+                checked={formData.paymentMethod === 'international'} 
+                onChange={() => handleInputChange('paymentMethod', 'international')}
+                className="text-primary"
+              />
+              <h5 className="font-semibold">🌍 International Payment</h5>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              <p className="font-medium mb-1">Available methods:</p>
+              <ul className="space-y-1">
+                <li>• Visa Cards</li>
+                <li>• Mastercard</li>
+                <li>• International Bank Transfer</li>
+                <li>• Online Banking</li>
+              </ul>
+              <p className="mt-2 font-medium text-primary">
+                Price: {plan.price} {plan.currency}/month
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Alert>
         <Smartphone className="h-4 w-4" />
         <AlertDescription>
-          You'll be redirected to Chapa's secure payment page. Chapa supports telebirr, CBE Birr, 
-          Visa, Mastercard, and bank transfers.
+          {formData.paymentMethod === 'local' 
+            ? "You'll be redirected to Chapa's secure payment page for Ethiopian payment methods (Telebirr, CBE Birr, Bank Transfer)."
+            : "You'll be redirected to secure international payment gateway for card payments (Visa, Mastercard)."
+          }
         </AlertDescription>
       </Alert>
+
+      {/* Support Contact Info */}
+      <div className="bg-blue-50 p-4 rounded-lg">
+        <h5 className="font-medium text-blue-900 mb-2">Need Help?</h5>
+        <p className="text-sm text-blue-800 mb-2">
+          If you encounter any payment issues, our support team is ready to assist you:
+        </p>
+        <div className="text-sm text-blue-700">
+          <p>📧 Email: support@vividplate.com</p>
+          <p>📱 Telegram: @VividplateBot</p>
+          <p>⏰ Available 24/7 for payment assistance</p>
+        </div>
+      </div>
       
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
@@ -274,32 +361,54 @@ export default function ChapaSubscribe() {
         lastName: formData.lastName,
         phoneNumber: formData.phoneNumber,
         currency: planData.currency,
-        countryCode: userCountry
+        countryCode: userCountry,
+        paymentMethod: formData.paymentMethod
       });
 
       console.log('Chapa initialization response:', response);
       const responseData = await response.json();
       console.log('Chapa initialization parsed:', responseData);
 
-      if (responseData.status === 'success' && responseData.data.checkout_url) {
-        toast({
-          title: "Redirecting to Payment",
-          description: "You will be redirected to Chapa's secure payment page.",
-        });
+      if (responseData.status === 'success') {
+        if (responseData.data.checkout_url) {
+          toast({
+            title: "Redirecting to Payment",
+            description: formData.paymentMethod === 'local' 
+              ? "Redirecting to Ethiopian payment methods (Telebirr, CBE Birr, etc.)"
+              : "Redirecting to international payment gateway",
+          });
 
-        // Redirect to Chapa checkout page
-        window.location.href = responseData.data.checkout_url;
+          // Redirect to Chapa checkout page
+          window.location.href = responseData.data.checkout_url;
+        } else if (responseData.data.redirect_url) {
+          // For free plans or direct redirects
+          toast({
+            title: "Success!",
+            description: responseData.message || "Plan activated successfully",
+          });
+          window.location.href = responseData.data.redirect_url;
+        }
       } else {
         throw new Error(responseData.message || 'Failed to initialize payment');
       }
 
     } catch (err: any) {
       console.error("Error initializing payment:", err);
-      toast({
-        title: "Payment Initialization Failed",
-        description: err.message || "There was an error setting up your payment. Please try again.",
-        variant: "destructive",
-      });
+      
+      // Handle specific error cases
+      if (err.message.includes('temporarily unavailable') || err.message.includes('not configured') || err.message.includes('503')) {
+        toast({
+          title: "Payment Service Unavailable",
+          description: `Payment processing is currently being configured. Please contact support for assistance with ${formData.paymentMethod === 'local' ? 'Ethiopian payment methods (Telebirr, CBE Birr, Bank Transfer)' : 'international card payments (Visa, Mastercard)'}.`,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Payment Initialization Failed",
+          description: err.message || "There was an error setting up your payment. Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setIsProcessing(false);
     }

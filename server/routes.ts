@@ -2426,14 +2426,32 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
       const planId = req.params.planId.toLowerCase();
-      const { email, firstName, lastName, phoneNumber, currency, countryCode } = req.body;
+      const { email, firstName, lastName, phoneNumber, currency, countryCode, paymentMethod } = req.body;
       
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
       }
 
+      // Check if this is a free plan - no payment needed
+      if (planId === 'free') {
+        return res.json({
+          status: 'success',
+          message: 'Free plan activated successfully',
+          data: {
+            plan: 'free',
+            redirect_url: '/payment-success?plan=free'
+          }
+        });
+      }
+
       if (!chapaService) {
-        return res.status(500).json({ message: 'Chapa payment service not configured' });
+        return res.status(503).json({ 
+          message: 'Payment service temporarily unavailable',
+          details: 'Payment processing is currently being configured. Please try again later or contact support.',
+          supportMethods: paymentMethod === 'local' 
+            ? ['Telebirr', 'CBE Birr', 'Bank Transfer', 'Mobile Banking']
+            : ['Visa', 'Mastercard', 'International Bank Transfer']
+        });
       }
 
       if (!(planId in SUBSCRIPTION_PLANS)) {
