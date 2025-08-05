@@ -235,11 +235,13 @@ export default function ChapaSubscribe() {
         
         // Get user's currency and location if available
         const userCountry = navigator.language.split('-')[1] || 'ET';
-        const response = await apiRequest(`/api/chapa/subscription-plans?currency=ETB&country=${userCountry}`);
+        const response = await apiRequest('GET', `/api/chapa/subscription-plans?currency=ETB&country=${userCountry}`);
         console.log('Plan data response:', response);
+        const responseData = await response.json();
+        console.log('Plan data parsed:', responseData);
         
-        if (response && response.plans && response.plans[planId]) {
-          setPlanData(response.plans[planId]);
+        if (responseData && responseData.plans && responseData.plans[planId]) {
+          setPlanData(responseData.plans[planId]);
         } else {
           setError('Subscription plan not found');
         }
@@ -266,33 +268,29 @@ export default function ChapaSubscribe() {
       const userCountry = navigator.language.split('-')[1] || 'ET';
       
       // Call backend to initialize Chapa payment
-      const response = await apiRequest(`/api/chapa/initialize-payment/${planId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          phoneNumber: formData.phoneNumber,
-          currency: planData.currency,
-          countryCode: userCountry
-        })
+      const response = await apiRequest('POST', `/api/chapa/initialize-payment/${planId}`, {
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phoneNumber: formData.phoneNumber,
+        currency: planData.currency,
+        countryCode: userCountry
       });
 
       console.log('Chapa initialization response:', response);
+      const responseData = await response.json();
+      console.log('Chapa initialization parsed:', responseData);
 
-      if (response.status === 'success' && response.data.checkout_url) {
+      if (responseData.status === 'success' && responseData.data.checkout_url) {
         toast({
           title: "Redirecting to Payment",
           description: "You will be redirected to Chapa's secure payment page.",
         });
 
         // Redirect to Chapa checkout page
-        window.location.href = response.data.checkout_url;
+        window.location.href = responseData.data.checkout_url;
       } else {
-        throw new Error(response.message || 'Failed to initialize payment');
+        throw new Error(responseData.message || 'Failed to initialize payment');
       }
 
     } catch (err: any) {
