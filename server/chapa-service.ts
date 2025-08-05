@@ -194,8 +194,8 @@ export class ChapaService {
 }
 
 // Create and export a singleton instance
-export const chapaService = CHAPA_SECRET_KEY 
-  ? new ChapaService(CHAPA_SECRET_KEY) 
+export const chapaService = process.env.CHAPA_SECRET_KEY 
+  ? new ChapaService(process.env.CHAPA_SECRET_KEY) 
   : null;
 
 // Currency conversion rates (ETB to other currencies)
