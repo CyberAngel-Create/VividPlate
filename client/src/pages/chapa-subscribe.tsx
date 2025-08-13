@@ -46,6 +46,8 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
     paymentMethod: 'local'
   });
 
+  const [selectedCurrency, setSelectedCurrency] = useState<string>('ETB');
+
   const [errors, setErrors] = useState<Partial<PaymentFormData>>({});
 
   const validateForm = (): boolean => {
@@ -83,6 +85,15 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: undefined }));
     }
+
+    // Update currency when payment method changes
+    if (field === 'paymentMethod') {
+      if (value === 'local') {
+        setSelectedCurrency('ETB');
+      } else {
+        setSelectedCurrency(plan.currency || 'USD');
+      }
+    }
   };
 
   return (
@@ -93,7 +104,10 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
           {plan.name} Plan
         </h3>
         <p className="text-2xl font-bold text-primary">
-          {plan.price} {plan.currency} {plan.price > 0 && '/month'}
+          {formData.paymentMethod === 'local' 
+            ? `${plan.originalPrice || plan.price} ETB`
+            : `${plan.price} ${plan.currency}`
+          } {plan.price > 0 && '/month'}
         </p>
         <p className="text-muted-foreground mt-2">{plan.description}</p>
         
@@ -143,6 +157,11 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
               <p className="mt-2 font-medium text-primary">
                 Price: {plan.originalPrice || plan.price} ETB/month
               </p>
+              {formData.paymentMethod === 'local' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Best for Ethiopian customers
+                </p>
+              )}
             </div>
           </div>
 
@@ -175,6 +194,11 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
               <p className="mt-2 font-medium text-primary">
                 Price: {plan.price} {plan.currency}/month
               </p>
+              {formData.paymentMethod === 'international' && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Best for international customers
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -354,13 +378,16 @@ export default function ChapaSubscribe() {
       // Get user's currency and location
       const userCountry = navigator.language.split('-')[1] || 'ET';
       
+      // Determine currency based on payment method
+      const paymentCurrency = formData.paymentMethod === 'local' ? 'ETB' : planData.currency;
+
       // Call backend to initialize Chapa payment
       const response = await apiRequest('POST', `/api/chapa/initialize-payment/${planId}`, {
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
         phoneNumber: formData.phoneNumber,
-        currency: planData.currency,
+        currency: paymentCurrency,
         countryCode: userCountry,
         paymentMethod: formData.paymentMethod
       });
