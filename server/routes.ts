@@ -2426,7 +2426,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
       const planId = req.params.planId.toLowerCase();
-      const { email, firstName, lastName, phoneNumber, currency, countryCode, paymentMethod } = req.body;
+      const { email, firstName, lastName, phoneNumber, currency, countryCode, paymentMethod, cardNumber, expiryDate, cvv, cardholderName } = req.body;
       
       if (!user) {
         return res.status(404).json({ message: 'User not found' });
@@ -2502,7 +2502,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const callbackUrl = `${baseUrl}/api/chapa/callback`;
       const returnUrl = `${baseUrl}/payment-success?plan=${planId}&currency=${userCurrency}`;
 
-      const paymentData = {
+      const paymentData: any = {
         amount,
         currency: userCurrency,
         email,
@@ -2514,11 +2514,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return_url: returnUrl,
         description: `VividPlate ${plan.name} Plan Subscription (${userCurrency})`,
         customization: {
-          title: 'VividPlate Subscription',
+          title: 'VividPlate',
           description: `Subscribe to ${plan.name} plan - ${finalPrice} ${userCurrency}`,
           logo: `${baseUrl}/favicon.ico`
         }
       };
+
+      // Add card details for international payments
+      if (paymentMethod === 'international' && cardNumber && expiryDate && cvv && cardholderName) {
+        paymentData.card = {
+          number: cardNumber.replace(/\s/g, ''),
+          expiry_month: expiryDate.split('/')[0],
+          expiry_year: '20' + expiryDate.split('/')[1],
+          cvv: cvv,
+          cardholder_name: cardholderName
+        };
+      }
 
       // Validate payment data
       const validationErrors = chapaService.validatePaymentData(paymentData);

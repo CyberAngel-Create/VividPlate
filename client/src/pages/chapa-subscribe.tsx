@@ -31,6 +31,11 @@ interface PaymentFormData {
   currency?: string;
   countryCode?: string;
   paymentMethod?: string;
+  // Card details for international payments
+  cardNumber?: string;
+  expiryDate?: string;
+  cvv?: string;
+  cardholderName?: string;
 }
 
 const PaymentForm = ({ plan, onSubmit, isProcessing }: { 
@@ -69,6 +74,31 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
       newErrors.phoneNumber = 'Phone number is required';
     }
 
+    // Additional validation for international payment method
+    if (formData.paymentMethod === 'international') {
+      if (!formData.cardholderName?.trim()) {
+        newErrors.cardholderName = 'Cardholder name is required';
+      }
+
+      if (!formData.cardNumber?.trim()) {
+        newErrors.cardNumber = 'Card number is required';
+      } else if (formData.cardNumber.replace(/\s/g, '').length < 13) {
+        newErrors.cardNumber = 'Card number must be at least 13 digits';
+      }
+
+      if (!formData.expiryDate?.trim()) {
+        newErrors.expiryDate = 'Expiry date is required';
+      } else if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(formData.expiryDate)) {
+        newErrors.expiryDate = 'Invalid expiry date (MM/YY)';
+      }
+
+      if (!formData.cvv?.trim()) {
+        newErrors.cvv = 'CVV is required';
+      } else if (formData.cvv.length < 3) {
+        newErrors.cvv = 'CVV must be 3-4 digits';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -90,9 +120,32 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
     if (field === 'paymentMethod') {
       if (value === 'local') {
         setSelectedCurrency('ETB');
+        // Clear card fields when switching to local
+        setFormData(prev => ({
+          ...prev,
+          cardNumber: '',
+          expiryDate: '',
+          cvv: '',
+          cardholderName: ''
+        }));
       } else {
         setSelectedCurrency(plan.currency || 'USD');
       }
+    }
+
+    // Format card number with spaces
+    if (field === 'cardNumber') {
+      value = value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+    }
+
+    // Format expiry date
+    if (field === 'expiryDate') {
+      value = value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2').substr(0, 5);
+    }
+
+    // Format CVV (numbers only)
+    if (field === 'cvv') {
+      value = value.replace(/\D/g, '');
     }
   };
 
@@ -292,6 +345,90 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
             Ethiopian phone number (supports +251, 0 prefix, or local format)
           </p>
         </div>
+
+        {/* International Payment Card Fields */}
+        {formData.paymentMethod === 'international' && (
+          <div className="space-y-4 border-t pt-4">
+            <h4 className="font-medium text-lg flex items-center gap-2">
+              <CreditCard className="h-5 w-5" />
+              Card Information
+            </h4>
+            
+            <div>
+              <Label htmlFor="cardholderName">Cardholder Name *</Label>
+              <Input
+                id="cardholderName"
+                type="text"
+                value={formData.cardholderName || ''}
+                onChange={(e) => handleInputChange('cardholderName', e.target.value)}
+                className={errors.cardholderName ? 'border-red-500' : ''}
+                placeholder="Full name on card"
+              />
+              {errors.cardholderName && (
+                <p className="text-red-500 text-sm mt-1">{errors.cardholderName}</p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="cardNumber">Card Number *</Label>
+              <Input
+                id="cardNumber"
+                type="text"
+                value={formData.cardNumber || ''}
+                onChange={(e) => handleInputChange('cardNumber', e.target.value)}
+                className={errors.cardNumber ? 'border-red-500' : ''}
+                placeholder="1234 5678 9012 3456"
+                maxLength={19}
+              />
+              {errors.cardNumber && (
+                <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>
+              )}
+              <p className="text-sm text-muted-foreground mt-1">
+                Visa, Mastercard, and other international cards accepted
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="expiryDate">Expiry Date *</Label>
+                <Input
+                  id="expiryDate"
+                  type="text"
+                  value={formData.expiryDate || ''}
+                  onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                  className={errors.expiryDate ? 'border-red-500' : ''}
+                  placeholder="MM/YY"
+                  maxLength={5}
+                />
+                {errors.expiryDate && (
+                  <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>
+                )}
+              </div>
+              
+              <div>
+                <Label htmlFor="cvv">CVV *</Label>
+                <Input
+                  id="cvv"
+                  type="text"
+                  value={formData.cvv || ''}
+                  onChange={(e) => handleInputChange('cvv', e.target.value)}
+                  className={errors.cvv ? 'border-red-500' : ''}
+                  placeholder="123"
+                  maxLength={4}
+                />
+                {errors.cvv && (
+                  <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                🔒 Your card information is securely processed by Chapa's certified payment gateway
+              </p>
+            </div>
+          </div>
+        )}
       </div>
       
       <Button 
@@ -308,7 +445,9 @@ const PaymentForm = ({ plan, onSubmit, isProcessing }: {
         ) : (
           <>
             <CreditCard className="mr-2 h-4 w-4" />
-            {plan.price > 0 ? `Pay ${plan.price} ${plan.currency}` : 'Continue with Free Plan'}
+            {plan.price > 0 ? `Pay ${formData.paymentMethod === 'local' 
+              ? `${plan.originalPrice || plan.price} ETB`
+              : `${plan.price} ${plan.currency}`}` : 'Continue with Free Plan'}
           </>
         )}
       </Button>
@@ -381,8 +520,8 @@ export default function ChapaSubscribe() {
       // Determine currency based on payment method
       const paymentCurrency = formData.paymentMethod === 'local' ? 'ETB' : planData.currency;
 
-      // Call backend to initialize Chapa payment
-      const response = await apiRequest('POST', `/api/chapa/initialize-payment/${planId}`, {
+      // Prepare payment data
+      const paymentData: any = {
         email: formData.email,
         firstName: formData.firstName,
         lastName: formData.lastName,
@@ -390,7 +529,18 @@ export default function ChapaSubscribe() {
         currency: paymentCurrency,
         countryCode: userCountry,
         paymentMethod: formData.paymentMethod
-      });
+      };
+
+      // Add card details for international payments
+      if (formData.paymentMethod === 'international') {
+        paymentData.cardNumber = formData.cardNumber;
+        paymentData.expiryDate = formData.expiryDate;
+        paymentData.cvv = formData.cvv;
+        paymentData.cardholderName = formData.cardholderName;
+      }
+
+      // Call backend to initialize Chapa payment
+      const response = await apiRequest('POST', `/api/chapa/initialize-payment/${planId}`, paymentData);
 
       console.log('Chapa initialization response:', response);
       const responseData = await response.json();
