@@ -14,49 +14,58 @@ export default function PaymentSuccess() {
   useEffect(() => {
     const verifyPayment = async () => {
       try {
-        // Extract Chapa transaction details from URL
+        // Extract plan details from URL
         const params = new URLSearchParams(window.location.search);
-        const txRef = params.get('trx_ref') || params.get('tx_ref') || params.get('reference');
-        const status = params.get('status');
         const planId = params.get('plan');
+        const currency = params.get('currency');
 
         console.log('Payment Success URL params:', {
-          txRef,
-          status,
           planId,
+          currency,
           allParams: Object.fromEntries(params.entries())
         });
 
         // Check if this is just a simple success redirect (for free plans)
-        if (planId === 'free' && status !== 'failed') {
+        if (planId === 'free') {
           console.log('Free plan detected, skipping verification');
           queryClient.invalidateQueries({ queryKey: ['/api/user/subscription-status'] });
           setLoading(false);
           return;
         }
 
-        if (!txRef) {
-          console.error('No transaction reference found in URL params:', Object.fromEntries(params.entries()));
-          throw new Error('No payment transaction reference found. Please check your payment confirmation email or contact support.');
-        }
-
-        // Verify the payment with Chapa
-        const result = await apiRequest('POST', '/api/chapa/verify-payment', {
-          txRef,
-          planId
-        });
-
-        const resultData = await result.json();
-
-        if (!result.ok) {
-          throw new Error(resultData.message || 'Failed to verify payment');
-        }
-
-        if (resultData.status === 'success') {
+        // For paid plans, wait a moment for the callback to process
+        // then check subscription status
+        console.log('Paid plan detected, waiting for payment processing...');
+        
+        // Wait 3 seconds for callback processing
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        // Check current subscription status to see if payment was processed
+        try {
+          const subscriptionResult = await apiRequest('GET', '/api/user/subscription-status');
+          const subscriptionData = await subscriptionResult.json();
+          
+          console.log('Current subscription status:', subscriptionData);
+          
+          // If subscription is still free after 3 seconds, payment might have failed
+          if (subscriptionData.tier === 'free' && planId !== 'free') {
+            // Wait another 2 seconds and check again
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            const finalCheck = await apiRequest('GET', '/api/user/subscription-status');
+            const finalData = await finalCheck.json();
+            
+            if (finalData.tier === 'free' && planId !== 'free') {
+              throw new Error('Payment processing is taking longer than expected. Your payment may still be processing. Please check your email for confirmation or contact support if the issue persists.');
+            }
+          }
+          
           // Payment successful, invalidate cache to refresh subscription
           queryClient.invalidateQueries({ queryKey: ['/api/user/subscription-status'] });
-        } else {
-          throw new Error(resultData.message || 'Payment verification failed');
+          
+        } catch (subscriptionError) {
+          console.error('Error checking subscription status:', subscriptionError);
+          throw new Error('Unable to verify payment status. Please check your email for payment confirmation or contact support.');
         }
 
       } catch (err) {
@@ -81,12 +90,15 @@ export default function PaymentSuccess() {
           <CardHeader>
             <CardTitle className="text-center">Processing Payment</CardTitle>
             <CardDescription className="text-center">
-              Please wait while we confirm your payment
+              Please wait while we confirm your Chapa payment
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center">
             <Loader2 className="h-16 w-16 animate-spin text-primary my-6" />
-            <p className="text-center">This may take a moment...</p>
+            <p className="text-center">Processing your payment through Chapa...</p>
+            <p className="text-sm text-center text-muted-foreground mt-2">
+              This usually takes a few seconds
+            </p>
           </CardContent>
         </Card>
       </div>

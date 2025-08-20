@@ -2500,7 +2500,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Prepare callback and return URLs
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const callbackUrl = `${baseUrl}/api/chapa/callback`;
-      const returnUrl = `${baseUrl}/payment-success?plan=${planId}&currency=${userCurrency}&tx_ref=${txRef}`;
+      const returnUrl = `${baseUrl}/payment-success?plan=${planId}&currency=${userCurrency}`;
 
       const paymentData: any = {
         amount,
@@ -2720,29 +2720,33 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   // Chapa callback endpoint (called by Chapa after payment)
-  app.post('/api/chapa/callback', async (req, res) => {
+  // According to Chapa docs, this receives a GET request with JSON payload: {trx_ref, ref_id, status}
+  app.get('/api/chapa/callback', async (req, res) => {
     try {
-      console.log('Chapa callback received:', req.body);
+      console.log('Chapa callback received - query params:', req.query);
       
       if (!chapaService) {
         console.error('Chapa service not available for callback processing');
         return res.status(503).json({ message: 'Payment service unavailable' });
       }
 
-      const { tx_ref, status, reference } = req.body;
+      // Chapa sends callback as GET request with query parameters
+      const { trx_ref, ref_id, status } = req.query;
       
-      if (!tx_ref) {
-        return res.status(400).json({ message: 'Invalid callback data: missing tx_ref' });
+      if (!trx_ref) {
+        return res.status(400).json({ message: 'Invalid callback data: missing trx_ref' });
       }
+
+      console.log('Chapa callback received:', { trx_ref, ref_id, status });
 
       // Verify the payment with Chapa
       try {
-        const verificationResult = await chapaService.verifyPayment(tx_ref);
+        const verificationResult = await chapaService.verifyPayment(trx_ref as string);
         console.log('Chapa verification result:', verificationResult);
         
         if (verificationResult.status === 'success' && verificationResult.data.status === 'success') {
           // Payment successful, update subscription
-          const txRefParts = tx_ref.split('_');
+          const txRefParts = (trx_ref as string).split('_');
           if (txRefParts.length >= 3) {
             const planId = txRefParts[1];
             const userId = parseInt(txRefParts[2]);
