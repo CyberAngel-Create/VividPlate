@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Chapa Callback</title>
+</head>
+<body>
+    <h2>Chapa Payment Callback Test</h2>
+    <p>Use these links to simulate Chapa payment callbacks:</p>
+    
+    <h3>Test Premium Payment Success:</h3>
+    <p><a href="http://localhost:5000/api/chapa/callback?trx_ref=vividplate_premium_11_test123&ref_id=APqDvYw1okk2&status=success" target="_blank">Simulate Premium Payment Success</a></p>
+    
+    <h3>Test Business Payment Success:</h3>
+    <p><a href="http://localhost:5000/api/chapa/callback?trx_ref=vividplate_business_11_test456&ref_id=APqDvYw1okk3&status=success" target="_blank">Simulate Business Payment Success</a></p>
+    
+    <h3>Test Payment Failure:</h3>
+    <p><a href="http://localhost:5000/api/chapa/callback?trx_ref=vividplate_premium_11_test789&ref_id=APqDvYw1okk4&status=failed" target="_blank">Simulate Payment Failure</a></p>
+    
+    <h3>Test Payment Success Flow:</h3>
+    <p><a href="http://localhost:5000/payment-success?plan=premium&currency=ETB">Test Payment Success Page (Premium)</a></p>
+    <p><a href="http://localhost:5000/payment-success?plan=business&currency=ETB">Test Payment Success Page (Business)</a></p>
+    
+    <h4>Current Issues Fixed:</h4>
+    <ul>
+        <li>✅ Changed callback from POST to GET request</li>
+        <li>✅ Fixed parameter names: trx_ref, ref_id, status</li>
+        <li>✅ Updated subscription status logic to handle multiple tiers</li>
+        <li>✅ Fixed user freleg subscription status synchronization</li>
+        <li>✅ Payment success page now uses polling approach</li>
+    </ul>
+</body>
+</html>

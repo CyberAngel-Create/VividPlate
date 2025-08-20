@@ -1008,9 +1008,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userTier = user.subscriptionTier || "free";
       const subscriptionTier = activeSubscription?.tier || "free";
       
-      // Use the highest tier available (premium takes precedence)
-      const effectiveTier = (userTier === "premium" || subscriptionTier === "premium") ? "premium" : "free";
-      const isPaid = effectiveTier === "premium";
+      // Use the highest tier available (business > premium > free)
+      let effectiveTier = "free";
+      if (userTier === "business" || subscriptionTier === "business") {
+        effectiveTier = "business";
+      } else if (userTier === "premium" || subscriptionTier === "premium") {
+        effectiveTier = "premium";
+      }
+      const isPaid = effectiveTier !== "free";
       
       // Determine expiration date
       let expiresAt = null;
@@ -1030,7 +1035,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}, expiresAt=${expiresAt}`);
       
       // Automatically manage restaurant active status based on subscription
-      const maxRestaurants = isPaid ? 3 : 1;
+      const maxRestaurants = effectiveTier === "business" ? 10 : (effectiveTier === "premium" ? 3 : 1);
       await storage.manageRestaurantsBySubscription(userId, maxRestaurants);
       
       return res.json({
