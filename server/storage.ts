@@ -51,6 +51,7 @@ export interface IStorage {
   // Admin operations
   createAdminLog(log: InsertAdminLog): Promise<AdminLog>;
   getAdminLogs(limit?: number): Promise<AdminLog[]>;
+  getAllLogs(): Promise<AdminLog[]>;
   getAdminLogsByAdminId(adminId: number, limit?: number): Promise<AdminLog[]>;
 
   // Pricing plan operations
@@ -71,6 +72,7 @@ export interface IStorage {
   updateRestaurant(id: number, restaurant: Partial<InsertRestaurant>): Promise<Restaurant | undefined>;
   countRestaurantsByUserId(userId: number): Promise<number>;
   getAllRestaurants(): Promise<Restaurant[]>;
+  getAllRestaurantsWithOwners(): Promise<any[]>;
   updateRestaurantActiveStatus(id: number, isActive: boolean): Promise<Restaurant | undefined>;
   manageRestaurantsBySubscription(userId: number, maxRestaurants: number): Promise<void>;
 
@@ -143,6 +145,7 @@ export interface IStorage {
 
   // Advertisement operations
   getAdvertisement(id: number): Promise<Advertisement | undefined>;
+  getAllAdvertisements(): Promise<Advertisement[]>;
   getAdvertisements(): Promise<Advertisement[]>;
   getActiveAdvertisementByPosition(position: string): Promise<Advertisement | undefined>;
   getTargetedAdvertisement(position: string, restaurant: Restaurant | null): Promise<Advertisement | undefined>;
@@ -178,6 +181,7 @@ export interface IStorage {
 
   // Testimonials operations
   getTestimonials(): Promise<Testimonial[]>;
+  getAllTestimonials(): Promise<Testimonial[]>;
   getActiveTestimonials(): Promise<Testimonial[]>;
   getTestimonial(id: number): Promise<Testimonial | undefined>;
   createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial>;
@@ -419,6 +423,34 @@ export class DatabaseStorage implements IStorage {
 
   async getAllRestaurants(): Promise<Restaurant[]> {
     return await db.select().from(restaurants).orderBy(desc(restaurants.id));
+  }
+
+  async getAllRestaurantsWithOwners(): Promise<any[]> {
+    const restaurantsWithOwners = await db.select({
+      id: restaurants.id,
+      name: restaurants.name,
+      email: restaurants.email,
+      phone: restaurants.phone,
+      description: restaurants.description,
+      cuisine: restaurants.cuisine,
+      logoUrl: restaurants.logoUrl,
+      bannerUrl: restaurants.bannerUrl,
+      isActive: restaurants.isActive,
+      createdAt: restaurants.createdAt,
+      ownerName: users.fullName,
+      ownerUsername: users.username,
+      ownerSubscriptionTier: users.subscriptionTier,
+      categoryCount: count(menuCategories.id),
+      itemCount: count(menuItems.id),
+    })
+    .from(restaurants)
+    .leftJoin(users, eq(restaurants.userId, users.id))
+    .leftJoin(menuCategories, eq(restaurants.id, menuCategories.restaurantId))
+    .leftJoin(menuItems, eq(menuCategories.id, menuItems.categoryId))
+    .groupBy(restaurants.id, users.fullName, users.username, users.subscriptionTier)
+    .orderBy(desc(restaurants.createdAt));
+
+    return restaurantsWithOwners;
   }
 
   async updateRestaurantActiveStatus(id: number, isActive: boolean): Promise<Restaurant | undefined> {
@@ -772,6 +804,10 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(advertisements).orderBy(desc(advertisements.createdAt));
   }
 
+  async getAllAdvertisements(): Promise<Advertisement[]> {
+    return await db.select().from(advertisements).orderBy(desc(advertisements.createdAt));
+  }
+
   async getActiveAdvertisementByPosition(position: string): Promise<Advertisement | undefined> {
     const [ad] = await db.select().from(advertisements)
       .where(and(
@@ -912,6 +948,11 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
+  async getAllLogs(): Promise<AdminLog[]> {
+    return await db.select().from(adminLogs)
+      .orderBy(desc(adminLogs.createdAt));
+  }
+
   async getAdminLogsByAdminId(adminId: number, limit: number = 50): Promise<AdminLog[]> {
     return await db.select().from(adminLogs)
       .where(eq(adminLogs.adminId, adminId))
@@ -1022,6 +1063,11 @@ export class DatabaseStorage implements IStorage {
   async getTestimonials(): Promise<Testimonial[]> {
     return await db.select().from(testimonials)
       .orderBy(testimonials.displayOrder);
+  }
+
+  async getAllTestimonials(): Promise<Testimonial[]> {
+    return await db.select().from(testimonials)
+      .orderBy(desc(testimonials.createdAt));
   }
 
   async getActiveTestimonials(): Promise<Testimonial[]> {

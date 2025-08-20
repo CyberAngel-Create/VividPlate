@@ -2867,6 +2867,163 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     });
   });
 
+  // Admin Authentication Middleware
+  const isAdmin = (req: any, res: any, next: any) => {
+    if (!req.user || !req.user.isAdmin) {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+  };
+
+  // Admin Dashboard - Statistics API
+  app.get('/api/admin/dashboard', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const [users, restaurants, subscriptions] = await Promise.all([
+        storage.getAllUsers(),
+        storage.getAllRestaurants(),
+        storage.getAllSubscriptions()
+      ]);
+
+      const stats = {
+        totalUsers: users.length,
+        totalRestaurants: restaurants.length,
+        premiumUsers: users.filter(u => u.subscriptionTier === 'premium').length,
+        businessUsers: users.filter(u => u.subscriptionTier === 'business').length,
+        freeUsers: users.filter(u => u.subscriptionTier === 'free' || !u.subscriptionTier).length,
+        activeSubscriptions: subscriptions.filter(s => s.isActive).length,
+        recentUsers: users.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 5)
+      };
+
+      res.json(stats);
+    } catch (error) {
+      console.error('Admin dashboard error:', error);
+      res.status(500).json({ message: 'Failed to load dashboard data' });
+    }
+  });
+
+  // Admin Users API
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const usersWithoutPasswords = users.map(user => {
+        const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitive } = user;
+        return userWithoutSensitive;
+      });
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      console.error('Admin get users error:', error);
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Admin Restaurants API
+  app.get('/api/admin/restaurants', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const restaurants = await storage.getAllRestaurantsWithOwners();
+      res.json(restaurants);
+    } catch (error) {
+      console.error('Admin get restaurants error:', error);
+      res.status(500).json({ message: 'Failed to fetch restaurants' });
+    }
+  });
+
+  // Admin Logs API
+  app.get('/api/admin/logs', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const logs = await storage.getAllLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error('Admin get logs error:', error);
+      res.status(500).json({ message: 'Failed to fetch logs' });
+    }
+  });
+
+  // Admin Pricing API
+  app.get('/api/admin/pricing', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plans = [
+        {
+          id: 'free',
+          name: 'Free',
+          description: 'Basic features for small restaurants',
+          price: 0,
+          currency: 'ETB',
+          features: ['1 restaurant', '1 menu', 'QR code generation', 'Basic analytics'],
+          maxRestaurants: 1,
+          isActive: true
+        },
+        {
+          id: 'premium',
+          name: 'Premium',
+          description: 'Advanced features for growing businesses',
+          price: 1500,
+          currency: 'ETB',
+          features: ['Up to 3 restaurants', 'Multiple menus', 'No ads', 'Customer feedback', 'Advanced analytics'],
+          maxRestaurants: 3,
+          isActive: true
+        },
+        {
+          id: 'business',
+          name: 'Business',
+          description: 'Enterprise features for large operations',
+          price: 3000,
+          currency: 'ETB',
+          features: ['Up to 10 restaurants', 'Unlimited menus', 'Priority support', 'Custom branding', 'API access'],
+          maxRestaurants: 10,
+          isActive: true
+        }
+      ];
+      res.json(plans);
+    } catch (error) {
+      console.error('Admin get pricing error:', error);
+      res.status(500).json({ message: 'Failed to fetch pricing plans' });
+    }
+  });
+
+  // Admin Contact Info API
+  app.get('/api/admin/contact-info', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const contactInfo = {
+        id: 1,
+        address: "Ethiopia, Addis Ababa",
+        email: "vividplate.spp@gmail.com", 
+        phone: "+251-913-690-687",
+        openHours: "Monday - Sunday: 9:00 AM - 10:00 PM",
+        socialMedia: {
+          facebook: "",
+          twitter: "",
+          instagram: ""
+        }
+      };
+      res.json(contactInfo);
+    } catch (error) {
+      console.error('Admin get contact info error:', error);
+      res.status(500).json({ message: 'Failed to fetch contact info' });
+    }
+  });
+
+  // Admin Advertisements API
+  app.get('/api/admin/advertisements', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const advertisements = await storage.getAllAdvertisements();
+      res.json(advertisements);
+    } catch (error) {
+      console.error('Admin get advertisements error:', error);
+      res.status(500).json({ message: 'Failed to fetch advertisements' });
+    }
+  });
+
+  // Admin Testimonials API
+  app.get('/api/admin/testimonials', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const testimonials = await storage.getAllTestimonials();
+      res.json(testimonials);
+    } catch (error) {
+      console.error('Admin get testimonials error:', error);
+      res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
