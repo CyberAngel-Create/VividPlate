@@ -16,20 +16,28 @@ export default function PaymentSuccess() {
       try {
         // Extract Chapa transaction details from URL
         const params = new URLSearchParams(window.location.search);
-        const txRef = params.get('trx_ref') || params.get('tx_ref');
+        const txRef = params.get('trx_ref') || params.get('tx_ref') || params.get('reference');
         const status = params.get('status');
         const planId = params.get('plan');
 
+        console.log('Payment Success URL params:', {
+          txRef,
+          status,
+          planId,
+          allParams: Object.fromEntries(params.entries())
+        });
+
         // Check if this is just a simple success redirect (for free plans)
         if (planId === 'free' && status !== 'failed') {
-          // For free plans, no verification needed
+          console.log('Free plan detected, skipping verification');
           queryClient.invalidateQueries({ queryKey: ['/api/user/subscription-status'] });
           setLoading(false);
           return;
         }
 
         if (!txRef) {
-          throw new Error('No payment transaction reference found');
+          console.error('No transaction reference found in URL params:', Object.fromEntries(params.entries()));
+          throw new Error('No payment transaction reference found. Please check your payment confirmation email or contact support.');
         }
 
         // Verify the payment with Chapa

@@ -2500,7 +2500,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // Prepare callback and return URLs
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       const callbackUrl = `${baseUrl}/api/chapa/callback`;
-      const returnUrl = `${baseUrl}/payment-success?plan=${planId}&currency=${userCurrency}`;
+      const returnUrl = `${baseUrl}/payment-success?plan=${planId}&currency=${userCurrency}&tx_ref=${txRef}`;
 
       const paymentData: any = {
         amount,
