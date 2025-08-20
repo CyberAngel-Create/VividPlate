@@ -14,26 +14,43 @@ export default function PaymentSuccess() {
   useEffect(() => {
     const verifyPayment = async () => {
       try {
-        // Extract payment_intent from URL if it exists
+        // Extract Chapa transaction details from URL
         const params = new URLSearchParams(window.location.search);
-        const paymentIntentId = params.get('payment_intent');
+        const txRef = params.get('trx_ref') || params.get('tx_ref');
+        const status = params.get('status');
+        const planId = params.get('plan');
 
-        if (!paymentIntentId) {
-          throw new Error('No payment information found');
+        // Check if this is just a simple success redirect (for free plans)
+        if (planId === 'free' && status !== 'failed') {
+          // For free plans, no verification needed
+          queryClient.invalidateQueries({ queryKey: ['/api/user/subscription-status'] });
+          setLoading(false);
+          return;
         }
 
-        // Verify the payment with the server
-        const result = await apiRequest('POST', '/api/verify-payment', {
-          paymentIntentId
+        if (!txRef) {
+          throw new Error('No payment transaction reference found');
+        }
+
+        // Verify the payment with Chapa
+        const result = await apiRequest('POST', '/api/chapa/verify-payment', {
+          txRef,
+          planId
         });
 
+        const resultData = await result.json();
+
         if (!result.ok) {
-          const errorData = await result.json();
-          throw new Error(errorData.message || 'Failed to verify payment');
+          throw new Error(resultData.message || 'Failed to verify payment');
         }
 
-        // Invalidate subscription status to refresh it
-        queryClient.invalidateQueries({ queryKey: ['/api/user/subscription-status'] });
+        if (resultData.status === 'success') {
+          // Payment successful, invalidate cache to refresh subscription
+          queryClient.invalidateQueries({ queryKey: ['/api/user/subscription-status'] });
+        } else {
+          throw new Error(resultData.message || 'Payment verification failed');
+        }
+
       } catch (err) {
         console.error('Payment verification error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error occurred');
@@ -100,13 +117,13 @@ export default function PaymentSuccess() {
         <CardHeader>
           <CardTitle className="text-center text-green-600">Payment Successful!</CardTitle>
           <CardDescription className="text-center">
-            Thank you for upgrading to Premium
+            Thank you for upgrading your subscription
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center">
           <CheckCircle className="h-16 w-16 text-green-500 my-6" />
           <p className="text-center mb-6">
-            Your payment has been processed successfully. You now have access to all premium features.
+            Your Chapa payment has been processed successfully. You now have access to all premium features.
           </p>
           <Button onClick={handleContinue} className="w-full">
             Continue to Dashboard

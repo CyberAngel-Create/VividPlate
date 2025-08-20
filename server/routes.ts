@@ -2719,6 +2719,138 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Chapa callback endpoint (called by Chapa after payment)
+  app.post('/api/chapa/callback', async (req, res) => {
+    try {
+      console.log('Chapa callback received:', req.body);
+      
+      if (!chapaService) {
+        console.error('Chapa service not available for callback processing');
+        return res.status(503).json({ message: 'Payment service unavailable' });
+      }
+
+      const { tx_ref, status, reference } = req.body;
+      
+      if (!tx_ref) {
+        return res.status(400).json({ message: 'Invalid callback data: missing tx_ref' });
+      }
+
+      // Verify the payment with Chapa
+      try {
+        const verificationResult = await chapaService.verifyPayment(tx_ref);
+        console.log('Chapa verification result:', verificationResult);
+        
+        if (verificationResult.status === 'success' && verificationResult.data.status === 'success') {
+          // Payment successful, update subscription
+          const txRefParts = tx_ref.split('_');
+          if (txRefParts.length >= 3) {
+            const planId = txRefParts[1];
+            const userId = parseInt(txRefParts[2]);
+            
+            if (userId && planId && SUBSCRIPTION_PLANS[planId]) {
+              const plan = SUBSCRIPTION_PLANS[planId];
+              const endDate = new Date();
+              endDate.setFullYear(endDate.getFullYear() + 1); // 1 year subscription
+              
+              const newSubscription = await storage.createSubscription({
+                userId,
+                tier: planId,
+                endDate,
+                paymentMethod: "chapa",
+                isActive: true
+              });
+
+              console.log('Subscription created successfully:', newSubscription);
+            }
+          }
+        }
+
+        res.json({ 
+          message: 'Callback processed successfully',
+          status: verificationResult.status,
+          data: verificationResult.data 
+        });
+      } catch (verifyError) {
+        console.error('Payment verification failed:', verifyError);
+        res.status(400).json({ 
+          message: 'Payment verification failed', 
+          error: verifyError instanceof Error ? verifyError.message : 'Unknown error'
+        });
+      }
+    } catch (error) {
+      console.error('Chapa callback error:', error);
+      res.status(500).json({ 
+        message: 'Callback processing failed', 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Manual payment verification endpoint
+  app.post('/api/chapa/verify-payment', isAuthenticated, async (req, res) => {
+    try {
+      const { txRef, planId } = req.body;
+      const userId = (req.user as any).id;
+      
+      if (!chapaService) {
+        return res.status(503).json({ 
+          message: 'Payment service temporarily unavailable',
+          error: 'Chapa service not configured' 
+        });
+      }
+
+      if (!txRef) {
+        return res.status(400).json({ message: 'Transaction reference is required' });
+      }
+
+      // Verify payment with Chapa
+      const verificationResult = await chapaService.verifyPayment(txRef);
+      
+      if (verificationResult.status === 'success' && verificationResult.data.status === 'success') {
+        // Payment successful, create/update subscription
+        if (planId && SUBSCRIPTION_PLANS[planId]) {
+          const plan = SUBSCRIPTION_PLANS[planId];
+          const endDate = new Date();
+          endDate.setFullYear(endDate.getFullYear() + 1); // 1 year subscription
+          
+          const newSubscription = await storage.createSubscription({
+            userId,
+            tier: planId,
+            endDate,
+            paymentMethod: "chapa",
+            isActive: true
+          });
+
+          res.json({
+            status: 'success',
+            message: 'Payment verified and subscription activated',
+            subscription: newSubscription,
+            paymentData: verificationResult.data
+          });
+        } else {
+          res.json({
+            status: 'success',
+            message: 'Payment verified successfully',
+            paymentData: verificationResult.data
+          });
+        }
+      } else {
+        res.status(400).json({
+          status: 'failed',
+          message: 'Payment verification failed',
+          error: verificationResult.message || 'Payment not successful',
+          paymentData: verificationResult.data
+        });
+      }
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      res.status(500).json({ 
+        message: 'Payment verification failed', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      });
+    }
+  });
+
   app.post('/api/verify-payment', isAuthenticated, async (req, res) => {
     res.status(400).json({
       message: 'Stripe payment system has been replaced with Chapa. Please use /api/chapa/verify-payment',
