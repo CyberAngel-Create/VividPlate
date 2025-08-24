@@ -10,8 +10,10 @@ import {
   insertMenuViewSchema,
   insertFeedbackSchema,
   insertAdminLogSchema,
-  insertDietaryPreferencesSchema
+  insertDietaryPreferencesSchema,
+  insertWaiterCallSchema
 } from "@shared/schema";
+import { ObjectStorageService } from './objectStorage';
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -3021,6 +3023,120 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     } catch (error) {
       console.error('Admin get testimonials error:', error);
       res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
+  });
+
+  // Waiter Call API routes
+  app.post('/api/waiter-calls', async (req, res) => {
+    try {
+      const callData = insertWaiterCallSchema.parse(req.body);
+      const call = await storage.createWaiterCall(callData);
+      res.json(call);
+    } catch (error) {
+      console.error('Error creating waiter call:', error);
+      res.status(500).json({ message: 'Failed to create waiter call' });
+    }
+  });
+
+  app.get('/api/restaurants/:restaurantId/waiter-calls', async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const calls = await storage.getWaiterCallsByRestaurantId(restaurantId);
+      res.json(calls);
+    } catch (error) {
+      console.error('Error fetching waiter calls:', error);
+      res.status(500).json({ message: 'Failed to fetch waiter calls' });
+    }
+  });
+
+  app.get('/api/restaurants/:restaurantId/waiter-calls/pending', isAuthenticated, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const calls = await storage.getPendingWaiterCalls(restaurantId);
+      res.json(calls);
+    } catch (error) {
+      console.error('Error fetching pending waiter calls:', error);
+      res.status(500).json({ message: 'Failed to fetch pending waiter calls' });
+    }
+  });
+
+  app.patch('/api/waiter-calls/:callId', isAuthenticated, async (req, res) => {
+    try {
+      const callId = parseInt(req.params.callId);
+      const { status } = req.body;
+      const call = await storage.updateWaiterCallStatus(callId, status);
+      if (!call) {
+        return res.status(404).json({ message: 'Waiter call not found' });
+      }
+      res.json(call);
+    } catch (error) {
+      console.error('Error updating waiter call status:', error);
+      res.status(500).json({ message: 'Failed to update waiter call status' });
+    }
+  });
+
+  // Object Storage API routes for background images
+  app.post('/api/objects/upload', async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('Error getting upload URL:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/restaurants/:restaurantId/background-image', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const { backgroundImageUrl } = req.body;
+
+      if (!backgroundImageUrl) {
+        return res.status(400).json({ error: 'backgroundImageUrl is required' });
+      }
+
+      const objectStorageService = new ObjectStorageService();
+      const objectPath = objectStorageService.normalizeObjectEntityPath(backgroundImageUrl);
+
+      // Get current restaurant and update theme settings
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ error: 'Restaurant not found' });
+      }
+
+      const currentThemeSettings = restaurant.themeSettings || {};
+      const updatedThemeSettings = {
+        ...currentThemeSettings,
+        backgroundImageUrl: objectPath
+      };
+
+      const updatedRestaurant = await storage.updateRestaurant(restaurantId, {
+        themeSettings: updatedThemeSettings
+      });
+
+      res.json({
+        success: true,
+        objectPath,
+        restaurant: updatedRestaurant
+      });
+    } catch (error) {
+      console.error('Error setting background image:', error);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.get('/objects/:objectPath(*)', async (req, res) => {
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error) {
+      console.error('Error serving object:', error);
+      if (error.name === 'ObjectNotFoundError') {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
     }
   });
 

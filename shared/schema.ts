@@ -61,7 +61,8 @@ export const restaurants = pgTable("restaurants", {
     fontFamily: "Inter, sans-serif",
     menuItemColor: "#333333",
     menuDescriptionColor: "#666666",
-    menuPriceColor: "#111111"
+    menuPriceColor: "#111111",
+    backgroundImageUrl: ""
   }),
 });
 
@@ -526,3 +527,24 @@ export const insertTestimonialSchema = createInsertSchema(testimonials).pick({
 
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = z.infer<typeof insertTestimonialSchema>;
+
+// Waiter call requests table
+export const waiterCalls = pgTable("waiter_calls", {
+  id: serial("id").primaryKey(),
+  restaurantId: integer("restaurant_id").notNull(),
+  tableNumber: text("table_number").notNull(),
+  status: text("status", { enum: ["pending", "acknowledged", "completed"] }).default("pending"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  acknowledgedAt: timestamp("acknowledged_at"),
+  completedAt: timestamp("completed_at"),
+});
+
+export const insertWaiterCallSchema = createInsertSchema(waiterCalls).pick({
+  restaurantId: true,
+  tableNumber: true,
+  notes: true,
+});
+
+export type WaiterCall = typeof waiterCalls.$inferSelect;
+export type InsertWaiterCall = z.infer<typeof insertWaiterCallSchema>;

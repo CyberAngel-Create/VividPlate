@@ -14,6 +14,7 @@ import { LogOut } from "lucide-react";
 import CustomerHeader from "@/components/layout/CustomerHeader";
 import Footer from "@/components/layout/Footer";
 import MenuAdvertisement from "@/components/menu/MenuAdvertisement";
+import { WaiterCall } from "../../components/WaiterCall";
 
 interface CategoryWithItems extends MenuCategory {
   items: MenuItem[];
@@ -244,6 +245,11 @@ const ViewMenu = () => {
               />
             </div>
           </div>
+        </div>
+
+        {/* Waiter Call Component */}
+        <div className="w-full max-w-screen-md px-4 mt-8 mb-6">
+          <WaiterCall restaurantId={restaurant.id} restaurantName={restaurant.name} />
         </div>
 
         {/* Bottom advertisement from advertisement management system - only shown if restaurant is not premium */}

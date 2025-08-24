@@ -17,7 +17,8 @@ import {
   adSettings, AdSettings, InsertAdSettings,
   menuExamples, MenuExample, InsertMenuExample,
   testimonials, Testimonial, InsertTestimonial,
-  permanentImages, PermanentImage, InsertPermanentImage
+  permanentImages, PermanentImage, InsertPermanentImage,
+  waiterCalls, WaiterCall, InsertWaiterCall
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
@@ -191,6 +192,13 @@ export interface IStorage {
   // Ad settings operations
   getAdSettings(): Promise<AdSettings | undefined>;
   updateAdSettings(settings: Partial<InsertAdSettings>): Promise<AdSettings>;
+
+  // Waiter call operations
+  createWaiterCall(call: InsertWaiterCall): Promise<WaiterCall>;
+  getWaiterCallsByRestaurantId(restaurantId: number): Promise<WaiterCall[]>;
+  getWaiterCall(id: number): Promise<WaiterCall | undefined>;
+  updateWaiterCallStatus(id: number, status: string): Promise<WaiterCall | undefined>;
+  getPendingWaiterCalls(restaurantId: number): Promise<WaiterCall[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1134,6 +1142,48 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return created;
+  }
+
+  // Waiter call operations
+  async createWaiterCall(call: InsertWaiterCall): Promise<WaiterCall> {
+    const [created] = await db.insert(waiterCalls).values(call).returning();
+    return created;
+  }
+
+  async getWaiterCallsByRestaurantId(restaurantId: number): Promise<WaiterCall[]> {
+    return await db.select().from(waiterCalls)
+      .where(eq(waiterCalls.restaurantId, restaurantId))
+      .orderBy(desc(waiterCalls.createdAt));
+  }
+
+  async getWaiterCall(id: number): Promise<WaiterCall | undefined> {
+    const [call] = await db.select().from(waiterCalls).where(eq(waiterCalls.id, id));
+    return call;
+  }
+
+  async updateWaiterCallStatus(id: number, status: string): Promise<WaiterCall | undefined> {
+    const updateData: any = { status };
+    
+    if (status === 'acknowledged') {
+      updateData.acknowledgedAt = new Date();
+    } else if (status === 'completed') {
+      updateData.completedAt = new Date();
+    }
+
+    const [updated] = await db.update(waiterCalls)
+      .set(updateData)
+      .where(eq(waiterCalls.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getPendingWaiterCalls(restaurantId: number): Promise<WaiterCall[]> {
+    return await db.select().from(waiterCalls)
+      .where(and(
+        eq(waiterCalls.restaurantId, restaurantId),
+        eq(waiterCalls.status, 'pending')
+      ))
+      .orderBy(desc(waiterCalls.createdAt));
   }
 }
 

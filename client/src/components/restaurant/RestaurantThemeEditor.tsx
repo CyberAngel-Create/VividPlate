@@ -8,6 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Restaurant } from "@shared/schema";
+import { ObjectUploader } from "../../../components/ObjectUploader";
+import { useMutation } from "@tanstack/react-query";
+import { Image, X } from "lucide-react";
 
 interface RestaurantThemeEditorProps {
   restaurantId: number;
@@ -42,11 +45,69 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
     fontFamily: "Inter, sans-serif",
     menuItemColor: "#333333",
     menuDescriptionColor: "#666666",
-    menuPriceColor: "#111111"
+    menuPriceColor: "#111111",
+    backgroundImageUrl: ""
   };
   
   const [theme, setTheme] = useState<Record<string, any>>(initialTheme || defaultTheme);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Background image upload mutation
+  const backgroundImageMutation = useMutation({
+    mutationFn: async (backgroundImageUrl: string) => {
+      return await apiRequest(
+        "PUT",
+        `/api/restaurants/${restaurantId}/background-image`,
+        { backgroundImageUrl }
+      );
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Background image uploaded successfully",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Error setting background image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload background image",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle background image upload
+  const handleGetUploadParameters = async () => {
+    const response = await apiRequest("POST", "/api/objects/upload");
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleBackgroundImageComplete = (result: { successful: Array<{ uploadURL: string }> }) => {
+    if (result.successful && result.successful.length > 0) {
+      const uploadURL = result.successful[0].uploadURL;
+      
+      // Update theme state immediately for preview
+      setTheme(prev => ({
+        ...prev,
+        backgroundImageUrl: uploadURL
+      }));
+
+      // Save to backend
+      backgroundImageMutation.mutate(uploadURL);
+    }
+  };
+
+  const removeBackgroundImage = () => {
+    setTheme(prev => ({
+      ...prev,
+      backgroundImageUrl: ""
+    }));
+  };
   
   // Handler for color and font changes
   const handleChange = (field: string, value: string) => {
@@ -156,6 +217,7 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
             <TabsList className="mb-4">
               <TabsTrigger value="colors">Colors</TabsTrigger>
               <TabsTrigger value="typography">Typography</TabsTrigger>
+              <TabsTrigger value="background">Background</TabsTrigger>
             </TabsList>
             
             <TabsContent value="colors" className="space-y-4">
@@ -314,6 +376,52 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="background" className="space-y-4">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Background Image</Label>
+                  {theme.backgroundImageUrl ? (
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <img 
+                          src={theme.backgroundImageUrl} 
+                          alt="Background preview" 
+                          className="w-full h-32 object-cover rounded-md border"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={removeBackgroundImage}
+                          className="absolute top-2 right-2"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-sm text-gray-600">Current background image</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <ObjectUploader
+                        maxNumberOfFiles={1}
+                        maxFileSize={5242880} // 5MB
+                        onGetUploadParameters={handleGetUploadParameters}
+                        onComplete={handleBackgroundImageComplete}
+                        buttonClassName="w-full"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Image className="h-4 w-4" />
+                          <span>Upload Background Image</span>
+                        </div>
+                      </ObjectUploader>
+                      <p className="text-sm text-gray-600">
+                        Upload an image to use as background for your customer menu (max 5MB)
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
