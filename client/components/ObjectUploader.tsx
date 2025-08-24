@@ -107,8 +107,10 @@ export function ObjectUploader({
     } finally {
       setUploading(false);
       setUploadProgress(0);
-      // Reset file input
-      event.target.value = '';
+      // Reset file input safely
+      if (event.target) {
+        event.target.value = '';
+      }
     }
   };
 
@@ -117,7 +119,18 @@ export function ObjectUploader({
     input.type = 'file';
     input.accept = accept;
     input.multiple = maxNumberOfFiles > 1;
-    input.onchange = handleFileUpload;
+    input.onchange = (event) => {
+      const files = (event.target as HTMLInputElement).files;
+      if (!files || files.length === 0) return;
+      
+      // Create a synthetic React event-like object
+      const syntheticEvent = {
+        target: event.target as HTMLInputElement,
+        currentTarget: event.target as HTMLInputElement,
+      } as React.ChangeEvent<HTMLInputElement>;
+      
+      handleFileUpload(syntheticEvent);
+    };
     input.click();
   };
 
