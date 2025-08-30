@@ -1774,6 +1774,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Get feedbacks for a restaurant
+  app.get('/api/restaurants/:restaurantId/feedbacks', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      console.log(`Fetching feedbacks for restaurant ${restaurantId}`);
+      
+      const feedbacks = await storage.getFeedbacksByRestaurantId(restaurantId);
+      console.log(`Found ${feedbacks.length} feedbacks for restaurant ${restaurantId}`);
+      
+      res.json(feedbacks);
+    } catch (error) {
+      console.error('Error fetching restaurant feedbacks:', error);
+      res.status(500).json({ message: 'Failed to fetch feedbacks' });
+    }
+  });
+
   // CRITICAL: Combined menu endpoint for shared menu links
   app.get('/api/restaurants/:restaurantId/menu', async (req, res) => {
     try {

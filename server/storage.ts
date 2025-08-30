@@ -115,6 +115,9 @@ export interface IStorage {
     menuItemCount: number;
     daysActive: number;
   }>;
+  
+  // Feedback operations
+  getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]>;
 
   // Analytics operations for admin dashboard
   getViewsAnalytics(): Promise<{
@@ -467,7 +470,7 @@ export class DatabaseStorage implements IStorage {
       logoUrl: restaurants.logoUrl,
       bannerUrl: restaurants.bannerUrl,
       isActive: restaurants.isActive,
-      createdAt: restaurants.createdAt,
+      // createdAt: restaurants.createdAt, // Field doesn't exist in schema
       ownerName: users.fullName,
       ownerUsername: users.username,
       ownerSubscriptionTier: users.subscriptionTier,
@@ -479,7 +482,7 @@ export class DatabaseStorage implements IStorage {
     .leftJoin(menuCategories, eq(restaurants.id, menuCategories.restaurantId))
     .leftJoin(menuItems, eq(menuCategories.id, menuItems.categoryId))
     .groupBy(restaurants.id, users.fullName, users.username, users.subscriptionTier)
-    .orderBy(desc(restaurants.createdAt));
+    .orderBy(desc(restaurants.id)); // Use ID instead of createdAt
 
     return restaurantsWithOwners;
   }
@@ -1307,10 +1310,13 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
       
       if (earliestViews.length > 0) {
-        const firstView = new Date(earliestViews[0].viewedAt);
-        const now = new Date();
-        daysActive = Math.floor((now.getTime() - firstView.getTime()) / (1000 * 60 * 60 * 24));
-        daysActive = Math.max(daysActive, 1); // Ensure at least 1 day
+        const viewedAt = earliestViews[0].viewedAt;
+        if (viewedAt) {
+          const firstView = new Date(viewedAt);
+          const now = new Date();
+          daysActive = Math.floor((now.getTime() - firstView.getTime()) / (1000 * 60 * 60 * 24));
+          daysActive = Math.max(daysActive, 1); // Ensure at least 1 day
+        }
       }
     } catch (error) {
       console.error('Error calculating days active:', error);
@@ -1327,6 +1333,21 @@ export class DatabaseStorage implements IStorage {
       menuItemCount,
       daysActive
     };
+  }
+
+  // Feedback operations
+  async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
+    try {
+      const result = await db.select()
+        .from(feedbacks)
+        .where(eq(feedbacks.restaurantId, restaurantId))
+        .orderBy(desc(feedbacks.createdAt));
+      
+      return result;
+    } catch (error) {
+      console.error('Error fetching feedbacks:', error);
+      return [];
+    }
   }
 }
 
