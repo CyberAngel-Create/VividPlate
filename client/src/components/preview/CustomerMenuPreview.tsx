@@ -22,7 +22,7 @@ const trackMenuItemClick = async (itemId: number) => {
 };
 import ImageViewDialog from "@/components/ui/image-view-dialog";
 
-import ItemFeedbackDialog from "@/components/feedback/ItemFeedbackDialog";
+
 import CompactSearch from "@/components/ui/compact-search";
 import MenuLanguageSwitcher from "@/components/ui/menu-language-switcher";
 import ResponsiveImage from "@/components/ui/responsive-image";
@@ -432,7 +432,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
               return (
                 <div className="w-full h-full relative">
                   <ResponsiveImage 
-                    src={restaurant.bannerUrl}
+                    src={restaurant.bannerUrl || ''}
                     alt={`${restaurant.name} banner`}
                     fallbackType="banner"
                     className="w-full h-full object-cover"
@@ -696,7 +696,6 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                             description={item.description ? item.description : undefined}
                             menuItemId={item.id}
                             restaurantId={restaurant.id}
-                            onOpen={() => trackMenuItemClick(item.id)}
                           >
                             <div className="w-full h-24 sm:h-28 bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                               <ResponsiveImage 
@@ -791,7 +790,6 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 description={item.description ? item.description : undefined}
                                 menuItemId={item.id}
                                 restaurantId={restaurant.id}
-                                onOpen={() => trackMenuItemClick(item.id)}
                               >
                                 <div className="w-full h-full bg-neutral rounded-md overflow-hidden cursor-pointer hover:opacity-90 transition-opacity">
                                   <ResponsiveImage 
@@ -824,7 +822,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                             <div className="mt-auto space-y-2">
                               <div className="flex items-center justify-between">
                                 <span className="font-semibold text-sm" style={menuItemPriceStyle}>
-                                  {formatCurrency(item.price, item.currency)}
+                                  {formatCurrency(item.price, item.currency || "ETB")}
                                 </span>
 
                                 <ImageViewDialog 
