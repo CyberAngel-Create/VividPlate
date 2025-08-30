@@ -242,62 +242,118 @@ export function getCurrencyByLocation(countryCode?: string): string {
 export const SUBSCRIPTION_PLANS = {
   free: {
     name: 'Free',
-    price: 0,
+    monthlyPrice: 0,
+    yearlyPrice: 0,
     currency: 'ETB',
-    description: 'Basic menu management for 1 restaurant',
+    description: 'Basic menu management with limited features',
     features: [
-      '1 Restaurant',
-      'Basic Menu Management',
-      'QR Code Generation',
+      'No Restaurants',
+      '10 Image Uploads Only',
+      'Basic Menu Viewing',
       'Standard Support'
     ],
-    maxRestaurants: 1,
-    maxMenuItems: 50,
+    maxRestaurants: 0,
+    maxMenuItems: 0,
+    maxImages: 10,
     international: true
   },
-  premium: {
-    name: 'Premium',
-    price: 500, // 500 ETB per month (~$9 USD)
+  single: {
+    name: 'Single Restaurant',
+    monthlyPrice: 800, // 800 ETB per month
+    yearlyPrice: 9600, // 800 × 12 months
     currency: 'ETB',
-    description: 'Advanced features for growing restaurants',
+    description: 'Perfect for single restaurant owners',
     features: [
-      '3 Restaurants',
-      'Advanced Analytics',
+      '1 Restaurant',
+      'Unlimited Menu Items',
+      'Unlimited Image Uploads',
+      'QR Code Generation',
       'Custom Themes',
-      'Priority Support',
-      'Menu Translation',
-      'Advanced QR Codes'
+      'Analytics',
+      'Priority Support'
     ],
-    maxRestaurants: 3,
-    maxMenuItems: 200,
+    maxRestaurants: 1,
+    maxMenuItems: -1,
+    maxImages: -1,
     international: true,
     internationalPricing: {
-      USD: 9,   // $9 USD
-      EUR: 8,   // €8 EUR
-      GBP: 7,   // £7 GBP
+      monthly: {
+        USD: 15,   // ~$15 USD
+        EUR: 14,   // ~€14 EUR
+        GBP: 12,   // ~£12 GBP
+      },
+      yearly: {
+        USD: 180,   // $15 × 12
+        EUR: 168,   // €14 × 12
+        GBP: 144,   // £12 × 12
+      }
     }
   },
-  business: {
-    name: 'Business',
-    price: 1200, // 1200 ETB per month (~$22 USD)
+  double: {
+    name: 'Two Restaurants',
+    monthlyPrice: 1500, // 1500 ETB per month
+    yearlyPrice: 18000, // 1500 × 12 months
+    currency: 'ETB',
+    description: 'Ideal for growing restaurant businesses',
+    features: [
+      '2 Restaurants',
+      'Unlimited Menu Items',
+      'Unlimited Image Uploads',
+      'Advanced Analytics',
+      'Custom Themes',
+      'Menu Translation',
+      'Priority Support',
+      'Advanced QR Codes'
+    ],
+    maxRestaurants: 2,
+    maxMenuItems: -1,
+    maxImages: -1,
+    international: true,
+    internationalPricing: {
+      monthly: {
+        USD: 28,   // ~$28 USD
+        EUR: 25,   // ~€25 EUR
+        GBP: 22,   // ~£22 GBP
+      },
+      yearly: {
+        USD: 336,   // $28 × 12
+        EUR: 300,   // €25 × 12
+        GBP: 264,   // £22 × 12
+      }
+    }
+  },
+  triple: {
+    name: 'Three Restaurants',
+    monthlyPrice: 2000, // 2000 ETB per month
+    yearlyPrice: 24000, // 2000 × 12 months
     currency: 'ETB',
     description: 'Complete solution for restaurant chains',
     features: [
-      'Unlimited Restaurants',
+      '3 Restaurants',
+      'Unlimited Menu Items',
+      'Unlimited Image Uploads',
       'Advanced Analytics & Reports',
       'Custom Branding',
+      'Menu Translation',
       '24/7 Support',
       'API Access',
-      'Multi-language Support',
-      'White Label Solution'
+      'Multi-language Support'
     ],
-    maxRestaurants: -1, // Unlimited
-    maxMenuItems: -1, // Unlimited
+    maxRestaurants: 3,
+    maxMenuItems: -1,
+    maxImages: -1,
     international: true,
     internationalPricing: {
-      USD: 22,   // $22 USD
-      EUR: 20,   // €20 EUR
-      GBP: 17,   // £17 GBP
+      monthly: {
+        USD: 37,   // ~$37 USD
+        EUR: 33,   // ~€33 EUR
+        GBP: 29,   // ~£29 GBP
+      },
+      yearly: {
+        USD: 444,   // $37 × 12
+        EUR: 396,   // €33 × 12
+        GBP: 348,   // £29 × 12
+      }
     }
   }
 };

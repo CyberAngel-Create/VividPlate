@@ -2396,22 +2396,31 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       // Convert plan prices to user's currency
       const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS).reduce((acc, [key, plan]) => {
-        let price = plan.price;
+        let monthlyPrice = plan.monthlyPrice;
+        let yearlyPrice = plan.yearlyPrice;
         let planCurrency = currency;
         
         // Use international pricing if available, otherwise convert from ETB
         if (plan.international && plan.internationalPricing && plan.internationalPricing[currency]) {
-          price = plan.internationalPricing[currency];
-        } else if (currency !== 'ETB' && plan.price > 0) {
-          price = convertPrice(plan.price, currency);
+          if (plan.internationalPricing.monthly) {
+            monthlyPrice = plan.internationalPricing.monthly[currency];
+          }
+          if (plan.internationalPricing.yearly) {
+            yearlyPrice = plan.internationalPricing.yearly[currency];
+          }
+        } else if (currency !== 'ETB' && plan.monthlyPrice > 0) {
+          monthlyPrice = convertPrice(plan.monthlyPrice, currency);
+          yearlyPrice = convertPrice(plan.yearlyPrice, currency);
         }
         
         acc[key] = {
           ...plan,
-          price,
+          monthlyPrice,
+          yearlyPrice,
           currency: planCurrency,
-          originalPrice: plan.price,
-          originalCurrency: 'ETB'
+          originalPrice: plan.monthlyPrice,
+          originalCurrency: 'ETB',
+          popular: key === 'double' // Set "Two Restaurants" as most popular
         };
         return acc;
       }, {} as any);
@@ -2467,9 +2476,12 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
       const plan = SUBSCRIPTION_PLANS[planId];
       
+      // Get billing period from query params
+      const billingPeriod = req.query.period === 'yearly' ? 'yearly' : 'monthly';
+      
       // Determine currency and price
       const userCurrency = currency || getCurrencyByLocation(countryCode) || 'ETB';
-      let finalPrice = plan.price;
+      let finalPrice = billingPeriod === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice;
       
       // Use international pricing if available, otherwise convert from ETB
       if (plan.international && plan.internationalPricing && plan.internationalPricing[userCurrency]) {
@@ -2584,77 +2596,115 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         const fallbackPlans = {
           free: {
             name: 'Free',
-            price: 0,
+            monthlyPrice: 0,
+            yearlyPrice: 0,
             currency: 'ETB',
-            description: 'Basic menu management for 1 restaurant',
+            description: 'Basic menu management with limited features',
             features: [
-              '1 Restaurant',
-              'Basic Menu Management', 
-              'QR Code Generation',
+              'No Restaurants',
+              '10 Image Uploads Only',
+              'Basic Menu Viewing',
               'Standard Support'
             ],
-            maxRestaurants: 1,
-            maxMenuItems: 50,
+            maxRestaurants: 0,
+            maxMenuItems: 0,
+            maxImages: 10,
             popular: false
           },
-          premium: {
-            name: 'Premium',
-            price: 500,
+          single: {
+            name: 'Single Restaurant',
+            monthlyPrice: 800,
+            yearlyPrice: 9600,
             currency: 'ETB',
-            description: 'Advanced features for growing restaurants',
+            description: 'Perfect for single restaurant owners',
             features: [
-              '3 Restaurants',
+              '1 Restaurant',
+              'Unlimited Menu Items',
+              'Unlimited Image Uploads',
+              'QR Code Generation',
+              'Custom Themes',
+              'Analytics',
+              'Priority Support'
+            ],
+            maxRestaurants: 1,
+            maxMenuItems: -1,
+            maxImages: -1,
+            popular: false
+          },
+          double: {
+            name: 'Two Restaurants',
+            monthlyPrice: 1500,
+            yearlyPrice: 18000,
+            currency: 'ETB',
+            description: 'Ideal for growing restaurant businesses',
+            features: [
+              '2 Restaurants',
+              'Unlimited Menu Items',
+              'Unlimited Image Uploads',
               'Advanced Analytics',
               'Custom Themes',
-              'Priority Support',
               'Menu Translation',
+              'Priority Support',
               'Advanced QR Codes'
             ],
-            maxRestaurants: 3,
-            maxMenuItems: 200,
+            maxRestaurants: 2,
+            maxMenuItems: -1,
+            maxImages: -1,
             popular: true
           },
-          business: {
-            name: 'Business',
-            price: 1200,
+          triple: {
+            name: 'Three Restaurants',
+            monthlyPrice: 2000,
+            yearlyPrice: 24000,
             currency: 'ETB',
             description: 'Complete solution for restaurant chains',
             features: [
-              'Unlimited Restaurants',
+              '3 Restaurants',
+              'Unlimited Menu Items',
+              'Unlimited Image Uploads',
               'Advanced Analytics & Reports',
               'Custom Branding',
+              'Menu Translation',
               '24/7 Support',
               'API Access',
-              'Multi-language Support',
-              'White Label Solution'
+              'Multi-language Support'
             ],
-            maxRestaurants: -1,
+            maxRestaurants: 3,
             maxMenuItems: -1,
+            maxImages: -1,
             popular: false
           }
         };
         return res.json(fallbackPlans);
       }
       
-      // Convert plan prices to user's currency
+      // Convert plan prices to user's currency using new structure
       const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS).reduce((acc, [key, plan]) => {
-        let price = plan.price;
+        let monthlyPrice = plan.monthlyPrice;
+        let yearlyPrice = plan.yearlyPrice;
         let planCurrency = currency;
         
         // Use international pricing if available, otherwise convert from ETB
         if (plan.international && plan.internationalPricing && plan.internationalPricing[currency]) {
-          price = plan.internationalPricing[currency];
-        } else if (currency !== 'ETB' && plan.price > 0 && convertPrice) {
-          price = convertPrice(plan.price, currency);
+          if (plan.internationalPricing.monthly) {
+            monthlyPrice = plan.internationalPricing.monthly[currency];
+          }
+          if (plan.internationalPricing.yearly) {
+            yearlyPrice = plan.internationalPricing.yearly[currency];
+          }
+        } else if (currency !== 'ETB' && plan.monthlyPrice > 0 && convertPrice) {
+          monthlyPrice = convertPrice(plan.monthlyPrice, currency);
+          yearlyPrice = convertPrice(plan.yearlyPrice, currency);
         }
         
         acc[key] = {
           ...plan,
-          price,
+          monthlyPrice,
+          yearlyPrice,
           currency: planCurrency,
-          originalPrice: plan.price,
+          originalPrice: plan.monthlyPrice,
           originalCurrency: 'ETB',
-          popular: key === 'premium'
+          popular: key === 'double' // Set "Two Restaurants" as most popular
         };
         return acc;
       }, {} as any);
@@ -2662,32 +2712,86 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.json(plansWithPricing);
     } catch (error) {
       console.error('Error fetching pricing plans:', error);
-      // Return basic fallback plans on error
+      // Return basic fallback plans on error with new structure
       const basicPlans = {
         free: {
           name: 'Free',
-          price: 0,
+          monthlyPrice: 0,
+          yearlyPrice: 0,
           currency: 'ETB',
-          description: 'Basic menu management',
-          features: ['1 Restaurant', 'Basic Features'],
-          maxRestaurants: 1,
-          maxMenuItems: 50,
+          description: 'Basic menu management with limited features',
+          features: ['No Restaurants', '10 Image Uploads Only'],
+          maxRestaurants: 0,
+          maxMenuItems: 0,
+          maxImages: 10,
           popular: false
         },
-        premium: {
-          name: 'Premium', 
-          price: 500,
+        single: {
+          name: 'Single Restaurant',
+          monthlyPrice: 800,
+          yearlyPrice: 9600,
           currency: 'ETB',
-          description: 'Advanced features',
-          features: ['3 Restaurants', 'Advanced Features'],
-          maxRestaurants: 3,
-          maxMenuItems: 200,
-          popular: true
+          description: 'Perfect for single restaurant owners',
+          features: ['1 Restaurant', 'Unlimited Menu Items', 'Unlimited Image Uploads'],
+          maxRestaurants: 1,
+          maxMenuItems: -1,
+          maxImages: -1,
+          popular: false
         }
       };
       res.json(basicPlans);
     }
   });
+
+  // Update subscription limits based on new pricing plans
+  app.get('/api/subscription/limits', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Get current subscription
+      const subscription = await storage.getUserSubscription(userId);
+      const tier = subscription?.tier || 'free';
+      
+      // Get limits based on tier
+      let limits = {
+        maxRestaurants: 0,
+        maxMenuItems: 0,
+        maxImages: 10
+      };
+
+      if (SUBSCRIPTION_PLANS[tier]) {
+        const plan = SUBSCRIPTION_PLANS[tier];
+        limits = {
+          maxRestaurants: plan.maxRestaurants,
+          maxMenuItems: plan.maxMenuItems,
+          maxImages: plan.maxImages
+        };
+      }
+
+      res.json({
+        tier,
+        limits,
+        subscription
+      });
+    } catch (error) {
+      console.error('Error fetching subscription limits:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Also need to remove the old fallback section that's causing issues
+  // Remove the old pricing endpoint implementation
+  app.get('/api/pricing-old', (req, res) => {
+    // Old implementation removed - now using updated structure above
+    res.json({ message: 'Deprecated endpoint' });
+  });
+
+
 
   // Legacy Stripe endpoints - redirect to Chapa
   app.post('/api/create-subscription', isAuthenticated, async (req, res) => {

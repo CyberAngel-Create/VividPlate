@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Check, Loader2 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { 
   Card, 
   CardContent, 
@@ -23,20 +24,26 @@ import { useTranslation } from "react-i18next";
 interface PricingPlan {
   name: string;
   description: string;
-  price: number;
+  monthlyPrice: number;
+  yearlyPrice: number;
   currency: string;
   popular: boolean;
   features: string[];
   maxRestaurants: number;
   maxMenuItems: number;
+  maxImages: number;
   international?: boolean;
-  internationalPricing?: Record<string, number>;
+  internationalPricing?: {
+    monthly?: Record<string, number>;
+    yearly?: Record<string, number>;
+  };
   originalPrice?: number;
   originalCurrency?: string;
 }
 
 const PricingPage = () => {
   const [, setLocation] = useLocation();
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const { toast } = useToast();
   const { user, isLoading: isAuthLoading } = useAuth();
   const { subscription, isPaid, isLoading: isSubscriptionLoading } = useSubscription();
@@ -80,8 +87,8 @@ const PricingPage = () => {
         return;
       }
       
-      // If it's a different paid plan, allow the change
-      setLocation(`/chapa-subscribe/${planKey}`);
+      // If it's a different paid plan, allow the change with billing period
+      setLocation(`/chapa-subscribe/${planKey}?period=${billingPeriod}`);
       return;
     }
 
@@ -103,9 +110,23 @@ const PricingPage = () => {
         });
       }
     } else {
-      // For upgrading to paid plans, go to Chapa subscribe page
-      setLocation(`/chapa-subscribe/${planKey}`);
+      // For upgrading to paid plans, go to Chapa subscribe page with billing period
+      setLocation(`/chapa-subscribe/${planKey}?period=${billingPeriod}`);
     }
+  };
+
+  // Helper function to get the display price based on billing period
+  const getDisplayPrice = (plan: PricingPlan) => {
+    return billingPeriod === 'monthly' ? plan.monthlyPrice : plan.yearlyPrice;
+  };
+
+  // Helper function to calculate monthly savings for yearly plans
+  const getMonthlySavings = (plan: PricingPlan) => {
+    if (billingPeriod === 'yearly' && plan.monthlyPrice > 0) {
+      const yearlyMonthly = plan.yearlyPrice / 12;
+      return Math.round(plan.monthlyPrice - yearlyMonthly);
+    }
+    return 0;
   };
 
   // Create a logout handler
@@ -141,12 +162,29 @@ const PricingPage = () => {
           <>
             <section className="text-center mb-12">
               <h1 className="text-4xl font-bold mb-4">Pricing Plans</h1>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
                 Choose the perfect plan for your restaurant. Upgrade anytime to access premium features.
               </p>
+              
+              {/* Billing Period Switcher */}
+              <div className="flex items-center justify-center gap-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 max-w-xs mx-auto">
+                <span className={`text-sm font-medium ${billingPeriod === 'monthly' ? 'text-primary' : 'text-muted-foreground'}`}>
+                  Monthly
+                </span>
+                <Switch
+                  checked={billingPeriod === 'yearly'}
+                  onCheckedChange={(checked) => setBillingPeriod(checked ? 'yearly' : 'monthly')}
+                />
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-medium ${billingPeriod === 'yearly' ? 'text-primary' : 'text-muted-foreground'}`}>
+                    Yearly
+                  </span>
+                  <Badge variant="secondary" className="text-xs">Save 0%</Badge>
+                </div>
+              </div>
             </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
               {plans && Object.entries(plans).map(([planKey, plan]: [string, any]) => (
                 <Card 
                   key={planKey} 
@@ -161,18 +199,25 @@ const PricingPage = () => {
                     <CardTitle className="text-2xl">{plan.name}</CardTitle>
                     <CardDescription className="mt-2">{plan.description}</CardDescription>
                     <div className="mt-4">
-                      <span className="text-4xl font-bold">
-                        {plan.currency === 'USD' ? '$' : plan.currency === 'EUR' ? '€' : plan.currency === 'GBP' ? '£' : plan.currency + ' '} {plan.price}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {plan.price > 0 ? '/month' : ''}
-                      </span>
+                      <div className="flex flex-col items-center">
+                        <span className="text-4xl font-bold">
+                          {plan.currency === 'USD' ? '$' : plan.currency === 'EUR' ? '€' : plan.currency === 'GBP' ? '£' : plan.currency + ' '} {getDisplayPrice(plan)}
+                        </span>
+                        <span className="text-muted-foreground text-sm">
+                          {getDisplayPrice(plan) > 0 ? `/${billingPeriod === 'yearly' ? 'year' : 'month'}` : ''}
+                        </span>
+                        {billingPeriod === 'yearly' && getMonthlySavings(plan) > 0 && (
+                          <Badge variant="outline" className="mt-2 text-xs">
+                            Save {plan.currency + ' '} {getMonthlySavings(plan)}/month
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent className="flex-1">
                     <h4 className="font-medium mb-4">Features</h4>
                     <ul className="space-y-3">
-                      {plan.features.map((feature, index) => (
+                      {plan.features.map((feature: string, index: number) => (
                         <li key={index} className="flex items-start">
                           <Check className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
                           <span>{feature}</span>
