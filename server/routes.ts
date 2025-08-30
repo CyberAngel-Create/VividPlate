@@ -3420,6 +3420,47 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Serve permanent images from database with optimized caching
+  app.get('/api/images/:filename', async (req, res) => {
+    try {
+      const { PermanentImageService } = await import('./permanent-image-service');
+      const filename = req.params.filename;
+      
+      const image = await PermanentImageService.getImage(filename);
+      if (!image) {
+        return res.status(404).json({ message: 'Image not found' });
+      }
+      
+      // Convert base64 back to buffer
+      const imageBuffer = Buffer.from(image.imageData, 'base64');
+      
+      // Generate ETag for better caching
+      const { createHash } = await import('crypto');
+      const etag = createHash('md5').update(imageBuffer).digest('hex');
+      
+      // Check if client has cached version
+      if (req.headers['if-none-match'] === etag) {
+        return res.status(304).end();
+      }
+      
+      // Set comprehensive caching headers
+      res.set({
+        'Content-Type': image.mimeType,
+        'Content-Length': imageBuffer.length,
+        'Cache-Control': 'public, max-age=31536000, immutable',
+        'ETag': etag,
+        'Last-Modified': new Date(image.uploadedAt).toUTCString(),
+        'Expires': new Date(Date.now() + 31536000000).toUTCString(),
+        'Content-Disposition': `inline; filename="${image.originalName}"`
+      });
+      
+      res.send(imageBuffer);
+    } catch (error) {
+      console.error('Error serving permanent image:', error);
+      res.status(500).json({ message: 'Error serving image' });
+    }
+  });
+
   app.get('/objects/:objectPath(*)', async (req, res) => {
     try {
       const objectStorageService = new ObjectStorageService();

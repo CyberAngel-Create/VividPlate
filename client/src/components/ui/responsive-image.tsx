@@ -23,6 +23,7 @@ const ResponsiveImage = ({
 
   const handleError = () => {
     console.error('Failed to load image:', imageSrc, 'Original src:', src);
+    console.error('Image loading failed for fallback type:', fallbackType);
     setError(true);
   };
 
