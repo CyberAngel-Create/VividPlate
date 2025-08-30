@@ -3,10 +3,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
-import { Bell, User } from 'lucide-react';
+import { Bell, User, Phone } from 'lucide-react';
 
 interface WaiterCallProps {
   restaurantId: number;
@@ -16,6 +17,7 @@ interface WaiterCallProps {
 export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
   const [tableNumber, setTableNumber] = useState('');
   const [notes, setNotes] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const callWaiterMutation = useMutation({
@@ -34,6 +36,7 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
       });
       setTableNumber('');
       setNotes('');
+      setIsDialogOpen(false); // Close the popup after successful call
     },
     onError: (error: any) => {
       toast({
@@ -64,18 +67,29 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
   };
 
   return (
-    <Card className="w-full max-w-md tablet:max-w-lg mx-auto bg-white shadow-lg border-2 border-amber-100 tablet:shadow-xl">
-      <CardHeader className="text-center bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-lg">
-        <CardTitle className="flex items-center justify-center gap-2 text-xl text-gray-800">
-          <Bell className="w-6 h-6 text-amber-600" />
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button 
+          size="lg" 
+          className="w-full max-w-xs mx-auto bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 border-0"
+        >
+          <Bell className="w-5 h-5 mr-2" />
           Call Waiter
-        </CardTitle>
-        <p className="text-sm text-gray-600 mt-1">
-          Need assistance? Let us know your table number
-        </p>
-      </CardHeader>
-      <CardContent className="p-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        </Button>
+      </DialogTrigger>
+      
+      <DialogContent className="w-full max-w-md mx-auto bg-white shadow-2xl border-2 border-amber-100">
+        <DialogHeader className="text-center">
+          <DialogTitle className="flex items-center justify-center gap-2 text-xl text-gray-800">
+            <Phone className="w-6 h-6 text-amber-600" />
+            Call Waiter
+          </DialogTitle>
+          <p className="text-sm text-gray-600 mt-1">
+            Need assistance? Let us know your table number
+          </p>
+        </DialogHeader>
+        
+        <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div className="space-y-2">
             <label htmlFor="tableNumber" className="text-sm font-medium text-gray-700 flex items-center gap-2">
               <User className="w-4 h-4" />
@@ -125,12 +139,12 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
           </Button>
         </form>
         
-        <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-200">
+        <div className="mt-4 mx-6 mb-6 p-3 bg-amber-50 rounded-lg border border-amber-200">
           <p className="text-xs text-amber-800 text-center">
             <span className="font-medium">{restaurantName}</span> • Your waiter will be with you shortly
           </p>
         </div>
-      </CardContent>
-    </Card>
+      </DialogContent>
+    </Dialog>
   );
 }
