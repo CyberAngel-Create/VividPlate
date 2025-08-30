@@ -26,6 +26,7 @@ import AdminUsers from "./pages/admin-users";
 import AdminRestaurants from "./pages/admin-restaurants";
 import AdminLogs from "./pages/admin-logs";
 import AdminPricing from "./pages/admin-pricing";
+import AdminPricingPlans from "./pages/admin/AdminPricingPlans";
 import AdminContactInfo from "./pages/admin-contact-info";
 import AdminAdvertisements from "./pages/admin-advertisements";
 import AdminMenuExamples from "./pages/admin-menu-examples";
@@ -178,6 +179,7 @@ function Router() {
         <AdminRoute path="/admin/users" component={AdminUsers} />
         <AdminRoute path="/admin/restaurants" component={AdminRestaurants} />
         <AdminRoute path="/admin/pricing" component={AdminPricing} />
+        <AdminRoute path="/admin/pricing-plans" component={AdminPricingPlans} />
         <AdminRoute path="/admin/logs" component={AdminLogs} />
         <AdminRoute path="/admin/profile" component={Profile} />
         <AdminRoute path="/admin/contact-info" component={AdminContactInfo} />

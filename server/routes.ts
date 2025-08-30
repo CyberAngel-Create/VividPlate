@@ -1758,6 +1758,42 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // CRITICAL: Combined menu endpoint for shared menu links
+  app.get('/api/restaurants/:restaurantId/menu', async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      console.log(`Fetching complete menu for restaurant ${restaurantId}`);
+      
+      // Get restaurant details
+      const restaurant = await storage.getRestaurant(restaurantId);
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+      
+      // Get categories and their items
+      const categories = await storage.getMenuCategoriesByRestaurantId(restaurantId);
+      const categoriesWithItems = await Promise.all(
+        categories.map(async (category) => {
+          const items = await storage.getMenuItemsByCategoryId(category.id);
+          return {
+            ...category,
+            items
+          };
+        })
+      );
+      
+      console.log(`Menu fetched successfully: ${categoriesWithItems.length} categories`);
+      
+      res.json({
+        restaurant,
+        menu: categoriesWithItems
+      });
+    } catch (error) {
+      console.error('Error fetching complete menu:', error);
+      res.status(500).json({ message: 'Server error fetching menu' });
+    }
+  });
+
   // Menu category routes
   app.get('/api/restaurants/:restaurantId/categories', async (req, res) => {
     try {
