@@ -107,6 +107,29 @@ export interface IStorage {
   // Stats operations
   getMenuItemCountByRestaurantId(restaurantId: number): Promise<number>;
   getQrScanCountByRestaurantId(restaurantId: number): Promise<number>;
+  incrementQRCodeScans(restaurantId: number): Promise<void>;
+  getRestaurantStats(restaurantId: number): Promise<{
+    viewCount: number;
+    qrScanCount: number;
+    directQrScans: number;
+    menuItemCount: number;
+    daysActive: number;
+  }>;
+
+  // Analytics operations for admin dashboard
+  getViewsAnalytics(): Promise<{
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+    total: number;
+  }>;
+  getRegistrationAnalytics(): Promise<{
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+  }>;
   
   // Menu item analytics operations
   incrementMenuItemClicks(itemId: number): Promise<void>;
@@ -1184,6 +1207,126 @@ export class DatabaseStorage implements IStorage {
         eq(waiterCalls.status, 'pending')
       ))
       .orderBy(desc(waiterCalls.createdAt));
+  }
+
+  // Missing analytics methods implementation
+  async incrementQRCodeScans(restaurantId: number): Promise<void> {
+    // First get current QR scan count
+    const [restaurant] = await db.select({ qrCodeScans: restaurants.qrCodeScans })
+      .from(restaurants)
+      .where(eq(restaurants.id, restaurantId));
+    
+    if (restaurant) {
+      // Increment the QR code scans count
+      await db.update(restaurants)
+        .set({ 
+          qrCodeScans: (restaurant.qrCodeScans || 0) + 1
+        })
+        .where(eq(restaurants.id, restaurantId));
+    }
+  }
+
+  async getViewsAnalytics(): Promise<{
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+    total: number;
+  }> {
+    const now = new Date();
+    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+    const [daily, weekly, monthly, yearly, total] = await Promise.all([
+      this.countMenuViewsInDateRange(dayAgo, now),
+      this.countMenuViewsInDateRange(weekAgo, now),
+      this.countMenuViewsInDateRange(monthAgo, now),
+      this.countMenuViewsInDateRange(yearAgo, now),
+      db.select({ count: count() }).from(menuViews).then(result => result[0].count)
+    ]);
+
+    return { daily, weekly, monthly, yearly, total };
+  }
+
+  async getRegistrationAnalytics(): Promise<{
+    daily: number;
+    weekly: number;
+    monthly: number;
+    yearly: number;
+  }> {
+    const now = new Date();
+    const dayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const yearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+
+    const [daily, weekly, monthly, yearly] = await Promise.all([
+      this.countRegistrationsInDateRange(dayAgo, now),
+      this.countRegistrationsInDateRange(weekAgo, now),
+      this.countRegistrationsInDateRange(monthAgo, now),
+      this.countRegistrationsInDateRange(yearAgo, now)
+    ]);
+
+    return { daily, weekly, monthly, yearly };
+  }
+
+  async getRestaurantStats(restaurantId: number): Promise<{
+    viewCount: number;
+    qrScanCount: number;
+    directQrScans: number;
+    menuItemCount: number;
+    daysActive: number;
+  }> {
+    const [restaurant, menuItemCount, viewCount] = await Promise.all([
+      this.getRestaurant(restaurantId),
+      this.getMenuItemCountByRestaurantId(restaurantId),
+      this.countMenuViewsByRestaurantId(restaurantId)
+    ]);
+
+    if (!restaurant) {
+      return {
+        viewCount: 0,
+        qrScanCount: 0,
+        directQrScans: 0,
+        menuItemCount: 0,
+        daysActive: 0
+      };
+    }
+
+    // Calculate days active based on earliest menu view or default to 1 day
+    let daysActive = 1; // Default to 1 day if no views exist
+    
+    try {
+      // Get the earliest menu view for this restaurant to calculate days active
+      const earliestViews = await db.select({ viewedAt: menuViews.viewedAt })
+        .from(menuViews)
+        .where(eq(menuViews.restaurantId, restaurantId))
+        .orderBy(menuViews.viewedAt)
+        .limit(1);
+      
+      if (earliestViews.length > 0) {
+        const firstView = new Date(earliestViews[0].viewedAt);
+        const now = new Date();
+        daysActive = Math.floor((now.getTime() - firstView.getTime()) / (1000 * 60 * 60 * 24));
+        daysActive = Math.max(daysActive, 1); // Ensure at least 1 day
+      }
+    } catch (error) {
+      console.error('Error calculating days active:', error);
+      daysActive = 1; // Fallback to 1 day
+    }
+
+    // Get QR scan count from restaurant record
+    const qrScanCount = restaurant.qrCodeScans || 0;
+
+    return {
+      viewCount,
+      qrScanCount,
+      directQrScans: qrScanCount, // Using same value for both QR scan fields
+      menuItemCount,
+      daysActive
+    };
   }
 }
 

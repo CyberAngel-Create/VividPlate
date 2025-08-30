@@ -1758,6 +1758,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Get restaurant statistics for dashboard
+  app.get('/api/restaurants/:restaurantId/stats', isAuthenticated, isRestaurantOwner, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      console.log(`Fetching stats for restaurant ${restaurantId}`);
+      
+      const stats = await storage.getRestaurantStats(restaurantId);
+      console.log(`Stats for restaurant ${restaurantId}:`, stats);
+      
+      res.json(stats);
+    } catch (error) {
+      console.error('Error fetching restaurant stats:', error);
+      res.status(500).json({ message: 'Failed to fetch restaurant statistics' });
+    }
+  });
+
   // CRITICAL: Combined menu endpoint for shared menu links
   app.get('/api/restaurants/:restaurantId/menu', async (req, res) => {
     try {
@@ -2449,37 +2465,9 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       // If the source is QR code, also increment the dedicated QR scan counter
       if (req.body.source === 'qr') {
         try {
-          // Log details before incrementing
           console.log(`Attempting to increment QR scan count for restaurant ${restaurantId}`);
-          
-          // Get current restaurant to ensure we have the latest state
-          const currentRestaurant = await storage.getRestaurant(restaurantId);
-          if (!currentRestaurant) {
-            console.error(`Restaurant ${restaurantId} not found when incrementing QR code scan count`);
-          } else {
-            // Ensure QR code scans has a valid value
-            const currentScans = currentRestaurant.qrCodeScans || 0;
-            
-            const result = await storage.incrementQRCodeScans(restaurantId);
-            
-            if (result) {
-              console.log(`QR code scan successfully recorded for restaurant ${restaurantId}. New count: ${result.qrCodeScans || 0}`);
-            } else {
-              console.error(`Failed to increment QR code scan count for restaurant ${restaurantId}`);
-              
-              // Fallback update if the main increment method failed
-              try {
-                const updatedRestaurant = await storage.updateRestaurant(restaurantId, { 
-                  qrCodeScans: currentScans + 1 
-                });
-                if (updatedRestaurant) {
-                  console.log(`QR code scan recorded using fallback method. New count: ${updatedRestaurant.qrCodeScans || 0}`);
-                }
-              } catch (fallbackError) {
-                console.error(`Fallback QR code scan increment also failed: ${fallbackError}`);
-              }
-            }
-          }
+          await storage.incrementQRCodeScans(restaurantId);
+          console.log(`QR code scan successfully recorded for restaurant ${restaurantId}`);
         } catch (qrError) {
           console.error(`Error incrementing QR code scan count: ${qrError}`);
           // Don't fail the whole request if just the QR counter fails
@@ -3113,20 +3101,26 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Admin Dashboard - Statistics API
   app.get('/api/admin/dashboard', isAuthenticated, isAdmin, async (req, res) => {
     try {
-      const [users, restaurants, subscriptions] = await Promise.all([
+      const [users, restaurants, subscriptions, viewsAnalytics, registrationAnalytics] = await Promise.all([
         storage.getAllUsers(),
         storage.getAllRestaurants(),
-        storage.getAllSubscriptions()
+        storage.getAllSubscriptions(),
+        storage.getViewsAnalytics(),
+        storage.getRegistrationAnalytics()
       ]);
 
       const stats = {
         totalUsers: users.length,
         totalRestaurants: restaurants.length,
+        activeUsers: users.filter(u => u.isActive !== false).length,
         premiumUsers: users.filter(u => u.subscriptionTier === 'premium').length,
         businessUsers: users.filter(u => u.subscriptionTier === 'business').length,
         freeUsers: users.filter(u => u.subscriptionTier === 'free' || !u.subscriptionTier).length,
+        paidUsers: users.filter(u => u.subscriptionTier === 'premium' || u.subscriptionTier === 'business').length,
         activeSubscriptions: subscriptions.filter(s => s.isActive).length,
-        recentUsers: users.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 5)
+        recentUsers: users.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime()).slice(0, 5),
+        viewStats: viewsAnalytics,
+        registrationStats: registrationAnalytics
       };
 
       res.json(stats);
