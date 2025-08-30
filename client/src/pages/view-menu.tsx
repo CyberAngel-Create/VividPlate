@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
@@ -81,7 +81,8 @@ const ViewMenu = () => {
       const fetchRestaurantIdByName = async () => {
         try {
           // Use the new dedicated API endpoint for looking up restaurant by name
-          const restaurant = await apiRequest("GET", `/api/restaurants/name/${restaurantName}`);
+          const response = await apiRequest("GET", `/api/restaurants/name/${restaurantName}`);
+          const restaurant = await response.json();
 
           console.log("Restaurant lookup result:", restaurant);
           setRestaurantId(restaurant.id);
@@ -144,12 +145,18 @@ const ViewMenu = () => {
     isLoading,
     error: error?.message,
     hasData: !!data,
+    queryEnabled: !!restaurantId,
     dataStructure: data ? {
       restaurant: !!data.restaurant,
       menu: data.menu?.length,
       menuCategories: data.menu?.map(cat => ({ name: cat.name, itemCount: cat.items?.length }))
     } : null
   });
+
+  // Log when restaurantId changes
+  React.useEffect(() => {
+    console.log("RestaurantId changed:", restaurantId);
+  }, [restaurantId]);
 
   if (isLoading) {
     return (
