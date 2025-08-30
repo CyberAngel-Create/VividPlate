@@ -81,9 +81,8 @@ const ViewMenu = () => {
       const fetchRestaurantIdByName = async () => {
         try {
           // Use the new dedicated API endpoint for looking up restaurant by name
-          const response = await apiRequest("GET", `/api/restaurants/name/${restaurantName}`);
+          const restaurant = await apiRequest("GET", `/api/restaurants/name/${restaurantName}`);
 
-          const restaurant = response;
           console.log("Restaurant lookup result:", restaurant);
           setRestaurantId(restaurant.id);
         } catch (error) {
@@ -136,6 +135,20 @@ const ViewMenu = () => {
     enabled: !!restaurantId,
     retry: 3,
     refetchOnWindowFocus: false,
+  });
+
+  // Debug logging
+  console.log("ViewMenu Debug:", {
+    restaurantName,
+    restaurantId, 
+    isLoading,
+    error: error?.message,
+    hasData: !!data,
+    dataStructure: data ? {
+      restaurant: !!data.restaurant,
+      menu: data.menu?.length,
+      menuCategories: data.menu?.map(cat => ({ name: cat.name, itemCount: cat.items?.length }))
+    } : null
   });
 
   if (isLoading) {
