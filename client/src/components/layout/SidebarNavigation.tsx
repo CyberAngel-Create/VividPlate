@@ -110,7 +110,7 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   return (
     <>
       {/* Mobile Header with Logo and Menu Toggle */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 h-16">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 h-16">
         <Link href="/dashboard">
           <div>
             <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">VividPlate</span>
