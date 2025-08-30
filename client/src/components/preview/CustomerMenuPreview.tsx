@@ -746,17 +746,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 </div>
                               )}
 
-                              {/* Only show feedback buttons for premium restaurants */}
-                              {restaurant.subscriptionTier === 'premium' && !previewMode && (
-                                <FeedbackDialog
-                                  menuItemId={item.id}
-                                  menuItemName={item.name}
-                                  restaurantId={restaurant.id}
-                                  position="inline"
-                                  variant="ghost"
-                                  size="sm"
-                                />
-                              )}
+
                             </div>
                       </div>
                     </div>
@@ -853,16 +843,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                                 </ImageViewDialog>
                               </div>
 
-                              <div className="text-center">
-                                <FeedbackDialog
-                                  menuItemId={item.id}
-                                  menuItemName={item.name}
-                                  restaurantId={restaurant.id}
-                                  variant="ghost"
-                                  size="sm"
-                                  position="inline"
-                                />
-                              </div>
+
                             </div>
                           </div>
                         </div>

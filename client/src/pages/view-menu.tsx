@@ -83,14 +83,9 @@ const ViewMenu = () => {
           // Use the new dedicated API endpoint for looking up restaurant by name
           const response = await apiRequest("GET", `/api/restaurants/name/${restaurantName}`);
 
-          if (response.ok) {
-            const restaurant = await response.json();
-            setRestaurantId(restaurant.id);
-          } else {
-            console.error("Restaurant not found:", restaurantName);
-            // Redirect to 404 or home page if restaurant not found
-            setLocation("/");
-          }
+          const restaurant = response;
+          console.log("Restaurant lookup result:", restaurant);
+          setRestaurantId(restaurant.id);
         } catch (error) {
           console.error("Failed to fetch restaurant by name:", error);
           setLocation("/");
@@ -137,8 +132,10 @@ const ViewMenu = () => {
 
   // Fetch menu data
   const { data, isLoading, error } = useQuery<MenuData>({
-    queryKey: [restaurantId ? `/api/restaurants/${restaurantId}/menu` : null],
+    queryKey: [`/api/restaurants/${restaurantId}/menu`],
     enabled: !!restaurantId,
+    retry: 3,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
