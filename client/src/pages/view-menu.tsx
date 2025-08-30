@@ -247,12 +247,8 @@ const ViewMenu = () => {
           </div>
         </div>
 
-        {/* Waiter Call Component - Prominently positioned for tablet/desktop */}
-        <div className="w-full max-w-screen-md tablet:max-w-screen-lg px-4 tablet:px-6 mt-6 tablet:mt-8 mb-6 tablet:mb-8">
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-4 tablet:p-6">
-            <WaiterCall restaurantId={restaurant.id} restaurantName={restaurant.name} />
-          </div>
-        </div>
+        {/* Floating Waiter Call Button */}
+        <WaiterCall restaurantId={restaurant.id} restaurantName={restaurant.name} />
 
         {/* Bottom advertisement from advertisement management system - only shown if restaurant is not premium */}
         {/* AdSense Policy Compliance: Bottom ads require content validation */}

@@ -71,7 +71,7 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
       <DialogTrigger asChild>
         <Button 
           size="lg" 
-          className="w-full max-w-xs mx-auto bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105 border-0"
+          className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-4 px-6 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 border-0 min-w-[160px] max-w-[200px]"
         >
           <Bell className="w-5 h-5 mr-2" />
           Call Waiter
