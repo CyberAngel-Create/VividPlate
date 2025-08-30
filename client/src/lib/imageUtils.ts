@@ -26,10 +26,12 @@ export function normalizeImageUrl(url: string | null | undefined): string {
     return url.startsWith('/') ? url : `/${url}`;
   }
   
-  // Handle legacy uploads URLs
+  // Handle legacy uploads URLs - convert to absolute URL for proper serving
   if (url.includes('/uploads/') || url.startsWith('/uploads/')) {
-    // These are legacy file upload URLs, return as is
-    return url.startsWith('/') ? url : `/${url}`;
+    // These are legacy file upload URLs, ensure they have leading slash
+    const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+    // For frontend, return as absolute URL path that works with current server
+    return cleanUrl;
   }
   
   // Handle cases where the URL might be missing uploads prefix for user-uploaded content
