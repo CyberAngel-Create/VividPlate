@@ -83,14 +83,14 @@ const RestaurantOwnerHeader = () => {
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 block lg:block relative">
+    <div className="bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 py-3 block lg:block relative z-30">
       <div className="w-full lg:pl-60">
         <div className="flex flex-col w-full">
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-2 block">Current Restaurant</p>
           <DropdownMenu>
             <DropdownMenuTrigger 
               disabled={isRestaurantSwitching} 
-              className="flex items-center justify-between p-3 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full min-h-[44px] touch-manipulation"
+              className="flex items-center justify-between p-3 text-left rounded-md border dark:border-gray-700 bg-white dark:bg-gray-800 w-full min-h-[44px] tablet:min-h-[52px] touch-manipulation"
             >
               <div className="flex items-center gap-2 truncate">
                 {isRestaurantSwitching ? (
@@ -106,7 +106,11 @@ const RestaurantOwnerHeader = () => {
               </div>
               <ChevronRight className="h-4 w-4 flex-shrink-0" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56 dark:bg-gray-800 dark:border-gray-700 z-50">
+            <DropdownMenuContent 
+              align="start" 
+              className="w-56 dark:bg-gray-800 dark:border-gray-700"
+              style={{ zIndex: 9999 }}
+            >
               <DropdownMenuLabel className="dark:text-gray-300">{t("Your Restaurants")}</DropdownMenuLabel>
               <DropdownMenuSeparator className="dark:border-gray-700" />
               {restaurants.map((restaurant) => (
