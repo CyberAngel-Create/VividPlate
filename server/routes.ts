@@ -1053,6 +1053,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // User image usage endpoint - for free plan restrictions (10 images limit)
+  app.get('/api/user/image-usage', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      const uploadedImages = await storage.getUserImageCount(userId);
+      const maxImages = user.subscriptionTier === 'free' ? 10 : 100; // Free plan: 10 images only
+      
+      res.json({
+        uploadedImages,
+        maxImages,
+        remainingImages: Math.max(0, maxImages - uploadedImages),
+        subscriptionTier: user.subscriptionTier || 'free'
+      });
+    } catch (error) {
+      console.error('Error fetching user image usage:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
   // Get current active subscription
   app.get('/api/subscription/current', isAuthenticated, async (req, res) => {
     try {
@@ -1146,15 +1171,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const restaurantCount = await storage.countRestaurantsByUserId(userId);
       const user = await storage.getUser(userId);
       
-      // Determine max restaurants based on user's subscription tier
-      const maxRestaurants = user && user.subscriptionTier === "premium" ? 3 : 1;
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
       
-      // Check if user has reached their limit
+      // Determine max restaurants based on user's subscription tier (Free plan restrictions)
+      let maxRestaurants = 1; // Free tier default
+      if (user.subscriptionTier === 'premium') {
+        maxRestaurants = 2;
+      } else if (user.subscriptionTier === 'business') {
+        maxRestaurants = 3;
+      }
+      
+      // Check if user has reached their limit (Free plan: 1 restaurant only)
       if (restaurantCount >= maxRestaurants) {
         return res.status(403).json({ 
-          message: 'Restaurant limit reached', 
-          limit: maxRestaurants,
-          upgradeRequired: maxRestaurants === 1
+          message: user.subscriptionTier === 'free' ? 'Free plan restaurant limit reached' : 'Restaurant limit reached',
+          details: user.subscriptionTier === 'free' ? 'Free users are limited to 1 restaurant. Please upgrade to create more restaurants.' : 'Please upgrade to create more restaurants.',
+          currentRestaurants: restaurantCount,
+          maxRestaurants: maxRestaurants,
+          upgradeRequired: true
         });
       }
       
@@ -1293,6 +1329,25 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         console.warn(`Logo upload attempt with no file for restaurant ${req.params.restaurantId}`);
         return res.status(400).json({ message: 'No file uploaded' });
       }
+
+      // Check subscription tier and image limits for free users
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (user.subscriptionTier === 'free') {
+        const imageCount = await storage.getUserImageCount(userId);
+        if (imageCount >= 10) {
+          return res.status(403).json({ 
+            message: 'Free plan image limit reached',
+            details: 'Free users are limited to 10 images. Please upgrade to continue uploading.',
+            currentImages: imageCount,
+            maxImages: 10,
+            upgradeRequired: true
+          });
+        }
+      }
       
       console.log(`Logo received: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
       
@@ -1395,6 +1450,25 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       if (!req.file) {
         console.warn(`Banner upload attempt with no file for restaurant ${req.params.restaurantId}`);
         return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      // Check subscription tier and image limits for free users
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (user.subscriptionTier === 'free') {
+        const imageCount = await storage.getUserImageCount(userId);
+        if (imageCount >= 10) {
+          return res.status(403).json({ 
+            message: 'Free plan image limit reached',
+            details: 'Free users are limited to 10 images. Please upgrade to continue uploading.',
+            currentImages: imageCount,
+            maxImages: 10,
+            upgradeRequired: true
+          });
+        }
       }
       
       console.log(`Banner uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
@@ -1936,6 +2010,25 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           success: false,
           code: 'MISSING_FILE'
         });
+      }
+
+      // Check subscription tier and image limits for free users
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (user.subscriptionTier === 'free') {
+        const imageCount = await storage.getUserImageCount(userId);
+        if (imageCount >= 10) {
+          return res.status(403).json({ 
+            message: 'Free plan image limit reached',
+            details: 'Free users are limited to 10 images. Please upgrade to continue uploading.',
+            currentImages: imageCount,
+            maxImages: 10,
+            upgradeRequired: true
+          });
+        }
       }
       
       // Validate file type
@@ -3030,6 +3123,57 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     } catch (error) {
       console.error('Admin get restaurants error:', error);
       res.status(500).json({ message: 'Failed to fetch restaurants' });
+    }
+  });
+
+  // Admin Pricing Plans Management API
+  app.get('/api/admin/pricing-plans', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const plans = await storage.getAllPricingPlans();
+      res.json(plans);
+    } catch (error) {
+      console.error('Error fetching pricing plans:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.post('/api/admin/pricing-plans', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const planData = req.body;
+      const plan = await storage.createPricingPlan(planData);
+      res.json(plan);
+    } catch (error) {
+      console.error('Error creating pricing plan:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.patch('/api/admin/pricing-plans/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const updates = req.body;
+      const plan = await storage.updatePricingPlan(planId, updates);
+      if (!plan) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
+      res.json(plan);
+    } catch (error) {
+      console.error('Error updating pricing plan:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  app.delete('/api/admin/pricing-plans/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const planId = parseInt(req.params.id);
+      const deleted = await storage.deletePricingPlan(planId);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Pricing plan not found' });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error deleting pricing plan:', error);
+      res.status(500).json({ message: 'Server error' });
     }
   });
 
