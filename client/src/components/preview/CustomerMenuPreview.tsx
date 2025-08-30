@@ -21,7 +21,7 @@ const trackMenuItemClick = async (itemId: number) => {
   }
 };
 import ImageViewDialog from "@/components/ui/image-view-dialog";
-import FeedbackDialog from "@/components/ui/feedback-dialog";
+
 import ItemFeedbackDialog from "@/components/feedback/ItemFeedbackDialog";
 import CompactSearch from "@/components/ui/compact-search";
 import MenuLanguageSwitcher from "@/components/ui/menu-language-switcher";
@@ -944,18 +944,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
         <p>{t('menu.endOfMenu', 'End of menu')}</p>
       </div>
 
-      {/* Feedback button - only show for premium restaurants */}
-      {mounted && restaurant && restaurant.id && !previewMode && (
-        <div className="relative">
-          <FeedbackDialog
-            restaurantId={restaurant.id}
-            position="bottom-right"
-            variant="default"
-            size="default"
-            checkPremiumStatus={true}
-          />
-        </div>
-      )}
+
     </div>
   );
 };
