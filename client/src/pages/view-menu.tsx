@@ -205,7 +205,7 @@ const ViewMenu = () => {
       {/* Add a spacer to prevent content from being hidden by mobile header/restaurant switcher */}
       <div className="h-16 md:h-0 w-full"></div>
 
-      <div className="flex flex-col items-center flex-grow pt-4">
+      <div className="flex flex-col items-center flex-grow pt-4 tablet:pt-2">
         {/* Top advertisement from advertisement management system - only shown if restaurant is not premium */}
         {/* AdSense Policy Compliance: Ads only displayed on pages with sufficient content */}
         {showAds && (
@@ -224,7 +224,7 @@ const ViewMenu = () => {
           </ContentValidator>
         )}
 
-        <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 md:px-0 md:py-0 w-full md:max-w-none lg:max-w-screen-xl">
+        <div className="flex justify-center py-4 px-2 sm:py-8 sm:px-4 md:px-4 md:py-4 tablet:px-6 tablet:py-2 w-full md:max-w-none lg:max-w-screen-xl tablet:max-w-full">
           <div className="flex flex-col lg:flex-row w-full gap-0 md:gap-0 lg:gap-6">
             {/* Sidebar advertisement (left side on larger screens) - only shown if restaurant is not premium */}
             {/* AdSense Policy Compliance: Sidebar ads require content validation */}
@@ -247,9 +247,11 @@ const ViewMenu = () => {
           </div>
         </div>
 
-        {/* Waiter Call Component */}
-        <div className="w-full max-w-screen-md px-4 mt-8 mb-6">
-          <WaiterCall restaurantId={restaurant.id} restaurantName={restaurant.name} />
+        {/* Waiter Call Component - Prominently positioned for tablet/desktop */}
+        <div className="w-full max-w-screen-md tablet:max-w-screen-lg px-4 tablet:px-6 mt-6 tablet:mt-8 mb-6 tablet:mb-8">
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200 p-4 tablet:p-6">
+            <WaiterCall restaurantId={restaurant.id} restaurantName={restaurant.name} />
+          </div>
         </div>
 
         {/* Bottom advertisement from advertisement management system - only shown if restaurant is not premium */}

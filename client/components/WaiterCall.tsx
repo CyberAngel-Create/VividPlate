@@ -20,12 +20,10 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
 
   const callWaiterMutation = useMutation({
     mutationFn: async (data: { restaurantId: number; tableNumber: string; notes?: string }) => {
-      return await apiRequest('/api/waiter-calls', {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      return await apiRequest('POST', '/api/waiter-calls', {
+        restaurantId: data.restaurantId,
+        tableNumber: data.tableNumber,
+        message: data.notes || `Customer at table ${data.tableNumber} needs assistance`,
       });
     },
     onSuccess: () => {
@@ -66,7 +64,7 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto bg-white shadow-lg border-2 border-amber-100">
+    <Card className="w-full max-w-md tablet:max-w-lg mx-auto bg-white shadow-lg border-2 border-amber-100 tablet:shadow-xl">
       <CardHeader className="text-center bg-gradient-to-r from-amber-50 to-orange-50 rounded-t-lg">
         <CardTitle className="flex items-center justify-center gap-2 text-xl text-gray-800">
           <Bell className="w-6 h-6 text-amber-600" />
@@ -89,7 +87,7 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
               placeholder="e.g., Table 5 or T-12"
               value={tableNumber}
               onChange={(e) => setTableNumber(e.target.value)}
-              className="w-full border-gray-200 focus:border-amber-400 focus:ring-amber-200"
+              className="w-full tablet:text-lg tablet:py-3 border-gray-200 focus:border-amber-400 focus:ring-amber-200"
               required
             />
           </div>
@@ -103,7 +101,7 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
               placeholder="Any specific requests or needs..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full min-h-20 border-gray-200 focus:border-amber-400 focus:ring-amber-200 resize-none"
+              className="w-full min-h-20 tablet:min-h-24 tablet:text-lg border-gray-200 focus:border-amber-400 focus:ring-amber-200 resize-none"
               rows={3}
             />
           </div>
@@ -111,7 +109,7 @@ export function WaiterCall({ restaurantId, restaurantName }: WaiterCallProps) {
           <Button
             type="submit"
             disabled={callWaiterMutation.isPending || !tableNumber.trim()}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium py-3 transition-all duration-200 shadow-md hover:shadow-lg"
+            className="w-full tablet:py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-medium py-3 tablet:text-lg transition-all duration-200 shadow-md hover:shadow-lg"
           >
             {callWaiterMutation.isPending ? (
               <div className="flex items-center gap-2">
