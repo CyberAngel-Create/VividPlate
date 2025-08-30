@@ -688,7 +688,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                       className="flex flex-row border-b pb-4 mb-4 last:border-0 last:pb-0 last:mb-0 rounded-md p-2 -m-2"
                     >
                       {/* Image on left side with click to view */}
-                      {item.imageUrl ? (
+                      {item.imageUrl && item.imageUrl.trim() !== '' ? (
                         <div className="w-1/3 pr-4 relative">
                           <ImageViewDialog 
                             imageSrc={normalizeImageUrl(item.imageUrl)} 
@@ -782,7 +782,7 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
                           className="flex-shrink-0 w-48 bg-white rounded-lg shadow-sm border p-3 hover:shadow-md transition-shadow"
                         >
                           {/* Grid item image */}
-                          {item.imageUrl && (
+                          {item.imageUrl && item.imageUrl.trim() !== '' && (
                             <div className="w-full h-32 mb-3">
                               <ImageViewDialog 
                                 imageSrc={normalizeImageUrl(item.imageUrl)} 

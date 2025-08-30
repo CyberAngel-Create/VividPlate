@@ -4,8 +4,8 @@
  * @returns A normalized URL that works with the server's static file serving
  */
 export function normalizeImageUrl(url: string | null | undefined): string {
-  if (!url) {
-    console.warn('Attempted to normalize a null or undefined image URL');
+  if (!url || url.trim() === '') {
+    // Don't log warnings for expected empty values - just return empty string
     return '';
   }
   
