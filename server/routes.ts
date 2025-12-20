@@ -416,6 +416,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configure file upload middleware
   const upload = configureFileUpload();
   
+  // Health check endpoint for Cloud Run / load balancers
+  app.get('/api/health', (req, res) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+  
   // Serve ads.txt file
   app.get('/ads.txt', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'client/public/ads.txt'));
