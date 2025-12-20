@@ -142,23 +142,27 @@ async function startTelegramBot() {
 }
 
 (async () => {
+  const port = parseInt(process.env.PORT || '5000', 10);
+  let dbReady = false;
+
   // Validate environment variables first
   console.log('🔍 Validating environment configuration...');
   const envCheck = DatabaseHealth.validateEnvironment();
   if (!envCheck.valid) {
-    console.error('❌ Missing required environment variables:', envCheck.missing);
-    process.exit(1);
+    console.error('⚠️ Missing environment variables:', envCheck.missing);
+    console.log('⚠️ Starting in limited mode - some features may not work');
+  } else {
+    console.log('✅ Environment variables validated');
+    
+    // Test database connection with retry logic
+    console.log('🔍 Testing database connection...');
+    dbReady = await DatabaseHealth.waitForDatabase(5, 2000);
+    if (!dbReady) {
+      console.error('⚠️ Database connection failed - starting in limited mode');
+    } else {
+      console.log('✅ Database connection established');
+    }
   }
-  console.log('✅ Environment variables validated');
-
-  // Test database connection with retry logic
-  console.log('🔍 Testing database connection...');
-  const dbReady = await DatabaseHealth.waitForDatabase(5, 2000);
-  if (!dbReady) {
-    console.error('❌ Failed to establish database connection');
-    process.exit(1);
-  }
-  console.log('✅ Database connection established');
 
   const server = await registerRoutes(app);
 
@@ -178,15 +182,15 @@ async function startTelegramBot() {
   } else {
     serveStatic(app);
   }
-
-  const port = parseInt(process.env.PORT || '5000', 10);
   
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
     console.log('🚀 Application started successfully');
     
-    // Start Telegram bot
-    startTelegramBot();
+    // Start Telegram bot only if database is ready
+    if (dbReady) {
+      startTelegramBot();
+    }
   });
 
   // Graceful shutdown handling
