@@ -129,3 +129,8 @@
     "bufferutil": "^4.0.8"
   }
 }
+"scripts": {
+  "build": "tsc",
+  "start": "node dist/server/index.js"
+}
+
