@@ -143,6 +143,7 @@ async function startTelegramBot() {
 
 (async () => {
   const port = parseInt(process.env.PORT || '5000', 10);
+  const port = Number(process.env.PORT) || 8080;
   let dbReady = false;
 
   // Validate environment variables first
