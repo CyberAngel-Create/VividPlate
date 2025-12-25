@@ -1,7 +1,7 @@
-import imagekit from './imagekit-config';
+import imagekit from './imagekit-config.js';
 import fs from 'fs';
 import path from 'path';
-import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
+import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils.js';
 
 /**
  * Upload a menu item image to ImageKit

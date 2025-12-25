@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { processMenuItemImage, processBannerImage, processLogoImage, ResizeOptions } from './image-utils';
-import { isBackblazeConfigured, uploadToBackblaze } from './backblaze-config';
+import { processMenuItemImage, processBannerImage, processLogoImage, ResizeOptions } from './image-utils.js';
+import { isBackblazeConfigured, uploadToBackblaze } from './backblaze-config.js';
 
 // Base directory for storing uploaded images
 const UPLOADS_DIR = path.join(process.cwd(), 'uploads');

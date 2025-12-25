@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { MemUser, findUserByCredentials } from './mem-auth';
+import { MemUser, findUserByCredentials } from './mem-auth.js';
 
 /**
  * Memory-based authentication handler that works with hard-coded test accounts

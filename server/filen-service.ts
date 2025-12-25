@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import { getFilenClient, initializeFilenClient } from './filen-config';
-import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
+import { getFilenClient, initializeFilenClient } from './filen-config.js';
+import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils.js';
 
 // Regular expression to extract Filen public URL from a directory
 const filenPublicUrlRegex = /https:\/\/drive\.filen\.io\/d\/[a-zA-Z0-9]+$/;

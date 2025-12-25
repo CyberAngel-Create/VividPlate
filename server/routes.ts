@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import fs from 'fs';
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { 
   insertUserSchema, 
   insertRestaurantSchema, 
@@ -12,8 +12,8 @@ import {
   insertAdminLogSchema,
   insertDietaryPreferencesSchema,
   insertWaiterCallSchema
-} from "@shared/schema";
-import { ObjectStorageService } from './objectStorage';
+} from "../shared/schema.js";
+import { ObjectStorageService } from './objectStorage.js';
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -27,9 +27,9 @@ import multer from 'multer';
 import axios from "axios";
 import { promisify } from "util";
 import { scrypt, timingSafeEqual } from "crypto";
-import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils';
-import { compressImageSmart } from './smart-image-compression';
-import { processTelegramWebhook, handleTelegramPasswordReset } from './telegram-bot';
+import { processMenuItemImage, processBannerImage, processLogoImage } from './image-utils.js';
+import { compressImageSmart } from './smart-image-compression.js';
+import { processTelegramWebhook, handleTelegramPasswordReset } from './telegram-bot.js';
 
 // Password comparison utility for authentication
 const scryptAsync = promisify(scrypt);

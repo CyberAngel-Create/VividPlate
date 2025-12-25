@@ -19,8 +19,8 @@ import {
   testimonials, Testimonial, InsertTestimonial,
   permanentImages, PermanentImage, InsertPermanentImage,
   waiterCalls, WaiterCall, InsertWaiterCall
-} from "@shared/schema";
-import { db } from "./db";
+} from "../shared/schema.js";
+import { db } from "./db.js";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
 import { phoneNumbersMatch, getPhoneNumberVariations } from "../shared/phone-utils";
 

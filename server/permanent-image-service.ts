@@ -1,8 +1,8 @@
-import { storage } from './storage';
-import { InsertPermanentImage } from '@shared/schema';
+import { storage } from './storage.js';
+import { InsertPermanentImage } from '../shared/schema.js';
 import fs from 'fs';
 import path from 'path';
-import { processImage, ResizeOptions } from './image-utils';
+import { processImage, ResizeOptions } from './image-utils.js';
 
 /**
  * Permanent Image Service - Stores images in database as base64

@@ -1,5 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
-import { setupVite, serveStatic, log } from "./vite";
+import { setupVite, serveStatic, log } from "./vite.js";
 import fs from "fs";
 import path from "path";
 import session from "express-session";
@@ -100,8 +100,8 @@ app.use((req, res, next) => {
 // ==============================
 // Routes & services
 // ==============================
-import { registerRoutes } from "./routes";
-import { DatabaseHealth } from "./database-health";
+import { registerRoutes } from "./routes.js";
+import { DatabaseHealth } from "./database-health.js";
 
 // ==============================
 // Telegram bot
