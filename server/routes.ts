@@ -3273,6 +3273,81 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Admin update user status
+  app.patch('/api/admin/users/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: 'isActive must be a boolean' });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, { isActive });
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitive } = updatedUser;
+      res.json(userWithoutSensitive);
+    } catch (error) {
+      console.error('Admin update user status error:', error);
+      res.status(500).json({ message: 'Failed to update user status' });
+    }
+  });
+
+  // Admin update user subscription tier
+  app.patch('/api/admin/users/:id/subscription', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { subscriptionTier } = req.body;
+      
+      if (!subscriptionTier || !['free', 'premium', 'admin'].includes(subscriptionTier)) {
+        return res.status(400).json({ message: 'Invalid subscription tier' });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, { subscriptionTier });
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitive } = updatedUser;
+      res.json(userWithoutSensitive);
+    } catch (error) {
+      console.error('Admin update user subscription error:', error);
+      res.status(500).json({ message: 'Failed to update user subscription' });
+    }
+  });
+
+  // Admin reset user password
+  app.put('/api/admin/users/:id/reset-password', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { newPassword } = req.body;
+      
+      if (!newPassword || newPassword.length < 6) {
+        return res.status(400).json({ message: 'Password must be at least 6 characters' });
+      }
+      
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const updatedUser = await storage.updateUser(userId, { password: hashedPassword });
+      
+      if (!updatedUser) {
+        return res.status(500).json({ message: 'Failed to reset password' });
+      }
+      
+      res.json({ message: 'Password reset successfully' });
+    } catch (error) {
+      console.error('Admin reset password error:', error);
+      res.status(500).json({ message: 'Failed to reset password' });
+    }
+  });
+
   // Admin Restaurants API
   app.get('/api/admin/restaurants', isAuthenticated, isAdmin, async (req, res) => {
     try {
