@@ -2,14 +2,14 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table for authentication
+// Users table for authentication - phone is the primary login identifier
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
-  phone: text("phone").notNull(),
+  phone: text("phone").notNull().unique(), // Primary login identifier
   subscriptionTier: text("subscription_tier").default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
@@ -19,6 +19,7 @@ export const users = pgTable("users", {
   resetPasswordExpires: timestamp("reset_password_expires"),
   isAdmin: boolean("is_admin").default(false),
   isActive: boolean("is_active").default(true),
+  role: text("role", { enum: ["user", "agent", "admin"] }).default("user"), // User role
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -31,7 +32,55 @@ export const insertUserSchema = createInsertSchema(users).pick({
   phone: true,
   isAdmin: true,
   isActive: true,
+  role: true,
 });
+
+// Agents table for agent verification and approval
+export const agents = pgTable("agents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(), // Link to users table
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: text("date_of_birth"),
+  gender: text("gender", { enum: ["male", "female", "other"] }),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  country: text("country"),
+  postalCode: text("postal_code"),
+  idType: text("id_type", { enum: ["national_id", "passport", "drivers_license"] }).notNull(),
+  idNumber: text("id_number").notNull(),
+  idFrontImageUrl: text("id_front_image_url").notNull(),
+  idBackImageUrl: text("id_back_image_url"),
+  selfieImageUrl: text("selfie_image_url"),
+  approvalStatus: text("approval_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  approvalNotes: text("approval_notes"),
+  approvedBy: integer("approved_by"), // Admin user ID who approved/rejected
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAgentSchema = createInsertSchema(agents).pick({
+  userId: true,
+  firstName: true,
+  lastName: true,
+  dateOfBirth: true,
+  gender: true,
+  address: true,
+  city: true,
+  state: true,
+  country: true,
+  postalCode: true,
+  idType: true,
+  idNumber: true,
+  idFrontImageUrl: true,
+  idBackImageUrl: true,
+  selfieImageUrl: true,
+});
+
+export type Agent = typeof agents.$inferSelect;
+export type InsertAgent = z.infer<typeof insertAgentSchema>;
 
 // Restaurant profiles
 export const restaurants = pgTable("restaurants", {
@@ -51,6 +100,11 @@ export const restaurants = pgTable("restaurants", {
   tags: text("tags").array(),
   qrCodeScans: integer("qr_code_scans").notNull().default(0), // Track QR code scans
   isActive: boolean("is_active").default(true), // Track if restaurant is active based on subscription
+  adminApproved: boolean("admin_approved").default(false), // Admin must approve before restaurant is visible
+  approvalStatus: text("approval_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  approvalNotes: text("approval_notes"),
+  approvedBy: integer("approved_by"), // Admin user ID who approved
+  approvedAt: timestamp("approved_at"),
   alcoholStatus: text("alcohol_status", { enum: ["alcoholic", "non-alcoholic"] }).default("non-alcoholic"), // Whether restaurant serves alcohol
   // Theme customization
   themeSettings: jsonb("theme_settings").default({
@@ -71,10 +125,10 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   name: true,
   description: true,
   cuisine: true,
-  customCuisine: true, // Added support for custom cuisine
+  customCuisine: true,
   logoUrl: true,
   bannerUrl: true,
-  bannerUrls: true,  // Added support for multiple banner URLs
+  bannerUrls: true,
   phone: true,
   email: true,
   address: true,
@@ -82,6 +136,8 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   tags: true,
   themeSettings: true,
   isActive: true,
+  adminApproved: true,
+  approvalStatus: true,
   alcoholStatus: true,
 });
 

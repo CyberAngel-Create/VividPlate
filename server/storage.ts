@@ -18,7 +18,8 @@ import {
   menuExamples, MenuExample, InsertMenuExample,
   testimonials, Testimonial, InsertTestimonial,
   permanentImages, PermanentImage, InsertPermanentImage,
-  waiterCalls, WaiterCall, InsertWaiterCall
+  waiterCalls, WaiterCall, InsertWaiterCall,
+  agents, Agent, InsertAgent
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
@@ -225,6 +226,27 @@ export interface IStorage {
   getWaiterCall(id: number): Promise<WaiterCall | undefined>;
   updateWaiterCallStatus(id: number, status: string): Promise<WaiterCall | undefined>;
   getPendingWaiterCalls(restaurantId: number): Promise<WaiterCall[]>;
+
+  // Agent operations
+  createAgent(agent: InsertAgent): Promise<Agent>;
+  getAgent(id: number): Promise<Agent | undefined>;
+  getAgentByUserId(userId: number): Promise<Agent | undefined>;
+  getAllAgents(): Promise<Agent[]>;
+  getPendingAgents(): Promise<Agent[]>;
+  getApprovedAgents(): Promise<Agent[]>;
+  updateAgent(id: number, agent: Partial<Agent>): Promise<Agent | undefined>;
+  approveAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined>;
+  rejectAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined>;
+
+  // Restaurant approval operations
+  getPendingRestaurants(): Promise<Restaurant[]>;
+  approveRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined>;
+  rejectRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined>;
+
+  // Free tier limit checks
+  countCategoriesByRestaurantId(restaurantId: number): Promise<number>;
+  countItemsByCategoryId(categoryId: number): Promise<number>;
+  countBannersByRestaurantId(restaurantId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1348,6 +1370,141 @@ export class DatabaseStorage implements IStorage {
       console.error('Error fetching feedbacks:', error);
       return [];
     }
+  }
+
+  // Agent operations
+  async createAgent(agent: InsertAgent): Promise<Agent> {
+    const [newAgent] = await db.insert(agents).values(agent).returning();
+    return newAgent;
+  }
+
+  async getAgent(id: number): Promise<Agent | undefined> {
+    const [agent] = await db.select().from(agents).where(eq(agents.id, id));
+    return agent;
+  }
+
+  async getAgentByUserId(userId: number): Promise<Agent | undefined> {
+    const [agent] = await db.select().from(agents).where(eq(agents.userId, userId));
+    return agent;
+  }
+
+  async getAllAgents(): Promise<Agent[]> {
+    return await db.select().from(agents).orderBy(desc(agents.createdAt));
+  }
+
+  async getPendingAgents(): Promise<Agent[]> {
+    return await db.select().from(agents)
+      .where(eq(agents.approvalStatus, 'pending'))
+      .orderBy(desc(agents.createdAt));
+  }
+
+  async getApprovedAgents(): Promise<Agent[]> {
+    return await db.select().from(agents)
+      .where(eq(agents.approvalStatus, 'approved'))
+      .orderBy(desc(agents.createdAt));
+  }
+
+  async updateAgent(id: number, agent: Partial<Agent>): Promise<Agent | undefined> {
+    const [updated] = await db.update(agents)
+      .set({ ...agent, updatedAt: new Date() })
+      .where(eq(agents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async approveAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined> {
+    const [updated] = await db.update(agents)
+      .set({
+        approvalStatus: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes,
+        updatedAt: new Date()
+      })
+      .where(eq(agents.id, id))
+      .returning();
+    
+    // Also update the user role to 'agent'
+    if (updated) {
+      await db.update(users)
+        .set({ role: 'agent' })
+        .where(eq(users.id, updated.userId));
+    }
+    
+    return updated;
+  }
+
+  async rejectAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined> {
+    const [updated] = await db.update(agents)
+      .set({
+        approvalStatus: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes,
+        updatedAt: new Date()
+      })
+      .where(eq(agents.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Restaurant approval operations
+  async getPendingRestaurants(): Promise<Restaurant[]> {
+    return await db.select().from(restaurants)
+      .where(eq(restaurants.approvalStatus, 'pending'));
+  }
+
+  async approveRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined> {
+    const [updated] = await db.update(restaurants)
+      .set({
+        adminApproved: true,
+        approvalStatus: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes
+      })
+      .where(eq(restaurants.id, id))
+      .returning();
+    return updated;
+  }
+
+  async rejectRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined> {
+    const [updated] = await db.update(restaurants)
+      .set({
+        adminApproved: false,
+        approvalStatus: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes
+      })
+      .where(eq(restaurants.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Free tier limit checks
+  async countCategoriesByRestaurantId(restaurantId: number): Promise<number> {
+    const [result] = await db.select({ count: count() })
+      .from(menuCategories)
+      .where(eq(menuCategories.restaurantId, restaurantId));
+    return result?.count || 0;
+  }
+
+  async countItemsByCategoryId(categoryId: number): Promise<number> {
+    const [result] = await db.select({ count: count() })
+      .from(menuItems)
+      .where(eq(menuItems.categoryId, categoryId));
+    return result?.count || 0;
+  }
+
+  async countBannersByRestaurantId(restaurantId: number): Promise<number> {
+    const [restaurant] = await db.select({ bannerUrls: restaurants.bannerUrls })
+      .from(restaurants)
+      .where(eq(restaurants.id, restaurantId));
+    
+    if (!restaurant || !restaurant.bannerUrls) return 0;
+    const bannerArray = restaurant.bannerUrls as string[];
+    return bannerArray.length;
   }
 }
 
