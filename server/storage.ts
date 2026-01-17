@@ -21,7 +21,8 @@ import {
   waiterCalls, WaiterCall, InsertWaiterCall,
   agents, Agent, InsertAgent,
   tokenRequests, TokenRequest, InsertTokenRequest,
-  tokenTransactions, TokenTransaction, InsertTokenTransaction
+  tokenTransactions, TokenTransaction, InsertTokenTransaction,
+  restaurantRequests, RestaurantRequest, InsertRestaurantRequest
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
@@ -270,6 +271,17 @@ export interface IStorage {
     pendingTokenRequests: number;
   }>;
   getRestaurantsByAgentId(agentId: number): Promise<Restaurant[]>;
+
+  // Restaurant request operations (for owners to request additional restaurants from agents)
+  createRestaurantRequest(request: InsertRestaurantRequest): Promise<RestaurantRequest>;
+  getRestaurantRequest(id: number): Promise<RestaurantRequest | undefined>;
+  getRestaurantRequestsByOwnerId(ownerId: number): Promise<RestaurantRequest[]>;
+  getRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]>;
+  getPendingRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]>;
+  updateRestaurantRequest(id: number, request: Partial<RestaurantRequest>): Promise<RestaurantRequest | undefined>;
+  approveRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined>;
+  rejectRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined>;
+  countActiveRestaurantsByOwnerId(ownerId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1719,6 +1731,82 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(restaurants)
       .where(eq(restaurants.agentId, agentId))
       .orderBy(desc(restaurants.id));
+  }
+
+  // Restaurant request operations
+  async createRestaurantRequest(request: InsertRestaurantRequest): Promise<RestaurantRequest> {
+    const [created] = await db.insert(restaurantRequests).values(request).returning();
+    return created;
+  }
+
+  async getRestaurantRequest(id: number): Promise<RestaurantRequest | undefined> {
+    const [request] = await db.select().from(restaurantRequests).where(eq(restaurantRequests.id, id));
+    return request;
+  }
+
+  async getRestaurantRequestsByOwnerId(ownerId: number): Promise<RestaurantRequest[]> {
+    return await db.select().from(restaurantRequests)
+      .where(eq(restaurantRequests.ownerUserId, ownerId))
+      .orderBy(desc(restaurantRequests.createdAt));
+  }
+
+  async getRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]> {
+    return await db.select().from(restaurantRequests)
+      .where(eq(restaurantRequests.agentId, agentId))
+      .orderBy(desc(restaurantRequests.createdAt));
+  }
+
+  async getPendingRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]> {
+    return await db.select().from(restaurantRequests)
+      .where(and(
+        eq(restaurantRequests.agentId, agentId),
+        eq(restaurantRequests.status, 'pending')
+      ))
+      .orderBy(desc(restaurantRequests.createdAt));
+  }
+
+  async updateRestaurantRequest(id: number, request: Partial<RestaurantRequest>): Promise<RestaurantRequest | undefined> {
+    const [updated] = await db.update(restaurantRequests)
+      .set({ ...request, updatedAt: new Date() })
+      .where(eq(restaurantRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async approveRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined> {
+    const [updated] = await db.update(restaurantRequests)
+      .set({ 
+        status: 'approved', 
+        agentNotes: agentNotes || null, 
+        approvedAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(restaurantRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async rejectRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined> {
+    const [updated] = await db.update(restaurantRequests)
+      .set({ 
+        status: 'rejected', 
+        agentNotes: agentNotes || null,
+        updatedAt: new Date() 
+      })
+      .where(eq(restaurantRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async countActiveRestaurantsByOwnerId(ownerId: number): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(restaurants)
+      .where(and(
+        eq(restaurants.userId, ownerId),
+        eq(restaurants.isActive, true),
+        eq(restaurants.isPremium, true)
+      ));
+    return result[0]?.count || 0;
   }
 }
 
