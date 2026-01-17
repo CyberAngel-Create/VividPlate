@@ -34,6 +34,7 @@ import AdminTestimonials from "./pages/admin-testimonials";
 import AdminAgents from "./pages/admin-agents";
 import AgentRegistration from "./pages/agent-registration";
 import AgentDashboard from "./pages/agent-dashboard";
+import AdminTokenRequests from "./pages/admin-token-requests";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -192,6 +193,7 @@ function Router() {
         <AdminRoute path="/admin/menu-examples" component={AdminMenuExamples} />
         <AdminRoute path="/admin/testimonials" component={AdminTestimonials} />
         <AdminRoute path="/admin/agents" component={AdminAgents} />
+        <AdminRoute path="/admin/token-requests" component={AdminTokenRequests} />
 
         <Route component={NotFound} />
       </Switch>
