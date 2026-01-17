@@ -64,6 +64,16 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
+// Serve ads.txt from client/public directory
+app.get("/ads.txt", (req, res) => {
+  const adsFilePath = path.join(process.cwd(), "client", "public", "ads.txt");
+  if (fs.existsSync(adsFilePath)) {
+    res.type("text/plain").sendFile(adsFilePath);
+  } else {
+    res.status(404).send("ads.txt not found");
+  }
+});
+
 // Add domain-specific handling for custom domain
 app.use((req, res, next) => {
   const host = req.headers.host;

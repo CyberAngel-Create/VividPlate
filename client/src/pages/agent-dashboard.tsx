@@ -44,8 +44,12 @@ import {
   ArrowRight,
   Loader2,
   User,
-  Calendar
+  Calendar,
+  Lock,
+  Eye,
+  EyeOff
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 interface AgentStats {
   tokenBalance: number;
@@ -97,6 +101,11 @@ export default function AgentDashboard() {
   const [requestDialogOpen, setRequestDialogOpen] = useState(false);
   const [requestedTokens, setRequestedTokens] = useState<number>(1);
   const [requestNotes, setRequestNotes] = useState("");
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPasswords, setShowPasswords] = useState(false);
 
   const { data: agent, isLoading: agentLoading } = useQuery<Agent>({
     queryKey: ["/api/agents/me"],
@@ -147,6 +156,58 @@ export default function AgentDashboard() {
       });
     },
   });
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const response = await apiRequest("PUT", "/api/user/change-password", data);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Password Changed",
+        description: "Your password has been updated successfully.",
+      });
+      setPasswordDialogOpen(false);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Password Change Failed",
+        description: error.message || "Failed to change password",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handlePasswordChange = () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast({
+        title: "Missing Fields",
+        description: "Please fill in all password fields",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Passwords Don't Match",
+        description: "New password and confirmation must match",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({
+        title: "Password Too Short",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
+    changePasswordMutation.mutate({ currentPassword, newPassword });
+  };
 
   const handleSubmitRequest = () => {
     if (requestedTokens < 1) {
@@ -501,6 +562,88 @@ export default function AgentDashboard() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5" />
+              Account Security
+            </CardTitle>
+            <CardDescription>Manage your password and security settings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Lock className="h-4 w-4 mr-2" />
+                  Change Password
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Change Password</DialogTitle>
+                  <DialogDescription>
+                    Enter your current password and choose a new one.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label>Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        type={showPasswords ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Enter current password"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>New Password</Label>
+                    <Input
+                      type={showPasswords ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Enter new password"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Confirm New Password</Label>
+                    <Input
+                      type={showPasswords ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Confirm new password"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowPasswords(!showPasswords)}
+                    >
+                      {showPasswords ? <EyeOff className="h-4 w-4 mr-1" /> : <Eye className="h-4 w-4 mr-1" />}
+                      {showPasswords ? "Hide" : "Show"} Passwords
+                    </Button>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    onClick={handlePasswordChange}
+                    disabled={changePasswordMutation.isPending}
+                  >
+                    {changePasswordMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Update Password
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </CardContent>
         </Card>
       </div>
