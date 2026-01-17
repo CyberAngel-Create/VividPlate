@@ -1017,15 +1017,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Count restaurants to enforce limits
       const restaurantCount = await storage.countRestaurantsByUserId(userId);
       
-      // Determine tier from user's subscription_tier field OR active subscription
+      // Check if user owns any premium restaurants (created by agents with tokens)
+      const userRestaurants = await storage.getRestaurantsByUserId(userId);
+      const now = new Date();
+      let hasPremiumRestaurant = false;
+      let restaurantPremiumExpiry: Date | null = null;
+      
+      for (const restaurant of userRestaurants) {
+        if (restaurant.isPremium && restaurant.premiumExpiresAt) {
+          const expiryDate = new Date(restaurant.premiumExpiresAt);
+          if (expiryDate > now) {
+            hasPremiumRestaurant = true;
+            // Get the latest expiry date among all premium restaurants
+            if (!restaurantPremiumExpiry || expiryDate > restaurantPremiumExpiry) {
+              restaurantPremiumExpiry = expiryDate;
+            }
+          }
+        }
+      }
+      
+      // Determine tier from user's subscription_tier field OR active subscription OR premium restaurant
       const userTier = user.subscriptionTier || "free";
       const subscriptionTier = activeSubscription?.tier || "free";
       
       // Use the highest tier available (business > premium > free)
+      // Also consider premium restaurants created by agents
       let effectiveTier = "free";
       if (userTier === "business" || subscriptionTier === "business") {
         effectiveTier = "business";
-      } else if (userTier === "premium" || subscriptionTier === "premium") {
+      } else if (userTier === "premium" || subscriptionTier === "premium" || hasPremiumRestaurant) {
         effectiveTier = "premium";
       }
       const isPaid = effectiveTier !== "free";
@@ -1036,6 +1056,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (activeSubscription?.endDate) {
           // Use active subscription end date if available
           expiresAt = activeSubscription.endDate;
+        } else if (restaurantPremiumExpiry) {
+          // Use restaurant premium expiry if this user has agent-created premium restaurants
+          expiresAt = restaurantPremiumExpiry.toISOString();
         } else if (userTier === "premium") {
           // For users with premium tier but no subscription record, 
           // provide a default expiration date (1 month from now)
@@ -1045,7 +1068,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}, expiresAt=${expiresAt}`);
+      console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, hasPremiumRestaurant=${hasPremiumRestaurant}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}, expiresAt=${expiresAt}`);
       
       // Automatically manage restaurant active status based on subscription
       const maxRestaurants = effectiveTier === "business" ? 10 : (effectiveTier === "premium" ? 3 : 1);
