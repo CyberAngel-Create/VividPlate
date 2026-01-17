@@ -39,6 +39,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const agents = pgTable("agents", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().unique(), // Link to users table
+  agentCode: text("agent_code").unique(), // Auto-generated agent ID code like AG-001
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
   dateOfBirth: text("date_of_birth"),
@@ -53,6 +54,7 @@ export const agents = pgTable("agents", {
   idFrontImageUrl: text("id_front_image_url").notNull(),
   idBackImageUrl: text("id_back_image_url"),
   selfieImageUrl: text("selfie_image_url"),
+  tokenBalance: integer("token_balance").default(0).notNull(), // Available tokens for premium restaurants
   approvalStatus: text("approval_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
   approvalNotes: text("approval_notes"),
   approvedBy: integer("approved_by"), // Admin user ID who approved/rejected
@@ -82,10 +84,63 @@ export const insertAgentSchema = createInsertSchema(agents).pick({
 export type Agent = typeof agents.$inferSelect;
 export type InsertAgent = z.infer<typeof insertAgentSchema>;
 
+// Token requests table - agents request tokens from admin
+export const tokenRequests = pgTable("token_requests", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull(), // Link to agents table
+  requestedTokens: integer("requested_tokens").notNull(),
+  status: text("status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  notes: text("notes"), // Agent can add notes to request
+  adminNotes: text("admin_notes"), // Admin response notes
+  approvedBy: integer("approved_by"), // Admin user ID
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTokenRequestSchema = createInsertSchema(tokenRequests).pick({
+  agentId: true,
+  requestedTokens: true,
+  notes: true,
+});
+
+export type TokenRequest = typeof tokenRequests.$inferSelect;
+export type InsertTokenRequest = z.infer<typeof insertTokenRequestSchema>;
+
+// Token transactions table - audit trail for token credits/debits
+export const tokenTransactions = pgTable("token_transactions", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull(),
+  amount: integer("amount").notNull(), // Positive for credits, negative for debits
+  type: text("type", { enum: ["credit", "debit"] }).notNull(),
+  reason: text("reason").notNull(), // e.g., "Admin approved request", "Premium restaurant created"
+  restaurantId: integer("restaurant_id"), // If transaction is for a restaurant
+  tokenRequestId: integer("token_request_id"), // If transaction is from a request
+  adminId: integer("admin_id"), // Admin who processed (for credits)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTokenTransactionSchema = createInsertSchema(tokenTransactions).pick({
+  agentId: true,
+  amount: true,
+  type: true,
+  reason: true,
+  restaurantId: true,
+  tokenRequestId: true,
+  adminId: true,
+});
+
+export type TokenTransaction = typeof tokenTransactions.$inferSelect;
+export type InsertTokenTransaction = z.infer<typeof insertTokenTransactionSchema>;
+
 // Restaurant profiles
 export const restaurants = pgTable("restaurants", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
+  agentId: integer("agent_id"), // Agent who created/manages this restaurant
+  isPremium: boolean("is_premium").default(false), // Premium restaurant (uses tokens)
+  premiumMonths: integer("premium_months").default(0), // How many months of premium
+  premiumExpiresAt: timestamp("premium_expires_at"), // When premium expires
+  tokensUsed: integer("tokens_used").default(0), // Total tokens used for this restaurant
   name: text("name").notNull(),
   description: text("description"),
   cuisine: text("cuisine"),
@@ -122,6 +177,9 @@ export const restaurants = pgTable("restaurants", {
 
 export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   userId: true,
+  agentId: true,
+  isPremium: true,
+  premiumMonths: true,
   name: true,
   description: true,
   cuisine: true,
