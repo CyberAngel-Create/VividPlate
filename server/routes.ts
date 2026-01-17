@@ -3629,6 +3629,211 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // ============================================
+  // Token Management API
+  // ============================================
+
+  // Agent: Get my dashboard stats
+  app.get('/api/agents/me/stats', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+      const stats = await storage.getAgentStats(agent.id);
+      res.json(stats);
+    } catch (error) {
+      console.error('Get agent stats error:', error);
+      res.status(500).json({ message: 'Failed to fetch agent stats' });
+    }
+  });
+
+  // Agent: Get my restaurants
+  app.get('/api/agents/me/restaurants', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+      const restaurants = await storage.getRestaurantsByAgentId(agent.id);
+      res.json(restaurants);
+    } catch (error) {
+      console.error('Get agent restaurants error:', error);
+      res.status(500).json({ message: 'Failed to fetch restaurants' });
+    }
+  });
+
+  // Agent: Request tokens
+  app.post('/api/agents/me/token-requests', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+      if (agent.approvalStatus !== 'approved') {
+        return res.status(403).json({ message: 'Only approved agents can request tokens' });
+      }
+
+      const { requestedTokens, notes } = req.body;
+      if (!requestedTokens || requestedTokens < 1) {
+        return res.status(400).json({ message: 'Must request at least 1 token' });
+      }
+
+      const tokenRequest = await storage.createTokenRequest({
+        agentId: agent.id,
+        requestedTokens,
+        notes
+      });
+
+      res.status(201).json(tokenRequest);
+    } catch (error) {
+      console.error('Create token request error:', error);
+      res.status(500).json({ message: 'Failed to create token request' });
+    }
+  });
+
+  // Agent: Get my token requests
+  app.get('/api/agents/me/token-requests', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+      const requests = await storage.getTokenRequestsByAgentId(agent.id);
+      res.json(requests);
+    } catch (error) {
+      console.error('Get token requests error:', error);
+      res.status(500).json({ message: 'Failed to fetch token requests' });
+    }
+  });
+
+  // Agent: Get my token transactions
+  app.get('/api/agents/me/token-transactions', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+      const transactions = await storage.getTokenTransactionsByAgentId(agent.id);
+      res.json(transactions);
+    } catch (error) {
+      console.error('Get token transactions error:', error);
+      res.status(500).json({ message: 'Failed to fetch token transactions' });
+    }
+  });
+
+  // Admin: Get all token requests
+  app.get('/api/admin/token-requests', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const requests = await storage.getAllTokenRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error('Get all token requests error:', error);
+      res.status(500).json({ message: 'Failed to fetch token requests' });
+    }
+  });
+
+  // Admin: Get pending token requests
+  app.get('/api/admin/token-requests/pending', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const requests = await storage.getPendingTokenRequests();
+      res.json(requests);
+    } catch (error) {
+      console.error('Get pending token requests error:', error);
+      res.status(500).json({ message: 'Failed to fetch pending token requests' });
+    }
+  });
+
+  // Admin: Approve token request
+  app.post('/api/admin/token-requests/:requestId/approve', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const adminUser = req.user as any;
+      const { notes } = req.body;
+
+      const tokenRequest = await storage.approveTokenRequest(requestId, adminUser.id, notes);
+      if (!tokenRequest) {
+        return res.status(404).json({ message: 'Token request not found or already processed' });
+      }
+
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'approve_token_request',
+        entityType: 'token_request',
+        entityId: requestId,
+        details: { tokens: tokenRequest.requestedTokens, notes }
+      });
+
+      res.json(tokenRequest);
+    } catch (error) {
+      console.error('Approve token request error:', error);
+      res.status(500).json({ message: 'Failed to approve token request' });
+    }
+  });
+
+  // Admin: Reject token request
+  app.post('/api/admin/token-requests/:requestId/reject', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.requestId);
+      const adminUser = req.user as any;
+      const { notes } = req.body;
+
+      const tokenRequest = await storage.rejectTokenRequest(requestId, adminUser.id, notes);
+      if (!tokenRequest) {
+        return res.status(404).json({ message: 'Token request not found' });
+      }
+
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'reject_token_request',
+        entityType: 'token_request',
+        entityId: requestId,
+        details: { notes }
+      });
+
+      res.json(tokenRequest);
+    } catch (error) {
+      console.error('Reject token request error:', error);
+      res.status(500).json({ message: 'Failed to reject token request' });
+    }
+  });
+
+  // Admin: Manually add tokens to agent
+  app.post('/api/admin/agents/:agentId/add-tokens', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const agentId = parseInt(req.params.agentId);
+      const adminUser = req.user as any;
+      const { amount, reason } = req.body;
+
+      if (!amount || amount < 1) {
+        return res.status(400).json({ message: 'Must add at least 1 token' });
+      }
+
+      const agent = await storage.addTokensToAgent(agentId, amount, adminUser.id, reason || 'Manual token addition by admin');
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'add_tokens',
+        entityType: 'agent',
+        entityId: agentId,
+        details: { amount, reason }
+      });
+
+      res.json(agent);
+    } catch (error) {
+      console.error('Add tokens error:', error);
+      res.status(500).json({ message: 'Failed to add tokens' });
+    }
+  });
+
   // Waiter Call API routes
   app.post('/api/waiter-calls', async (req, res) => {
     try {

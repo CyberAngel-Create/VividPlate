@@ -1380,21 +1380,6 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Feedback operations
-  async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
-    try {
-      const result = await db.select()
-        .from(feedbacks)
-        .where(eq(feedbacks.restaurantId, restaurantId))
-        .orderBy(desc(feedbacks.createdAt));
-      
-      return result;
-    } catch (error) {
-      console.error('Error fetching feedbacks:', error);
-      return [];
-    }
-  }
-
   // Agent operations
   async createAgent(agent: InsertAgent): Promise<Agent> {
     const [newAgent] = await db.insert(agents).values(agent).returning();
@@ -1436,12 +1421,16 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined> {
+    // Generate unique agent code
+    const agentCode = await this.generateAgentCode();
+    
     const [updated] = await db.update(agents)
       .set({
         approvalStatus: 'approved',
         approvedBy: adminId,
         approvedAt: new Date(),
         approvalNotes: notes,
+        agentCode: agentCode,
         updatedAt: new Date()
       })
       .where(eq(agents.id, id))
@@ -1698,7 +1687,7 @@ export class DatabaseStorage implements IStorage {
   async getRestaurantsByAgentId(agentId: number): Promise<Restaurant[]> {
     return await db.select().from(restaurants)
       .where(eq(restaurants.agentId, agentId))
-      .orderBy(desc(restaurants.createdAt));
+      .orderBy(desc(restaurants.id));
   }
 }
 
