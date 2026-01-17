@@ -33,6 +33,13 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   });
   const isAgent = agent && agent.approvalStatus === 'approved';
   
+  // Check subscription status to see if premium is from agent (hide Upgrade Plan)
+  const { data: subscriptionStatus } = useQuery<{ hasAgentPremiumRestaurant?: boolean; isPaid: boolean }>({
+    queryKey: ["/api/user/subscription-status"],
+    retry: false,
+  });
+  const hasAgentPremiumRestaurant = subscriptionStatus?.hasAgentPremiumRestaurant || false;
+  
   // Define navigation items with Categories
   const navItems: NavItem[] = [
     { 
@@ -105,10 +112,15 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   ];
 
   // Filter items based on subscription status
+  // Hide "Upgrade Plan" for users with agent-created premium restaurants (they can't self-upgrade)
   const filteredNavItems = navItems.filter(item => {
     if (!item.showFor || item.showFor === "all") return true;
     if (item.showFor === "premium" && isPaid) return true;
-    if (item.showFor === "free" && !isPaid) return true;
+    if (item.showFor === "free" && !isPaid) {
+      // Hide upgrade option if user has agent-created premium restaurant
+      if (item.id === 'pricing' && hasAgentPremiumRestaurant) return false;
+      return true;
+    }
     return false;
   });
 
