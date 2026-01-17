@@ -39,6 +39,8 @@ interface SubscriptionStatus {
   maxRestaurants: number;
   currentRestaurants: number;
   expiresAt: string | null;
+  hasAgentPremiumRestaurant?: boolean;
+  agentId?: number | null;
 }
 
 const Dashboard = () => {
@@ -178,7 +180,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div className="mt-2 sm:mt-0 sm:ml-auto flex flex-col sm:flex-row gap-2">
-                {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && (
+                {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && !subscriptionStatus.hasAgentPremiumRestaurant && (
                   <button 
                     onClick={() => window.location.href = "/edit-restaurant"}
                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
@@ -186,7 +188,15 @@ const Dashboard = () => {
                     Create New Restaurant
                   </button>
                 )}
-                {!subscriptionStatus.isPaid && (
+                {subscriptionStatus.hasAgentPremiumRestaurant && subscriptionStatus.agentId && (
+                  <button 
+                    onClick={() => setLocation(`/request-restaurant?agentId=${subscriptionStatus.agentId}`)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                  >
+                    Request Additional Restaurant
+                  </button>
+                )}
+                {!subscriptionStatus.isPaid && !subscriptionStatus.hasAgentPremiumRestaurant && (
                   <button 
                     onClick={() => window.location.href = "/subscribe"}
                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
@@ -210,13 +220,17 @@ const Dashboard = () => {
                 </h3>
                 <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
                   This restaurant is currently inactive due to your subscription plan. 
-                  Free users can only access their first restaurant. 
-                  <button 
-                    onClick={() => window.location.href = "/subscribe"}
-                    className="underline hover:no-underline ml-1"
-                  >
-                    Upgrade to premium
-                  </button> to activate all your restaurants.
+                  {subscriptionStatus?.hasAgentPremiumRestaurant ? (
+                    <>Contact your agent to activate this restaurant.</>
+                  ) : (
+                    <>Free users can only access their first restaurant. 
+                    <button 
+                      onClick={() => window.location.href = "/subscribe"}
+                      className="underline hover:no-underline ml-1"
+                    >
+                      Upgrade to premium
+                    </button> to activate all your restaurants.</>
+                  )}
                 </p>
               </div>
             </div>

@@ -38,6 +38,7 @@ import AgentCreateRestaurant from "./pages/agent-create-restaurant";
 import AgentProfile from "./pages/agent-profile";
 import AgentChangePassword from "./pages/agent-change-password";
 import AdminTokenRequests from "./pages/admin-token-requests";
+import RequestRestaurant from "./pages/request-restaurant";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -187,6 +188,7 @@ function Router() {
         <AuthenticatedRoute path="/agent/profile" component={AgentProfile} />
         <AuthenticatedRoute path="/agent/change-password" component={AgentChangePassword} />
         <AuthenticatedRoute path="/change-password" component={ChangePassword} />
+        <AuthenticatedRoute path="/request-restaurant" component={RequestRestaurant} />
 
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />

@@ -94,6 +94,21 @@ interface TokenTransaction {
   createdAt: string;
 }
 
+interface RestaurantRequest {
+  id: number;
+  ownerUserId: number;
+  restaurantName: string;
+  restaurantDescription?: string;
+  cuisine?: string;
+  requestedMonths: number;
+  status: 'pending' | 'approved' | 'rejected';
+  ownerNotes?: string;
+  createdAt: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  ownerEmail?: string;
+}
+
 export default function AgentDashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -130,6 +145,56 @@ export default function AgentDashboard() {
   const { data: transactions, isLoading: transactionsLoading } = useQuery<TokenTransaction[]>({
     queryKey: ["/api/agents/me/token-transactions"],
     enabled: !!agent,
+  });
+
+  const { data: restaurantRequests, isLoading: restaurantRequestsLoading } = useQuery<RestaurantRequest[]>({
+    queryKey: ["/api/agents/me/restaurant-requests"],
+    enabled: !!agent,
+  });
+
+  const approveRestaurantRequestMutation = useMutation({
+    mutationFn: async ({ requestId, agentNotes }: { requestId: number; agentNotes?: string }) => {
+      const response = await apiRequest("POST", `/api/agents/restaurant-requests/${requestId}/approve`, { agentNotes });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Request Approved",
+        description: `Restaurant created successfully. ${data.tokensUsed} token(s) deducted.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/me/restaurant-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/me/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/me/restaurants"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/me/token-transactions"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Approval Failed",
+        description: error.message || "Failed to approve request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const rejectRestaurantRequestMutation = useMutation({
+    mutationFn: async ({ requestId, agentNotes }: { requestId: number; agentNotes?: string }) => {
+      const response = await apiRequest("POST", `/api/agents/restaurant-requests/${requestId}/reject`, { agentNotes });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Request Rejected",
+        description: "Restaurant request has been rejected.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/me/restaurant-requests"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Rejection Failed",
+        description: error.message || "Failed to reject request",
+        variant: "destructive",
+      });
+    },
   });
 
   const requestTokensMutation = useMutation({
@@ -574,6 +639,98 @@ export default function AgentDashboard() {
                   </Button>
                 )}
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Restaurant Requests from Owners */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Store className="h-5 w-5" />
+              Restaurant Requests
+            </CardTitle>
+            <CardDescription>Requests from restaurant owners for additional restaurants</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {restaurantRequestsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : restaurantRequests && restaurantRequests.length > 0 ? (
+              <div className="space-y-4">
+                {restaurantRequests.map((request) => (
+                  <div 
+                    key={request.id} 
+                    className={`p-4 rounded-lg border ${
+                      request.status === 'pending' 
+                        ? 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-900/20' 
+                        : request.status === 'approved'
+                        ? 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
+                        : 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20'
+                    }`}
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-semibold">{request.restaurantName}</h4>
+                          {getStatusBadge(request.status)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {request.cuisine && <span>{request.cuisine} • </span>}
+                          <span>{request.requestedMonths} {request.requestedMonths === 1 ? 'month' : 'months'} premium</span>
+                        </p>
+                        {request.ownerName && (
+                          <p className="text-sm">
+                            <User className="h-3 w-3 inline mr-1" />
+                            {request.ownerName}
+                            {request.ownerPhone && <span className="ml-2">({request.ownerPhone})</span>}
+                          </p>
+                        )}
+                        {request.ownerNotes && (
+                          <p className="text-sm italic text-muted-foreground mt-1">
+                            "{request.ownerNotes}"
+                          </p>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          <Calendar className="h-3 w-3 inline mr-1" />
+                          Requested: {new Date(request.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      
+                      {request.status === 'pending' && (
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="border-green-500 text-green-600 hover:bg-green-50"
+                            onClick={() => approveRestaurantRequestMutation.mutate({ requestId: request.id })}
+                            disabled={approveRestaurantRequestMutation.isPending || (stats?.tokenBalance || 0) < request.requestedMonths}
+                            title={(stats?.tokenBalance || 0) < request.requestedMonths ? `Need ${request.requestedMonths} tokens (you have ${stats?.tokenBalance || 0})` : ''}
+                          >
+                            <CheckCircle className="h-4 w-4 mr-1" />
+                            Approve ({request.requestedMonths} tokens)
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="outline"
+                            className="border-red-500 text-red-600 hover:bg-red-50"
+                            onClick={() => rejectRestaurantRequestMutation.mutate({ requestId: request.id })}
+                            disabled={rejectRestaurantRequestMutation.isPending}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Reject
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No restaurant requests from owners yet
+              </p>
             )}
           </CardContent>
         </Card>
