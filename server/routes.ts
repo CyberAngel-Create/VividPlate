@@ -3708,6 +3708,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       premiumExpiresAt.setMonth(premiumExpiresAt.getMonth() + tokensRequired);
 
       // Create the restaurant with premium duration
+      // Auto-approve restaurants created with tokens (no admin approval needed)
       const restaurant = await storage.createRestaurant({
         userId: ownerUser.id,
         name: validatedData.restaurantName,
@@ -3715,9 +3716,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         address: validatedData.address || '',
         phone: validatedData.phone || '',
         agentId: currentAgent.id,
-        approvalStatus: 'pending_approval',
+        approvalStatus: 'approved',
+        adminApproved: true,
+        approvedAt: new Date(),
         isPremium: true,
-        isActive: false,
+        isActive: true,
         premiumMonths: tokensRequired,
         premiumExpiresAt: premiumExpiresAt
       });
