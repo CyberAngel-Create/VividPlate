@@ -3590,7 +3590,6 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
 
       // Hash the password
-      const bcrypt = require('bcryptjs');
       const hashedPassword = await bcrypt.hash(validatedData.ownerPassword, 10);
 
       // Create the restaurant owner user
@@ -3663,14 +3662,58 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
-  // Admin: Get all agents
+  // Admin: Get all agents with user details (phone numbers)
   app.get('/api/admin/agents', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const agents = await storage.getAllAgents();
-      res.json(agents);
+      // Enhance agents with user phone numbers
+      const enhancedAgents = await Promise.all(
+        agents.map(async (agent) => {
+          const user = await storage.getUser(agent.userId);
+          return {
+            ...agent,
+            userPhone: user?.phone || null,
+            userEmail: user?.email || null,
+            userName: user?.username || null
+          };
+        })
+      );
+      res.json(enhancedAgents);
     } catch (error) {
       console.error('Get all agents error:', error);
       res.status(500).json({ message: 'Failed to fetch agents' });
+    }
+  });
+
+  // Admin: Toggle agent active status
+  app.patch('/api/admin/agents/:agentId/status', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const agentId = parseInt(req.params.agentId);
+      const { isActive } = req.body;
+      const adminUser = req.user as any;
+
+      if (typeof isActive !== 'boolean') {
+        return res.status(400).json({ message: 'isActive must be a boolean' });
+      }
+
+      const agent = await storage.updateAgent(agentId, { isActive });
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+
+      // Log admin action
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: isActive ? 'activate_agent' : 'deactivate_agent',
+        entityType: 'agent',
+        entityId: agentId,
+        details: { isActive }
+      });
+
+      res.json(agent);
+    } catch (error) {
+      console.error('Toggle agent status error:', error);
+      res.status(500).json({ message: 'Failed to update agent status' });
     }
   });
 

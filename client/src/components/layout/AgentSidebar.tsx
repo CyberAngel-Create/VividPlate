@@ -45,13 +45,13 @@ const AgentSidebar = ({ onLogout = () => {} }: AgentSidebarProps) => {
       id: 'profile',
       icon: <User className="h-5 w-5" />,
       label: 'Profile',
-      path: '/profile'
+      path: '/agent/profile'
     },
     {
       id: 'change-password',
       icon: <Lock className="h-5 w-5" />,
       label: 'Change Password',
-      path: '/change-password'
+      path: '/agent/change-password'
     },
   ];
 

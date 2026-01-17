@@ -55,6 +55,7 @@ export const agents = pgTable("agents", {
   idBackImageUrl: text("id_back_image_url"),
   selfieImageUrl: text("selfie_image_url"),
   tokenBalance: integer("token_balance").default(0).notNull(), // Available tokens for premium restaurants
+  isActive: boolean("is_active").default(true).notNull(), // Admin can deactivate agents
   approvalStatus: text("approval_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
   approvalNotes: text("approval_notes"),
   approvedBy: integer("approved_by"), // Admin user ID who approved/rejected

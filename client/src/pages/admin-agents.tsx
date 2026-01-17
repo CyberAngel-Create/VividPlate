@@ -43,9 +43,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { 
   CheckCircle, XCircle, Clock, Search, Eye, 
-  User, FileText, Calendar, MapPin 
+  User, FileText, Calendar, MapPin, Phone, Power
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -71,6 +72,12 @@ interface Agent {
   approvedAt?: string;
   approvedBy?: number;
   createdAt: string;
+  isActive?: boolean;
+  agentCode?: string;
+  tokenBalance?: number;
+  userPhone?: string;
+  userEmail?: string;
+  userName?: string;
 }
 
 export default function AdminAgents() {
@@ -128,6 +135,27 @@ export default function AdminAgents() {
       toast({
         title: "Error",
         description: error.message || "Failed to reject agent",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const toggleStatusMutation = useMutation({
+    mutationFn: async ({ agentId, isActive }: { agentId: number; isActive: boolean }) => {
+      const response = await apiRequest("PATCH", `/api/admin/agents/${agentId}/status`, { isActive });
+      return response.json();
+    },
+    onSuccess: (_, variables) => {
+      toast({
+        title: variables.isActive ? "Agent Activated" : "Agent Deactivated",
+        description: `The agent has been ${variables.isActive ? 'activated' : 'deactivated'} successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/agents"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update agent status",
         variant: "destructive",
       });
     },
@@ -258,44 +286,70 @@ export default function AdminAgents() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
-                    <TableHead>ID Type</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Submitted</TableHead>
+                    <TableHead>Agent</TableHead>
+                    <TableHead>Phone</TableHead>
+                    <TableHead>ID Info</TableHead>
+                    <TableHead>Tokens</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Active</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredAgents.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                         No agents found
                       </TableCell>
                     </TableRow>
                   ) : (
                     filteredAgents.map((agent) => (
-                      <TableRow key={agent.id}>
+                      <TableRow key={agent.id} className={agent.isActive === false ? 'opacity-60' : ''}>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <User className="w-4 h-4 text-muted-foreground" />
-                            <span className="font-medium">{agent.firstName} {agent.lastName}</span>
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-muted-foreground" />
+                              <span className="font-medium">{agent.firstName} {agent.lastName}</span>
+                            </div>
+                            {agent.agentCode && (
+                              <div className="text-xs text-muted-foreground">{agent.agentCode}</div>
+                            )}
+                            {agent.userEmail && (
+                              <div className="text-xs text-muted-foreground">{agent.userEmail}</div>
+                            )}
                           </div>
                         </TableCell>
-                        <TableCell>{getIdTypeLabel(agent.idType)}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm">
-                            <MapPin className="w-3 h-3" />
-                            {agent.city}, {agent.country}
+                            <Phone className="w-3 h-3" />
+                            {agent.userPhone || 'N/A'}
                           </div>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Calendar className="w-3 h-3" />
-                            {format(new Date(agent.createdAt), 'MMM d, yyyy')}
+                          <div className="space-y-1">
+                            <div className="text-sm font-medium">{getIdTypeLabel(agent.idType)}</div>
+                            <div className="text-xs text-muted-foreground">{agent.idNumber}</div>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <MapPin className="w-3 h-3" />
+                              {agent.city}, {agent.country}
+                            </div>
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{agent.tokenBalance || 0}</Badge>
                         </TableCell>
                         <TableCell>{getStatusBadge(agent.approvalStatus)}</TableCell>
+                        <TableCell>
+                          {agent.approvalStatus === 'approved' && (
+                            <Switch
+                              checked={agent.isActive !== false}
+                              onCheckedChange={(checked) => {
+                                toggleStatusMutation.mutate({ agentId: agent.id, isActive: checked });
+                              }}
+                              disabled={toggleStatusMutation.isPending}
+                            />
+                          )}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button
@@ -364,15 +418,41 @@ export default function AdminAgents() {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Status</label>
-                    <div className="mt-1">{getStatusBadge(selectedAgent.approvalStatus)}</div>
+                    <div className="mt-1 flex items-center gap-2">
+                      {getStatusBadge(selectedAgent.approvalStatus)}
+                      {selectedAgent.approvalStatus === 'approved' && (
+                        <Badge variant={selectedAgent.isActive !== false ? 'default' : 'secondary'}>
+                          {selectedAgent.isActive !== false ? 'Active' : 'Inactive'}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Agent Code</label>
+                    <p className="font-medium">{selectedAgent.agentCode || 'Not assigned'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Token Balance</label>
+                    <p className="font-medium">{selectedAgent.tokenBalance || 0} tokens</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Phone Number</label>
+                    <p className="flex items-center gap-1">
+                      <Phone className="w-3 h-3" />
+                      {selectedAgent.userPhone || 'Not provided'}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">Email</label>
+                    <p>{selectedAgent.userEmail || 'Not provided'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Date of Birth</label>
-                    <p>{selectedAgent.dateOfBirth}</p>
+                    <p>{selectedAgent.dateOfBirth || 'Not provided'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">Gender</label>
-                    <p className="capitalize">{selectedAgent.gender}</p>
+                    <p className="capitalize">{selectedAgent.gender || 'Not provided'}</p>
                   </div>
                   <div className="col-span-2">
                     <label className="text-sm font-medium text-muted-foreground">Address</label>
