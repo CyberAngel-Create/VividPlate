@@ -56,6 +56,7 @@ export default function AgentCreateRestaurant() {
     description: "",
     address: "",
     phone: "",
+    ownerFullName: "",
     ownerUsername: "",
     ownerEmail: "",
     ownerPassword: "",
@@ -100,10 +101,10 @@ export default function AgentCreateRestaurant() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.restaurantName || !formData.ownerUsername || !formData.ownerPassword) {
+    if (!formData.restaurantName || !formData.ownerFullName || !formData.ownerUsername || !formData.ownerPassword || !formData.ownerPhone) {
       toast({
         title: "Missing Fields",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields (restaurant name, owner full name, username, password, and phone)",
         variant: "destructive",
       });
       return;
@@ -257,6 +258,20 @@ export default function AgentCreateRestaurant() {
                 <p className="text-sm text-muted-foreground">
                   These credentials will be used by the restaurant owner to log in and manage their menu.
                 </p>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="ownerFullName">
+                    <User className="w-4 h-4 inline mr-1" />
+                    Owner Full Name *
+                  </Label>
+                  <Input
+                    id="ownerFullName"
+                    value={formData.ownerFullName}
+                    onChange={(e) => setFormData({ ...formData, ownerFullName: e.target.value })}
+                    placeholder="Enter owner's full name"
+                    required
+                  />
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">

@@ -3387,6 +3387,105 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  app.post('/api/admin/advertisements', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const adData = {
+        title: req.body.title,
+        description: req.body.description || '',
+        imageUrl: req.body.imageUrl || '',
+        linkUrl: req.body.linkUrl || '',
+        isActive: req.body.isActive !== false,
+        position: req.body.position || 'bottom',
+        startDate: req.body.startDate ? new Date(req.body.startDate) : new Date(),
+        endDate: req.body.endDate ? new Date(req.body.endDate) : null,
+        isAlcoholic: req.body.isAlcoholic || false,
+      };
+      const advertisement = await storage.createAdvertisement(adData);
+      res.json(advertisement);
+    } catch (error) {
+      console.error('Admin create advertisement error:', error);
+      res.status(500).json({ message: 'Failed to create advertisement' });
+    }
+  });
+
+  app.patch('/api/admin/advertisements/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const adData: any = {};
+      
+      if (req.body.title !== undefined) adData.title = req.body.title;
+      if (req.body.description !== undefined) adData.description = req.body.description;
+      if (req.body.imageUrl !== undefined) adData.imageUrl = req.body.imageUrl;
+      if (req.body.linkUrl !== undefined) adData.linkUrl = req.body.linkUrl;
+      if (req.body.isActive !== undefined) adData.isActive = req.body.isActive;
+      if (req.body.position !== undefined) adData.position = req.body.position;
+      if (req.body.startDate !== undefined) adData.startDate = new Date(req.body.startDate);
+      if (req.body.endDate !== undefined) adData.endDate = req.body.endDate ? new Date(req.body.endDate) : null;
+      if (req.body.isAlcoholic !== undefined) adData.isAlcoholic = req.body.isAlcoholic;
+      
+      const advertisement = await storage.updateAdvertisement(id, adData);
+      if (!advertisement) {
+        return res.status(404).json({ message: 'Advertisement not found' });
+      }
+      res.json(advertisement);
+    } catch (error) {
+      console.error('Admin update advertisement error:', error);
+      res.status(500).json({ message: 'Failed to update advertisement' });
+    }
+  });
+
+  app.delete('/api/admin/advertisements/:id', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteAdvertisement(id);
+      if (!deleted) {
+        return res.status(404).json({ message: 'Advertisement not found' });
+      }
+      res.json({ message: 'Advertisement deleted successfully' });
+    } catch (error) {
+      console.error('Admin delete advertisement error:', error);
+      res.status(500).json({ message: 'Failed to delete advertisement' });
+    }
+  });
+
+  // Public advertisement endpoint (for displaying ads on menu pages - no auth required)
+  app.get('/api/advertisements', async (req, res) => {
+    try {
+      const position = req.query.position as string;
+      const restaurantId = req.query.restaurantId ? parseInt(req.query.restaurantId as string) : null;
+      
+      if (!position) {
+        return res.status(400).json({ message: 'Position parameter is required' });
+      }
+      
+      // Get active advertisement for this position
+      let restaurant = null;
+      if (restaurantId) {
+        restaurant = await storage.getRestaurant(restaurantId);
+      }
+      
+      const advertisement = await storage.getTargetedAdvertisement(position, restaurant);
+      
+      if (!advertisement) {
+        return res.status(404).json({ message: 'No active advertisement found for this position' });
+      }
+      
+      // Only return active advertisements within their date range
+      const now = new Date();
+      if (advertisement.startDate && new Date(advertisement.startDate) > now) {
+        return res.status(404).json({ message: 'No active advertisement found' });
+      }
+      if (advertisement.endDate && new Date(advertisement.endDate) < now) {
+        return res.status(404).json({ message: 'No active advertisement found' });
+      }
+      
+      res.json(advertisement);
+    } catch (error) {
+      console.error('Get public advertisement error:', error);
+      res.status(500).json({ message: 'Failed to fetch advertisement' });
+    }
+  });
+
   // Admin Testimonials API
   app.get('/api/admin/testimonials', isAuthenticated, isAdmin, async (req, res) => {
     try {
@@ -3541,6 +3640,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     description: z.string().max(500).optional().default(""),
     address: z.string().max(200).optional().default(""),
     phone: z.string().max(20).optional().default(""),
+    ownerFullName: z.string().min(1, "Owner full name is required").max(100),
     ownerUsername: z.string().min(3, "Username must be at least 3 characters").max(50)
       .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
     ownerEmail: z.string().email().optional().or(z.literal("")),
@@ -3598,6 +3698,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         email: validatedData.ownerEmail || `${validatedData.ownerUsername}@vividplate.local`,
         password: hashedPassword,
         phone: validatedData.ownerPhone,
+        fullName: validatedData.ownerFullName || validatedData.ownerUsername,
         role: 'user'
       });
       createdUserId = ownerUser.id;
