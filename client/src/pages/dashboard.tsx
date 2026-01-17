@@ -89,18 +89,30 @@ const Dashboard = () => {
   }
 
   if (!activeRestaurant) {
+    // For agent-premium users without a restaurant, they need to contact their agent
+    const hasAgentPremium = subscriptionStatus?.hasAgentPremiumRestaurant;
+    
     return (
       <RestaurantOwnerLayout>
         <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
-          <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
-          <p className="mb-6">Create your first restaurant to get started with VividPlate.</p>
-          <button 
-            onClick={() => window.location.href = "/edit-restaurant"}
-            className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
-          >
-            Create Restaurant
-          </button>
+          {hasAgentPremium ? (
+            <>
+              <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
+              <p className="mb-6">Your restaurant was set up by an agent. Please contact your agent if you need assistance.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
+              <p className="mb-6">Create your first restaurant to get started with VividPlate.</p>
+              <button 
+                onClick={() => setLocation("/edit-restaurant")}
+                className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
+              >
+                Create Restaurant
+              </button>
+            </>
+          )}
         </div>
       </RestaurantOwnerLayout>
     );
@@ -190,7 +202,7 @@ const Dashboard = () => {
                 )}
                 {subscriptionStatus.hasAgentPremiumRestaurant && subscriptionStatus.agentId && (
                   <button 
-                    onClick={() => setLocation(`/request-restaurant?agentId=${subscriptionStatus.agentId}`)}
+                    onClick={() => setLocation("/request-restaurant")}
                     className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
                   >
                     Request Additional Restaurant

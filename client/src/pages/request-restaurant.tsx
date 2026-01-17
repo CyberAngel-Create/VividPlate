@@ -21,13 +21,24 @@ interface RestaurantRequest {
   agentNotes?: string;
 }
 
+interface SubscriptionStatus {
+  tier: string;
+  isPaid: boolean;
+  hasAgentPremiumRestaurant?: boolean;
+  agentId?: number | null;
+}
+
 const RequestRestaurant = () => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  const urlParams = new URLSearchParams(window.location.search);
-  const agentId = urlParams.get("agentId");
+  // Get agentId from subscription status (server-derived, not URL params)
+  const { data: subscriptionStatus, isLoading: isLoadingSubscription } = useQuery<SubscriptionStatus>({
+    queryKey: ["/api/user/subscription-status"],
+  });
+  
+  const agentId = subscriptionStatus?.agentId;
   
   const [formData, setFormData] = useState({
     restaurantName: "",
@@ -77,14 +88,14 @@ const RequestRestaurant = () => {
     if (!agentId) {
       toast({
         title: "Error",
-        description: "Agent ID is missing",
+        description: "You don't have an agent associated with your account",
         variant: "destructive",
       });
       return;
     }
     submitRequestMutation.mutate({
       ...formData,
-      agentId: parseInt(agentId)
+      agentId: agentId
     });
   };
 
@@ -101,13 +112,27 @@ const RequestRestaurant = () => {
     }
   };
 
+  // Show loading state while checking subscription
+  if (isLoadingSubscription) {
+    return (
+      <RestaurantOwnerLayout>
+        <div className="p-6 flex justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </RestaurantOwnerLayout>
+    );
+  }
+
+  // Show message if user doesn't have an agent (not an agent-sponsored restaurant)
   if (!agentId) {
     return (
       <RestaurantOwnerLayout>
         <div className="p-6">
           <Card>
             <CardContent className="p-6">
-              <p className="text-center text-gray-600">No agent associated with your account. Please contact support.</p>
+              <p className="text-center text-gray-600">
+                This feature is only available for restaurant owners with agent-created premium restaurants.
+              </p>
               <Button onClick={() => setLocation("/dashboard")} className="mt-4 mx-auto block">
                 Back to Dashboard
               </Button>
