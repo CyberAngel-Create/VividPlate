@@ -38,14 +38,8 @@ const AgentSidebar = ({ onLogout = () => {} }: AgentSidebarProps) => {
     { 
       id: 'create-restaurant', 
       icon: hasTokens ? <Plus className="h-5 w-5" /> : <Lock className="h-5 w-5" />, 
-      label: hasTokens ? 'Create Restaurant' : 'Create Restaurant (Need Tokens)', 
-      path: hasTokens ? '/agent/create-restaurant' : '/agent-dashboard'
-    },
-    { 
-      id: 'token-requests', 
-      icon: <Coins className="h-5 w-5" />, 
-      label: 'Token Requests', 
-      path: '/agent-dashboard' 
+      label: 'Create Restaurant', 
+      path: '/agent/create-restaurant'
     },
     {
       id: 'profile',

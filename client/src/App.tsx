@@ -34,6 +34,7 @@ import AdminTestimonials from "./pages/admin-testimonials";
 import AdminAgents from "./pages/admin-agents";
 import AgentRegistration from "./pages/agent-registration";
 import AgentDashboard from "./pages/agent-dashboard";
+import AgentCreateRestaurant from "./pages/agent-create-restaurant";
 import AdminTokenRequests from "./pages/admin-token-requests";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
@@ -179,6 +180,7 @@ function Router() {
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
         <AuthenticatedRoute path="/agent-registration" component={AgentRegistration} />
         <AuthenticatedRoute path="/agent-dashboard" component={AgentDashboard} />
+        <AuthenticatedRoute path="/agent/create-restaurant" component={AgentCreateRestaurant} />
 
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />

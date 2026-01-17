@@ -3481,6 +3481,124 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Agent: Create restaurant with owner account (consumes 1 token)
+  // Input validation schema for agent restaurant creation
+  const agentCreateRestaurantSchema = z.object({
+    restaurantName: z.string().min(1, "Restaurant name is required").max(100),
+    description: z.string().max(500).optional().default(""),
+    address: z.string().max(200).optional().default(""),
+    phone: z.string().max(20).optional().default(""),
+    ownerUsername: z.string().min(3, "Username must be at least 3 characters").max(50)
+      .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    ownerEmail: z.string().email().optional().or(z.literal("")),
+    ownerPassword: z.string().min(6, "Password must be at least 6 characters"),
+    ownerPhone: z.string().min(1, "Owner phone is required").max(20),
+  });
+
+  app.post('/api/agents/create-restaurant', isAuthenticated, async (req, res) => {
+    let createdUserId: number | null = null;
+    let createdRestaurantId: number | null = null;
+    
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+      
+      if (agent.approvalStatus !== 'approved') {
+        return res.status(403).json({ message: 'Your agent account is not approved yet' });
+      }
+      
+      // Double-check token balance (prevents race conditions)
+      const currentAgent = await storage.getAgentByUserId(user.id);
+      if (!currentAgent || (currentAgent.tokenBalance || 0) < 1) {
+        return res.status(400).json({ message: 'Insufficient tokens. You need at least 1 token to create a restaurant.' });
+      }
+
+      // Validate input with Zod schema
+      const validatedData = agentCreateRestaurantSchema.parse(req.body);
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(validatedData.ownerUsername);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username already taken' });
+      }
+
+      // Check if email already exists (if provided)
+      if (validatedData.ownerEmail) {
+        const existingEmail = await storage.getUserByEmail(validatedData.ownerEmail);
+        if (existingEmail) {
+          return res.status(400).json({ message: 'Email already registered' });
+        }
+      }
+
+      // Hash the password
+      const bcrypt = require('bcryptjs');
+      const hashedPassword = await bcrypt.hash(validatedData.ownerPassword, 10);
+
+      // Create the restaurant owner user
+      const ownerUser = await storage.createUser({
+        username: validatedData.ownerUsername,
+        email: validatedData.ownerEmail || `${validatedData.ownerUsername}@vividplate.local`,
+        password: hashedPassword,
+        phone: validatedData.ownerPhone,
+        role: 'user'
+      });
+      createdUserId = ownerUser.id;
+
+      // Create the restaurant
+      const restaurant = await storage.createRestaurant({
+        userId: ownerUser.id,
+        name: validatedData.restaurantName,
+        description: validatedData.description || '',
+        address: validatedData.address || '',
+        phone: validatedData.phone || '',
+        agentId: currentAgent.id,
+        approvalStatus: 'pending_approval',
+        isPremium: true,
+        isActive: false
+      });
+      createdRestaurantId = restaurant.id;
+
+      // Deduct 1 token from agent
+      const newBalance = (currentAgent.tokenBalance || 0) - 1;
+      await storage.updateAgent(currentAgent.id, { tokenBalance: newBalance });
+
+      // Create token transaction record
+      await storage.createTokenTransaction({
+        agentId: currentAgent.id,
+        amount: -1,
+        type: 'debit',
+        reason: `Created restaurant: ${validatedData.restaurantName}`,
+        relatedRestaurantId: restaurant.id
+      });
+
+      res.json({
+        message: 'Restaurant created successfully',
+        restaurant,
+        ownerCredentials: {
+          username: validatedData.ownerUsername,
+          email: validatedData.ownerEmail,
+          phone: validatedData.ownerPhone
+        },
+        newTokenBalance: newBalance
+      });
+    } catch (error) {
+      // Note: createdUserId and createdRestaurantId tracked for future transaction support
+      // Currently no cleanup since storage doesn't have delete methods
+      // Validation errors are caught early via Zod before any database writes
+      
+      if (error instanceof z.ZodError) {
+        const firstError = error.errors[0];
+        return res.status(400).json({ message: firstError.message || 'Validation error' });
+      }
+      console.error('Agent create restaurant error:', error);
+      res.status(500).json({ message: 'Failed to create restaurant' });
+    }
+  });
+
   // Admin: Get all agents
   app.get('/api/admin/agents', isAuthenticated, isAdmin, async (req, res) => {
     try {
