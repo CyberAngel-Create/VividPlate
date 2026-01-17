@@ -663,3 +663,34 @@ export const insertWaiterCallSchema = createInsertSchema(waiterCalls).pick({
 
 export type WaiterCall = typeof waiterCalls.$inferSelect;
 export type InsertWaiterCall = z.infer<typeof insertWaiterCallSchema>;
+
+// Restaurant requests table - for owners to request additional restaurants from agents
+export const restaurantRequests = pgTable("restaurant_requests", {
+  id: serial("id").primaryKey(),
+  ownerUserId: integer("owner_user_id").notNull(),
+  agentId: integer("agent_id").notNull(),
+  restaurantName: text("restaurant_name").notNull(),
+  restaurantDescription: text("restaurant_description"),
+  cuisine: text("cuisine"),
+  requestedMonths: integer("requested_months").notNull().default(1),
+  status: text("status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  ownerNotes: text("owner_notes"),
+  agentNotes: text("agent_notes"),
+  createdRestaurantId: integer("created_restaurant_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+});
+
+export const insertRestaurantRequestSchema = createInsertSchema(restaurantRequests).pick({
+  ownerUserId: true,
+  agentId: true,
+  restaurantName: true,
+  restaurantDescription: true,
+  cuisine: true,
+  requestedMonths: true,
+  ownerNotes: true,
+});
+
+export type RestaurantRequest = typeof restaurantRequests.$inferSelect;
+export type InsertRestaurantRequest = z.infer<typeof insertRestaurantRequestSchema>;
