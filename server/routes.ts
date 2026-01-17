@@ -1074,12 +1074,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const maxRestaurants = effectiveTier === "business" ? 10 : (effectiveTier === "premium" ? 3 : 1);
       await storage.manageRestaurantsBySubscription(userId, maxRestaurants);
       
+      // Check if premium is from agent-created restaurants (not self-subscription)
+      // Owners with agent-created premium restaurants should not see "Upgrade Plan"
+      const hasAgentPremiumRestaurant = userRestaurants.some(r => 
+        r.isPremium && r.agentId && r.premiumExpiresAt && new Date(r.premiumExpiresAt) > now
+      );
+      
+      // Get the agent ID if user has agent-created restaurants (for request workflow)
+      const agentIdForRequests = userRestaurants.find(r => r.agentId)?.agentId || null;
+      
       return res.json({
         tier: effectiveTier,
         isPaid: isPaid,
         maxRestaurants: maxRestaurants,
         currentRestaurants: restaurantCount,
-        expiresAt: expiresAt
+        expiresAt: expiresAt,
+        hasAgentPremiumRestaurant: hasAgentPremiumRestaurant,
+        agentId: agentIdForRequests
       });
     } catch (error) {
       console.error("Error getting subscription status:", error);
@@ -3788,6 +3799,210 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
       console.error('Agent create restaurant error:', error);
       res.status(500).json({ message: 'Failed to create restaurant' });
+    }
+  });
+
+  // ======= Restaurant Request Endpoints (Owner requests additional restaurants from Agent) =======
+  
+  // Owner: Submit a request for an additional restaurant
+  app.post('/api/restaurant-requests', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { restaurantName, restaurantDescription, cuisine, requestedMonths, agentId, ownerNotes } = req.body;
+      
+      if (!restaurantName || !requestedMonths || !agentId) {
+        return res.status(400).json({ message: 'Restaurant name, requested months, and agent ID are required' });
+      }
+      
+      if (requestedMonths < 1 || requestedMonths > 24) {
+        return res.status(400).json({ message: 'Requested months must be between 1 and 24' });
+      }
+      
+      // Verify the agent exists and is approved
+      const agent = await storage.getAgent(agentId);
+      if (!agent || agent.approvalStatus !== 'approved') {
+        return res.status(400).json({ message: 'Invalid or unapproved agent' });
+      }
+      
+      // Create the request
+      const request = await storage.createRestaurantRequest({
+        ownerUserId: userId,
+        agentId: agentId,
+        restaurantName,
+        restaurantDescription: restaurantDescription || null,
+        cuisine: cuisine || null,
+        requestedMonths,
+        ownerNotes: ownerNotes || null
+      });
+      
+      res.status(201).json({
+        message: 'Restaurant request submitted successfully',
+        request
+      });
+    } catch (error) {
+      console.error('Create restaurant request error:', error);
+      res.status(500).json({ message: 'Failed to submit restaurant request' });
+    }
+  });
+  
+  // Owner: Get their own restaurant requests
+  app.get('/api/restaurant-requests/my-requests', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const requests = await storage.getRestaurantRequestsByOwnerId(userId);
+      res.json(requests);
+    } catch (error) {
+      console.error('Get owner restaurant requests error:', error);
+      res.status(500).json({ message: 'Failed to fetch restaurant requests' });
+    }
+  });
+  
+  // Agent: Get pending restaurant requests assigned to them
+  app.get('/api/agents/me/restaurant-requests', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const agent = await storage.getAgentByUserId(userId);
+      
+      if (!agent) {
+        return res.status(403).json({ message: 'Not an agent' });
+      }
+      
+      const requests = await storage.getRestaurantRequestsByAgentId(agent.id);
+      
+      // Enhance requests with owner details
+      const enhancedRequests = await Promise.all(
+        requests.map(async (request) => {
+          const owner = await storage.getUser(request.ownerUserId);
+          return {
+            ...request,
+            ownerName: owner?.fullName || owner?.username || 'Unknown',
+            ownerPhone: owner?.phone || null,
+            ownerEmail: owner?.email || null
+          };
+        })
+      );
+      
+      res.json(enhancedRequests);
+    } catch (error) {
+      console.error('Get agent restaurant requests error:', error);
+      res.status(500).json({ message: 'Failed to fetch restaurant requests' });
+    }
+  });
+  
+  // Agent: Approve a restaurant request (creates the restaurant and deducts tokens)
+  app.post('/api/agents/restaurant-requests/:id/approve', isAuthenticated, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      const { agentNotes } = req.body;
+      
+      const agent = await storage.getAgentByUserId(userId);
+      if (!agent) {
+        return res.status(403).json({ message: 'Not an agent' });
+      }
+      
+      const request = await storage.getRestaurantRequest(requestId);
+      if (!request) {
+        return res.status(404).json({ message: 'Request not found' });
+      }
+      
+      if (request.agentId !== agent.id) {
+        return res.status(403).json({ message: 'This request is not assigned to you' });
+      }
+      
+      if (request.status !== 'pending') {
+        return res.status(400).json({ message: 'Request has already been processed' });
+      }
+      
+      // Check if agent has enough tokens
+      const tokensRequired = request.requestedMonths;
+      if ((agent.tokenBalance || 0) < tokensRequired) {
+        return res.status(400).json({ 
+          message: 'Insufficient tokens',
+          required: tokensRequired,
+          available: agent.tokenBalance || 0
+        });
+      }
+      
+      // Calculate premium expiry date
+      const premiumExpiresAt = new Date();
+      premiumExpiresAt.setMonth(premiumExpiresAt.getMonth() + tokensRequired);
+      
+      // Create the restaurant
+      const restaurant = await storage.createRestaurant({
+        userId: request.ownerUserId,
+        name: request.restaurantName,
+        description: request.restaurantDescription || '',
+        cuisine: request.cuisine || null,
+        agentId: agent.id,
+        approvalStatus: 'approved',
+        adminApproved: true,
+        approvedAt: new Date(),
+        isPremium: true,
+        isActive: true,
+        premiumMonths: tokensRequired,
+        premiumExpiresAt: premiumExpiresAt
+      });
+      
+      // Deduct tokens from agent
+      await storage.debitTokensFromAgent(
+        agent.id, 
+        tokensRequired, 
+        `Approved restaurant request: ${request.restaurantName} (${tokensRequired} months)`,
+        restaurant.id
+      );
+      
+      // Update the request
+      await storage.updateRestaurantRequest(requestId, {
+        status: 'approved',
+        agentNotes: agentNotes || null,
+        approvedAt: new Date(),
+        createdRestaurantId: restaurant.id
+      });
+      
+      res.json({
+        message: 'Restaurant request approved and restaurant created',
+        restaurant,
+        tokensUsed: tokensRequired,
+        newTokenBalance: (agent.tokenBalance || 0) - tokensRequired
+      });
+    } catch (error) {
+      console.error('Approve restaurant request error:', error);
+      res.status(500).json({ message: 'Failed to approve restaurant request' });
+    }
+  });
+  
+  // Agent: Reject a restaurant request
+  app.post('/api/agents/restaurant-requests/:id/reject', isAuthenticated, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+      const { agentNotes } = req.body;
+      
+      const agent = await storage.getAgentByUserId(userId);
+      if (!agent) {
+        return res.status(403).json({ message: 'Not an agent' });
+      }
+      
+      const request = await storage.getRestaurantRequest(requestId);
+      if (!request) {
+        return res.status(404).json({ message: 'Request not found' });
+      }
+      
+      if (request.agentId !== agent.id) {
+        return res.status(403).json({ message: 'This request is not assigned to you' });
+      }
+      
+      if (request.status !== 'pending') {
+        return res.status(400).json({ message: 'Request has already been processed' });
+      }
+      
+      await storage.rejectRestaurantRequest(requestId, agentNotes);
+      
+      res.json({ message: 'Restaurant request rejected' });
+    } catch (error) {
+      console.error('Reject restaurant request error:', error);
+      res.status(500).json({ message: 'Failed to reject restaurant request' });
     }
   });
 
