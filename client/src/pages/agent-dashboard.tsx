@@ -4,7 +4,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
-import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
+import AgentLayout from "@/components/layout/AgentLayout";
 import {
   Card,
   CardContent,
@@ -238,17 +238,17 @@ export default function AgentDashboard() {
 
   if (agentLoading) {
     return (
-      <RestaurantOwnerLayout>
+      <AgentLayout>
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </RestaurantOwnerLayout>
+      </AgentLayout>
     );
   }
 
   if (!agent) {
     return (
-      <RestaurantOwnerLayout>
+      <AgentLayout>
         <div className="max-w-2xl mx-auto p-6">
           <Card>
             <CardHeader>
@@ -265,13 +265,13 @@ export default function AgentDashboard() {
             </CardContent>
           </Card>
         </div>
-      </RestaurantOwnerLayout>
+      </AgentLayout>
     );
   }
 
   if (agent.approvalStatus === 'pending') {
     return (
-      <RestaurantOwnerLayout>
+      <AgentLayout>
         <div className="max-w-2xl mx-auto p-6">
           <Card className="border-yellow-200 dark:border-yellow-800">
             <CardHeader>
@@ -290,13 +290,13 @@ export default function AgentDashboard() {
             </CardContent>
           </Card>
         </div>
-      </RestaurantOwnerLayout>
+      </AgentLayout>
     );
   }
 
   if (agent.approvalStatus === 'rejected') {
     return (
-      <RestaurantOwnerLayout>
+      <AgentLayout>
         <div className="max-w-2xl mx-auto p-6">
           <Card className="border-red-200 dark:border-red-800">
             <CardHeader>
@@ -318,12 +318,14 @@ export default function AgentDashboard() {
             </CardContent>
           </Card>
         </div>
-      </RestaurantOwnerLayout>
+      </AgentLayout>
     );
   }
 
+  const hasTokens = (stats?.tokenBalance || 0) > 0;
+
   return (
-    <RestaurantOwnerLayout>
+    <AgentLayout>
       <div className="p-6 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
@@ -511,9 +513,14 @@ export default function AgentDashboard() {
               <CardTitle>Your Restaurants</CardTitle>
               <CardDescription>Restaurants you manage as an agent</CardDescription>
             </div>
-            <Button variant="outline" onClick={() => setLocation("/edit-restaurant")}>
+            <Button 
+              variant="outline" 
+              onClick={() => setLocation("/agent/create-restaurant")}
+              disabled={!hasTokens}
+              title={!hasTokens ? "You need tokens to create a restaurant" : ""}
+            >
               <Plus className="h-4 w-4 mr-2" />
-              Create Restaurant
+              {hasTokens ? "Create Restaurant" : "Need Tokens"}
             </Button>
           </CardHeader>
           <CardContent>
@@ -556,10 +563,16 @@ export default function AgentDashboard() {
               </Table>
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">No restaurants yet</p>
-                <Button onClick={() => setLocation("/edit-restaurant")}>
-                  Create Your First Restaurant
-                </Button>
+                <p className="text-muted-foreground mb-4">
+                  {hasTokens 
+                    ? "No restaurants yet. Create your first one!"
+                    : "You need tokens to create restaurants. Request tokens from the administrator."}
+                </p>
+                {hasTokens && (
+                  <Button onClick={() => setLocation("/agent/create-restaurant")}>
+                    Create Your First Restaurant
+                  </Button>
+                )}
               </div>
             )}
           </CardContent>
@@ -647,6 +660,6 @@ export default function AgentDashboard() {
           </CardContent>
         </Card>
       </div>
-    </RestaurantOwnerLayout>
+    </AgentLayout>
   );
 }
