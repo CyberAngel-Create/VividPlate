@@ -31,6 +31,8 @@ import AdminContactInfo from "./pages/admin-contact-info";
 import AdminAdvertisements from "./pages/admin-advertisements";
 import AdminMenuExamples from "./pages/admin-menu-examples";
 import AdminTestimonials from "./pages/admin-testimonials";
+import AdminAgents from "./pages/admin-agents";
+import AgentRegistration from "./pages/agent-registration";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -173,6 +175,7 @@ function Router() {
         <AuthenticatedRoute path="/subscribe" component={Subscribe} />
         <AuthenticatedRoute path="/chapa-subscribe/:planId" component={ChapaSubscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
+        <AuthenticatedRoute path="/agent-registration" component={AgentRegistration} />
 
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />
@@ -186,6 +189,7 @@ function Router() {
         <AdminRoute path="/admin/advertisements" component={AdminAdvertisements} />
         <AdminRoute path="/admin/menu-examples" component={AdminMenuExamples} />
         <AdminRoute path="/admin/testimonials" component={AdminTestimonials} />
+        <AdminRoute path="/admin/agents" component={AdminAgents} />
 
         <Route component={NotFound} />
       </Switch>
