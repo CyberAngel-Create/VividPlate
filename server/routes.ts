@@ -11,7 +11,8 @@ import {
   insertFeedbackSchema,
   insertAdminLogSchema,
   insertDietaryPreferencesSchema,
-  insertWaiterCallSchema
+  insertWaiterCallSchema,
+  insertAgentSchema
 } from "@shared/schema";
 import { ObjectStorageService } from './objectStorage';
 import session from "express-session";
@@ -1184,6 +1185,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'User not found' });
       }
       
+      // Check if user is an approved agent (only approved agents can create restaurants)
+      // Admin users bypass this check
+      if (user.role !== 'admin') {
+        const agent = await storage.getAgentByUserId(userId);
+        if (!agent) {
+          return res.status(403).json({ 
+            message: 'Agent registration required',
+            details: 'You must register as an agent and get approved before creating a restaurant.',
+            requiresAgentRegistration: true
+          });
+        }
+        if (agent.approvalStatus !== 'approved') {
+          return res.status(403).json({ 
+            message: 'Agent approval pending',
+            details: agent.approvalStatus === 'rejected' 
+              ? 'Your agent application was rejected. Please contact support for more information.'
+              : 'Your agent application is pending approval. Please wait for admin approval before creating a restaurant.',
+            approvalStatus: agent.approvalStatus,
+            requiresApproval: true
+          });
+        }
+      }
+      
       // Determine max restaurants based on user's subscription tier (Free plan restrictions)
       let maxRestaurants = 1; // Free tier default
       if (user.subscriptionTier === 'premium') {
@@ -1208,7 +1232,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         userId
       });
       
-      const restaurant = await storage.createRestaurant(restaurantData);
+      // Create restaurant with pending status (requires admin approval before going live)
+      const restaurant = await storage.createRestaurant({
+        ...restaurantData,
+        approvalStatus: 'pending',
+        adminApproved: false
+      });
       res.status(201).json(restaurant);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1551,13 +1580,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         !url.includes('fallback')
       );
       
-      // Check maximum banner limit (3 banners max)
-      if (bannerUrls.length >= 3) {
-        console.warn(`Restaurant ${restaurantId} already has maximum banners (${bannerUrls.length})`);
-        return res.status(400).json({ 
-          message: 'Maximum number of banner images reached. You can upload up to 3 banner images. Please delete an existing banner before uploading a new one.',
+      // Check maximum banner limit based on subscription tier
+      // Free tier: 1 banner, Paid tiers: 3 banners
+      const maxBanners = (user.subscriptionTier === 'free' || !user.subscriptionTier) ? 1 : 3;
+      
+      if (bannerUrls.length >= maxBanners) {
+        const message = maxBanners === 1 
+          ? 'Free plan allows only 1 banner image. Upgrade to add more banners.'
+          : 'Maximum number of banner images reached. You can upload up to 3 banner images. Please delete an existing banner before uploading a new one.';
+        
+        console.warn(`Restaurant ${restaurantId} already has maximum banners (${bannerUrls.length}/${maxBanners})`);
+        return res.status(403).json({ 
+          message,
           currentCount: bannerUrls.length,
-          maxCount: 3
+          maxCount: maxBanners,
+          limitType: 'banners',
+          upgradeRequired: maxBanners === 1
         });
       }
       
@@ -1847,9 +1885,25 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   app.post('/api/restaurants/:restaurantId/categories', isAuthenticated, isRestaurantOwner, async (req, res) => {
     try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const user = req.user as any;
+      
+      // Check free tier category limit (5 categories max)
+      if (user.subscriptionTier === 'free' || !user.subscriptionTier) {
+        const categoryCount = await storage.countCategoriesByRestaurantId(restaurantId);
+        if (categoryCount >= 5) {
+          return res.status(403).json({ 
+            message: 'Free plan limit reached. You can only create 5 categories. Upgrade to add more.',
+            limitType: 'categories',
+            current: categoryCount,
+            limit: 5
+          });
+        }
+      }
+      
       const categoryData = insertMenuCategorySchema.parse({
         ...req.body,
-        restaurantId: parseInt(req.params.restaurantId)
+        restaurantId
       });
       
       const category = await storage.createMenuCategory(categoryData);
@@ -2001,7 +2055,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   app.post('/api/categories/:categoryId/items', isAuthenticated, async (req, res) => {
     try {
       const categoryId = parseInt(req.params.categoryId);
-      const userId = (req.user as any).id;
+      const user = req.user as any;
+      const userId = user.id;
       
       console.log(`🍽️ Creating menu item for category ${categoryId}, user ${userId}`);
       console.log(`📋 Request body:`, JSON.stringify(req.body, null, 2));
@@ -2015,6 +2070,19 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const restaurant = await storage.getRestaurant(category.restaurantId);
       if (!restaurant || restaurant.userId !== userId) {
         return res.status(403).json({ message: 'Access denied' });
+      }
+      
+      // Check free tier item limit (10 items per category)
+      if (user.subscriptionTier === 'free' || !user.subscriptionTier) {
+        const itemCount = await storage.countItemsByCategoryId(categoryId);
+        if (itemCount >= 10) {
+          return res.status(403).json({ 
+            message: 'Free plan limit reached. You can only add 10 items per category. Upgrade to add more.',
+            limitType: 'items_per_category',
+            current: itemCount,
+            limit: 10
+          });
+        }
       }
       
       const itemData = insertMenuItemSchema.parse({
@@ -3326,6 +3394,238 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     } catch (error) {
       console.error('Admin get testimonials error:', error);
       res.status(500).json({ message: 'Failed to fetch testimonials' });
+    }
+  });
+
+  // ============================================
+  // Agent Registration and Approval API
+  // ============================================
+
+  // Agent registration - create agent profile
+  app.post('/api/agents/register', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      
+      // Check if user already has an agent profile
+      const existingAgent = await storage.getAgentByUserId(user.id);
+      if (existingAgent) {
+        return res.status(400).json({ message: 'You already have an agent profile' });
+      }
+
+      // Validate input with schema - prevents invalid/arbitrary fields
+      const agentData = insertAgentSchema.parse({
+        ...req.body,
+        userId: user.id // Always use authenticated user's ID
+      });
+
+      const agent = await storage.createAgent(agentData);
+      
+      // Update user role to agent - they still need approval before creating restaurants
+      await storage.updateUser(user.id, { role: 'agent' });
+
+      res.json(agent);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      console.error('Agent registration error:', error);
+      res.status(500).json({ message: 'Failed to register as agent' });
+    }
+  });
+
+  // Get current user's agent profile
+  app.get('/api/agents/me', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+      res.json(agent);
+    } catch (error) {
+      console.error('Get agent profile error:', error);
+      res.status(500).json({ message: 'Failed to get agent profile' });
+    }
+  });
+
+  // Update agent profile
+  app.patch('/api/agents/me', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const agent = await storage.getAgentByUserId(user.id);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent profile not found' });
+      }
+
+      // Allowlist of fields that can be updated by the agent themselves
+      // Prevents tampering with approval fields (approvalStatus, approvedAt, approvedBy, rejectionReason)
+      const allowedFields = [
+        'firstName', 'lastName', 'dateOfBirth', 'gender', 'address',
+        'city', 'state', 'country', 'postalCode', 'idType', 'idNumber',
+        'idFrontImageUrl', 'idBackImageUrl', 'selfieImageUrl'
+      ];
+      
+      const updateData: Record<string, any> = {};
+      for (const field of allowedFields) {
+        if (req.body[field] !== undefined) {
+          updateData[field] = req.body[field];
+        }
+      }
+
+      const updatedAgent = await storage.updateAgent(agent.id, updateData);
+      res.json(updatedAgent);
+    } catch (error) {
+      console.error('Update agent profile error:', error);
+      res.status(500).json({ message: 'Failed to update agent profile' });
+    }
+  });
+
+  // Admin: Get all agents
+  app.get('/api/admin/agents', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const agents = await storage.getAllAgents();
+      res.json(agents);
+    } catch (error) {
+      console.error('Get all agents error:', error);
+      res.status(500).json({ message: 'Failed to fetch agents' });
+    }
+  });
+
+  // Admin: Get pending agents
+  app.get('/api/admin/agents/pending', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const agents = await storage.getPendingAgents();
+      res.json(agents);
+    } catch (error) {
+      console.error('Get pending agents error:', error);
+      res.status(500).json({ message: 'Failed to fetch pending agents' });
+    }
+  });
+
+  // Admin: Approve agent
+  app.post('/api/admin/agents/:agentId/approve', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const agentId = parseInt(req.params.agentId);
+      const adminUser = req.user as any;
+      const { notes } = req.body;
+
+      const agent = await storage.approveAgent(agentId, adminUser.id, notes);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+
+      // Log admin action
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'approve_agent',
+        entityType: 'agent',
+        entityId: agentId,
+        details: { notes }
+      });
+
+      res.json(agent);
+    } catch (error) {
+      console.error('Approve agent error:', error);
+      res.status(500).json({ message: 'Failed to approve agent' });
+    }
+  });
+
+  // Admin: Reject agent
+  app.post('/api/admin/agents/:agentId/reject', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const agentId = parseInt(req.params.agentId);
+      const adminUser = req.user as any;
+      const { notes } = req.body;
+
+      const agent = await storage.rejectAgent(agentId, adminUser.id, notes);
+      if (!agent) {
+        return res.status(404).json({ message: 'Agent not found' });
+      }
+
+      // Log admin action
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'reject_agent',
+        entityType: 'agent',
+        entityId: agentId,
+        details: { notes }
+      });
+
+      res.json(agent);
+    } catch (error) {
+      console.error('Reject agent error:', error);
+      res.status(500).json({ message: 'Failed to reject agent' });
+    }
+  });
+
+  // ============================================
+  // Restaurant Approval API
+  // ============================================
+
+  // Admin: Get pending restaurants
+  app.get('/api/admin/restaurants/pending', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const restaurants = await storage.getPendingRestaurants();
+      res.json(restaurants);
+    } catch (error) {
+      console.error('Get pending restaurants error:', error);
+      res.status(500).json({ message: 'Failed to fetch pending restaurants' });
+    }
+  });
+
+  // Admin: Approve restaurant
+  app.post('/api/admin/restaurants/:restaurantId/approve', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const adminUser = req.user as any;
+      const { notes } = req.body;
+
+      const restaurant = await storage.approveRestaurant(restaurantId, adminUser.id, notes);
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+
+      // Log admin action
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'approve_restaurant',
+        entityType: 'restaurant',
+        entityId: restaurantId,
+        details: { notes }
+      });
+
+      res.json(restaurant);
+    } catch (error) {
+      console.error('Approve restaurant error:', error);
+      res.status(500).json({ message: 'Failed to approve restaurant' });
+    }
+  });
+
+  // Admin: Reject restaurant
+  app.post('/api/admin/restaurants/:restaurantId/reject', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const adminUser = req.user as any;
+      const { notes } = req.body;
+
+      const restaurant = await storage.rejectRestaurant(restaurantId, adminUser.id, notes);
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+
+      // Log admin action
+      await storage.createAdminLog({
+        adminId: adminUser.id,
+        action: 'reject_restaurant',
+        entityType: 'restaurant',
+        entityId: restaurantId,
+        details: { notes }
+      });
+
+      res.json(restaurant);
+    } catch (error) {
+      console.error('Reject restaurant error:', error);
+      res.status(500).json({ message: 'Failed to reject restaurant' });
     }
   });
 
