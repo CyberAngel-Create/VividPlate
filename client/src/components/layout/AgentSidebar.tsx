@@ -47,6 +47,12 @@ const AgentSidebar = ({ onLogout = () => {} }: AgentSidebarProps) => {
       label: 'Profile',
       path: '/profile'
     },
+    {
+      id: 'change-password',
+      icon: <Lock className="h-5 w-5" />,
+      label: 'Change Password',
+      path: '/change-password'
+    },
   ];
 
   const isActive = (path: string) => {
