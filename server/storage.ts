@@ -19,7 +19,9 @@ import {
   testimonials, Testimonial, InsertTestimonial,
   permanentImages, PermanentImage, InsertPermanentImage,
   waiterCalls, WaiterCall, InsertWaiterCall,
-  agents, Agent, InsertAgent
+  agents, Agent, InsertAgent,
+  tokenRequests, TokenRequest, InsertTokenRequest,
+  tokenTransactions, TokenTransaction, InsertTokenTransaction
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
@@ -247,6 +249,27 @@ export interface IStorage {
   countCategoriesByRestaurantId(restaurantId: number): Promise<number>;
   countItemsByCategoryId(categoryId: number): Promise<number>;
   countBannersByRestaurantId(restaurantId: number): Promise<number>;
+
+  // Token management operations
+  generateAgentCode(): Promise<string>;
+  createTokenRequest(request: InsertTokenRequest): Promise<TokenRequest>;
+  getTokenRequest(id: number): Promise<TokenRequest | undefined>;
+  getTokenRequestsByAgentId(agentId: number): Promise<TokenRequest[]>;
+  getPendingTokenRequests(): Promise<TokenRequest[]>;
+  getAllTokenRequests(): Promise<TokenRequest[]>;
+  approveTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined>;
+  rejectTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined>;
+  createTokenTransaction(transaction: InsertTokenTransaction): Promise<TokenTransaction>;
+  getTokenTransactionsByAgentId(agentId: number): Promise<TokenTransaction[]>;
+  addTokensToAgent(agentId: number, amount: number, adminId: number, reason: string, requestId?: number): Promise<Agent | undefined>;
+  debitTokensFromAgent(agentId: number, amount: number, reason: string, restaurantId?: number): Promise<Agent | undefined>;
+  getAgentStats(agentId: number): Promise<{
+    tokenBalance: number;
+    totalRestaurants: number;
+    premiumRestaurants: number;
+    pendingTokenRequests: number;
+  }>;
+  getRestaurantsByAgentId(agentId: number): Promise<Restaurant[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1505,6 +1528,177 @@ export class DatabaseStorage implements IStorage {
     if (!restaurant || !restaurant.bannerUrls) return 0;
     const bannerArray = restaurant.bannerUrls as string[];
     return bannerArray.length;
+  }
+
+  // Token management operations
+  async generateAgentCode(): Promise<string> {
+    const allAgents = await db.select({ agentCode: agents.agentCode }).from(agents);
+    const existingCodes = allAgents.map(a => a.agentCode).filter(Boolean);
+    
+    let maxNum = 0;
+    for (const code of existingCodes) {
+      if (code && code.startsWith('AG-')) {
+        const num = parseInt(code.substring(3), 10);
+        if (!isNaN(num) && num > maxNum) {
+          maxNum = num;
+        }
+      }
+    }
+    
+    const nextNum = maxNum + 1;
+    return `AG-${nextNum.toString().padStart(3, '0')}`;
+  }
+
+  async createTokenRequest(request: InsertTokenRequest): Promise<TokenRequest> {
+    const [newRequest] = await db.insert(tokenRequests).values(request).returning();
+    return newRequest;
+  }
+
+  async getTokenRequest(id: number): Promise<TokenRequest | undefined> {
+    const [request] = await db.select().from(tokenRequests).where(eq(tokenRequests.id, id));
+    return request;
+  }
+
+  async getTokenRequestsByAgentId(agentId: number): Promise<TokenRequest[]> {
+    return await db.select().from(tokenRequests)
+      .where(eq(tokenRequests.agentId, agentId))
+      .orderBy(desc(tokenRequests.createdAt));
+  }
+
+  async getPendingTokenRequests(): Promise<TokenRequest[]> {
+    return await db.select().from(tokenRequests)
+      .where(eq(tokenRequests.status, 'pending'))
+      .orderBy(desc(tokenRequests.createdAt));
+  }
+
+  async getAllTokenRequests(): Promise<TokenRequest[]> {
+    return await db.select().from(tokenRequests)
+      .orderBy(desc(tokenRequests.createdAt));
+  }
+
+  async approveTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined> {
+    const request = await this.getTokenRequest(id);
+    if (!request || request.status !== 'pending') return undefined;
+
+    const [updated] = await db.update(tokenRequests)
+      .set({
+        status: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        adminNotes: notes
+      })
+      .where(eq(tokenRequests.id, id))
+      .returning();
+
+    if (updated) {
+      await this.addTokensToAgent(
+        updated.agentId,
+        updated.requestedTokens,
+        adminId,
+        `Token request #${id} approved`,
+        id
+      );
+    }
+
+    return updated;
+  }
+
+  async rejectTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined> {
+    const [updated] = await db.update(tokenRequests)
+      .set({
+        status: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        adminNotes: notes
+      })
+      .where(eq(tokenRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createTokenTransaction(transaction: InsertTokenTransaction): Promise<TokenTransaction> {
+    const [newTransaction] = await db.insert(tokenTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  async getTokenTransactionsByAgentId(agentId: number): Promise<TokenTransaction[]> {
+    return await db.select().from(tokenTransactions)
+      .where(eq(tokenTransactions.agentId, agentId))
+      .orderBy(desc(tokenTransactions.createdAt));
+  }
+
+  async addTokensToAgent(agentId: number, amount: number, adminId: number, reason: string, requestId?: number): Promise<Agent | undefined> {
+    const agent = await this.getAgent(agentId);
+    if (!agent) return undefined;
+
+    const newBalance = (agent.tokenBalance || 0) + amount;
+    
+    const [updated] = await db.update(agents)
+      .set({ tokenBalance: newBalance, updatedAt: new Date() })
+      .where(eq(agents.id, agentId))
+      .returning();
+
+    await this.createTokenTransaction({
+      agentId,
+      amount,
+      type: 'credit',
+      reason,
+      tokenRequestId: requestId,
+      adminId
+    });
+
+    return updated;
+  }
+
+  async debitTokensFromAgent(agentId: number, amount: number, reason: string, restaurantId?: number): Promise<Agent | undefined> {
+    const agent = await this.getAgent(agentId);
+    if (!agent || (agent.tokenBalance || 0) < amount) return undefined;
+
+    const newBalance = (agent.tokenBalance || 0) - amount;
+    
+    const [updated] = await db.update(agents)
+      .set({ tokenBalance: newBalance, updatedAt: new Date() })
+      .where(eq(agents.id, agentId))
+      .returning();
+
+    await this.createTokenTransaction({
+      agentId,
+      amount: -amount,
+      type: 'debit',
+      reason,
+      restaurantId
+    });
+
+    return updated;
+  }
+
+  async getAgentStats(agentId: number): Promise<{
+    tokenBalance: number;
+    totalRestaurants: number;
+    premiumRestaurants: number;
+    pendingTokenRequests: number;
+  }> {
+    const agent = await this.getAgent(agentId);
+    const agentRestaurants = await this.getRestaurantsByAgentId(agentId);
+    const pendingRequests = await db.select({ count: count() })
+      .from(tokenRequests)
+      .where(and(
+        eq(tokenRequests.agentId, agentId),
+        eq(tokenRequests.status, 'pending')
+      ));
+
+    return {
+      tokenBalance: agent?.tokenBalance || 0,
+      totalRestaurants: agentRestaurants.length,
+      premiumRestaurants: agentRestaurants.filter(r => r.isPremium).length,
+      pendingTokenRequests: pendingRequests[0]?.count || 0
+    };
+  }
+
+  async getRestaurantsByAgentId(agentId: number): Promise<Restaurant[]> {
+    return await db.select().from(restaurants)
+      .where(eq(restaurants.agentId, agentId))
+      .orderBy(desc(restaurants.createdAt));
   }
 }
 
