@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle, List } from "lucide-react";
+import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle, List, Coins } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTranslation } from "react-i18next";
 import { useSubscription } from "@/hooks/use-subscription";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useQuery } from "@tanstack/react-query";
 
 interface SidebarNavigationProps {
   onLogout?: () => void;
@@ -24,6 +25,13 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { subscription, isPaid } = useSubscription();
   const { t } = useTranslation();
+  
+  // Check if user is an approved agent
+  const { data: agent } = useQuery<{ approvalStatus: string } | null>({
+    queryKey: ["/api/agents/me"],
+    retry: false,
+  });
+  const isAgent = agent && agent.approvalStatus === 'approved';
   
   // Define navigation items with Categories
   const navItems: NavItem[] = [
@@ -87,7 +95,13 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       icon: <Mail className="h-5 w-5" />,
       label: 'Contact',
       path: '/contact'
-    }
+    },
+    ...(isAgent ? [{
+      id: 'agent-dashboard',
+      icon: <Coins className="h-5 w-5" />,
+      label: 'Agent Dashboard',
+      path: '/agent-dashboard'
+    }] : [])
   ];
 
   // Filter items based on subscription status
