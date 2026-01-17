@@ -33,6 +33,7 @@ import AdminMenuExamples from "./pages/admin-menu-examples";
 import AdminTestimonials from "./pages/admin-testimonials";
 import AdminAgents from "./pages/admin-agents";
 import AgentRegistration from "./pages/agent-registration";
+import AgentDashboard from "./pages/agent-dashboard";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -176,6 +177,7 @@ function Router() {
         <AuthenticatedRoute path="/chapa-subscribe/:planId" component={ChapaSubscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
         <AuthenticatedRoute path="/agent-registration" component={AgentRegistration} />
+        <AuthenticatedRoute path="/agent-dashboard" component={AgentDashboard} />
 
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />

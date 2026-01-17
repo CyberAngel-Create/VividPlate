@@ -1520,22 +1520,37 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Token management operations
-  async generateAgentCode(): Promise<string> {
-    const allAgents = await db.select({ agentCode: agents.agentCode }).from(agents);
-    const existingCodes = allAgents.map(a => a.agentCode).filter(Boolean);
-    
-    let maxNum = 0;
-    for (const code of existingCodes) {
-      if (code && code.startsWith('AG-')) {
-        const num = parseInt(code.substring(3), 10);
-        if (!isNaN(num) && num > maxNum) {
-          maxNum = num;
+  async generateAgentCode(retries = 3): Promise<string> {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      const allAgents = await db.select({ agentCode: agents.agentCode }).from(agents);
+      const existingCodes = allAgents.map(a => a.agentCode).filter(Boolean);
+      
+      let maxNum = 0;
+      for (const code of existingCodes) {
+        if (code && code.startsWith('AG-')) {
+          const num = parseInt(code.substring(3), 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
         }
+      }
+      
+      const nextNum = maxNum + 1 + attempt; // Add attempt offset for retries
+      const newCode = `AG-${nextNum.toString().padStart(3, '0')}`;
+      
+      // Check if code already exists (double-check for concurrent safety)
+      const existingWithCode = await db.select({ id: agents.id })
+        .from(agents)
+        .where(eq(agents.agentCode, newCode));
+      
+      if (existingWithCode.length === 0) {
+        return newCode;
       }
     }
     
-    const nextNum = maxNum + 1;
-    return `AG-${nextNum.toString().padStart(3, '0')}`;
+    // Fallback with timestamp for uniqueness
+    const timestamp = Date.now().toString(36).toUpperCase();
+    return `AG-${timestamp}`;
   }
 
   async createTokenRequest(request: InsertTokenRequest): Promise<TokenRequest> {
@@ -1569,6 +1584,11 @@ export class DatabaseStorage implements IStorage {
     const request = await this.getTokenRequest(id);
     if (!request || request.status !== 'pending') return undefined;
 
+    const agent = await this.getAgent(request.agentId);
+    if (!agent) return undefined;
+
+    // Perform all operations together - if any fail, the changes will be rolled back on error
+    // Update token request status
     const [updated] = await db.update(tokenRequests)
       .set({
         status: 'approved',
@@ -1576,18 +1596,29 @@ export class DatabaseStorage implements IStorage {
         approvedAt: new Date(),
         adminNotes: notes
       })
-      .where(eq(tokenRequests.id, id))
+      .where(and(
+        eq(tokenRequests.id, id),
+        eq(tokenRequests.status, 'pending') // Double-check status to prevent race conditions
+      ))
       .returning();
 
-    if (updated) {
-      await this.addTokensToAgent(
-        updated.agentId,
-        updated.requestedTokens,
-        adminId,
-        `Token request #${id} approved`,
-        id
-      );
-    }
+    if (!updated) return undefined; // Request was already processed
+
+    // Update agent token balance
+    const newBalance = (agent.tokenBalance || 0) + updated.requestedTokens;
+    await db.update(agents)
+      .set({ tokenBalance: newBalance, updatedAt: new Date() })
+      .where(eq(agents.id, request.agentId));
+
+    // Create audit transaction
+    await db.insert(tokenTransactions).values({
+      agentId: request.agentId,
+      amount: updated.requestedTokens,
+      type: 'credit',
+      reason: `Token request #${id} approved`,
+      tokenRequestId: id,
+      adminId: adminId
+    });
 
     return updated;
   }

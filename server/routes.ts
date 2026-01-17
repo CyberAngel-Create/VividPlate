@@ -12,7 +12,8 @@ import {
   insertAdminLogSchema,
   insertDietaryPreferencesSchema,
   insertWaiterCallSchema,
-  insertAgentSchema
+  insertAgentSchema,
+  insertTokenRequestSchema
 } from "@shared/schema";
 import { ObjectStorageService } from './objectStorage';
 import session from "express-session";
@@ -3665,7 +3666,14 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
-  // Agent: Request tokens
+  // Agent: Request tokens - with Zod validation
+  const tokenRequestBodySchema = insertTokenRequestSchema.pick({
+    requestedTokens: true,
+    notes: true
+  }).extend({
+    requestedTokens: z.number().int().min(1, "Must request at least 1 token").max(100, "Cannot request more than 100 tokens at once")
+  });
+
   app.post('/api/agents/me/token-requests', isAuthenticated, async (req, res) => {
     try {
       const user = req.user as any;
@@ -3677,10 +3685,16 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(403).json({ message: 'Only approved agents can request tokens' });
       }
 
-      const { requestedTokens, notes } = req.body;
-      if (!requestedTokens || requestedTokens < 1) {
-        return res.status(400).json({ message: 'Must request at least 1 token' });
+      // Validate request body with Zod
+      const parseResult = tokenRequestBodySchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res.status(400).json({ 
+          message: 'Invalid request data',
+          errors: parseResult.error.flatten().fieldErrors
+        });
       }
+
+      const { requestedTokens, notes } = parseResult.data;
 
       const tokenRequest = await storage.createTokenRequest({
         agentId: agent.id,
