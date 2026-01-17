@@ -3402,6 +3402,59 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Agent Registration and Approval API
   // ============================================
 
+  // Agent document upload (ID front/back, selfie)
+  app.post('/api/upload/agent-document', isAuthenticated, upload.single('image'), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      console.log(`Processing agent document upload from user ID: ${userId}`);
+      
+      if (!req.file) {
+        return res.status(400).json({ 
+          message: 'No file uploaded',
+          success: false
+        });
+      }
+      
+      // Validate file type
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validMimeTypes.includes(req.file.mimetype)) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (e) {}
+        return res.status(400).json({
+          message: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.',
+          success: false
+        });
+      }
+      
+      // Process and compress the image
+      const imageBuffer = fs.readFileSync(req.file.path);
+      const compressedBuffer = await compressImageSmart(imageBuffer, {
+        targetSizeKB: 150,
+        minQuality: 50,
+        maxWidth: 1200,
+        maxHeight: 1200
+      });
+      
+      // Convert to base64 for storage
+      const base64Image = `data:${req.file.mimetype};base64,${compressedBuffer.toString('base64')}`;
+      
+      // Clean up temp file
+      try {
+        fs.unlinkSync(req.file.path);
+      } catch (e) {}
+      
+      res.json({
+        success: true,
+        imageUrl: base64Image,
+        message: 'Document uploaded successfully'
+      });
+    } catch (error) {
+      console.error('Agent document upload error:', error);
+      res.status(500).json({ message: 'Failed to upload document' });
+    }
+  });
+
   // Agent registration - create agent profile
   app.post('/api/agents/register', isAuthenticated, async (req, res) => {
     try {

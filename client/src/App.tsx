@@ -55,6 +55,7 @@ import TermsOfService from "./pages/terms";
 import CategoriesPage from "./pages/categories";
 import PasswordResetHelp from "./pages/password-reset-help";
 import ChapaSubscribe from "./pages/chapa-subscribe";
+import ChangePassword from "./pages/change-password";
 import { PWAInstaller } from "@/components/PWAInstaller";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -181,6 +182,7 @@ function Router() {
         <AuthenticatedRoute path="/agent-registration" component={AgentRegistration} />
         <AuthenticatedRoute path="/agent-dashboard" component={AgentDashboard} />
         <AuthenticatedRoute path="/agent/create-restaurant" component={AgentCreateRestaurant} />
+        <AuthenticatedRoute path="/change-password" component={ChangePassword} />
 
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />
