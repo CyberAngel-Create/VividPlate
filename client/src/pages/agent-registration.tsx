@@ -248,16 +248,22 @@ export default function AgentRegistration() {
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
         </Button>
         
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+        <Card className="border-2 border-primary/20">
+          <CardHeader className="bg-primary/5">
+            <CardTitle className="flex items-center gap-2 text-primary">
               <FileText className="w-6 h-6" />
-              Register as an Agent
+              Complete Your Agent Registration
             </CardTitle>
-            <CardDescription>
-              To create and manage restaurants on VividPlate, you need to register as an agent. 
-              Please provide your personal information and a valid ID document.
+            <CardDescription className="text-base">
+              <span className="font-semibold text-foreground">Almost there!</span> To create and manage restaurants on VividPlate, 
+              please complete your agent profile below. This is a one-time verification process.
             </CardDescription>
+            <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-800 dark:text-amber-200">
+                <strong>Required:</strong> Fill in all fields and upload your ID document. 
+                After submission, your application will be reviewed within 1-2 business days.
+              </p>
+            </div>
           </CardHeader>
           <CardContent>
             <Form {...form}>
