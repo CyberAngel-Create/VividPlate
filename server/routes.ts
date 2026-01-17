@@ -3546,6 +3546,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     ownerEmail: z.string().email().optional().or(z.literal("")),
     ownerPassword: z.string().min(6, "Password must be at least 6 characters"),
     ownerPhone: z.string().min(1, "Owner phone is required").max(20),
+    premiumMonths: z.number().int().min(1).max(24).default(1),
   });
 
   app.post('/api/agents/create-restaurant', isAuthenticated, async (req, res) => {
@@ -3564,14 +3565,15 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(403).json({ message: 'Your agent account is not approved yet' });
       }
       
+      // Validate input with Zod schema first to know how many tokens needed
+      const validatedData = agentCreateRestaurantSchema.parse(req.body);
+      const tokensRequired = validatedData.premiumMonths;
+
       // Double-check token balance (prevents race conditions)
       const currentAgent = await storage.getAgentByUserId(user.id);
-      if (!currentAgent || (currentAgent.tokenBalance || 0) < 1) {
-        return res.status(400).json({ message: 'Insufficient tokens. You need at least 1 token to create a restaurant.' });
+      if (!currentAgent || (currentAgent.tokenBalance || 0) < tokensRequired) {
+        return res.status(400).json({ message: `Insufficient tokens. You need ${tokensRequired} token(s) for ${tokensRequired} month(s) premium.` });
       }
-
-      // Validate input with Zod schema
-      const validatedData = agentCreateRestaurantSchema.parse(req.body);
 
       // Check if username already exists
       const existingUser = await storage.getUserByUsername(validatedData.ownerUsername);
@@ -3601,7 +3603,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       });
       createdUserId = ownerUser.id;
 
-      // Create the restaurant
+      // Calculate premium expiry date
+      const premiumExpiresAt = new Date();
+      premiumExpiresAt.setMonth(premiumExpiresAt.getMonth() + tokensRequired);
+
+      // Create the restaurant with premium duration
       const restaurant = await storage.createRestaurant({
         userId: ownerUser.id,
         name: validatedData.restaurantName,
@@ -3611,31 +3617,36 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         agentId: currentAgent.id,
         approvalStatus: 'pending_approval',
         isPremium: true,
-        isActive: false
+        isActive: false,
+        premiumMonths: tokensRequired,
+        premiumExpiresAt: premiumExpiresAt
       });
       createdRestaurantId = restaurant.id;
 
-      // Deduct 1 token from agent
-      const newBalance = (currentAgent.tokenBalance || 0) - 1;
+      // Deduct tokens from agent (1 token per month)
+      const newBalance = (currentAgent.tokenBalance || 0) - tokensRequired;
       await storage.updateAgent(currentAgent.id, { tokenBalance: newBalance });
 
       // Create token transaction record
       await storage.createTokenTransaction({
         agentId: currentAgent.id,
-        amount: -1,
+        amount: -tokensRequired,
         type: 'debit',
-        reason: `Created restaurant: ${validatedData.restaurantName}`,
+        reason: `Created restaurant: ${validatedData.restaurantName} (${tokensRequired} month${tokensRequired > 1 ? 's' : ''} premium)`,
         relatedRestaurantId: restaurant.id
       });
 
       res.json({
-        message: 'Restaurant created successfully',
+        message: `Restaurant created successfully with ${tokensRequired} month(s) premium`,
         restaurant,
         ownerCredentials: {
           username: validatedData.ownerUsername,
           email: validatedData.ownerEmail,
           phone: validatedData.ownerPhone
         },
+        premiumMonths: tokensRequired,
+        premiumExpiresAt: premiumExpiresAt,
+        tokensUsed: tokensRequired,
         newTokenBalance: newBalance
       });
     } catch (error) {

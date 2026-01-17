@@ -29,8 +29,16 @@ import {
   Eye,
   EyeOff,
   Coins,
-  AlertCircle
+  AlertCircle,
+  Calendar
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Agent {
   id: number;
@@ -52,6 +60,7 @@ export default function AgentCreateRestaurant() {
     ownerEmail: "",
     ownerPassword: "",
     ownerPhone: "",
+    premiumMonths: 1,
   });
 
   const { data: agent, isLoading: agentLoading } = useQuery<Agent>({
@@ -68,10 +77,10 @@ export default function AgentCreateRestaurant() {
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Restaurant Created",
-        description: "Restaurant and owner account created successfully. 1 token has been deducted.",
+        description: `Restaurant and owner account created successfully. ${formData.premiumMonths} token(s) deducted for ${formData.premiumMonths} month(s) premium.`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/agents/me"] });
       queryClient.invalidateQueries({ queryKey: ["/api/agents/me/stats"] });
@@ -137,6 +146,8 @@ export default function AgentCreateRestaurant() {
     );
   }
 
+  const hasEnoughTokens = agent.tokenBalance >= formData.premiumMonths;
+
   if (agent.tokenBalance < 1) {
     return (
       <AgentLayout>
@@ -182,7 +193,7 @@ export default function AgentCreateRestaurant() {
             <Alert className="mt-4">
               <Coins className="h-4 w-4" />
               <AlertDescription>
-                Creating a restaurant will consume 1 token from your balance.
+                1 token = 1 month premium. Select how many months of premium for this restaurant.
               </AlertDescription>
             </Alert>
           </CardHeader>
@@ -318,6 +329,60 @@ export default function AgentCreateRestaurant() {
                 </div>
               </div>
 
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold border-b pb-2">Premium Duration</h3>
+                <p className="text-sm text-muted-foreground">
+                  Select how many months of premium access for this restaurant. Each month costs 1 token.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+                  <div className="space-y-2">
+                    <Label htmlFor="premiumMonths">
+                      <Calendar className="w-4 h-4 inline mr-1" />
+                      Premium Months *
+                    </Label>
+                    <Select
+                      value={formData.premiumMonths.toString()}
+                      onValueChange={(value) => setFormData({ ...formData, premiumMonths: parseInt(value) })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select months" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((month) => (
+                          <SelectItem 
+                            key={month} 
+                            value={month.toString()}
+                            disabled={month > agent.tokenBalance}
+                          >
+                            {month} month{month > 1 ? 's' : ''} ({month} token{month > 1 ? 's' : ''})
+                            {month > agent.tokenBalance && ' - Not enough tokens'}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="p-4 bg-muted rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Token Cost:</span>
+                      <Badge variant={hasEnoughTokens ? "default" : "destructive"} className="text-lg">
+                        <Coins className="w-4 h-4 mr-1" />
+                        {formData.premiumMonths} token{formData.premiumMonths > 1 ? 's' : ''}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm text-muted-foreground">Your Balance:</span>
+                      <span className="text-sm font-medium">{agent.tokenBalance} tokens</span>
+                    </div>
+                    {!hasEnoughTokens && (
+                      <p className="text-xs text-destructive mt-2">
+                        You don't have enough tokens for {formData.premiumMonths} months.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div className="flex gap-4 pt-4">
                 <Button
                   type="button"
@@ -329,11 +394,11 @@ export default function AgentCreateRestaurant() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={createRestaurantMutation.isPending}
+                  disabled={createRestaurantMutation.isPending || !hasEnoughTokens}
                   className="flex-1"
                 >
                   {createRestaurantMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Restaurant (1 Token)
+                  Create Restaurant ({formData.premiumMonths} Token{formData.premiumMonths > 1 ? 's' : ''})
                 </Button>
               </div>
             </form>
