@@ -3389,6 +3389,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   app.post('/api/admin/advertisements', isAuthenticated, isAdmin, async (req, res) => {
     try {
+      const user = req.user as any;
       const adData = {
         title: req.body.title,
         description: req.body.description || '',
@@ -3399,6 +3400,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         startDate: req.body.startDate ? new Date(req.body.startDate) : new Date(),
         endDate: req.body.endDate ? new Date(req.body.endDate) : null,
         isAlcoholic: req.body.isAlcoholic || false,
+        createdBy: user.id,
       };
       const advertisement = await storage.createAdvertisement(adData);
       res.json(advertisement);
