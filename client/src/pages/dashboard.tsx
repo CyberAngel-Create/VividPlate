@@ -39,6 +39,8 @@ interface SubscriptionStatus {
   maxRestaurants: number;
   currentRestaurants: number;
   expiresAt: string | null;
+  hasAgentPremiumRestaurant?: boolean;
+  agentId?: number | null;
 }
 
 const Dashboard = () => {
@@ -87,18 +89,30 @@ const Dashboard = () => {
   }
 
   if (!activeRestaurant) {
+    // For agent-premium users without a restaurant, they need to contact their agent
+    const hasAgentPremium = subscriptionStatus?.hasAgentPremiumRestaurant;
+    
     return (
       <RestaurantOwnerLayout>
         <h1 className="text-2xl font-heading font-bold mb-6">Restaurant Dashboard</h1>
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
-          <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
-          <p className="mb-6">Create your first restaurant to get started with VividPlate.</p>
-          <button 
-            onClick={() => window.location.href = "/edit-restaurant"}
-            className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
-          >
-            Create Restaurant
-          </button>
+          {hasAgentPremium ? (
+            <>
+              <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
+              <p className="mb-6">Your restaurant was set up by an agent. Please contact your agent if you need assistance.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-lg mb-4">You haven't created a restaurant yet.</p>
+              <p className="mb-6">Create your first restaurant to get started with VividPlate.</p>
+              <button 
+                onClick={() => setLocation("/edit-restaurant")}
+                className="bg-primary text-white px-4 py-2 rounded-md font-medium hover:bg-opacity-90 transition-colors"
+              >
+                Create Restaurant
+              </button>
+            </>
+          )}
         </div>
       </RestaurantOwnerLayout>
     );
@@ -178,7 +192,7 @@ const Dashboard = () => {
                 )}
               </div>
               <div className="mt-2 sm:mt-0 sm:ml-auto flex flex-col sm:flex-row gap-2">
-                {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && (
+                {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && !subscriptionStatus.hasAgentPremiumRestaurant && (
                   <button 
                     onClick={() => window.location.href = "/edit-restaurant"}
                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
@@ -186,7 +200,15 @@ const Dashboard = () => {
                     Create New Restaurant
                   </button>
                 )}
-                {!subscriptionStatus.isPaid && (
+                {subscriptionStatus.hasAgentPremiumRestaurant && subscriptionStatus.agentId && (
+                  <button 
+                    onClick={() => setLocation("/request-restaurant")}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
+                  >
+                    Request Additional Restaurant
+                  </button>
+                )}
+                {!subscriptionStatus.isPaid && !subscriptionStatus.hasAgentPremiumRestaurant && (
                   <button 
                     onClick={() => window.location.href = "/subscribe"}
                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
@@ -210,13 +232,17 @@ const Dashboard = () => {
                 </h3>
                 <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
                   This restaurant is currently inactive due to your subscription plan. 
-                  Free users can only access their first restaurant. 
-                  <button 
-                    onClick={() => window.location.href = "/subscribe"}
-                    className="underline hover:no-underline ml-1"
-                  >
-                    Upgrade to premium
-                  </button> to activate all your restaurants.
+                  {subscriptionStatus?.hasAgentPremiumRestaurant ? (
+                    <>Contact your agent to activate this restaurant.</>
+                  ) : (
+                    <>Free users can only access their first restaurant. 
+                    <button 
+                      onClick={() => window.location.href = "/subscribe"}
+                      className="underline hover:no-underline ml-1"
+                    >
+                      Upgrade to premium
+                    </button> to activate all your restaurants.</>
+                  )}
                 </p>
               </div>
             </div>

@@ -5,11 +5,10 @@ import path from "path";
 import session from "express-session";
 import memorystore from "memorystore";
 
-// ==============================
-// Local storage setup
-// ==============================
+// We're using only local storage for all file operations
 console.log("Using local storage for all file operations");
 
+// Ensure uploads directory exists
 const uploadsDir = path.join(process.cwd(), "uploads");
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -20,11 +19,11 @@ if (!fs.existsSync(uploadsDir)) {
 
 try {
   const testFile = path.join(uploadsDir, `test-${Date.now()}.txt`);
-  fs.writeFileSync(testFile, "test");
+  fs.writeFileSync(testFile, "Test write permission");
   fs.unlinkSync(testFile);
   console.log("Uploads directory is writable");
-} catch (err) {
-  console.error("Uploads directory is NOT writable", err);
+} catch (error) {
+  console.error("ERROR: Uploads directory is not writable:", error);
 }
 
 // ==============================
@@ -50,25 +49,46 @@ app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", origin);
   }
 
-  res.header(
-    "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
-  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
   res.header(
     "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
   );
   res.header("Access-Control-Allow-Credentials", "true");
 
-  if (req.method === "OPTIONS") return res.sendStatus(200);
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+
   next();
 });
 
-// ==============================
-// Health check (Cloud Run)
-// ==============================
-app.get("/health", (_req, res) => {
+// Add health check endpoint while preserving SPA routing
+app.get("/health", (req, res) => {
   res.status(200).send("OK");
+});
+
+// Serve ads.txt from client/public directory
+app.get("/ads.txt", (req, res) => {
+  const adsFilePath = path.join(process.cwd(), "client", "public", "ads.txt");
+  if (fs.existsSync(adsFilePath)) {
+    res.type("text/plain").sendFile(adsFilePath);
+  } else {
+    res.status(404).send("ads.txt not found");
+  }
+});
+
+// Add domain-specific handling for custom domain
+app.use((req, res, next) => {
+  const host = req.headers.host;
+
+  // Log requests to help debug domain issues
+  if (host === "vividplate.com" || host === "www.vividplate.com") {
+    console.log(`Custom domain request: ${req.method} ${req.url} from ${host}`);
+  }
+
+  next();
+>>>>>>> 8bdda1f9747cbae0fcedc7df612ca9949fefb842
 });
 
 // ==============================
@@ -97,33 +117,43 @@ app.use((req, res, next) => {
   next();
 });
 
-// ==============================
-// Routes & services
-// ==============================
-import { registerRoutes } from "./routes.js";
-import { DatabaseHealth } from "./database-health.js";
+// Import routes and database health check
+import { registerRoutes } from "./routes";
+import { testBackblazeConnection } from "./backblaze-config";
+import { DatabaseHealth } from "./database-health";
 
 // ==============================
 // Telegram bot
 // ==============================
 async function startTelegramBot() {
   if (!process.env.TELEGRAM_BOT_TOKEN) {
-    console.log("⚠️ Telegram bot disabled (no token)");
+    console.log("⚠️ TELEGRAM_BOT_TOKEN not provided - Telegram bot disabled");
     return;
   }
 
   try {
+    // Import and run the bot as a module
     const { spawn } = await import("child_process");
-    const bot = spawn("node", ["run-telegram-bot.js"], {
-      stdio: "inherit",
+    const botProcess = spawn("node", ["run-telegram-bot.js"], {
+      detached: false,
+      stdio: ["pipe", "pipe", "pipe"],
     });
 
-    console.log("🤖 Telegram bot started");
-    bot.on("exit", (code) =>
-      console.log(`🤖 Bot exited with code ${code}`)
-    );
-  } catch (err) {
-    console.error("❌ Failed to start Telegram bot", err);
+    botProcess.stdout?.on("data", (data) => {
+      console.log(`🤖 Bot: ${data.toString().trim()}`);
+    });
+
+    botProcess.stderr?.on("data", (data) => {
+      console.error(`🤖 Bot Error: ${data.toString().trim()}`);
+    });
+
+    botProcess.on("close", (code) => {
+      console.log(`🤖 Bot process exited with code ${code}`);
+    });
+
+    console.log("🤖 Telegram bot started successfully");
+  } catch (error) {
+    console.error("❌ Failed to start Telegram bot:", error);
   }
 }
 
@@ -131,10 +161,27 @@ async function startTelegramBot() {
 // App startup (Cloud Run SAFE)
 // ==============================
 (async () => {
-  const PORT = Number(process.env.PORT) || 8080;
+  const port = parseInt(process.env.PORT || "5000", 10);
   let dbReady = false;
 
-  console.log("🚀 Starting application...");
+  // Validate environment variables first
+  console.log("🔍 Validating environment configuration...");
+  const envCheck = DatabaseHealth.validateEnvironment();
+  if (!envCheck.valid) {
+    console.error("⚠️ Missing environment variables:", envCheck.missing);
+    console.log("⚠️ Starting in limited mode - some features may not work");
+  } else {
+    console.log("✅ Environment variables validated");
+
+    // Test database connection with retry logic
+    console.log("🔍 Testing database connection...");
+    dbReady = await DatabaseHealth.waitForDatabase(5, 2000);
+    if (!dbReady) {
+      console.error("⚠️ Database connection failed - starting in limited mode");
+    } else {
+      console.log("✅ Database connection established");
+    }
+  }
 
   const server = await registerRoutes(app);
 
@@ -151,30 +198,15 @@ async function startTelegramBot() {
     serveStatic(app);
   }
 
-  // 🔥 LISTEN IMMEDIATELY (Cloud Run requirement)
-  server.listen(PORT, "0.0.0.0", () => {
-    console.log(`✅ Server listening on port ${PORT}`);
-  });
+  server.listen(port, "0.0.0.0", () => {
+    log(`serving on port ${port}`);
+    console.log("🚀 Application started successfully");
 
-  // ==============================
-  // Background checks AFTER listen
-  // ==============================
-  console.log("🔍 Validating environment...");
-  const envCheck = DatabaseHealth.validateEnvironment();
-
-  if (envCheck.valid) {
-    console.log("🔍 Connecting to database...");
-    dbReady = await DatabaseHealth.waitForDatabase(5, 2000);
-
+    // Start Telegram bot only if database is ready
     if (dbReady) {
-      console.log("✅ Database connected");
       startTelegramBot();
-    } else {
-      console.log("⚠️ Database not ready (limited mode)");
     }
-  } else {
-    console.log("⚠️ Missing env vars:", envCheck.missing);
-  }
+  });
 
   // ==============================
   // Graceful shutdown
@@ -189,5 +221,53 @@ async function startTelegramBot() {
   process.on("SIGINT", () => shutdown("SIGINT"));
 })().catch((err) => {
   console.error("💥 Startup failed", err);
+=======
+  server.listen(port, "0.0.0.0", () => {
+    log(`serving on port ${port}`);
+    console.log("🚀 Application started successfully");
+
+    // Start Telegram bot only if database is ready
+    if (dbReady) {
+      startTelegramBot();
+    }
+  });
+
+  // Graceful shutdown handling
+  const gracefulShutdown = (signal: string) => {
+    console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
+
+    server.close((err) => {
+      if (err) {
+        console.error("❌ Error during server shutdown:", err);
+        process.exit(1);
+      }
+
+      console.log("✅ Server closed successfully");
+      process.exit(0);
+    });
+
+    // Force close after 10 seconds
+    setTimeout(() => {
+      console.error("⚠️ Forcing shutdown after timeout");
+      process.exit(1);
+    }, 10000);
+  };
+
+  // Handle shutdown signals
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+  // Handle uncaught exceptions
+  process.on("uncaughtException", (error) => {
+    console.error("💥 Uncaught Exception:", error);
+    gracefulShutdown("uncaughtException");
+  });
+
+  process.on("unhandledRejection", (reason, promise) => {
+    console.error("💥 Unhandled Rejection at:", promise, "reason:", reason);
+    gracefulShutdown("unhandledRejection");
+  });
+})().catch((error) => {
+  console.error("💥 Failed to start application:", error);
   process.exit(1);
 });

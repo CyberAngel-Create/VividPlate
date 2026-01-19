@@ -18,9 +18,13 @@ import {
   menuExamples, MenuExample, InsertMenuExample,
   testimonials, Testimonial, InsertTestimonial,
   permanentImages, PermanentImage, InsertPermanentImage,
-  waiterCalls, WaiterCall, InsertWaiterCall
-} from "../shared/schema.js";
-import { db } from "./db.js";
+  waiterCalls, WaiterCall, InsertWaiterCall,
+  agents, Agent, InsertAgent,
+  tokenRequests, TokenRequest, InsertTokenRequest,
+  tokenTransactions, TokenTransaction, InsertTokenTransaction,
+  restaurantRequests, RestaurantRequest, InsertRestaurantRequest
+} from "@shared/schema";
+import { db } from "./db";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
 import { phoneNumbersMatch, getPhoneNumberVariations } from "../shared/phone-utils";
 
@@ -225,6 +229,59 @@ export interface IStorage {
   getWaiterCall(id: number): Promise<WaiterCall | undefined>;
   updateWaiterCallStatus(id: number, status: string): Promise<WaiterCall | undefined>;
   getPendingWaiterCalls(restaurantId: number): Promise<WaiterCall[]>;
+
+  // Agent operations
+  createAgent(agent: InsertAgent): Promise<Agent>;
+  getAgent(id: number): Promise<Agent | undefined>;
+  getAgentByUserId(userId: number): Promise<Agent | undefined>;
+  getAllAgents(): Promise<Agent[]>;
+  getPendingAgents(): Promise<Agent[]>;
+  getApprovedAgents(): Promise<Agent[]>;
+  updateAgent(id: number, agent: Partial<Agent>): Promise<Agent | undefined>;
+  approveAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined>;
+  rejectAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined>;
+
+  // Restaurant approval operations
+  getPendingRestaurants(): Promise<Restaurant[]>;
+  approveRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined>;
+  rejectRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined>;
+
+  // Free tier limit checks
+  countCategoriesByRestaurantId(restaurantId: number): Promise<number>;
+  countItemsByCategoryId(categoryId: number): Promise<number>;
+  countBannersByRestaurantId(restaurantId: number): Promise<number>;
+
+  // Token management operations
+  generateAgentCode(): Promise<string>;
+  createTokenRequest(request: InsertTokenRequest): Promise<TokenRequest>;
+  getTokenRequest(id: number): Promise<TokenRequest | undefined>;
+  getTokenRequestsByAgentId(agentId: number): Promise<TokenRequest[]>;
+  getPendingTokenRequests(): Promise<TokenRequest[]>;
+  getAllTokenRequests(): Promise<TokenRequest[]>;
+  approveTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined>;
+  rejectTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined>;
+  createTokenTransaction(transaction: InsertTokenTransaction): Promise<TokenTransaction>;
+  getTokenTransactionsByAgentId(agentId: number): Promise<TokenTransaction[]>;
+  addTokensToAgent(agentId: number, amount: number, adminId: number, reason: string, requestId?: number): Promise<Agent | undefined>;
+  debitTokensFromAgent(agentId: number, amount: number, reason: string, restaurantId?: number): Promise<Agent | undefined>;
+  getAgentStats(agentId: number): Promise<{
+    tokenBalance: number;
+    totalRestaurants: number;
+    premiumRestaurants: number;
+    pendingTokenRequests: number;
+  }>;
+  getRestaurantsByAgentId(agentId: number): Promise<Restaurant[]>;
+
+  // Restaurant request operations (for owners to request additional restaurants from agents)
+  createRestaurantRequest(request: InsertRestaurantRequest): Promise<RestaurantRequest>;
+  getRestaurantRequest(id: number): Promise<RestaurantRequest | undefined>;
+  getRestaurantRequestsByOwnerId(ownerId: number): Promise<RestaurantRequest[]>;
+  getRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]>;
+  getPendingRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]>;
+  updateRestaurantRequest(id: number, request: Partial<RestaurantRequest>): Promise<RestaurantRequest | undefined>;
+  approveRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined>;
+  rejectRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined>;
+  countActiveRestaurantsByOwnerId(ownerId: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1335,19 +1392,421 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Feedback operations
-  async getFeedbacksByRestaurantId(restaurantId: number): Promise<Feedback[]> {
-    try {
-      const result = await db.select()
-        .from(feedbacks)
-        .where(eq(feedbacks.restaurantId, restaurantId))
-        .orderBy(desc(feedbacks.createdAt));
-      
-      return result;
-    } catch (error) {
-      console.error('Error fetching feedbacks:', error);
-      return [];
+  // Agent operations
+  async createAgent(agent: InsertAgent): Promise<Agent> {
+    const [newAgent] = await db.insert(agents).values(agent).returning();
+    return newAgent;
+  }
+
+  async getAgent(id: number): Promise<Agent | undefined> {
+    const [agent] = await db.select().from(agents).where(eq(agents.id, id));
+    return agent;
+  }
+
+  async getAgentByUserId(userId: number): Promise<Agent | undefined> {
+    const [agent] = await db.select().from(agents).where(eq(agents.userId, userId));
+    return agent;
+  }
+
+  async getAllAgents(): Promise<Agent[]> {
+    return await db.select().from(agents).orderBy(desc(agents.createdAt));
+  }
+
+  async getPendingAgents(): Promise<Agent[]> {
+    return await db.select().from(agents)
+      .where(eq(agents.approvalStatus, 'pending'))
+      .orderBy(desc(agents.createdAt));
+  }
+
+  async getApprovedAgents(): Promise<Agent[]> {
+    return await db.select().from(agents)
+      .where(eq(agents.approvalStatus, 'approved'))
+      .orderBy(desc(agents.createdAt));
+  }
+
+  async updateAgent(id: number, agent: Partial<Agent>): Promise<Agent | undefined> {
+    const [updated] = await db.update(agents)
+      .set({ ...agent, updatedAt: new Date() })
+      .where(eq(agents.id, id))
+      .returning();
+    return updated;
+  }
+
+  async approveAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined> {
+    // Generate unique agent code
+    const agentCode = await this.generateAgentCode();
+    
+    const [updated] = await db.update(agents)
+      .set({
+        approvalStatus: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes,
+        agentCode: agentCode,
+        updatedAt: new Date()
+      })
+      .where(eq(agents.id, id))
+      .returning();
+    
+    // Also update the user role to 'agent'
+    if (updated) {
+      await db.update(users)
+        .set({ role: 'agent' })
+        .where(eq(users.id, updated.userId));
     }
+    
+    return updated;
+  }
+
+  async rejectAgent(id: number, adminId: number, notes?: string): Promise<Agent | undefined> {
+    const [updated] = await db.update(agents)
+      .set({
+        approvalStatus: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes,
+        updatedAt: new Date()
+      })
+      .where(eq(agents.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Restaurant approval operations
+  async getPendingRestaurants(): Promise<Restaurant[]> {
+    return await db.select().from(restaurants)
+      .where(eq(restaurants.approvalStatus, 'pending'));
+  }
+
+  async approveRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined> {
+    const [updated] = await db.update(restaurants)
+      .set({
+        adminApproved: true,
+        approvalStatus: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes
+      })
+      .where(eq(restaurants.id, id))
+      .returning();
+    return updated;
+  }
+
+  async rejectRestaurant(id: number, adminId: number, notes?: string): Promise<Restaurant | undefined> {
+    const [updated] = await db.update(restaurants)
+      .set({
+        adminApproved: false,
+        approvalStatus: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        approvalNotes: notes
+      })
+      .where(eq(restaurants.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Free tier limit checks
+  async countCategoriesByRestaurantId(restaurantId: number): Promise<number> {
+    const [result] = await db.select({ count: count() })
+      .from(menuCategories)
+      .where(eq(menuCategories.restaurantId, restaurantId));
+    return result?.count || 0;
+  }
+
+  async countItemsByCategoryId(categoryId: number): Promise<number> {
+    const [result] = await db.select({ count: count() })
+      .from(menuItems)
+      .where(eq(menuItems.categoryId, categoryId));
+    return result?.count || 0;
+  }
+
+  async countBannersByRestaurantId(restaurantId: number): Promise<number> {
+    const [restaurant] = await db.select({ bannerUrls: restaurants.bannerUrls })
+      .from(restaurants)
+      .where(eq(restaurants.id, restaurantId));
+    
+    if (!restaurant || !restaurant.bannerUrls) return 0;
+    const bannerArray = restaurant.bannerUrls as string[];
+    return bannerArray.length;
+  }
+
+  // Token management operations
+  async generateAgentCode(retries = 3): Promise<string> {
+    for (let attempt = 0; attempt < retries; attempt++) {
+      const allAgents = await db.select({ agentCode: agents.agentCode }).from(agents);
+      const existingCodes = allAgents.map(a => a.agentCode).filter(Boolean);
+      
+      let maxNum = 0;
+      for (const code of existingCodes) {
+        if (code && code.startsWith('AG-')) {
+          const num = parseInt(code.substring(3), 10);
+          if (!isNaN(num) && num > maxNum) {
+            maxNum = num;
+          }
+        }
+      }
+      
+      const nextNum = maxNum + 1 + attempt; // Add attempt offset for retries
+      const newCode = `AG-${nextNum.toString().padStart(3, '0')}`;
+      
+      // Check if code already exists (double-check for concurrent safety)
+      const existingWithCode = await db.select({ id: agents.id })
+        .from(agents)
+        .where(eq(agents.agentCode, newCode));
+      
+      if (existingWithCode.length === 0) {
+        return newCode;
+      }
+    }
+    
+    // Fallback with timestamp for uniqueness
+    const timestamp = Date.now().toString(36).toUpperCase();
+    return `AG-${timestamp}`;
+  }
+
+  async createTokenRequest(request: InsertTokenRequest): Promise<TokenRequest> {
+    const [newRequest] = await db.insert(tokenRequests).values(request).returning();
+    return newRequest;
+  }
+
+  async getTokenRequest(id: number): Promise<TokenRequest | undefined> {
+    const [request] = await db.select().from(tokenRequests).where(eq(tokenRequests.id, id));
+    return request;
+  }
+
+  async getTokenRequestsByAgentId(agentId: number): Promise<TokenRequest[]> {
+    return await db.select().from(tokenRequests)
+      .where(eq(tokenRequests.agentId, agentId))
+      .orderBy(desc(tokenRequests.createdAt));
+  }
+
+  async getPendingTokenRequests(): Promise<TokenRequest[]> {
+    return await db.select().from(tokenRequests)
+      .where(eq(tokenRequests.status, 'pending'))
+      .orderBy(desc(tokenRequests.createdAt));
+  }
+
+  async getAllTokenRequests(): Promise<TokenRequest[]> {
+    return await db.select().from(tokenRequests)
+      .orderBy(desc(tokenRequests.createdAt));
+  }
+
+  async approveTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined> {
+    const request = await this.getTokenRequest(id);
+    if (!request || request.status !== 'pending') return undefined;
+
+    const agent = await this.getAgent(request.agentId);
+    if (!agent) return undefined;
+
+    // Perform all operations together - if any fail, the changes will be rolled back on error
+    // Update token request status
+    const [updated] = await db.update(tokenRequests)
+      .set({
+        status: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        adminNotes: notes
+      })
+      .where(and(
+        eq(tokenRequests.id, id),
+        eq(tokenRequests.status, 'pending') // Double-check status to prevent race conditions
+      ))
+      .returning();
+
+    if (!updated) return undefined; // Request was already processed
+
+    // Update agent token balance
+    const newBalance = (agent.tokenBalance || 0) + updated.requestedTokens;
+    await db.update(agents)
+      .set({ tokenBalance: newBalance, updatedAt: new Date() })
+      .where(eq(agents.id, request.agentId));
+
+    // Create audit transaction
+    await db.insert(tokenTransactions).values({
+      agentId: request.agentId,
+      amount: updated.requestedTokens,
+      type: 'credit',
+      reason: `Token request #${id} approved`,
+      tokenRequestId: id,
+      adminId: adminId
+    });
+
+    return updated;
+  }
+
+  async rejectTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined> {
+    const [updated] = await db.update(tokenRequests)
+      .set({
+        status: 'rejected',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        adminNotes: notes
+      })
+      .where(eq(tokenRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async createTokenTransaction(transaction: InsertTokenTransaction): Promise<TokenTransaction> {
+    const [newTransaction] = await db.insert(tokenTransactions).values(transaction).returning();
+    return newTransaction;
+  }
+
+  async getTokenTransactionsByAgentId(agentId: number): Promise<TokenTransaction[]> {
+    return await db.select().from(tokenTransactions)
+      .where(eq(tokenTransactions.agentId, agentId))
+      .orderBy(desc(tokenTransactions.createdAt));
+  }
+
+  async addTokensToAgent(agentId: number, amount: number, adminId: number, reason: string, requestId?: number): Promise<Agent | undefined> {
+    const agent = await this.getAgent(agentId);
+    if (!agent) return undefined;
+
+    const newBalance = (agent.tokenBalance || 0) + amount;
+    
+    const [updated] = await db.update(agents)
+      .set({ tokenBalance: newBalance, updatedAt: new Date() })
+      .where(eq(agents.id, agentId))
+      .returning();
+
+    await this.createTokenTransaction({
+      agentId,
+      amount,
+      type: 'credit',
+      reason,
+      tokenRequestId: requestId,
+      adminId
+    });
+
+    return updated;
+  }
+
+  async debitTokensFromAgent(agentId: number, amount: number, reason: string, restaurantId?: number): Promise<Agent | undefined> {
+    const agent = await this.getAgent(agentId);
+    if (!agent || (agent.tokenBalance || 0) < amount) return undefined;
+
+    const newBalance = (agent.tokenBalance || 0) - amount;
+    
+    const [updated] = await db.update(agents)
+      .set({ tokenBalance: newBalance, updatedAt: new Date() })
+      .where(eq(agents.id, agentId))
+      .returning();
+
+    await this.createTokenTransaction({
+      agentId,
+      amount: -amount,
+      type: 'debit',
+      reason,
+      restaurantId
+    });
+
+    return updated;
+  }
+
+  async getAgentStats(agentId: number): Promise<{
+    tokenBalance: number;
+    totalRestaurants: number;
+    premiumRestaurants: number;
+    pendingTokenRequests: number;
+  }> {
+    const agent = await this.getAgent(agentId);
+    const agentRestaurants = await this.getRestaurantsByAgentId(agentId);
+    const pendingRequests = await db.select({ count: count() })
+      .from(tokenRequests)
+      .where(and(
+        eq(tokenRequests.agentId, agentId),
+        eq(tokenRequests.status, 'pending')
+      ));
+
+    return {
+      tokenBalance: agent?.tokenBalance || 0,
+      totalRestaurants: agentRestaurants.length,
+      premiumRestaurants: agentRestaurants.filter(r => r.isPremium).length,
+      pendingTokenRequests: pendingRequests[0]?.count || 0
+    };
+  }
+
+  async getRestaurantsByAgentId(agentId: number): Promise<Restaurant[]> {
+    return await db.select().from(restaurants)
+      .where(eq(restaurants.agentId, agentId))
+      .orderBy(desc(restaurants.id));
+  }
+
+  // Restaurant request operations
+  async createRestaurantRequest(request: InsertRestaurantRequest): Promise<RestaurantRequest> {
+    const [created] = await db.insert(restaurantRequests).values(request).returning();
+    return created;
+  }
+
+  async getRestaurantRequest(id: number): Promise<RestaurantRequest | undefined> {
+    const [request] = await db.select().from(restaurantRequests).where(eq(restaurantRequests.id, id));
+    return request;
+  }
+
+  async getRestaurantRequestsByOwnerId(ownerId: number): Promise<RestaurantRequest[]> {
+    return await db.select().from(restaurantRequests)
+      .where(eq(restaurantRequests.ownerUserId, ownerId))
+      .orderBy(desc(restaurantRequests.createdAt));
+  }
+
+  async getRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]> {
+    return await db.select().from(restaurantRequests)
+      .where(eq(restaurantRequests.agentId, agentId))
+      .orderBy(desc(restaurantRequests.createdAt));
+  }
+
+  async getPendingRestaurantRequestsByAgentId(agentId: number): Promise<RestaurantRequest[]> {
+    return await db.select().from(restaurantRequests)
+      .where(and(
+        eq(restaurantRequests.agentId, agentId),
+        eq(restaurantRequests.status, 'pending')
+      ))
+      .orderBy(desc(restaurantRequests.createdAt));
+  }
+
+  async updateRestaurantRequest(id: number, request: Partial<RestaurantRequest>): Promise<RestaurantRequest | undefined> {
+    const [updated] = await db.update(restaurantRequests)
+      .set({ ...request, updatedAt: new Date() })
+      .where(eq(restaurantRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async approveRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined> {
+    const [updated] = await db.update(restaurantRequests)
+      .set({ 
+        status: 'approved', 
+        agentNotes: agentNotes || null, 
+        approvedAt: new Date(),
+        updatedAt: new Date() 
+      })
+      .where(eq(restaurantRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async rejectRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined> {
+    const [updated] = await db.update(restaurantRequests)
+      .set({ 
+        status: 'rejected', 
+        agentNotes: agentNotes || null,
+        updatedAt: new Date() 
+      })
+      .where(eq(restaurantRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async countActiveRestaurantsByOwnerId(ownerId: number): Promise<number> {
+    const result = await db.select({ count: count() })
+      .from(restaurants)
+      .where(and(
+        eq(restaurants.userId, ownerId),
+        eq(restaurants.isActive, true),
+        eq(restaurants.isPremium, true)
+      ));
+    return result[0]?.count || 0;
   }
 }
 

@@ -31,6 +31,14 @@ import AdminContactInfo from "./pages/admin-contact-info";
 import AdminAdvertisements from "./pages/admin-advertisements";
 import AdminMenuExamples from "./pages/admin-menu-examples";
 import AdminTestimonials from "./pages/admin-testimonials";
+import AdminAgents from "./pages/admin-agents";
+import AgentRegistration from "./pages/agent-registration";
+import AgentDashboard from "./pages/agent-dashboard";
+import AgentCreateRestaurant from "./pages/agent-create-restaurant";
+import AgentProfile from "./pages/agent-profile";
+import AgentChangePassword from "./pages/agent-change-password";
+import AdminTokenRequests from "./pages/admin-token-requests";
+import RequestRestaurant from "./pages/request-restaurant";
 import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
@@ -50,6 +58,7 @@ import TermsOfService from "./pages/terms";
 import CategoriesPage from "./pages/categories";
 import PasswordResetHelp from "./pages/password-reset-help";
 import ChapaSubscribe from "./pages/chapa-subscribe";
+import ChangePassword from "./pages/change-password";
 import { PWAInstaller } from "@/components/PWAInstaller";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -173,6 +182,13 @@ function Router() {
         <AuthenticatedRoute path="/subscribe" component={Subscribe} />
         <AuthenticatedRoute path="/chapa-subscribe/:planId" component={ChapaSubscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />
+        <AuthenticatedRoute path="/agent-registration" component={AgentRegistration} />
+        <AuthenticatedRoute path="/agent-dashboard" component={AgentDashboard} />
+        <AuthenticatedRoute path="/agent/create-restaurant" component={AgentCreateRestaurant} />
+        <AuthenticatedRoute path="/agent/profile" component={AgentProfile} />
+        <AuthenticatedRoute path="/agent/change-password" component={AgentChangePassword} />
+        <AuthenticatedRoute path="/change-password" component={ChangePassword} />
+        <AuthenticatedRoute path="/request-restaurant" component={RequestRestaurant} />
 
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />
@@ -186,6 +202,8 @@ function Router() {
         <AdminRoute path="/admin/advertisements" component={AdminAdvertisements} />
         <AdminRoute path="/admin/menu-examples" component={AdminMenuExamples} />
         <AdminRoute path="/admin/testimonials" component={AdminTestimonials} />
+        <AdminRoute path="/admin/agents" component={AdminAgents} />
+        <AdminRoute path="/admin/token-requests" component={AdminTokenRequests} />
 
         <Route component={NotFound} />
       </Switch>

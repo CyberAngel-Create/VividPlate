@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle, List, Coins } from "lucide-react";
+import { LayoutDashboard, Store, LogOut, Menu, Coins, Plus, User, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useTranslation } from "react-i18next";
-import { useSubscription } from "@/hooks/use-subscription";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { useQuery } from "@tanstack/react-query";
 
-interface SidebarNavigationProps {
+interface AgentSidebarProps {
   onLogout?: () => void;
 }
 
@@ -17,112 +15,45 @@ type NavItem = {
   icon: React.ReactNode;
   label: string;
   path: string;
-  showFor?: "all" | "free" | "premium";
 };
 
-const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
+const AgentSidebar = ({ onLogout = () => {} }: AgentSidebarProps) => {
   const [location, setLocation] = useLocation();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const { subscription, isPaid } = useSubscription();
-  const { t } = useTranslation();
-  
-  // Check if user is an approved agent
-  const { data: agent } = useQuery<{ approvalStatus: string } | null>({
+
+  const { data: agent } = useQuery<{ tokenBalance: number } | null>({
     queryKey: ["/api/agents/me"],
     retry: false,
   });
-  const isAgent = agent && agent.approvalStatus === 'approved';
-  
-  // Check subscription status to see if premium is from agent (hide Upgrade Plan)
-  const { data: subscriptionStatus } = useQuery<{ hasAgentPremiumRestaurant?: boolean; isPaid: boolean }>({
-    queryKey: ["/api/user/subscription-status"],
-    retry: false,
-  });
-  const hasAgentPremiumRestaurant = subscriptionStatus?.hasAgentPremiumRestaurant || false;
-  
-  // Define navigation items with Categories
+
+  const hasTokens = agent && agent.tokenBalance > 0;
+
   const navItems: NavItem[] = [
     { 
-      id: 'dashboard', 
+      id: 'agent-dashboard', 
       icon: <LayoutDashboard className="h-5 w-5" />, 
       label: 'Dashboard', 
-      path: '/dashboard' 
+      path: '/agent-dashboard' 
     },
     { 
-      id: 'create-menu', 
-      icon: <MenuSquare className="h-5 w-5" />, 
-      label: 'Create Menu', 
-      path: '/create-menu' 
-    },
-    { 
-      id: 'categories', 
-      icon: <List className="h-5 w-5" />, 
-      label: 'Manage Categories', 
-      path: '/categories' 
-    },
-    { 
-      id: 'edit-restaurant', 
-      icon: <Store className="h-5 w-5" />, 
-      label: 'Restaurant Profile', 
-      path: '/edit-restaurant' 
-    },
-    { 
-      id: 'menu-preview', 
-      icon: <Eye className="h-5 w-5" />, 
-      label: 'Menu Preview', 
-      path: '/menu-preview' 
-    },
-    { 
-      id: 'share', 
-      icon: <Share2 className="h-5 w-5" />, 
-      label: 'Share Menu', 
-      path: '/share-menu' 
-    },
-    { 
-      id: 'tutorial', 
-      icon: <HelpCircle className="h-5 w-5" />, 
-      label: 'Tutorial', 
-      path: '/tutorial' 
-    },
-    { 
-      id: 'pricing', 
-      icon: <CreditCard className="h-5 w-5" />, 
-      label: 'Upgrade Plan', 
-      path: '/pricing',
-      showFor: "free" 
+      id: 'create-restaurant', 
+      icon: hasTokens ? <Plus className="h-5 w-5" /> : <Lock className="h-5 w-5" />, 
+      label: 'Create Restaurant', 
+      path: '/agent/create-restaurant'
     },
     {
       id: 'profile',
       icon: <User className="h-5 w-5" />,
       label: 'Profile',
-      path: '/profile'
+      path: '/agent/profile'
     },
     {
-      id: 'contact',
-      icon: <Mail className="h-5 w-5" />,
-      label: 'Contact',
-      path: '/contact'
+      id: 'change-password',
+      icon: <Lock className="h-5 w-5" />,
+      label: 'Change Password',
+      path: '/agent/change-password'
     },
-    ...(isAgent ? [{
-      id: 'agent-dashboard',
-      icon: <Coins className="h-5 w-5" />,
-      label: 'Agent Dashboard',
-      path: '/agent-dashboard'
-    }] : [])
   ];
-
-  // Filter items based on subscription status
-  // Hide "Upgrade Plan" for users with agent-created premium restaurants (they can't self-upgrade)
-  const filteredNavItems = navItems.filter(item => {
-    if (!item.showFor || item.showFor === "all") return true;
-    if (item.showFor === "premium" && isPaid) return true;
-    if (item.showFor === "free" && !isPaid) {
-      // Hide upgrade option if user has agent-created premium restaurant
-      if (item.id === 'pricing' && hasAgentPremiumRestaurant) return false;
-      return true;
-    }
-    return false;
-  });
 
   const isActive = (path: string) => {
     return location === path;
@@ -135,12 +66,11 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
 
   return (
     <>
-      {/* Mobile Header with Logo and Menu Toggle */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-4 h-16">
-        <Link href="/dashboard">
+        <Link href="/agent-dashboard">
           <div>
             <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">VividPlate</span>
-            <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
+            <span className="ml-2 text-sm font-medium text-amber-600 dark:text-amber-400">Agent</span>
           </div>
         </Link>
         
@@ -156,30 +86,32 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
               <div className="flex flex-col h-full">
                 <div className="p-4 border-b dark:border-gray-800">
                   <span className="text-lg font-heading font-bold text-primary dark:text-primary-light">VividPlate</span>
+                  <span className="ml-2 text-sm font-medium text-amber-600 dark:text-amber-400">Agent</span>
                 </div>
                 
-                {/* Navigation Items */}
                 <nav className="flex-1 overflow-y-auto p-4">
                   <ul className="space-y-2">
-                    {filteredNavItems.map((item) => (
+                    {navItems.map((item) => (
                       <li key={item.id}>
                         <button
                           onClick={() => handleNavigation(item.path)}
+                          disabled={item.id === 'create-restaurant' && !hasTokens}
                           className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
-                            isActive(item.path)
+                            item.id === 'create-restaurant' && !hasTokens
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : isActive(item.path)
                               ? 'bg-primary/10 text-primary dark:bg-primary-dark/20 dark:text-primary-light font-medium'
                               : 'text-gray-700 hover:text-primary hover:bg-gray-100 dark:text-gray-300 dark:hover:text-primary-light dark:hover:bg-gray-800'
                           }`}
                         >
                           {item.icon}
-                          <span className="whitespace-nowrap">{item.label}</span>
+                          <span className="whitespace-nowrap text-left">{item.label}</span>
                         </button>
                       </li>
                     ))}
                   </ul>
                 </nav>
                 
-                {/* Logout */}
                 <div className="p-4 border-t dark:border-gray-800">
                   <Button
                     variant="outline"
@@ -196,25 +128,25 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
         </div>
       </div>
     
-      {/* Desktop Sidebar - Fixed at the left side */}
       <aside className="hidden lg:flex flex-col w-60 h-screen fixed left-0 top-0 bottom-0 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 z-40">
-        {/* Logo */}
         <div className="p-4 border-b dark:border-gray-800">
-          <Link href="/dashboard">
+          <Link href="/agent-dashboard">
             <span className="text-xl font-heading font-bold text-primary dark:text-primary-light">VividPlate</span>
-            <span className="ml-2 text-sm font-medium text-gray-600 dark:text-gray-400">Owner</span>
+            <span className="ml-2 text-sm font-medium text-amber-600 dark:text-amber-400">Agent</span>
           </Link>
         </div>
         
-        {/* Navigation Links */}
         <nav className="flex-1 overflow-y-auto p-4">
           <ul className="space-y-2">
-            {filteredNavItems.map((item) => (
+            {navItems.map((item) => (
               <li key={item.id}>
                 <button
                   onClick={() => handleNavigation(item.path)}
+                  disabled={item.id === 'create-restaurant' && !hasTokens}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm ${
-                    isActive(item.path)
+                    item.id === 'create-restaurant' && !hasTokens
+                      ? 'text-gray-400 cursor-not-allowed'
+                      : isActive(item.path)
                       ? 'bg-primary/10 text-primary dark:bg-primary-dark/20 dark:text-primary-light font-medium'
                       : 'text-gray-700 hover:text-primary hover:bg-gray-100 dark:text-gray-300 dark:hover:text-primary-light dark:hover:bg-gray-800'
                   }`}
@@ -227,7 +159,6 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
           </ul>
         </nav>
         
-        {/* Theme Toggle and Logout */}
         <div className="p-4 border-t dark:border-gray-800 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Appearance</span>
@@ -243,10 +174,8 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
           </Button>
         </div>
       </aside>
-      
-      {/* Mobile padding for content - handled in RestaurantOwnerLayout */}
     </>
   );
 };
 
-export default SidebarNavigation;
+export default AgentSidebar;

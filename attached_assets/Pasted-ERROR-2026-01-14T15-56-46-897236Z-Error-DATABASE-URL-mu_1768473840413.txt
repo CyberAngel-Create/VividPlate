@@ -1,0 +1,32 @@
+ERROR 2026-01-14T15:56:46.897236Z Error: DATABASE_URL must be set. Did you forget to provision a database? at server/db.ts (file:///app/dist/index.js:547:13) at __init (file:///app/dist/index.js:4:56) at server/storage.ts (file:///app/dist/index.js:655:5) at __init (file:///app/dist/index.js:4:56) at file:///app/dist/index.js:2191:1 at ModuleJob.run (node:internal/modules/esm/module_job:325:25) at async ModuleLoader.import (node:internal/modules/esm/loader:606:24) at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)
+  {
+    "textPayload": "Error: DATABASE_URL must be set. Did you forget to provision a database?\n    at server/db.ts (file:///app/dist/index.js:547:13)\n    at __init (file:///app/dist/index.js:4:56)\n    at server/storage.ts (file:///app/dist/index.js:655:5)\n    at __init (file:///app/dist/index.js:4:56)\n    at file:///app/dist/index.js:2191:1\n    at ModuleJob.run (node:internal/modules/esm/module_job:325:25)\n    at async ModuleLoader.import (node:internal/modules/esm/loader:606:24)\n    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5)",
+    "insertId": "6967bcbe000db0d438b752de",
+    "resource": {
+      "type": "cloud_run_revision",
+      "labels": {
+        "location": "europe-west9",
+        "revision_name": "vividplate-00003-r9x",
+        "service_name": "vividplate",
+        "project_id": "white-notch-467408-e9",
+        "configuration_name": "vividplate"
+      }
+    },
+    "timestamp": "2026-01-14T15:56:46.897236Z",
+    "severity": "ERROR",
+    "labels": {
+      "commit-sha": "b047cb14476394208dc5b2c59d2cd88e07b1372a",
+      "managed-by": "gcp-cloud-build-deploy-cloud-run",
+      "instanceId": "005eb6974c966b9a12d8507696c01531635b7a12c24d73a26a0759e319a9ef34526c5fbb100fbe64719f19b2e8093da28179de16bb9a18e7a6ca7bb813ded39645fb9c5b971d6bac3df1255fc52b",
+      "gcb-build-id": "be9b33fd-2d70-426a-81f9-23cb6833c206",
+      "gcb-trigger-region": "global",
+      "gcb-trigger-id": "47678ba0-2641-43a5-af14-3816d13f8d9a"
+    },
+    "logName": "projects/white-notch-467408-e9/logs/run.googleapis.com%2Fstderr",
+    "receiveTimestamp": "2026-01-14T15:56:46.902220669Z",
+    "errorGroups": [
+      {
+        "id": "CJnbqIOx3q_exwE"
+      }
+    ]
+  }

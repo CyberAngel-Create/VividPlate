@@ -1,0 +1,595 @@
+ERROR [builder 5/5] RUN npm run build                                                          89.3s
+------
+ > [builder 5/5] RUN npm run build:
+#0 28.89
+#0 28.89 > rest-express@1.0.0 build
+#0 28.89 > tsc -p tsconfig.server.json
+#0 28.89
+#0 87.06 server/filen-service.ts(23,31): error TS2339: Property 'fs' does not exist on type 'Promise<any>
+'.
+#0 87.06 server/filen-service.ts(30,20): error TS2339: Property 'fs' does not exist on type 'Promise<any>
+'.
+#0 87.06 server/filen-service.ts(42,36): error TS2339: Property 'fs' does not exist on type 'Promise<any>
+'.
+#0 87.06 server/filen-service.ts(49,22): error TS2339: Property 'fs' does not exist on type 'Promise<any>
+'.
+#0 87.06 server/filen-service.ts(121,43): error TS2345: Argument of type 'string' is not assignable to pa
+rameter of type '"menu-items" | "logos" | "banners"'.
+#0 87.06 server/filen-service.ts(134,43): error TS2345: Argument of type 'string' is not assignable to pa
+rameter of type '"menu-items" | "logos" | "banners"'.
+#0 87.06 server/filen-service.ts(147,43): error TS2345: Argument of type 'string' is not assignable to pa
+rameter of type '"menu-items" | "logos" | "banners"'.
+#0 87.06 server/fixed-login.ts(15,40): error TS2835: Relative import paths need explicit file extensions
+in ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './mem-auth.js'?
+#0 87.06 server/routes.ts(571,73): error TS2339: Property 'username' does not exist on type '{}'.
+#0 87.06 server/routes.ts(576,67): error TS2339: Property 'email' does not exist on type '{}'.
+#0 87.06 server/routes.ts(582,16): error TS2339: Property 'password' does not exist on type '{}'.
+#0 87.06 server/routes.ts(582,54): error TS2339: Property 'password' does not exist on type '{}'.
+#0 87.06 server/routes.ts(695,9): error TS2740: Type '{ id: number; username: string; password: string; e
+mail: string; fullName: string; isAdmin: boolean; subscriptionTier: string; isActive: boolean; createdAt:
+ Date; }' is missing the following properties from type '{ id: number; username: string; password: string
+; email: string; fullName: string; phone: string; subscriptionTier: string; stripeCustomerId: string; str
+ipeSubscriptionId: string; telebirrCustomerId: string; ... 6 more ...; createdAt: Date; }': phone, stripe
+CustomerId, stripeSubscriptionId, telebirrCustomerId, and 4 more.
+#0 87.06 server/routes.ts(698,14): error TS2339: Property 'phone' does not exist on type '{ id: number; u
+sername: string; password: string; email: string; fullName: string; isAdmin: boolean; subscriptionTier: s
+tring; isActive: boolean; createdAt: Date; }'.
+#0 87.06 server/routes.ts(698,25): error TS2339: Property 'phone' does not exist on type '{ id: number; u
+sername: string; password: string; email: string; fullName: string; isAdmin: boolean; subscriptionTier: s
+tring; isActive: boolean; createdAt: Date; }'.
+#0 87.09 server/routes.ts(1119,20): error TS2339: Property 'stripeSubscriptionId' does not exist on type
+'User'.
+#0 87.09 server/routes.ts(1121,15): error TS2304: Cannot find name 'stripe'.
+#0 87.09 server/routes.ts(1122,19): error TS2304: Cannot find name 'stripe'.
+#0 87.09 server/routes.ts(1122,56): error TS2339: Property 'stripeSubscriptionId' does not exist on type
+'User'.
+#0 87.09 server/routes.ts(1260,41): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './db.js'?
+#0 87.09 server/routes.ts(1380,56): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './permanent-image-s
+ervice.js'?
+#0 87.09 server/routes.ts(1502,56): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './permanent-image-s
+ervice.js'?
+#0 87.09 server/routes.ts(1721,25): error TS2551: Property 'updateFileUpload' does not exist on type 'Dat
+abaseStorage'. Did you mean 'createFileUpload'?
+#0 87.09 server/routes.ts(2026,62): error TS2339: Property 'imageUrl' does not exist on type '{}'.
+#0 87.09 server/routes.ts(2172,56): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './permanent-image-s
+ervice.js'?
+#0 87.09 server/routes.ts(2290,53): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './image-utils.js'?
+#0 87.09 server/routes.ts(2296,56): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './permanent-image-s
+ervice.js'?
+#0 87.09 server/routes.ts(2517,38): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './chapa-service.js'
+?
+#0 87.09 server/routes.ts(2541,33): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2542,32): error TS2339: Property 'yearlyPrice' does not exist on type 'unknown'
+.
+#0 87.09 server/routes.ts(2546,18): error TS2339: Property 'international' does not exist on type 'unknow
+n'.
+#0 87.09 server/routes.ts(2546,40): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2546,69): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2547,20): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2548,33): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2550,20): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2551,32): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2553,47): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2554,44): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2555,43): error TS2339: Property 'yearlyPrice' does not exist on type 'unknown'
+.
+#0 87.09 server/routes.ts(2559,11): error TS2698: Spread types may only be created from object types.
+#0 87.09 server/routes.ts(2563,31): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2825,33): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2826,32): error TS2339: Property 'yearlyPrice' does not exist on type 'unknown'
+.
+#0 87.09 server/routes.ts(2830,18): error TS2339: Property 'international' does not exist on type 'unknow
+n'.
+#0 87.09 server/routes.ts(2830,40): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2830,69): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2831,20): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2832,33): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2834,20): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2835,32): error TS2339: Property 'internationalPricing' does not exist on type
+'unknown'.
+#0 87.09 server/routes.ts(2837,47): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2838,44): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2839,43): error TS2339: Property 'yearlyPrice' does not exist on type 'unknown'
+.
+#0 87.09 server/routes.ts(2843,11): error TS2698: Spread types may only be created from object types.
+#0 87.09 server/routes.ts(2847,31): error TS2339: Property 'monthlyPrice' does not exist on type 'unknown
+'.
+#0 87.09 server/routes.ts(2899,42): error TS2551: Property 'getUserSubscription' does not exist on type '
+DatabaseStorage'. Did you mean 'getSubscription'?
+#0 87.09 server/routes.ts(3413,9): error TS2698: Spread types may only be created from object types.
+#0 87.09 server/routes.ts(3435,54): error TS2835: Relative import paths need explicit file extensions in
+ECMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean './permanent-image-s
+ervice.js'?
+#0 87.09 server/simple-auth.ts(125,20): error TS2339: Property 'user' does not exist on type 'Session & P
+artial<SessionData>'.
+#0 87.09 server/simple-auth.ts(134,20): error TS2339: Property 'user' does not exist on type 'Session & P
+artial<SessionData>'.
+#0 87.09 server/simple-auth.ts(134,41): error TS2339: Property 'user' does not exist on type 'Session & P
+artial<SessionData>'.
+#0 87.09 server/storage.ts(25,61): error TS2835: Relative import paths need explicit file extensions in E
+CMAScript imports when '--moduleResolution' is 'node16' or 'nodenext'. Did you mean '../shared/phone-util
+s.js'?
+#0 87.11 server/storage.ts(303,50): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { username: string | SQL<unknown> | Placeholder<string, any>; passwo
+rd: string | SQL<unknown> | Placeholder<string, any>; email: string | SQL<unknown> | Placeholder<...>; fu
+llName: string | ... 1 more ... | Placeholder<...>; phone: string | ... 1 more ... | Placeholder<...>; })
+: PgInsertBase<...>', gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ username: string | SQL<unkno
+wn> | Placeholder<string, any>; password: string | SQL<unknown> | Placeholder<string, any>; email: string
+ | SQL<unknown> | Placeholder<...>; fullName: string | ... 1 more ... | Placeholder<...>; phone: string |
+ ... 1 more ... | Placeholder<...>; }'.
+#0 87.11       Type '{}' is missing the following properties from type '{ username: string | SQL<unknown>
+ | Placeholder<string, any>; password: string | SQL<unknown> | Placeholder<string, any>; email: string |
+SQL<unknown> | Placeholder<...>; fullName: string | ... 1 more ... | Placeholder<...>; phone: string | ..
+. 1 more ... | Placeholder<...>; }': username, password, email, fullName, phone
+#0 87.11   Overload 2 of 2, '(values: { username: string | SQL<unknown> | Placeholder<string, any>; passw
+ord: string | SQL<unknown> | Placeholder<string, any>; email: string | SQL<unknown> | Placeholder<...>; f
+ullName: string | ... 1 more ... | Placeholder<...>; phone: string | ... 1 more ... | Placeholder<...>; }
+[]): PgInsertBase<...>', gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ username: string | SQL<unkno
+wn> | Placeholder<string, any>; password: string | SQL<unknown> | Placeholder<string, any>; email: string
+ | SQL<unknown> | Placeholder<...>; fullName: string | ... 1 more ... | Placeholder<...>; phone: string |
+ ... 1 more ... | Placeholder<...>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ username: string | SQL<unknown>
+ | Placeholder<string, any>; password: string | SQL<unknown> | Placeholder<string, any>; email: string |
+SQL<unknown> | Placeholder<...>; fullName: string | ... 1 more ... | Placeholder<...>; phone: string | ..
+. 1 more ... | Placeholder<...>; }[]': length, pop, push, concat, and 29 more.
+#0 87.11 server/storage.ts(332,9): error TS2353: Object literal may only specify known properties, and 'r
+esetPasswordToken' does not exist in type '{ username?: string | SQL<unknown> | PgColumn<ColumnBaseConfig
+<ColumnDataType, string>, {}, {}>; password?: string | SQL<unknown> | PgColumn<...>; email?: string | ...
+ 1 more ... | PgColumn<...>; fullName?: string | ... 1 more ... | PgColumn<...>; phone?: string | ... 1 m
+ore ... | PgColumn<...>; }'.
+#0 87.11 server/storage.ts(344,9): error TS2353: Object literal may only specify known properties, and 'r
+esetPasswordToken' does not exist in type '{ username?: string | SQL<unknown> | PgColumn<ColumnBaseConfig
+<ColumnDataType, string>, {}, {}>; password?: string | SQL<unknown> | PgColumn<...>; email?: string | ...
+ 1 more ... | PgColumn<...>; fullName?: string | ... 1 more ... | PgColumn<...>; phone?: string | ... 1 m
+ore ... | PgColumn<...>; }'.
+#0 87.11 server/storage.ts(395,14): error TS2353: Object literal may only specify known properties, and '
+isActive' does not exist in type '{ username?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDa
+taType, string>, {}, {}>; password?: string | SQL<unknown> | PgColumn<...>; email?: string | ... 1 more .
+.. | PgColumn<...>; fullName?: string | ... 1 more ... | PgColumn<...>; phone?: string | ... 1 more ... |
+ PgColumn<...>; }'.
+#0 87.11 server/storage.ts(403,14): error TS2353: Object literal may only specify known properties, and '
+subscriptionTier' does not exist in type '{ username?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<
+ColumnDataType, string>, {}, {}>; password?: string | SQL<unknown> | PgColumn<...>; email?: string | ...
+1 more ... | PgColumn<...>; fullName?: string | ... 1 more ... | PgColumn<...>; phone?: string | ... 1 mo
+re ... | PgColumn<...>; }'.
+#0 87.11 server/storage.ts(412,9): error TS2353: Object literal may only specify known properties, and 's
+ubscriptionTier' does not exist in type '{ username?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<C
+olumnDataType, string>, {}, {}>; password?: string | SQL<unknown> | PgColumn<...>; email?: string | ... 1
+ more ... | PgColumn<...>; fullName?: string | ... 1 more ... | PgColumn<...>; phone?: string | ... 1 mor
+e ... | PgColumn<...>; }'.
+#0 87.11 server/storage.ts(439,59): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { name: string | SQL<unknown> | Placeholder<string, any>; userId: nu
+mber | SQL<unknown> | Placeholder<string, any>; }): PgInsertBase<PgTableWithColumns<{ name: "restaurants"
+; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the following er
+ror.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; }'.
+#0 87.11       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; }': name, userId
+#0 87.11   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; userId: n
+umber | SQL<unknown> | Placeholder<string, any>; }[]): PgInsertBase<PgTableWithColumns<{ name: "restauran
+ts"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the following
+ error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; }[]': length, pop, pus
+h, concat, and 29 more.
+#0 87.11 server/storage.ts(492,14): error TS2353: Object literal may only specify known properties, and '
+isActive' does not exist in type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataTy
+pe, string>, {}, {}>; userId?: number | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, string>,
+ {}, {}>; }'.
+#0 87.11 server/storage.ts(521,62): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { name: string | SQL<unknown> | Placeholder<string, any>; restaurant
+Id: number | SQL<unknown> | Placeholder<string, any>; }): PgInsertBase<PgTableWithColumns<{ name: "menu_c
+ategories"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the fo
+llowing error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; restaurantId: number | SQL<unknown> | Placeholder<string, any>; }'.
+#0 87.11       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; restaurantId: number | SQL<unknown> | Placeholder<string, any>; }': name, restau
+rantId
+#0 87.11   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; restauran
+tId: number | SQL<unknown> | Placeholder<string, any>; }[]): PgInsertBase<PgTableWithColumns<{ name: "men
+u_categories"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the
+ following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; restaurantId: number | SQL<unknown> | Placeholder<string, any>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; restaurantId: number | SQL<unknown> | Placeholder<string, any>; }[]': length, po
+p, push, concat, and 29 more.
+#0 87.11 server/storage.ts(560,57): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { name: string | SQL<unknown> | Placeholder<string, any>; categoryId
+: number | SQL<unknown> | Placeholder<string, any>; price: string | SQL<unknown> | Placeholder<...>; }):
+PgInsertBase<...>', gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; categoryId: number | SQL<unknown> | Placeholder<string, any>; price: string |
+ SQL<unknown> | Placeholder<...>; }'.
+#0 87.11       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; categoryId: number | SQL<unknown> | Placeholder<string, any>; price: string | SQ
+L<unknown> | Placeholder<...>; }': name, categoryId, price
+#0 87.11   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; categoryI
+d: number | SQL<unknown> | Placeholder<string, any>; price: string | SQL<unknown> | Placeholder<...>; }[]
+): PgInsertBase<...>', gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; categoryId: number | SQL<unknown> | Placeholder<string, any>; price: string |
+ SQL<unknown> | Placeholder<...>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; categoryId: number | SQL<unknown> | Placeholder<string, any>; price: string | SQ
+L<unknown> | Placeholder<...>; }[]': length, pop, push, concat, and 29 more.
+#0 87.11 server/storage.ts(631,57): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { restaurantId: number | SQL<unknown> | Placeholder<string, any>; })
+: PgInsertBase<PgTableWithColumns<{ name: "menu_views"; schema: undefined; columns: { id: PgColumn<{ name
+: "id"; tableName: "menu_views"; ... 12 more ...; generated: undefined; }, {}, {}>; restaurantId: PgColum
+n<...>; viewedAt: PgColumn<...>; source: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>', ga
+ve the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ restaurantId: number | SQL<u
+nknown> | Placeholder<string, any>; }'.
+#0 87.11       Property 'restaurantId' is missing in type '{}' but required in type '{ restaurantId: numb
+er | SQL<unknown> | Placeholder<string, any>; }'.
+#0 87.11   Overload 2 of 2, '(values: { restaurantId: number | SQL<unknown> | Placeholder<string, any>; }
+[]): PgInsertBase<PgTableWithColumns<{ name: "menu_views"; schema: undefined; columns: { id: PgColumn<{ n
+ame: "id"; tableName: "menu_views"; ... 12 more ...; generated: undefined; }, {}, {}>; restaurantId: PgCo
+lumn<...>; viewedAt: PgColumn<...>; source: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>',
+ gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ restaurantId: number | SQL<u
+nknown> | Placeholder<string, any>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ restaurantId: number | SQL<unkn
+own> | Placeholder<string, any>; }[]': length, pop, push, concat, and 29 more.
+#0 87.11 server/storage.ts(651,68): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { userId: number | SQL<unknown> | Placeholder<string, any>; }): PgIn
+sertBase<PgTableWithColumns<{ name: "registration_analytics"; schema: undefined; columns: { id: PgColumn<
+{ name: "id"; tableName: "registration_analytics"; ... 12 more ...; generated: undefined; }, {}, {}>; ...
+ 9 more ...; country: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the following er
+ror.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; }'.
+#0 87.11       Property 'userId' is missing in type '{}' but required in type '{ userId: number | SQL<unk
+nown> | Placeholder<string, any>; }'.
+#0 87.11   Overload 2 of 2, '(values: { userId: number | SQL<unknown> | Placeholder<string, any>; }[]): P
+gInsertBase<PgTableWithColumns<{ name: "registration_analytics"; schema: undefined; columns: { id: PgColu
+mn<{ name: "id"; tableName: "registration_analytics"; ... 12 more ...; generated: undefined; }, {}, {}>;
+... 9 more ...; country: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the following
+ error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ userId: number | SQL<unknown> |
+ Placeholder<string, any>; }[]': length, pop, push, concat, and 29 more.
+#0 87.11 server/storage.ts(693,61): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { userId: number | SQL<unknown> | Placeholder<string, any>; }): PgIn
+sertBase<PgTableWithColumns<{ name: "subscriptions"; schema: undefined; columns: { id: PgColumn<{ name: "
+id"; tableName: "subscriptions"; ... 12 more ...; generated: undefined; }, {}, {}>; ... 5 more ...; isAct
+ive: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; }'.
+#0 87.11       Property 'userId' is missing in type '{}' but required in type '{ userId: number | SQL<unk
+nown> | Placeholder<string, any>; }'.
+#0 87.11   Overload 2 of 2, '(values: { userId: number | SQL<unknown> | Placeholder<string, any>; }[]): P
+gInsertBase<PgTableWithColumns<{ name: "subscriptions"; schema: undefined; columns: { id: PgColumn<{ name
+: "id"; tableName: "subscriptions"; ... 12 more ...; generated: undefined; }, {}, {}>; ... 5 more ...; is
+Active: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ userId: number | SQL<unknown> |
+ Placeholder<string, any>; }[]': length, pop, push, concat, and 29 more.
+#0 87.11 server/storage.ts(734,56): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { status: string | SQL<unknown> | Placeholder<string, any>; userId:
+number | SQL<unknown> | Placeholder<string, any>; paymentMethod: string | SQL<unknown> | Placeholder<...>
+; amount: string | ... 1 more ... | Placeholder<...>; }): PgInsertBase<...>', gave the following error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ status: string | SQL<unknown
+> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; paymentMethod: st
+ring | SQL<unknown> | Placeholder<...>; amount: string | ... 1 more ... | Placeholder<...>; }'.
+#0 87.11       Type '{}' is missing the following properties from type '{ status: string | SQL<unknown> |
+ Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; paymentMethod: strin
+g | SQL<unknown> | Placeholder<...>; amount: string | ... 1 more ... | Placeholder<...>; }': status, user
+Id, paymentMethod, amount
+#0 87.11   Overload 2 of 2, '(values: { status: string | SQL<unknown> | Placeholder<string, any>; userId:
+ number | SQL<unknown> | Placeholder<string, any>; paymentMethod: string | SQL<unknown> | Placeholder<...
+>; amount: string | ... 1 more ... | Placeholder<...>; }[]): PgInsertBase<...>', gave the following error
+.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ status: string | SQL<unknown
+> | Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; paymentMethod: st
+ring | SQL<unknown> | Placeholder<...>; amount: string | ... 1 more ... | Placeholder<...>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ status: string | SQL<unknown> |
+ Placeholder<string, any>; userId: number | SQL<unknown> | Placeholder<string, any>; paymentMethod: strin
+g | SQL<unknown> | Placeholder<...>; amount: string | ... 1 more ... | Placeholder<...>; }[]': length, po
+p, push, concat, and 29 more.
+#0 87.11 server/storage.ts(752,9): error TS2393: Duplicate function implementation.
+#0 87.11 server/storage.ts(765,57): error TS2769: No overload matches this call.
+#0 87.11   Overload 1 of 2, '(value: { restaurantId: number | SQL<unknown> | Placeholder<string, any>; ra
+ting: number | SQL<unknown> | Placeholder<string, any>; }): PgInsertBase<PgTableWithColumns<{ name: "feed
+backs"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the follow
+ing error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ restaurantId: number | SQL<u
+nknown> | Placeholder<string, any>; rating: number | SQL<unknown> | Placeholder<string, any>; }'.
+#0 87.11       Type '{}' is missing the following properties from type '{ restaurantId: number | SQL<unkn
+own> | Placeholder<string, any>; rating: number | SQL<unknown> | Placeholder<string, any>; }': restaurant
+Id, rating
+#0 87.11   Overload 2 of 2, '(values: { restaurantId: number | SQL<unknown> | Placeholder<string, any>; r
+ating: number | SQL<unknown> | Placeholder<string, any>; }[]): PgInsertBase<PgTableWithColumns<{ name: "f
+eedbacks"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the fol
+lowing error.
+#0 87.11     Argument of type '{}' is not assignable to parameter of type '{ restaurantId: number | SQL<u
+nknown> | Placeholder<string, any>; rating: number | SQL<unknown> | Placeholder<string, any>; }[]'.
+#0 87.11       Type '{}' is missing the following properties from type '{ restaurantId: number | SQL<unkn
+own> | Placeholder<string, any>; rating: number | SQL<unknown> | Placeholder<string, any>; }[]': length,
+pop, push, concat, and 29 more.
+#0 87.11 server/storage.ts(779,14): error TS2353: Object literal may only specify known properties, and '
+status' does not exist in type '{ restaurantId?: number | SQL<unknown> | PgColumn<ColumnBaseConfig<Column
+DataType, string>, {}, {}>; rating?: number | SQL<unknown> | PgColumn<...>; }'.
+#0 87.12 server/storage.ts(787,14): error TS2353: Object literal may only specify known properties, and '
+status' does not exist in type '{ restaurantId?: number | SQL<unknown> | PgColumn<ColumnBaseConfig<Column
+DataType, string>, {}, {}>; rating?: number | SQL<unknown> | PgColumn<...>; }'.
+#0 87.13 server/storage.ts(812,66): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { preferences: unknown; }): PgInsertBase<PgTableWithColumns<{ name:
+"dietary_preferences"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "dietary_prefe
+rences"; dataType: "number"; columnType: "PgSerial"; ... 10 more ...; generated: undefined; }, {}, {}>; .
+.. 6 more ...; updatedAt: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the followin
+g error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ preferences: unknown; }'.
+#0 87.13       Property 'preferences' is missing in type '{}' but required in type '{ preferences: unknow
+n; }'.
+#0 87.13   Overload 2 of 2, '(values: { preferences: unknown; }[]): PgInsertBase<PgTableWithColumns<{ nam
+e: "dietary_preferences"; schema: undefined; columns: { id: PgColumn<{ name: "id"; tableName: "dietary_pr
+eferences"; dataType: "number"; columnType: "PgSerial"; ... 10 more ...; generated: undefined; }, {}, {}>
+; ... 6 more ...; updatedAt: PgColumn<...>; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the follo
+wing error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ preferences: unknown; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ preferences: unknown; }[]': len
+gth, pop, push, concat, and 29 more.
+#0 87.13 server/storage.ts(859,62): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { title: string | SQL<unknown> | Placeholder<string, any>; createdBy
+: number | SQL<unknown> | Placeholder<string, any>; }): PgInsertBase<PgTableWithColumns<{ name: "advertis
+ements"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the follo
+wing error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ title: string | SQL<unknown>
+ | Placeholder<string, any>; createdBy: number | SQL<unknown> | Placeholder<string, any>; }'.
+#0 87.13       Type '{}' is missing the following properties from type '{ title: string | SQL<unknown> |
+Placeholder<string, any>; createdBy: number | SQL<unknown> | Placeholder<string, any>; }': title, created
+By
+#0 87.13   Overload 2 of 2, '(values: { title: string | SQL<unknown> | Placeholder<string, any>; createdB
+y: number | SQL<unknown> | Placeholder<string, any>; }[]): PgInsertBase<PgTableWithColumns<{ name: "adver
+tisements"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave the fo
+llowing error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ title: string | SQL<unknown>
+ | Placeholder<string, any>; createdBy: number | SQL<unknown> | Placeholder<string, any>; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ title: string | SQL<unknown> |
+Placeholder<string, any>; createdBy: number | SQL<unknown> | Placeholder<string, any>; }[]': length, pop,
+ push, concat, and 29 more.
+#0 87.13 server/storage.ts(880,59): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { userId: number | SQL<unknown> | Placeholder<string, any>; fileSize
+: number | SQL<unknown> | Placeholder<string, any>; originalFilename: string | SQL<...> | Placeholder<...
+>; ... 4 more ...; fileCategory: string | ... 1 more ... | Placeholder<...>; }): PgInsertBase<...>', gave
+ the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; fileSize: number | SQL<unknown> | Placeholder<string, any>; originalFilenam
+e: string | SQL<...> | Placeholder<...>; ... 4 more ...; fileCategory: string | ... 1 more ... | Placehol
+der<...>; }'.
+#0 87.13       Type '{}' is missing the following properties from type '{ userId: number | SQL<unknown> |
+ Placeholder<string, any>; fileSize: number | SQL<unknown> | Placeholder<string, any>; originalFilename:
+string | SQL<...> | Placeholder<...>; ... 4 more ...; fileCategory: string | ... 1 more ... | Placeholder
+<...>; }': userId, fileSize, originalFilename, storedFilename, and 4 more.
+#0 87.13   Overload 2 of 2, '(values: { userId: number | SQL<unknown> | Placeholder<string, any>; fileSiz
+e: number | SQL<unknown> | Placeholder<string, any>; originalFilename: string | SQL<...> | Placeholder<..
+.>; ... 4 more ...; fileCategory: string | ... 1 more ... | Placeholder<...>; }[]): PgInsertBase<...>', g
+ave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; fileSize: number | SQL<unknown> | Placeholder<string, any>; originalFilenam
+e: string | SQL<...> | Placeholder<...>; ... 4 more ...; fileCategory: string | ... 1 more ... | Placehol
+der<...>; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ userId: number | SQL<unknown> |
+ Placeholder<string, any>; fileSize: number | SQL<unknown> | Placeholder<string, any>; originalFilename:
+string | SQL<...> | Placeholder<...>; ... 4 more ...; fileCategory: string | ... 1 more ... | Placeholder
+<...>; }[]': length, pop, push, concat, and 29 more.
+#0 87.13 server/storage.ts(915,14): error TS2353: Object literal may only specify known properties, and '
+status' does not exist in type '{ userId?: number | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataTy
+pe, string>, {}, {}>; fileSize?: number | SQL<unknown> | PgColumn<...>; ... 5 more ...; fileCategory?: st
+ring | ... 1 more ... | PgColumn<...>; }'.
+#0 87.13 server/storage.ts(944,61): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { userId: number | SQL<unknown> | Placeholder<string, any>; filename
+: string | SQL<unknown> | Placeholder<string, any>; originalName: string | SQL<unknown> | Placeholder<...
+>; mimeType: string | ... 1 more ... | Placeholder<...>; imageData: string | ... 1 more ... | Placeholder
+<...>; fileSize: number | ... 1 more ... | Placeholder<...>; category: string | ... 1 more ... | Placehol
+der<...>; }): PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; filename: string | SQL<unknown> | Placeholder<string, any>; originalName: s
+tring | SQL<unknown> | Placeholder<...>; mimeType: string | ... 1 more ... | Placeholder<...>; imageData:
+ string | ... 1 more ... | Placeholder<...>; fileSize: number | ... 1 more .....'.
+#0 87.13       Type '{}' is missing the following properties from type '{ userId: number | SQL<unknown> |
+ Placeholder<string, any>; filename: string | SQL<unknown> | Placeholder<string, any>; originalName: stri
+ng | SQL<unknown> | Placeholder<...>; mimeType: string | ... 1 more ... | Placeholder<...>; imageData: st
+ring | ... 1 more ... | Placeholder<...>; fileSize: number | ... 1 more .....': userId, filename, origina
+lName, mimeType, and 3 more.
+#0 87.13   Overload 2 of 2, '(values: { userId: number | SQL<unknown> | Placeholder<string, any>; filenam
+e: string | SQL<unknown> | Placeholder<string, any>; originalName: string | SQL<unknown> | Placeholder<..
+.>; mimeType: string | ... 1 more ... | Placeholder<...>; imageData: string | ... 1 more ... | Placeholde
+r<...>; fileSize: number | ... 1 more ... | Placeholder<...>; category: string | ... 1 more ... | Placeho
+lder<...>; }[]): PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ userId: number | SQL<unknown
+> | Placeholder<string, any>; filename: string | SQL<unknown> | Placeholder<string, any>; originalName: s
+tring | SQL<unknown> | Placeholder<...>; mimeType: string | ... 1 more ... | Placeholder<...>; imageData:
+ string | ... 1 more ... | Placeholder<...>; fileSize: number | ... 1 more .....'.
+#0 87.13       Type '{}' is missing the following properties from type '{ userId: number | SQL<unknown> |
+ Placeholder<string, any>; filename: string | SQL<unknown> | Placeholder<string, any>; originalName: stri
+ng | SQL<unknown> | Placeholder<...>; mimeType: string | ... 1 more ... | Placeholder<...>; imageData: st
+ring | ... 1 more ... | Placeholder<...>; fileSize: number | ... 1 more .....': length, pop, push, concat
+, and 29 more.
+#0 87.13 server/storage.ts(975,58): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { adminId: number | SQL<unknown> | Placeholder<string, any>; action:
+ string | SQL<unknown> | Placeholder<string, any>; entityType: string | SQL<unknown> | Placeholder<...>;
+}): PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ adminId: number | SQL<unknow
+n> | Placeholder<string, any>; action: string | SQL<unknown> | Placeholder<string, any>; entityType: stri
+ng | SQL<unknown> | Placeholder<...>; }'.
+#0 87.13       Type '{}' is missing the following properties from type '{ adminId: number | SQL<unknown>
+| Placeholder<string, any>; action: string | SQL<unknown> | Placeholder<string, any>; entityType: string
+| SQL<unknown> | Placeholder<...>; }': adminId, action, entityType
+#0 87.13   Overload 2 of 2, '(values: { adminId: number | SQL<unknown> | Placeholder<string, any>; action
+: string | SQL<unknown> | Placeholder<string, any>; entityType: string | SQL<unknown> | Placeholder<...>;
+ }[]): PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ adminId: number | SQL<unknow
+n> | Placeholder<string, any>; action: string | SQL<unknown> | Placeholder<string, any>; entityType: stri
+ng | SQL<unknown> | Placeholder<...>; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ adminId: number | SQL<unknown>
+| Placeholder<string, any>; action: string | SQL<unknown> | Placeholder<string, any>; entityType: string
+| SQL<unknown> | Placeholder<...>; }[]': length, pop, push, concat, and 29 more.
+#0 87.13 server/storage.ts(1008,60): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { name: string | SQL<unknown> | Placeholder<string, any>; descriptio
+n: string | SQL<unknown> | Placeholder<string, any>; price: number | SQL<unknown> | Placeholder<...>; fea
+tures: string[] | ... 1 more ... | Placeholder<...>; }): PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; description: string | SQL<unknown> | Placeholder<string, any>; price: number
+| SQL<unknown> | Placeholder<...>; features: string[] | ... 1 more ... | Placeholder<...>; }'.
+#0 87.13       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; description: string | SQL<unknown> | Placeholder<string, any>; price: number | S
+QL<unknown> | Placeholder<...>; features: string[] | ... 1 more ... | Placeholder<...>; }': name, descrip
+tion, price, features
+#0 87.13   Overload 2 of 2, '(values: { name: string | SQL<unknown> | Placeholder<string, any>; descripti
+on: string | SQL<unknown> | Placeholder<string, any>; price: number | SQL<unknown> | Placeholder<...>; fe
+atures: string[] | ... 1 more ... | Placeholder<...>; }[]): PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ name: string | SQL<unknown>
+| Placeholder<string, any>; description: string | SQL<unknown> | Placeholder<string, any>; price: number
+| SQL<unknown> | Placeholder<...>; features: string[] | ... 1 more ... | Placeholder<...>; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ name: string | SQL<unknown> | P
+laceholder<string, any>; description: string | SQL<unknown> | Placeholder<string, any>; price: number | S
+QL<unknown> | Placeholder<...>; features: string[] | ... 1 more ... | Placeholder<...>; }[]': length, pop
+, push, concat, and 29 more.
+#0 87.13 server/storage.ts(1045,8): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { email: string | SQL<unknown> | Placeholder<string, any>; phone: st
+ring | SQL<unknown> | Placeholder<string, any>; address: string | SQL<unknown> | Placeholder<...>; }): Pg
+InsertBase<...>', gave the following error.
+#0 87.13     Object literal may only specify known properties, and 'updatedAt' does not exist in type '{
+email: string | SQL<unknown> | Placeholder<string, any>; phone: string | SQL<unknown> | Placeholder<strin
+g, any>; address: string | SQL<unknown> | Placeholder<string, any>; }'.
+#0 87.13   Overload 2 of 2, '(values: { email: string | SQL<unknown> | Placeholder<string, any>; phone: s
+tring | SQL<unknown> | Placeholder<string, any>; address: string | SQL<unknown> | Placeholder<...>; }[]):
+ PgInsertBase<...>', gave the following error.
+#0 87.13     Object literal may only specify known properties, and 'address' does not exist in type '{ em
+ail: string | SQL<unknown> | Placeholder<string, any>; phone: string | SQL<unknown> | Placeholder<string,
+ any>; address: string | SQL<unknown> | Placeholder<string, any>; }[]'.
+#0 87.13 server/storage.ts(1076,15): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { imageUrl: string | SQL<unknown> | Placeholder<string, any>; title:
+ string | SQL<unknown> | Placeholder<string, any>; subtitle: string | SQL<unknown> | Placeholder<...>; })
+: PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ imageUrl: string | SQL<unkno
+wn> | Placeholder<string, any>; title: string | SQL<unknown> | Placeholder<string, any>; subtitle: string
+ | SQL<unknown> | Placeholder<...>; }'.
+#0 87.13       Type '{}' is missing the following properties from type '{ imageUrl: string | SQL<unknown>
+ | Placeholder<string, any>; title: string | SQL<unknown> | Placeholder<string, any>; subtitle: string |
+SQL<unknown> | Placeholder<...>; }': imageUrl, title, subtitle
+#0 87.13   Overload 2 of 2, '(values: { imageUrl: string | SQL<unknown> | Placeholder<string, any>; title
+: string | SQL<unknown> | Placeholder<string, any>; subtitle: string | SQL<unknown> | Placeholder<...>; }
+[]): PgInsertBase<...>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ imageUrl: string | SQL<unkno
+wn> | Placeholder<string, any>; title: string | SQL<unknown> | Placeholder<string, any>; subtitle: string
+ | SQL<unknown> | Placeholder<...>; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ imageUrl: string | SQL<unknown>
+ | Placeholder<string, any>; title: string | SQL<unknown> | Placeholder<string, any>; subtitle: string |
+SQL<unknown> | Placeholder<...>; }[]': length, pop, push, concat, and 29 more.
+#0 87.13 server/storage.ts(1121,15): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { customerName: string | SQL<unknown> | Placeholder<string, any>; cu
+stomerTitle: string | SQL<unknown> | Placeholder<string, any>; customerInitials: string | ... 1 more ...
+| Placeholder<...>; testimonialText: string | ... 1 more ... | Placeholder<...>; }): PgInsertBase<...>',
+gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ customerName: string | SQL<u
+nknown> | Placeholder<string, any>; customerTitle: string | SQL<unknown> | Placeholder<string, any>; cust
+omerInitials: string | ... 1 more ... | Placeholder<...>; testimonialText: string | ... 1 more ... | Plac
+eholder<...>; }'.
+#0 87.13       Type '{}' is missing the following properties from type '{ customerName: string | SQL<unkn
+own> | Placeholder<string, any>; customerTitle: string | SQL<unknown> | Placeholder<string, any>; custome
+rInitials: string | ... 1 more ... | Placeholder<...>; testimonialText: string | ... 1 more ... | Placeho
+lder<...>; }': customerName, customerTitle, customerInitials, testimonialText
+#0 87.13   Overload 2 of 2, '(values: { customerName: string | SQL<unknown> | Placeholder<string, any>; c
+ustomerTitle: string | SQL<unknown> | Placeholder<string, any>; customerInitials: string | ... 1 more ...
+ | Placeholder<...>; testimonialText: string | ... 1 more ... | Placeholder<...>; }[]): PgInsertBase<...>
+', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ customerName: string | SQL<u
+nknown> | Placeholder<string, any>; customerTitle: string | SQL<unknown> | Placeholder<string, any>; cust
+omerInitials: string | ... 1 more ... | Placeholder<...>; testimonialText: string | ... 1 more ... | Plac
+eholder<...>; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ customerName: string | SQL<unkn
+own> | Placeholder<string, any>; customerTitle: string | SQL<unknown> | Placeholder<string, any>; custome
+rInitials: string | ... 1 more ... | Placeholder<...>; testimonialText: string | ... 1 more ... | Placeho
+lder<...>; }[]': length, pop, push, concat, and 29 more.
+#0 87.13 server/storage.ts(1160,28): error TS2339: Property 'position' does not exist on type 'Partial<{}
+>'.
+#0 87.13 server/storage.ts(1161,29): error TS2339: Property 'isEnabled' does not exist on type 'Partial<{
+}>'.
+#0 87.13 server/storage.ts(1162,31): error TS2339: Property 'description' does not exist on type 'Partial
+<{}>'.
+#0 87.13 server/storage.ts(1163,36): error TS2339: Property 'displayFrequency' does not exist on type 'Pa
+rtial<{}>'.
+#0 87.13 server/storage.ts(1164,33): error TS2339: Property 'maxAdsPerPage' does not exist on type 'Parti
+al<{}>'.
+#0 87.13 server/storage.ts(1175,59): error TS2769: No overload matches this call.
+#0 87.13   Overload 1 of 2, '(value: { restaurantId: number | SQL<unknown> | Placeholder<string, any>; ta
+bleNumber: string | SQL<unknown> | Placeholder<string, any>; }): PgInsertBase<PgTableWithColumns<{ name:
+"waiter_calls"; schema: undefined; columns: { ...; }; dialect: "pg"; }>, ... 4 more ..., never>', gave th
+e following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ restaurantId: number | SQL<u
+nknown> | Placeholder<string, any>; tableNumber: string | SQL<unknown> | Placeholder<string, any>; }'.
+#0 87.13       Type '{}' is missing the following properties from type '{ restaurantId: number | SQL<unkn
+own> | Placeholder<string, any>; tableNumber: string | SQL<unknown> | Placeholder<string, any>; }': resta
+urantId, tableNumber
+#0 87.13   Overload 2 of 2, '(values: { restaurantId: number | SQL<unknown> | Placeholder<string, any>; t
+ableNumber: string | SQL<unknown> | Placeholder<string, any>; }[]): PgInsertBase<PgTableWithColumns<{ ...
+; }>, ... 4 more ..., never>', gave the following error.
+#0 87.13     Argument of type '{}' is not assignable to parameter of type '{ restaurantId: number | SQL<u
+nknown> | Placeholder<string, any>; tableNumber: string | SQL<unknown> | Placeholder<string, any>; }[]'.
+#0 87.13       Type '{}' is missing the following properties from type '{ restaurantId: number | SQL<unkn
+own> | Placeholder<string, any>; tableNumber: string | SQL<unknown> | Placeholder<string, any>; }[]': len
+gth, pop, push, concat, and 29 more.
+#0 87.13 server/storage.ts(1226,11): error TS2353: Object literal may only specify known properties, and
+'qrCodeScans' does not exist in type '{ name?: string | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDa
+taType, string>, {}, {}>; userId?: number | SQL<unknown> | PgColumn<ColumnBaseConfig<ColumnDataType, stri
+ng>, {}, {}>; }'.
+#0 87.13 server/storage.ts(1339,9): error TS2393: Duplicate function implementation.
+#0 87.13 server/vite.ts(39,5): error TS2322: Type '{ middlewareMode: boolean; hmr: { server: Server<typeo
+f IncomingMessage, typeof ServerResponse>; }; allowedHosts: boolean; }' is not assignable to type 'Resolv
+edServerOptions | ServerOptions'.
+#0 87.13   Type '{ middlewareMode: boolean; hmr: { server: Server<typeof IncomingMessage, typeof ServerRe
+sponse>; }; allowedHosts: boolean; }' is not assignable to type 'ServerOptions'.
+#0 87.13     Types of property 'allowedHosts' are incompatible.
+#0 87.13       Type 'boolean' is not assignable to type 'true | string[]'.
+#0 87.84 npm notice
+#0 87.84 npm notice New major version of npm available! 10.8.2 -> 11.7.0
+#0 87.84 npm notice Changelog: https://github.com/npm/cli/releases/tag/v11.7.0
+#0 87.84 npm notice To update run: npm install -g npm@11.7.0
+#0 87.84 npm notice
+------
+Dockerfile:20
+--------------------
+  18 |     COPY --from=deps /app/node_modules ./node_modules
+  19 |     COPY . .
+  20 | >>> RUN npm run build
+  21 |
+  22 |     # ---------- Stage 3: Production ----------
+--------------------
+ERROR: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2

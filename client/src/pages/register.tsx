@@ -20,6 +20,8 @@ import { Link } from "wouter";
 import CustomerHeader from "@/components/layout/CustomerHeader";
 import Footer from "@/components/layout/Footer";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Store, UserCheck } from "lucide-react";
 
 const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -37,6 +39,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 const Register = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<"owner" | "agent">("owner");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -75,9 +78,13 @@ const Register = () => {
             description: "Your account has been created and you are now logged in.",
           });
           
-          // Add a slight delay before redirection to ensure session is properly set
+          // Redirect based on selected role
           setTimeout(() => {
-            window.location.href = "/dashboard"; // Use direct navigation instead of wouter
+            if (selectedRole === "agent") {
+              window.location.href = "/agent-registration"; // Redirect agents to complete agent registration
+            } else {
+              window.location.href = "/dashboard"; // Restaurant owners go to dashboard
+            }
           }, 300);
           
           // Don't set isLoading to false as we're redirecting
@@ -128,10 +135,33 @@ const Register = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-heading text-center">Create an Account</CardTitle>
             <CardDescription className="text-center">
-              Enter your details to create your VividPlate account
+              Choose your account type and enter your details
             </CardDescription>
           </CardHeader>
           <CardContent>
+            <Tabs value={selectedRole} onValueChange={(v) => setSelectedRole(v as "owner" | "agent")} className="mb-6">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="owner" className="flex items-center gap-2">
+                  <Store className="h-4 w-4" />
+                  Restaurant Owner
+                </TabsTrigger>
+                <TabsTrigger value="agent" className="flex items-center gap-2">
+                  <UserCheck className="h-4 w-4" />
+                  Agent
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="owner" className="mt-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Create and manage your restaurant's digital menu
+                </p>
+              </TabsContent>
+              <TabsContent value="agent" className="mt-4">
+                <p className="text-sm text-muted-foreground text-center">
+                  Manage multiple restaurants and earn tokens
+                </p>
+              </TabsContent>
+            </Tabs>
+
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
@@ -222,7 +252,7 @@ const Register = () => {
                   className="w-full bg-[#ff5733] hover:bg-[#ff5733]/90 text-white"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Creating account..." : "Create Account"}
+                  {isLoading ? "Creating account..." : selectedRole === "agent" ? "Register as Agent" : "Create Account"}
                 </Button>
               </form>
             </Form>

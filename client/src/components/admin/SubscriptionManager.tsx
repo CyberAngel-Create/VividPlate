@@ -46,9 +46,17 @@ export const SubscriptionManager = ({ user }: SubscriptionManagerProps) => {
 
   const subscriptionOptions = [
     { value: "1month", label: "1 Month Premium", duration: 30 },
+    { value: "2months", label: "2 Months Premium", duration: 60 },
     { value: "3months", label: "3 Months Premium", duration: 90 },
+    { value: "4months", label: "4 Months Premium", duration: 120 },
+    { value: "5months", label: "5 Months Premium", duration: 150 },
     { value: "6months", label: "6 Months Premium", duration: 180 },
-    { value: "1year", label: "1 Year Premium", duration: 365 },
+    { value: "7months", label: "7 Months Premium", duration: 210 },
+    { value: "8months", label: "8 Months Premium", duration: 240 },
+    { value: "9months", label: "9 Months Premium", duration: 270 },
+    { value: "10months", label: "10 Months Premium", duration: 300 },
+    { value: "11months", label: "11 Months Premium", duration: 330 },
+    { value: "12months", label: "12 Months Premium (1 Year)", duration: 365 },
     { value: "remove", label: "Remove Premium", duration: 0 }
   ];
 

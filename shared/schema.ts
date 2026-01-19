@@ -3,14 +3,14 @@ import { pgTable, text, serial, integer, boolean, timestamp, jsonb } from "drizz
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table for authentication
+// Users table for authentication - phone is the primary login identifier
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").notNull().unique(),
   fullName: text("full_name").notNull(),
-  phone: text("phone").notNull(),
+  phone: text("phone").notNull().unique(), // Primary login identifier
   subscriptionTier: text("subscription_tier").default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
@@ -20,6 +20,7 @@ export const users = pgTable("users", {
   resetPasswordExpires: timestamp("reset_password_expires"),
   isAdmin: boolean("is_admin").default(false),
   isActive: boolean("is_active").default(true),
+  role: text("role", { enum: ["user", "agent", "admin"] }).default("user"), // User role
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -32,12 +33,116 @@ export const insertUserSchema = createInsertSchema(users).pick({
   phone: true,
   isAdmin: true,
   isActive: true,
+  role: true,
 });
+
+// Agents table for agent verification and approval
+export const agents = pgTable("agents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(), // Link to users table
+  agentCode: text("agent_code").unique(), // Auto-generated agent ID code like AG-001
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  dateOfBirth: text("date_of_birth"),
+  gender: text("gender", { enum: ["male", "female", "other"] }),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  country: text("country"),
+  postalCode: text("postal_code"),
+  idType: text("id_type", { enum: ["national_id", "passport", "drivers_license"] }).notNull(),
+  idNumber: text("id_number").notNull(),
+  idFrontImageUrl: text("id_front_image_url").notNull(),
+  idBackImageUrl: text("id_back_image_url"),
+  selfieImageUrl: text("selfie_image_url"),
+  tokenBalance: integer("token_balance").default(0).notNull(), // Available tokens for premium restaurants
+  isActive: boolean("is_active").default(true).notNull(), // Admin can deactivate agents
+  approvalStatus: text("approval_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  approvalNotes: text("approval_notes"),
+  approvedBy: integer("approved_by"), // Admin user ID who approved/rejected
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAgentSchema = createInsertSchema(agents).pick({
+  userId: true,
+  firstName: true,
+  lastName: true,
+  dateOfBirth: true,
+  gender: true,
+  address: true,
+  city: true,
+  state: true,
+  country: true,
+  postalCode: true,
+  idType: true,
+  idNumber: true,
+  idFrontImageUrl: true,
+  idBackImageUrl: true,
+  selfieImageUrl: true,
+});
+
+export type Agent = typeof agents.$inferSelect;
+export type InsertAgent = z.infer<typeof insertAgentSchema>;
+
+// Token requests table - agents request tokens from admin
+export const tokenRequests = pgTable("token_requests", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull(), // Link to agents table
+  requestedTokens: integer("requested_tokens").notNull(),
+  status: text("status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  notes: text("notes"), // Agent can add notes to request
+  adminNotes: text("admin_notes"), // Admin response notes
+  approvedBy: integer("approved_by"), // Admin user ID
+  approvedAt: timestamp("approved_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTokenRequestSchema = createInsertSchema(tokenRequests).pick({
+  agentId: true,
+  requestedTokens: true,
+  notes: true,
+});
+
+export type TokenRequest = typeof tokenRequests.$inferSelect;
+export type InsertTokenRequest = z.infer<typeof insertTokenRequestSchema>;
+
+// Token transactions table - audit trail for token credits/debits
+export const tokenTransactions = pgTable("token_transactions", {
+  id: serial("id").primaryKey(),
+  agentId: integer("agent_id").notNull(),
+  amount: integer("amount").notNull(), // Positive for credits, negative for debits
+  type: text("type", { enum: ["credit", "debit"] }).notNull(),
+  reason: text("reason").notNull(), // e.g., "Admin approved request", "Premium restaurant created"
+  restaurantId: integer("restaurant_id"), // If transaction is for a restaurant
+  tokenRequestId: integer("token_request_id"), // If transaction is from a request
+  adminId: integer("admin_id"), // Admin who processed (for credits)
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTokenTransactionSchema = createInsertSchema(tokenTransactions).pick({
+  agentId: true,
+  amount: true,
+  type: true,
+  reason: true,
+  restaurantId: true,
+  tokenRequestId: true,
+  adminId: true,
+});
+
+export type TokenTransaction = typeof tokenTransactions.$inferSelect;
+export type InsertTokenTransaction = z.infer<typeof insertTokenTransactionSchema>;
 
 // Restaurant profiles
 export const restaurants = pgTable("restaurants", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
+  agentId: integer("agent_id"), // Agent who created/manages this restaurant
+  isPremium: boolean("is_premium").default(false), // Premium restaurant (uses tokens)
+  premiumMonths: integer("premium_months").default(0), // How many months of premium
+  premiumExpiresAt: timestamp("premium_expires_at"), // When premium expires
+  tokensUsed: integer("tokens_used").default(0), // Total tokens used for this restaurant
   name: text("name").notNull(),
   description: text("description"),
   cuisine: text("cuisine"),
@@ -52,6 +157,11 @@ export const restaurants = pgTable("restaurants", {
   tags: text("tags").array(),
   qrCodeScans: integer("qr_code_scans").notNull().default(0), // Track QR code scans
   isActive: boolean("is_active").default(true), // Track if restaurant is active based on subscription
+  adminApproved: boolean("admin_approved").default(false), // Admin must approve before restaurant is visible
+  approvalStatus: text("approval_status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  approvalNotes: text("approval_notes"),
+  approvedBy: integer("approved_by"), // Admin user ID who approved
+  approvedAt: timestamp("approved_at"),
   alcoholStatus: text("alcohol_status", { enum: ["alcoholic", "non-alcoholic"] }).default("non-alcoholic"), // Whether restaurant serves alcohol
   // Theme customization
   themeSettings: jsonb("theme_settings").default({
@@ -69,13 +179,16 @@ export const restaurants = pgTable("restaurants", {
 
 export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   userId: true,
+  agentId: true,
+  isPremium: true,
+  premiumMonths: true,
   name: true,
   description: true,
   cuisine: true,
-  customCuisine: true, // Added support for custom cuisine
+  customCuisine: true,
   logoUrl: true,
   bannerUrl: true,
-  bannerUrls: true,  // Added support for multiple banner URLs
+  bannerUrls: true,
   phone: true,
   email: true,
   address: true,
@@ -83,6 +196,8 @@ export const insertRestaurantSchema = createInsertSchema(restaurants).pick({
   tags: true,
   themeSettings: true,
   isActive: true,
+  adminApproved: true,
+  approvalStatus: true,
   alcoholStatus: true,
 });
 
@@ -549,3 +664,34 @@ export const insertWaiterCallSchema = createInsertSchema(waiterCalls).pick({
 
 export type WaiterCall = typeof waiterCalls.$inferSelect;
 export type InsertWaiterCall = z.infer<typeof insertWaiterCallSchema>;
+
+// Restaurant requests table - for owners to request additional restaurants from agents
+export const restaurantRequests = pgTable("restaurant_requests", {
+  id: serial("id").primaryKey(),
+  ownerUserId: integer("owner_user_id").notNull(),
+  agentId: integer("agent_id").notNull(),
+  restaurantName: text("restaurant_name").notNull(),
+  restaurantDescription: text("restaurant_description"),
+  cuisine: text("cuisine"),
+  requestedMonths: integer("requested_months").notNull().default(1),
+  status: text("status", { enum: ["pending", "approved", "rejected"] }).default("pending"),
+  ownerNotes: text("owner_notes"),
+  agentNotes: text("agent_notes"),
+  createdRestaurantId: integer("created_restaurant_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  approvedAt: timestamp("approved_at"),
+});
+
+export const insertRestaurantRequestSchema = createInsertSchema(restaurantRequests).pick({
+  ownerUserId: true,
+  agentId: true,
+  restaurantName: true,
+  restaurantDescription: true,
+  cuisine: true,
+  requestedMonths: true,
+  ownerNotes: true,
+});
+
+export type RestaurantRequest = typeof restaurantRequests.$inferSelect;
+export type InsertRestaurantRequest = z.infer<typeof insertRestaurantRequestSchema>;

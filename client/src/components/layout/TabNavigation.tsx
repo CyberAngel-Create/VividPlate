@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useSubscription } from "@/hooks/use-subscription";
+import { useQuery } from "@tanstack/react-query";
 
 interface TabItem {
   id: string;
@@ -17,6 +18,13 @@ const TabNavigation = ({ onTabChange }: TabNavigationProps) => {
   const [location, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const { isPaid } = useSubscription();
+  
+  // Check subscription status to see if premium is from agent (hide Upgrade Plan)
+  const { data: subscriptionStatus } = useQuery<{ hasAgentPremiumRestaurant?: boolean }>({
+    queryKey: ["/api/user/subscription-status"],
+    retry: false,
+  });
+  const hasAgentPremiumRestaurant = subscriptionStatus?.hasAgentPremiumRestaurant || false;
 
   // Define all tabs with visibility conditions
   const allTabs: TabItem[] = [
@@ -30,10 +38,15 @@ const TabNavigation = ({ onTabChange }: TabNavigationProps) => {
   ];
 
   // Filter tabs based on subscription status
+  // Hide "Upgrade Plan" for users with agent-created premium restaurants (they can't self-upgrade)
   const tabs = allTabs.filter(tab => {
     if (!tab.showFor || tab.showFor === "all") return true;
     if (tab.showFor === "premium" && isPaid) return true;
-    if (tab.showFor === "free" && !isPaid) return true;
+    if (tab.showFor === "free" && !isPaid) {
+      // Hide upgrade option if user has agent-created premium restaurant
+      if (tab.id === 'pricing' && hasAgentPremiumRestaurant) return false;
+      return true;
+    }
     return false;
   });
 

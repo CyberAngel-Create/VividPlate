@@ -102,6 +102,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${user.fullName || user.username}!`,
       });
       
+      // Check if user is an agent and redirect accordingly
+      try {
+        const agentRes = await fetch("/api/agents/me", { credentials: 'include' });
+        if (agentRes.ok) {
+          const agent = await agentRes.json();
+          if (agent && agent.approvalStatus === 'approved') {
+            setTimeout(() => {
+              setLocation("/agent-dashboard");
+            }, 100);
+            return;
+          }
+        }
+      } catch (e) {
+        // Not an agent, proceed to regular dashboard
+      }
+      
       // Use setTimeout to ensure state updates have propagated
       setTimeout(() => {
         setLocation("/dashboard");
