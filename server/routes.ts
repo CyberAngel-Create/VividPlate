@@ -1240,22 +1240,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Determine max restaurants based on user's subscription tier (Free plan restrictions)
-      let maxRestaurants = 1; // Free tier default
-      if (user.subscriptionTier === 'premium') {
-        maxRestaurants = 2;
-      } else if (user.subscriptionTier === 'business') {
-        maxRestaurants = 3;
-      }
+      const maxRestaurants = 1;
       
-      // Check if user has reached their limit (Free plan: 1 restaurant only)
       if (restaurantCount >= maxRestaurants) {
         return res.status(403).json({ 
-          message: user.subscriptionTier === 'free' ? 'Free plan restaurant limit reached' : 'Restaurant limit reached',
-          details: user.subscriptionTier === 'free' ? 'Free users are limited to 1 restaurant. Please upgrade to create more restaurants.' : 'Please upgrade to create more restaurants.',
+          message: 'Each account can manage only one restaurant',
+          details: 'Create a new owner account or contact support to transfer an existing restaurant.',
           currentRestaurants: restaurantCount,
-          maxRestaurants: maxRestaurants,
-          upgradeRequired: true
+          maxRestaurants,
+          upgradeRequired: false
         });
       }
       

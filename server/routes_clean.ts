@@ -1136,15 +1136,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const restaurantCount = await storage.countRestaurantsByUserId(userId);
       const user = await storage.getUser(userId);
       
-      // Determine max restaurants based on user's subscription tier
-      const maxRestaurants = user && user.subscriptionTier === "premium" ? 3 : 1;
+      const maxRestaurants = 1;
       
-      // Check if user has reached their limit
       if (restaurantCount >= maxRestaurants) {
         return res.status(403).json({ 
-          message: 'Restaurant limit reached', 
+          message: 'Each account can manage only one restaurant', 
           limit: maxRestaurants,
-          upgradeRequired: maxRestaurants === 1
+          upgradeRequired: false
         });
       }
       
