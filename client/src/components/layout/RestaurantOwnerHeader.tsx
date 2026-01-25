@@ -1,10 +1,8 @@
 import { useState, useCallback } from "react";
-import { Store, ChevronRight, PlusCircle, Lock } from "lucide-react";
+import { Store, ChevronRight, Lock } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
-import { useSubscription } from "@/hooks/use-subscription";
 import { useTranslation } from "react-i18next";
 import { queryClient } from "@/lib/queryClient";
-import CreateRestaurantModal from "@/components/restaurant/CreateRestaurantModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,12 +14,9 @@ import {
 
 const RestaurantOwnerHeader = () => {
   const { restaurants, activeRestaurant, setActiveRestaurant } = useRestaurant();
-  const { isPaid } = useSubscription();
   const { t } = useTranslation();
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-
-  // Check if the user can add more restaurants (premium users can add up to 3)
-  const canAddRestaurant = isPaid && restaurants && restaurants.length < 3;
+  
+  // Additional restaurant creation is disabled once an account already has a restaurant
 
   // State for tracking restaurant switch loading
   const [isRestaurantSwitching, setIsRestaurantSwitching] = useState(false);
@@ -139,33 +134,11 @@ const RestaurantOwnerHeader = () => {
                   </div>
                 </DropdownMenuItem>
               ))}
-              {canAddRestaurant && (
-                <>
-                  <DropdownMenuSeparator className="dark:border-gray-700" />
-                  <DropdownMenuItem 
-                    className="cursor-pointer text-primary dark:text-primary-light font-medium"
-                    onClick={() => {
-                      // Remove any existing reset flag to ensure we get a clean form
-                      sessionStorage.removeItem("resetRestaurantForm");
-                      // Open the create restaurant modal
-                      setIsCreateModalOpen(true);
-                    }}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    {t("Create Restaurant")}
-                  </DropdownMenuItem>
-                </>
-              )}
+              {/* Additional restaurant creation intentionally unavailable in this view */}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
-
-      {/* Create Restaurant Modal */}
-      <CreateRestaurantModal 
-        isOpen={isCreateModalOpen} 
-        onClose={() => setIsCreateModalOpen(false)} 
-      />
     </div>
   );
 };

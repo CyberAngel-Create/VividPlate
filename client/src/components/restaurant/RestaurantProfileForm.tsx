@@ -574,7 +574,7 @@ const RestaurantProfileForm = ({ restaurant, onSubmit, canCreateRestaurant = tru
         </div>
         {!restaurant && !canCreateRestaurant && (
           <p className="text-sm text-destructive mt-2 text-center">
-            You've reached your restaurant limit. Upgrade to create more restaurants.
+            Each account can only manage one restaurant. Create a separate owner account or contact support to add another location.
           </p>
         )}
       </form>

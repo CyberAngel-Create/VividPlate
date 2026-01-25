@@ -1068,7 +1068,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, hasPremiumRestaurant=${hasPremiumRestaurant}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}, expiresAt=${expiresAt}`);
       
       // Automatically manage restaurant active status based on subscription
-      const maxRestaurants = effectiveTier === "business" ? 10 : (effectiveTier === "premium" ? 3 : 1);
+      // Platform policy: one restaurant per account regardless of tier
+      const maxRestaurants = 1;
       await storage.manageRestaurantsBySubscription(userId, maxRestaurants);
       
       // Check if premium is from agent-created restaurants (not self-subscription)

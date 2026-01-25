@@ -1026,8 +1026,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Subscription status for user ${userId} (${user.username}): userTier=${userTier}, subscriptionTier=${subscriptionTier}, effectiveTier=${effectiveTier}, restaurantCount=${restaurantCount}, expiresAt=${expiresAt}`);
       
-      // Automatically manage restaurant active status based on subscription
-      const maxRestaurants = isPaid ? 3 : 1;
+      // Platform policy: enforce a single restaurant per account
+      const maxRestaurants = 1;
       await storage.manageRestaurantsBySubscription(userId, maxRestaurants);
       
       return res.json({

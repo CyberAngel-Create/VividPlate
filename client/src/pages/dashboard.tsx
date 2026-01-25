@@ -159,11 +159,7 @@ const Dashboard = () => {
                   )}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                  {subscriptionStatus.isPaid ? (
-                    <>You can create up to {subscriptionStatus.maxRestaurants} restaurants with no ads.</>
-                  ) : (
-                    <>You can create {subscriptionStatus.maxRestaurants} restaurant with the free plan. Upgrade to create more.</>
-                  )}
+                  Each VividPlate account can manage one restaurant. Create a separate owner account or contact support if you need to operate additional locations.
                 </p>
                 <div className="mt-1 flex items-center gap-1 text-sm">
                   <span>Restaurants: {subscriptionStatus.currentRestaurants}/{subscriptionStatus.maxRestaurants}</span>
@@ -192,12 +188,12 @@ const Dashboard = () => {
                 )}
               </div>
               <div className="mt-2 sm:mt-0 sm:ml-auto flex flex-col sm:flex-row gap-2">
-                {subscriptionStatus.isPaid && subscriptionStatus.currentRestaurants < subscriptionStatus.maxRestaurants && !subscriptionStatus.hasAgentPremiumRestaurant && (
+                {subscriptionStatus.currentRestaurants === 0 && !subscriptionStatus.hasAgentPremiumRestaurant && (
                   <button 
                     onClick={() => window.location.href = "/edit-restaurant"}
                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
                   >
-                    Create New Restaurant
+                    Create First Restaurant
                   </button>
                 )}
                 {subscriptionStatus.hasAgentPremiumRestaurant && subscriptionStatus.agentId && (

@@ -80,7 +80,7 @@ const CreateRestaurantModal = ({ isOpen, onClose }: CreateRestaurantModalProps) 
     if (!canCreateRestaurant) {
       toast({
         title: "Restaurant Limit Reached",
-        description: "You have reached your restaurant limit. Upgrade your subscription to create more restaurants.",
+        description: "Each account can only manage one restaurant. Create a new owner account or contact support to add another.",
         variant: "destructive",
       });
       return;
@@ -105,10 +105,10 @@ const CreateRestaurantModal = ({ isOpen, onClose }: CreateRestaurantModalProps) 
             <RocketIcon className="h-4 w-4" />
             <AlertTitle>Subscription Status: {subscriptionStatus.tier}</AlertTitle>
             <AlertDescription>
-              You are using {subscriptionStatus.currentRestaurants} of {subscriptionStatus.maxRestaurants} restaurants.
+              You are using {subscriptionStatus.currentRestaurants} of {subscriptionStatus.maxRestaurants} restaurant.
               {!canCreateRestaurant && (
                 <div className="mt-2 text-destructive dark:text-red-400">
-                  You have reached your restaurant limit. Upgrade your subscription to create more restaurants.
+                  Each account can only manage one restaurant. Create a new owner account or contact support to operate additional locations.
                 </div>
               )}
               {canCreateRestaurant && (
