@@ -1,3 +1,8 @@
+import dotenv from "dotenv";
+
+// Load environment variables FIRST
+dotenv.config({ path: path.join(process.cwd(), '.env') });
+
 import express, { type Request, Response, NextFunction } from "express";
 import { setupVite, serveStatic, log } from "./vite.js";
 import fs from "fs";
@@ -38,12 +43,10 @@ app.use(express.urlencoded({ extended: false }));
 // ==============================
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  const allowedOrigins = [
-    "https://digitalmenumate.replit.app",
-    "https://vividplate.com",
-    "http://localhost:5000",
-    "http://127.0.0.1:5000",
-  ];
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS || "https://vividplate.com,http://localhost:5000,http://127.0.0.1:5000")
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
 
   if (origin && allowedOrigins.includes(origin)) {
     res.header("Access-Control-Allow-Origin", origin);
@@ -68,15 +71,7 @@ app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
 
-// Serve ads.txt from client/public directory
-app.get("/ads.txt", (req, res) => {
-  const adsFilePath = path.join(process.cwd(), "client", "public", "ads.txt");
-  if (fs.existsSync(adsFilePath)) {
-    res.type("text/plain").sendFile(adsFilePath);
-  } else {
-    res.status(404).send("ads.txt not found");
-  }
-});
+// ads.txt handler removed
 
 // Add domain-specific handling for custom domain
 app.use((req, res, next) => {

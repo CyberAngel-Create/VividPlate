@@ -1,4 +1,4 @@
-// GitHub Client - Replit GitHub Integration
+// GitHub Client - Deploy connectors GitHub integration
 import { Octokit } from '@octokit/rest';
 
 let connectionSettings: any;
@@ -8,15 +8,15 @@ async function getAccessToken() {
     return connectionSettings.settings.access_token;
   }
   
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+  const hostname = process.env.CONNECTORS_HOSTNAME;
+  const xDeployToken = process.env.DEPLOY_IDENTITY
+    ? 'deploy ' + process.env.DEPLOY_IDENTITY
+    : process.env.WEB_REPL_RENEWAL
+    ? 'deploy ' + process.env.WEB_REPL_RENEWAL
     : null;
 
-  if (!xReplitToken) {
-    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  if (!xDeployToken) {
+    throw new Error('Deploy token not found for connector retrieval');
   }
 
   connectionSettings = await fetch(
@@ -24,7 +24,7 @@ async function getAccessToken() {
     {
       headers: {
         'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
+        'X_DEPLOY_TOKEN': xDeployToken
       }
     }
   ).then(res => res.json()).then(data => data.items?.[0]);

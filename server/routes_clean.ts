@@ -70,7 +70,7 @@ const configureSession = (app: Express) => {
     resave: false,
     saveUninitialized: false,
     cookie: { 
-      // Don't force secure cookies in production as Replit might not have HTTPS
+      // Don't force secure cookies in production in case the hosting environment doesn't provide HTTPS
       secure: false, 
       maxAge: 86400000, // 1 day
       sameSite: 'lax' // Helps with CSRF protection while allowing redirects
@@ -80,7 +80,7 @@ const configureSession = (app: Express) => {
     })
   }));
   
-  // Enable trust proxy if running behind a reverse proxy (like on Replit)
+  // Enable trust proxy if running behind a reverse proxy
   app.set('trust proxy', 1);
 };
 
@@ -414,10 +414,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Configure file upload middleware
   const upload = configureFileUpload();
   
-  // Serve ads.txt file
-  app.get('/ads.txt', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'client/public/ads.txt'));
-  });
+  // ads.txt handler removed
   
   // Serve static files from the uploads directory with improved error handling
   app.use('/uploads', (req, res, next) => {

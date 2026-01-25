@@ -58,9 +58,7 @@ scripts
 # Attached assets (if large)
 attached_assets
 
-# Config files not needed in production
-.replit
-replit.nix
+.upm
 .upm
 
 # GitHub

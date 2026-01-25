@@ -43,11 +43,11 @@ async function pushToGitHub() {
     }
     
     // Get the access token for git operations
-    const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-    const xReplitToken = process.env.REPL_IDENTITY 
-      ? 'repl ' + process.env.REPL_IDENTITY 
-      : process.env.WEB_REPL_RENEWAL 
-      ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+    const hostname = process.env.CONNECTORS_HOSTNAME;
+    const xDeployToken = process.env.DEPLOY_IDENTITY
+      ? 'deploy ' + process.env.DEPLOY_IDENTITY
+      : process.env.WEB_REPL_RENEWAL
+      ? 'deploy ' + process.env.WEB_REPL_RENEWAL
       : null;
 
     const connectionSettings = await fetch(
@@ -55,7 +55,7 @@ async function pushToGitHub() {
       {
         headers: {
           'Accept': 'application/json',
-          'X_REPLIT_TOKEN': xReplitToken!
+          'X_DEPLOY_TOKEN': xDeployToken!
         }
       }
     ).then(res => res.json()).then(data => data.items?.[0]);
