@@ -55,10 +55,3 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 
 # Start the server
 CMD ["node", "dist/index.js"]
-=======
-# Health check using curl
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:8080/api/health || exit 1
-
-# Start the server
-CMD ["node", "dist/index.js"]
