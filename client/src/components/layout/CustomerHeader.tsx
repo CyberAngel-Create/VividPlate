@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LogOut, User, Star, CreditCard } from "lucide-react";
+import { Menu, X, LogOut, User, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { PremiumBadge } from "@/components/ui/premium-badge";
@@ -17,14 +17,13 @@ interface CustomerHeaderProps {
 const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children }: CustomerHeaderProps) => {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { subscription, isPaid } = useSubscription();
+  const { isPaid } = useSubscription();
   const { t } = useTranslation();
 
   const closeMenu = () => setIsMenuOpen(false);
 
   const navigationItems = [
     { name: "Home", path: "/" },
-    { name: "Pricing", path: "/pricing" },
     { name: "Contact", path: "/contact" }
   ];
 
@@ -76,14 +75,7 @@ const CustomerHeader = ({ isAuthenticated = false, onLogout = () => {}, children
                     <div className="flex items-center">
                       <PremiumBadge size="sm" className="mr-2" />
                     </div>
-                  ) : (
-                    <Link href="/pricing">
-                      <div className="text-sm font-medium text-gray-700 hover:text-primary transition-colors flex items-center">
-                        <CreditCard className="h-3 w-3 mr-1" />
-                        {t("Upgrade")}
-                      </div>
-                    </Link>
-                  )}
+                  ) : null}
                   <Button
                     variant="ghost"
                     size="sm"

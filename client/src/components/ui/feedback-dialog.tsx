@@ -146,8 +146,8 @@ const FeedbackDialog: React.FC<FeedbackDialogProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Send the feedback to the existing API endpoint
-      const response = await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback/submit`, {
+      // Send the feedback to the API endpoint
+      const response = await apiRequest('POST', `/api/restaurants/${restaurantId}/feedbacks`, {
         menuItemId: menuItemId || null,
         customerName: name,
         customerEmail: email,

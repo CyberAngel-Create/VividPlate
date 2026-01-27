@@ -41,7 +41,7 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ feedback, isOwner = false }
       }
       
       // Invalidate feedback queries to refresh data
-      queryClient.invalidateQueries({ queryKey: [`/api/restaurants/${feedback.restaurantId}/feedback`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/restaurants/${feedback.restaurantId}/feedbacks`] });
       
       toast({
         title: 'Success',
@@ -73,7 +73,7 @@ const FeedbackItem: React.FC<FeedbackItemProps> = ({ feedback, isOwner = false }
       }
       
       // Invalidate feedback queries to refresh data
-      queryClient.invalidateQueries({ queryKey: [`/api/restaurants/${feedback.restaurantId}/feedback`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/restaurants/${feedback.restaurantId}/feedbacks`] });
       
       toast({
         title: 'Success',

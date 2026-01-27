@@ -34,7 +34,6 @@ const TabNavigation = ({ onTabChange }: TabNavigationProps) => {
     { id: 'edit-restaurant', label: 'Restaurant Profile', path: '/edit-restaurant' },
     { id: 'menu-preview', label: 'Menu Preview', path: '/menu-preview' },
     { id: 'share', label: 'Share Menu', path: '/share-menu' },
-    { id: 'pricing', label: 'Upgrade Plan', path: '/pricing', showFor: "free" },
   ];
 
   // Filter tabs based on subscription status

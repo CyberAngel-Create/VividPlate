@@ -11,6 +11,7 @@ import { Restaurant } from "@shared/schema";
 import { ObjectUploader } from "../../../components/ObjectUploader";
 import { useMutation } from "@tanstack/react-query";
 import { Image, X } from "lucide-react";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
 
 interface RestaurantThemeEditorProps {
   restaurantId: number;
@@ -51,6 +52,8 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
   
   const [theme, setTheme] = useState<Record<string, any>>(initialTheme || defaultTheme);
   const [isLoading, setIsLoading] = useState(false);
+  const { subscriptionStatus } = useSubscriptionStatus();
+  const bannerOnlyPlan = !subscriptionStatus || !subscriptionStatus.isPaid;
 
   // Background image upload mutation
   const backgroundImageMutation = useMutation({
@@ -402,6 +405,17 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
                         </Button>
                       </div>
                       <p className="text-sm text-gray-600">Current background image</p>
+                      {bannerOnlyPlan && (
+                        <p className="text-xs text-amber-600">
+                          You can remove this image, but uploading a new background requires a paid plan.
+                        </p>
+                      )}
+                    </div>
+                  ) : bannerOnlyPlan ? (
+                    <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50 p-4">
+                      <p className="text-sm text-amber-700">
+                        Background image uploads are available on paid plans. Free plan accounts can customize colors and upload a banner image only.
+                      </p>
                     </div>
                   ) : (
                     <div className="space-y-3">

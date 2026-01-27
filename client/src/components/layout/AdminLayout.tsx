@@ -75,11 +75,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       icon: <Building className="h-5 w-5" />,
     },
     {
-      title: "Pricing",
-      href: "/admin/pricing",
-      icon: <Crown className="h-5 w-5" />,
-    },
-    {
       title: "Logs",
       href: "/admin/logs",
       icon: <FileText className="h-5 w-5" />,

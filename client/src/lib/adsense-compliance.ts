@@ -28,7 +28,7 @@ export interface PageValidationConfig {
 // Default configuration for AdSense compliance
 const defaultConfig: PageValidationConfig = {
   minWordCount: 300, // Google AdSense recommendation for meaningful content
-  allowedPageTypes: ['menu', 'restaurant', 'home', 'pricing', 'contact'],
+  allowedPageTypes: ['menu', 'restaurant', 'home', 'contact'],
   excludedRoutes: [
     '/login',
     '/register', 

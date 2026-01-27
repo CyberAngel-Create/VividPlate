@@ -7,6 +7,7 @@ import { normalizeImageUrl, getFallbackImage } from '@/lib/imageUtils';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { useFileUpload } from '@/lib/upload-utils';
+import { useSubscriptionStatus } from '@/hooks/use-subscription-status';
 
 interface RestaurantLogoUploadProps {
   restaurantId: number;
@@ -22,8 +23,19 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { uploadFile } = useFileUpload();
+  const { subscriptionStatus } = useSubscriptionStatus();
+  const bannerOnlyPlan = !subscriptionStatus || !subscriptionStatus.isPaid;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (bannerOnlyPlan) {
+      toast({
+        title: 'Logo uploads unavailable',
+        description: 'Free plan accounts can only upload banner images. Upgrade to change your logo.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const file = e.target.files?.[0];
     
     if (!file) return;
@@ -155,7 +167,7 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
               onClick={handleRemoveLogo}
               className="absolute top-1 right-1 bg-black bg-opacity-50 text-white rounded-full p-1 hover:bg-opacity-70"
               aria-label="Remove logo"
-              disabled={isUploading}
+              disabled={isUploading || bannerOnlyPlan}
             >
               <X className="h-4 w-4" />
             </button>
@@ -171,7 +183,7 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
             type="button"
             variant="outline"
             onClick={() => document.getElementById(`logo-upload-${restaurantId}`)?.click()}
-            disabled={isUploading}
+            disabled={isUploading || bannerOnlyPlan}
             className="flex items-center gap-2"
           >
             {isUploading ? (
@@ -192,9 +204,14 @@ const RestaurantLogoUpload = ({ restaurantId, currentLogoUrl, onSuccess }: Resta
             className="hidden"
             accept="image/jpeg,image/png,image/gif,image/webp"
             onChange={handleFileChange}
-            disabled={isUploading}
+            disabled={isUploading || bannerOnlyPlan}
           />
         </div>
+        {bannerOnlyPlan && (
+          <p className="text-xs text-amber-600 mt-3">
+            Logo uploads are available on paid plans. Free plan accounts can only upload a banner image.
+          </p>
+        )}
       </div>
     </div>
   );

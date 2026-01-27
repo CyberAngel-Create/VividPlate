@@ -616,12 +616,12 @@ export default function ChapaSubscribe() {
           <CardContent>
             <p className="text-muted-foreground mb-4">{error}</p>
             <Button 
-              onClick={() => navigate('/pricing')} 
+              onClick={() => navigate('/dashboard')} 
               variant="outline"
               className="w-full"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Pricing
+              Back to Dashboard
             </Button>
           </CardContent>
         </Card>
@@ -636,12 +636,12 @@ export default function ChapaSubscribe() {
           <CardContent className="p-6">
             <p className="text-center">Subscription plan not found.</p>
             <Button 
-              onClick={() => navigate('/pricing')} 
+              onClick={() => navigate('/dashboard')} 
               variant="outline"
               className="w-full mt-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Pricing
+              Back to Dashboard
             </Button>
           </CardContent>
         </Card>
@@ -655,11 +655,11 @@ export default function ChapaSubscribe() {
         <div className="mb-6">
           <Button 
             variant="ghost" 
-            onClick={() => navigate('/pricing')}
+            onClick={() => navigate('/dashboard')}
             className="mb-4"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Pricing
+            Back to Dashboard
           </Button>
           
           <h1 className="text-2xl font-bold text-center mb-2">

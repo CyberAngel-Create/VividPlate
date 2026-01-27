@@ -41,6 +41,7 @@ interface SubscriptionStatus {
   expiresAt: string | null;
   hasAgentPremiumRestaurant?: boolean;
   agentId?: number | null;
+  agentName?: string | null;
 }
 
 const Dashboard = () => {
@@ -68,6 +69,9 @@ const Dashboard = () => {
   const { data: subscriptionStatus, isLoading: isLoadingSubscription } = useQuery<SubscriptionStatus>({
     queryKey: ['/api/user/subscription-status'],
   });
+
+  const agentAssigned = Boolean(subscriptionStatus?.agentId);
+  const canRequestAgentSupport = agentAssigned && (subscriptionStatus?.currentRestaurants ?? 0) === 0;
 
   // Effect for auto-select restaurant - only run when restaurants length changes
   useEffect(() => {
@@ -161,6 +165,11 @@ const Dashboard = () => {
                 <p className="text-sm text-gray-600 dark:text-gray-300">
                   Each VividPlate account can manage one restaurant. Create a separate owner account or contact support if you need to operate additional locations.
                 </p>
+                {subscriptionStatus.agentId && (
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
+                    Assigned agent: <span className="font-medium">{subscriptionStatus.agentName || 'Agent1'}</span>
+                  </p>
+                )}
                 <div className="mt-1 flex items-center gap-1 text-sm">
                   <span>Restaurants: {subscriptionStatus.currentRestaurants}/{subscriptionStatus.maxRestaurants}</span>
                   {subscriptionStatus.currentRestaurants >= subscriptionStatus.maxRestaurants && (
@@ -196,20 +205,20 @@ const Dashboard = () => {
                     Create First Restaurant
                   </button>
                 )}
-                {subscriptionStatus.hasAgentPremiumRestaurant && subscriptionStatus.agentId && (
+                {canRequestAgentSupport && (
                   <button 
                     onClick={() => setLocation("/request-restaurant")}
                     className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700"
                   >
-                    Request Additional Restaurant
+                    Request Premium From Agent
                   </button>
                 )}
                 {!subscriptionStatus.isPaid && !subscriptionStatus.hasAgentPremiumRestaurant && (
                   <button 
-                    onClick={() => window.location.href = "/subscribe"}
+                    onClick={() => setLocation("/request-restaurant")}
                     className="bg-primary text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-opacity-90"
                   >
-                    Upgrade Now
+                    Contact Agent
                   </button>
                 )}
               </div>
@@ -233,10 +242,10 @@ const Dashboard = () => {
                   ) : (
                     <>Free users can only access their first restaurant. 
                     <button 
-                      onClick={() => window.location.href = "/subscribe"}
+                      onClick={() => setLocation("/request-restaurant")}
                       className="underline hover:no-underline ml-1"
                     >
-                      Upgrade to premium
+                      Contact your agent
                     </button> to activate all your restaurants.</>
                   )}
                 </p>

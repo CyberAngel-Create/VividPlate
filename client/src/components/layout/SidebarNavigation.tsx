@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle, List, Coins } from "lucide-react";
+import { LayoutDashboard, MenuSquare, User, Eye, Share2, CreditCard, Mail, LogOut, Menu, Store, HelpCircle, List } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useTranslation } from "react-i18next";
@@ -25,13 +25,6 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const { subscription, isPaid } = useSubscription();
   const { t } = useTranslation();
-  
-  // Check if user is an approved agent
-  const { data: agent } = useQuery<{ approvalStatus: string } | null>({
-    queryKey: ["/api/agents/me"],
-    retry: false,
-  });
-  const isAgent = agent && agent.approvalStatus === 'approved';
   
   // Check subscription status to see if premium is from agent (hide Upgrade Plan)
   const { data: subscriptionStatus } = useQuery<{ hasAgentPremiumRestaurant?: boolean; isPaid: boolean }>({
@@ -84,13 +77,6 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       label: 'Tutorial', 
       path: '/tutorial' 
     },
-    { 
-      id: 'pricing', 
-      icon: <CreditCard className="h-5 w-5" />, 
-      label: 'Upgrade Plan', 
-      path: '/pricing',
-      showFor: "free" 
-    },
     {
       id: 'profile',
       icon: <User className="h-5 w-5" />,
@@ -98,17 +84,11 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       path: '/profile'
     },
     {
-      id: 'contact',
+      id: 'contact-agent',
       icon: <Mail className="h-5 w-5" />,
-      label: 'Contact',
-      path: '/contact'
-    },
-    ...(isAgent ? [{
-      id: 'agent-dashboard',
-      icon: <Coins className="h-5 w-5" />,
-      label: 'Agent Dashboard',
-      path: '/agent-dashboard'
-    }] : [])
+      label: 'Contact Agent',
+      path: '/request-restaurant'
+    }
   ];
 
   // Filter items based on subscription status

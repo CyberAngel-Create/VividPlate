@@ -59,13 +59,15 @@ const Register = () => {
     setIsLoading(true);
     try {
       const { confirmPassword, ...registrationData } = data;
-      
-      await apiRequest("POST", "/api/auth/register", registrationData);
+      // Include selected role so server can mark new user as agent when appropriate
+      const payload = { ...registrationData, role: selectedRole === 'agent' ? 'agent' : 'user' };
+
+      await apiRequest("POST", "/api/auth/register", payload);
       
       // Attempt to log in the user automatically after registration
       try {
         await apiRequest("POST", "/api/auth/login", {
-          username: data.username,
+          identifier: data.username,
           password: data.password
         });
         

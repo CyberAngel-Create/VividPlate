@@ -69,7 +69,7 @@ const FeedbackForm: React.FC<FeedbackFormProps> = ({ restaurantId, menuItemId })
       // Send to server
       const response = await apiRequest(
         'POST',
-        `/api/restaurants/${restaurantId}/feedback`,
+        `/api/restaurants/${restaurantId}/feedbacks`,
         formData
       );
       

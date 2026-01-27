@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, X, Image as ImageIcon, Loader2 } from "lucide-react";
 import { normalizeImageUrl, getFallbackImage } from "@/lib/imageUtils";
 import { useFileUpload } from "@/lib/upload-utils";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
 
 interface MenuItemImageUploadProps {
   onImageUploaded: (imageUrl: string) => void;
@@ -18,14 +19,27 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
   const [previewUrl, setPreviewUrl] = useState<string | null>(existingImageUrl || null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { subscriptionStatus } = useSubscriptionStatus();
+  const bannerOnlyPlan = !subscriptionStatus || !subscriptionStatus.isPaid;
 
   const handleUploadClick = () => {
+    if (bannerOnlyPlan) {
+      toast({
+        title: "Menu item uploads unavailable",
+        description: "Free plan accounts can only upload banner images. Upgrade to add menu photos.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
+    if (bannerOnlyPlan) {
+      return;
+    }
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -114,6 +128,9 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
   };
 
   const handleRemoveImage = () => {
+    if (bannerOnlyPlan) {
+      return;
+    }
     setPreviewUrl(null);
     onImageUploaded("");
     if (fileInputRef.current) {
@@ -157,7 +174,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
               type="button"
               onClick={handleRemoveImage}
               className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-              disabled={isUploading}
+              disabled={isUploading || bannerOnlyPlan}
             >
               <X className="h-4 w-4" />
             </button>
@@ -165,7 +182,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
         ) : (
           <div
             onClick={handleUploadClick}
-            className="w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors bg-white dark:bg-gray-700"
+            className={`w-full h-48 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-md flex flex-col items-center justify-center transition-colors bg-white dark:bg-gray-700 ${bannerOnlyPlan ? 'cursor-not-allowed opacity-60' : 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'}`}
           >
             <ImageIcon className="h-10 w-10 text-gray-400 dark:text-gray-300 mb-2" />
             <p className="text-gray-500 dark:text-gray-300 text-sm">Click to upload menu item image</p>
@@ -181,7 +198,7 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
           size="sm"
           onClick={handleUploadClick}
           className="w-full"
-          disabled={isUploading}
+          disabled={isUploading || bannerOnlyPlan}
         >
           {isUploading ? (
             <>
@@ -203,8 +220,13 @@ const MenuItemImageUpload = ({ onImageUploaded, existingImageUrl }: MenuItemImag
         className="hidden"
         accept="image/jpeg,image/png,image/webp,image/gif"
         onChange={handleFileChange}
-        disabled={isUploading}
+        disabled={isUploading || bannerOnlyPlan}
       />
+      {bannerOnlyPlan && (
+        <p className="text-xs text-amber-600 text-center">
+          Menu item image uploads are available on paid plans. Free plan accounts can only upload a banner image.
+        </p>
+      )}
     </div>
   );
 };

@@ -23,11 +23,6 @@ const RestaurantOwnerFooter = () => {
                 Contact Support
               </div>
             </Link>
-            <Link href="/pricing">
-              <div className="text-sm text-gray-500 hover:text-primary transition-colors">
-                Pricing Plans
-              </div>
-            </Link>
           </div>
         </div>
       </div>

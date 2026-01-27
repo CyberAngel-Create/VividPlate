@@ -102,20 +102,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         description: `Welcome back, ${user.fullName || user.username}!`,
       });
       
-      // Check if user is an agent and redirect accordingly
+      // Check if user is an agent (auth/me now includes agent profile when available)
       try {
-        const agentRes = await fetch("/api/agents/me", { credentials: 'include' });
-        if (agentRes.ok) {
-          const agent = await agentRes.json();
-          if (agent && agent.approvalStatus === 'approved') {
-            setTimeout(() => {
-              setLocation("/agent-dashboard");
-            }, 100);
-            return;
-          }
+        const authRes = await fetch("/api/auth/me", { credentials: 'include' });
+        if (authRes.ok) {
+          const authUser = await authRes.json() as any;
+            // If server returned an agent profile, prefer that
+            if (authUser && authUser.agent) {
+              const isApproved = authUser.agent.isApproved === true || authUser.agent.approvalStatus === 'approved';
+              if (isApproved) {
+                setTimeout(() => setLocation('/agent-dashboard'), 100);
+                return;
+              }
+              setTimeout(() => setLocation('/agent-registration'), 100);
+              return;
+            }
+
+            // Fallback: if the user's role is 'agent' but no agent profile exists yet,
+            // fetch /api/agents/me to determine status and route appropriately.
+            if (authUser && authUser.role === 'agent') {
+              try {
+                const agentRes = await fetch("/api/agents/me", { credentials: 'include' });
+                if (agentRes.ok) {
+                  const agent = await agentRes.json() as any;
+                  const isApproved = agent?.isApproved === true || agent?.approvalStatus === 'approved';
+                  if (isApproved) {
+                    setTimeout(() => setLocation('/agent-dashboard'), 100);
+                    return;
+                  }
+                }
+              } catch (err) {
+                // ignore and route to registration
+              }
+              setTimeout(() => setLocation('/agent-registration'), 100);
+              return;
+            }
         }
       } catch (e) {
-        // Not an agent, proceed to regular dashboard
+        // If check fails, fall back to regular dashboard
       }
       
       // Use setTimeout to ensure state updates have propagated

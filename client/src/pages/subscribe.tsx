@@ -31,7 +31,7 @@ export default function Subscribe() {
         if (planId && planId !== 'subscribe') {
           navigate(`/chapa-subscribe/${planId}`);
         } else {
-          navigate('/pricing');
+          navigate('/dashboard');
         }
       }, 2000);
     };
@@ -82,7 +82,7 @@ export default function Subscribe() {
                       if (planId && planId !== 'subscribe') {
                         navigate(`/chapa-subscribe/${planId}`);
                       } else {
-                        navigate('/pricing');
+                        navigate('/dashboard');
                       }
                     }}
                     className="w-full"

@@ -62,7 +62,7 @@ export const SubscriptionManager = ({ user }: SubscriptionManagerProps) => {
 
   const updateSubscriptionMutation = useMutation({
     mutationFn: async (data: { userId: number; duration: number; subscriptionTier: string }) => {
-      const res = await apiRequest("POST", `/api/admin/users/${data.userId}/subscription`, {
+      const res = await apiRequest("PATCH", `/api/admin/users/${data.userId}/subscription`, {
         duration: data.duration,
         subscriptionTier: data.subscriptionTier
       });

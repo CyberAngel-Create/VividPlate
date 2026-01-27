@@ -23,7 +23,8 @@ const MenuAdvertisement = ({ position, restaurantId }: MenuAdvertisementProps) =
   const [linkUrl, setLinkUrl] = useState<string>("");
   
   // AdSense Policy Compliance: Check if ads should be displayed
-  const shouldShowAds = shouldDisplayAds(isPaid, location);
+  const isMenuRoute = location.startsWith("/menu/") || location.startsWith("/view-menu/");
+  const shouldShowAds = isMenuRoute ? !isPaid : shouldDisplayAds(isPaid, location);
   
   // Don't render advertisement if compliance validation fails
   if (!shouldShowAds) {

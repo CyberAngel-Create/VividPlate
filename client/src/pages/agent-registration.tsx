@@ -34,7 +34,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Upload, CheckCircle, Clock, XCircle, User, FileText } from "lucide-react";
-import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
+import AgentLayout from "@/components/layout/AgentLayout";
 
 const agentFormSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -122,29 +122,18 @@ export default function AgentRegistration() {
     try {
       const formData = new FormData();
       formData.append('image', file);
-      
-      const response = await fetch('/api/upload/agent-document', {
-        method: 'POST',
-        body: formData,
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
+
+      const res = await apiRequest('POST', '/api/upload/agent-document', formData, true);
+      const data = await res.json();
+      if (data && data.imageUrl) {
         form.setValue(field, data.imageUrl);
-        toast({
-          title: "Upload Successful",
-          description: "Document uploaded successfully",
-        });
+        toast({ title: 'Upload Successful', description: 'Document uploaded successfully' });
       } else {
-        throw new Error('Upload failed');
+        throw new Error('Invalid upload response');
       }
-    } catch (error) {
-      toast({
-        title: "Upload Failed",
-        description: "Failed to upload document. Please try again.",
-        variant: "destructive",
-      });
+    } catch (err: any) {
+      console.error('Agent document upload failed:', err);
+      toast({ title: 'Upload Failed', description: err.message || 'Failed to upload document', variant: 'destructive' });
     } finally {
       setUploadingField(null);
     }
@@ -167,19 +156,25 @@ export default function AgentRegistration() {
 
   if (agentLoading) {
     return (
-      <RestaurantOwnerLayout>
+      <AgentLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </RestaurantOwnerLayout>
+      </AgentLayout>
     );
   }
 
-  if (existingAgent) {
+  // Show status view only if the agent actually submitted an application
+  // or if the approval status is explicitly approved/rejected
+  if (
+    existingAgent &&
+    existingAgent.id !== -1 &&
+    ((existingAgent as any).applicationSubmitted || existingAgent.approvalStatus === 'approved' || existingAgent.approvalStatus === 'rejected')
+  ) {
     return (
-      <RestaurantOwnerLayout>
+      <AgentLayout>
         <div className="container mx-auto px-4 py-8 max-w-2xl">
-          <Button variant="ghost" onClick={() => setLocation("/dashboard")} className="mb-4">
+          <Button variant="ghost" onClick={() => setLocation("/agent-dashboard")} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
           </Button>
           
@@ -204,8 +199,11 @@ export default function AgentRegistration() {
               
               {existingAgent.approvalStatus === 'pending' && (
                 <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                  <p className="text-yellow-800 dark:text-yellow-200">
-                    Your application is under review. This usually takes 1-2 business days. 
+                  <p className="text-yellow-800 dark:text-yellow-200 font-medium">
+                    Pending Review
+                  </p>
+                  <p className="text-yellow-800 dark:text-yellow-200 mt-1">
+                    Your application is under review. This usually takes 1-2 business days.
                     You will be able to create restaurants once approved.
                   </p>
                 </div>
@@ -217,7 +215,7 @@ export default function AgentRegistration() {
                     Congratulations! Your agent application has been approved. 
                     You can now create and manage restaurants.
                   </p>
-                  <Button className="mt-4" onClick={() => setLocation("/dashboard")}>
+                  <Button className="mt-4" onClick={() => setLocation("/agent-dashboard")}>
                     Go to Dashboard
                   </Button>
                 </div>
@@ -237,17 +235,13 @@ export default function AgentRegistration() {
             </CardContent>
           </Card>
         </div>
-      </RestaurantOwnerLayout>
+      </AgentLayout>
     );
   }
 
   return (
-    <RestaurantOwnerLayout>
+    <AgentLayout>
       <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <Button variant="ghost" onClick={() => setLocation("/dashboard")} className="mb-4">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Back to Dashboard
-        </Button>
-        
         <Card className="border-2 border-primary/20">
           <CardHeader className="bg-primary/5">
             <CardTitle className="flex items-center gap-2 text-primary">
@@ -518,6 +512,6 @@ export default function AgentRegistration() {
           </CardContent>
         </Card>
       </div>
-    </RestaurantOwnerLayout>
+    </AgentLayout>
   );
 }

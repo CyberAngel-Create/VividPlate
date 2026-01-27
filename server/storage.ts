@@ -22,7 +22,8 @@ import {
   agents, Agent, InsertAgent,
   tokenRequests, TokenRequest, InsertTokenRequest,
   tokenTransactions, TokenTransaction, InsertTokenTransaction,
-  restaurantRequests, RestaurantRequest, InsertRestaurantRequest
+  restaurantRequests, RestaurantRequest, InsertRestaurantRequest,
+  agentMessages, AgentMessage, InsertAgentMessage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
@@ -282,6 +283,13 @@ export interface IStorage {
   approveRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined>;
   rejectRestaurantRequest(id: number, agentNotes?: string): Promise<RestaurantRequest | undefined>;
   countActiveRestaurantsByOwnerId(ownerId: number): Promise<number>;
+
+  // Agent messaging operations
+  createAgentMessage(message: InsertAgentMessage): Promise<AgentMessage>;
+  getAgentMessage(id: number): Promise<AgentMessage | undefined>;
+  getAgentMessagesByOwnerId(ownerId: number): Promise<AgentMessage[]>;
+  getAgentMessagesByAgentId(agentId: number): Promise<AgentMessage[]>;
+  respondToAgentMessage(id: number, response: string): Promise<AgentMessage | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1807,6 +1815,99 @@ export class DatabaseStorage implements IStorage {
         eq(restaurants.isPremium, true)
       ));
     return result[0]?.count || 0;
+  }
+
+  async createAgentMessage(message: InsertAgentMessage): Promise<AgentMessage> {
+    const now = new Date();
+    try {
+      const [created] = await db.insert(agentMessages)
+        .values({ 
+          ...message, 
+          status: 'open',
+          ownerViewed: true,
+          agentViewed: false,
+          createdAt: now, 
+          updatedAt: now 
+        })
+        .returning();
+      return created;
+    } catch (err: any) {
+      // Bubble up other errors; creation of the table should be handled by migrations
+      console.error('createAgentMessage failed:', err);
+      throw err;
+    }
+  }
+
+  async getAgentMessage(id: number): Promise<AgentMessage | undefined> {
+    const [record] = await db.select().from(agentMessages)
+      .where(eq(agentMessages.id, id));
+    return record;
+  }
+
+  async getAgentMessagesByOwnerId(ownerId: number): Promise<AgentMessage[]> {
+    return await db.select().from(agentMessages)
+      .where(eq(agentMessages.ownerUserId, ownerId))
+      .orderBy(desc(agentMessages.createdAt));
+  }
+
+  async getAgentMessagesByAgentId(agentId: number): Promise<AgentMessage[]> {
+    return await db.select().from(agentMessages)
+      .where(eq(agentMessages.agentId, agentId))
+      .orderBy(desc(agentMessages.createdAt));
+  }
+
+  async respondToAgentMessage(id: number, response: string): Promise<AgentMessage | undefined> {
+    const [updated] = await db.update(agentMessages)
+      .set({
+        agentResponse: response,
+        status: 'responded',
+        ownerViewed: false,
+        agentViewed: true,
+        respondedAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(agentMessages.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Create a message originating from an agent to the owner (notification)
+  async createAgentMessageFromAgent(params: {
+    ownerUserId: number;
+    agentId: number;
+    subject?: string | null;
+    agentResponse?: string | null;
+    relatedRequestId?: number | null;
+  }): Promise<AgentMessage> {
+    const now = new Date();
+    const [created] = await db.insert(agentMessages)
+      .values({
+        ownerUserId: params.ownerUserId,
+        agentId: params.agentId,
+        subject: params.subject || null,
+        message: null,
+        agentResponse: params.agentResponse || null,
+        status: 'responded',
+        ownerViewed: false,
+        agentViewed: true,
+        createdAt: now,
+        respondedAt: params.agentResponse ? now : null,
+        updatedAt: now
+      })
+      .returning();
+    return created;
+  }
+
+  async deleteAgentMessage(id: number): Promise<boolean> {
+    try {
+      const result = await db.delete(agentMessages)
+        .where(eq(agentMessages.id, id))
+        .returning();
+      return result.length > 0;
+    } catch (err) {
+      console.error('deleteAgentMessage failed:', err);
+      throw err;
+    }
   }
 }
 

@@ -47,7 +47,8 @@ import {
   Calendar,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  Mail
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 
@@ -109,6 +110,20 @@ interface RestaurantRequest {
   ownerEmail?: string;
 }
 
+interface AgentMessage {
+  id: number;
+  ownerUserId: number;
+  subject?: string | null;
+  message: string;
+  status: 'open' | 'responded' | 'closed';
+  agentResponse?: string | null;
+  createdAt: string;
+  respondedAt?: string | null;
+  ownerName?: string;
+  ownerEmail?: string | null;
+  ownerPhone?: string | null;
+}
+
 export default function AgentDashboard() {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -121,6 +136,7 @@ export default function AgentDashboard() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
+  const [responseDrafts, setResponseDrafts] = useState<Record<number, string>>({});
 
   const { data: agent, isLoading: agentLoading } = useQuery<Agent>({
     queryKey: ["/api/agents/me"],
@@ -149,6 +165,11 @@ export default function AgentDashboard() {
 
   const { data: restaurantRequests, isLoading: restaurantRequestsLoading } = useQuery<RestaurantRequest[]>({
     queryKey: ["/api/agents/me/restaurant-requests"],
+    enabled: !!agent,
+  });
+
+  const { data: agentMessages, isLoading: agentMessagesLoading } = useQuery<AgentMessage[]>({
+    queryKey: ["/api/agents/me/messages"],
     enabled: !!agent,
   });
 
@@ -192,6 +213,30 @@ export default function AgentDashboard() {
       toast({
         title: "Rejection Failed",
         description: error.message || "Failed to reject request",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const respondToMessageMutation = useMutation({
+    mutationFn: async ({ messageId, response }: { messageId: number; response: string }) => {
+      const apiResponse = await apiRequest("POST", `/api/agents/messages/${messageId}/respond`, { response });
+      return apiResponse.json();
+    },
+    onSuccess: (_data, variables) => {
+      toast({
+        title: "Response Sent",
+        description: "Your reply was delivered to the owner.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/agents/me/messages"] });
+      // Also invalidate owner message cache so owners see the reply
+      queryClient.invalidateQueries({ queryKey: ["/api/agent-messages/my"] });
+      setResponseDrafts((prev) => ({ ...prev, [variables.messageId]: "" }));
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Response Failed",
+        description: error.message || "Failed to send response",
         variant: "destructive",
       });
     },
@@ -289,6 +334,19 @@ export default function AgentDashboard() {
     });
   };
 
+  const handleRespondToMessage = (messageId: number) => {
+    const response = responseDrafts[messageId];
+    if (!response || !response.trim()) {
+      toast({
+        title: "Response Required",
+        description: "Enter a response before sending.",
+        variant: "destructive",
+      });
+      return;
+    }
+    respondToMessageMutation.mutate({ messageId, response: response.trim() });
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'approved':
@@ -326,6 +384,33 @@ export default function AgentDashboard() {
               <Button onClick={() => setLocation("/agent-registration")}>
                 Register as Agent
                 <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </AgentLayout>
+    );
+  }
+
+  const applicationSubmitted = Boolean((agent as any)?.applicationSubmitted);
+
+  if (agent.approvalStatus === 'pending' && !applicationSubmitted) {
+    return (
+      <AgentLayout>
+        <div className="max-w-2xl mx-auto p-6">
+          <Card className="border-primary/30">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Complete Your Agent Registration
+              </CardTitle>
+              <CardDescription>
+                Please complete your application and upload your documents to continue.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setLocation("/agent-registration")}>
+                Complete Registration
               </Button>
             </CardContent>
           </Card>
@@ -643,14 +728,14 @@ export default function AgentDashboard() {
           </CardContent>
         </Card>
 
-        {/* Restaurant Requests from Owners */}
+        {/* Premium Subscription Requests from Owners */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Store className="h-5 w-5" />
-              Restaurant Requests
+              Premium Subscription Requests
             </CardTitle>
-            <CardDescription>Requests from restaurant owners for additional restaurants</CardDescription>
+            <CardDescription>Requests from restaurant owners to renew premium duration</CardDescription>
           </CardHeader>
           <CardContent>
             {restaurantRequestsLoading ? (
@@ -729,7 +814,83 @@ export default function AgentDashboard() {
               </div>
             ) : (
               <p className="text-center text-muted-foreground py-8">
-                No restaurant requests from owners yet
+                No premium subscription requests yet
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Messages from Restaurant Owners */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
+              Owner Messages
+            </CardTitle>
+            <CardDescription>Conversations with your assigned restaurant owners</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {agentMessagesLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+            ) : agentMessages && agentMessages.length > 0 ? (
+              <div className="space-y-4">
+                {agentMessages.map((msg) => (
+                  <div key={msg.id} className="p-4 border rounded-lg bg-gray-50 dark:bg-gray-900/30">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <p className="font-semibold">{msg.ownerName || 'Restaurant Owner'}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(msg.createdAt).toLocaleString()}</p>
+                        {msg.ownerEmail && (
+                          <p className="text-xs text-muted-foreground">{msg.ownerEmail}{msg.ownerPhone ? ` • ${msg.ownerPhone}` : ''}</p>
+                        )}
+                      </div>
+                      <div>
+                        {msg.status === 'responded' ? (
+                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">Responded</Badge>
+                        ) : (
+                          <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">Awaiting reply</Badge>
+                        )}
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm whitespace-pre-line text-gray-800 dark:text-gray-200">{msg.message}</p>
+                    {msg.agentResponse ? (
+                      <div className="mt-3 border-l-2 border-primary/40 pl-3 text-sm text-gray-700 dark:text-gray-100">
+                        <p className="font-medium text-primary dark:text-primary-light">Your response</p>
+                        <p className="whitespace-pre-line">{msg.agentResponse}</p>
+                        {msg.respondedAt && (
+                          <p className="text-xs text-muted-foreground mt-1">{new Date(msg.respondedAt).toLocaleString()}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-4 space-y-2">
+                        <Label htmlFor={`response-${msg.id}`}>Respond to owner</Label>
+                        <Textarea
+                          id={`response-${msg.id}`}
+                          rows={3}
+                          value={responseDrafts[msg.id] || ""}
+                          onChange={(e) => setResponseDrafts((prev) => ({ ...prev, [msg.id]: e.target.value }))}
+                          placeholder="Type your response"
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            onClick={() => handleRespondToMessage(msg.id)}
+                            disabled={respondToMessageMutation.isPending}
+                          >
+                            {respondToMessageMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Send Response
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-8">
+                No messages from owners yet.
               </p>
             )}
           </CardContent>

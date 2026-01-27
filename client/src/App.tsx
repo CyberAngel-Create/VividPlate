@@ -25,8 +25,6 @@ import AdminLogin from "./pages/admin-login";
 import AdminUsers from "./pages/admin-users";
 import AdminRestaurants from "./pages/admin-restaurants";
 import AdminLogs from "./pages/admin-logs";
-import AdminPricing from "./pages/admin-pricing";
-import AdminPricingPlans from "./pages/admin/AdminPricingPlans";
 import AdminContactInfo from "./pages/admin-contact-info";
 import AdminAdvertisements from "./pages/admin-advertisements";
 import AdminMenuExamples from "./pages/admin-menu-examples";
@@ -39,7 +37,6 @@ import AgentProfile from "./pages/agent-profile";
 import AgentChangePassword from "./pages/agent-change-password";
 import AdminTokenRequests from "./pages/admin-token-requests";
 import RequestRestaurant from "./pages/request-restaurant";
-import Pricing from "./pages/pricing";
 import Contact from "./pages/contact";
 import ForgotPassword from "./pages/forgot-password";
 import ResetPassword from "./pages/reset-password";
@@ -103,7 +100,7 @@ function Router() {
   const [showLoadingTimeout, setShowLoadingTimeout] = useState(false);
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
   const isPublicRoute = location === "/" || location.startsWith("/login") || location.startsWith("/register") || 
-                       location.startsWith("/pricing") || location.startsWith("/contact") || 
+                       location.startsWith("/contact") || 
                        location.startsWith("/privacy-policy") || location.startsWith("/terms") ||
                        location.startsWith("/forgot-password") || location.startsWith("/reset-password") ||
                        location.startsWith("/admin-login") || isPublicMenuView;
@@ -157,7 +154,6 @@ function Router() {
         <PublicRoute path="/reset-password" component={ResetPassword} />
         <PublicRoute path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/terms" component={TermsOfService} />
-        <PublicRoute path="/pricing" component={Pricing} />
         <PublicRoute path="/contact" component={Contact} />
         <PublicRoute path="/password-reset-help" component={PasswordResetHelp} />
         <PublicRoute path="/menu/:restaurantName" component={ViewMenu} />
@@ -194,8 +190,6 @@ function Router() {
         <AdminRoute path="/admin" component={AdminDashboard} />
         <AdminRoute path="/admin/users" component={AdminUsers} />
         <AdminRoute path="/admin/restaurants" component={AdminRestaurants} />
-        <AdminRoute path="/admin/pricing" component={AdminPricing} />
-        <AdminRoute path="/admin/pricing-plans" component={AdminPricingPlans} />
         <AdminRoute path="/admin/logs" component={AdminLogs} />
         <AdminRoute path="/admin/profile" component={Profile} />
         <AdminRoute path="/admin/contact-info" component={AdminContactInfo} />

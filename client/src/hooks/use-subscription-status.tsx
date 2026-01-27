@@ -8,6 +8,9 @@ export interface SubscriptionStatus {
   maxRestaurants: number;
   currentRestaurants: number;
   expiresAt: string | null;
+  hasAgentPremiumRestaurant?: boolean;
+  agentId?: number | null;
+  agentName?: string | null;
 }
 
 type UseSubscriptionStatusResult = {
@@ -23,7 +26,10 @@ const defaultSubscriptionStatus: SubscriptionStatus = {
   isPaid: false,
   maxRestaurants: 1,
   currentRestaurants: 0,
-  expiresAt: null
+  expiresAt: null,
+  hasAgentPremiumRestaurant: false,
+  agentId: null,
+  agentName: null,
 };
 
 const SubscriptionStatusContext = createContext<UseSubscriptionStatusResult | null>(null);

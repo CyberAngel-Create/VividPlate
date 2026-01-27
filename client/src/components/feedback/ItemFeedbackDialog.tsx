@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { apiRequest } from '@/lib/queryClient';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ const ItemFeedbackDialog = ({ menuItem, restaurantId, children }: ItemFeedbackDi
     setIsSubmitting(true);
 
     try {
-      await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback`, {
+      await apiRequest('POST', `/api/restaurants/${restaurantId}/feedbacks`, {
         menuItemId: menuItem.id,
         rating,
         comment

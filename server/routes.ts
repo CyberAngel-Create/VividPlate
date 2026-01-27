@@ -2,10 +2,10 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import fs from 'fs';
 import { storage } from "./storage.js";
-import { 
-  insertUserSchema, 
-  insertRestaurantSchema, 
-  insertMenuCategorySchema, 
+import {
+  insertUserSchema,
+  insertRestaurantSchema,
+  insertMenuCategorySchema,
   insertMenuItemSchema,
   insertMenuViewSchema,
   insertFeedbackSchema,
@@ -13,7 +13,8 @@ import {
   insertDietaryPreferencesSchema,
   insertWaiterCallSchema,
   insertAgentSchema,
-  insertTokenRequestSchema
+  insertTokenRequestSchema,
+  type User
 } from "@shared/schema";
 import { ObjectStorageService } from './objectStorage';
 import session from "express-session";
@@ -56,11 +57,97 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
   }
 }
 
+const DEFAULT_AGENT_USERNAME = process.env.DEFAULT_AGENT_USERNAME || 'Agent1';
+const DEFAULT_AGENT_EMAIL = process.env.DEFAULT_AGENT_EMAIL || 'michaellegesse.gm@gmail.com';
+const DEFAULT_AGENT_CACHE_MS = 5 * 60 * 1000;
+
+type DefaultAgentCache = {
+  id: number;
+  name: string;
+  email?: string | null;
+};
+
+let cachedDefaultAgent: DefaultAgentCache | null = null;
+let cachedDefaultAgentAt = 0;
+
+const isFreeTierUser = (user?: { subscriptionTier?: string | null } | null): boolean => {
+  const tier = user?.subscriptionTier?.toLowerCase();
+  return !tier || tier === 'free';
+};
+
+const getDefaultAgentAssignment = async (): Promise<DefaultAgentCache | null> => {
+  if (cachedDefaultAgent && Date.now() - cachedDefaultAgentAt < DEFAULT_AGENT_CACHE_MS) {
+    return cachedDefaultAgent;
+  }
+
+  let defaultAgentUser: User | undefined | null = null;
+  if (DEFAULT_AGENT_USERNAME) {
+    defaultAgentUser = await storage.getUserByUsername(DEFAULT_AGENT_USERNAME);
+  }
+  if (!defaultAgentUser && DEFAULT_AGENT_EMAIL) {
+    defaultAgentUser = await storage.getUserByEmail(DEFAULT_AGENT_EMAIL);
+  }
+
+  if (!defaultAgentUser) {
+    console.warn('Default agent user not found. Trying to fallback to any approved agent.');
+    // Fallback: try to pick any approved agent from the system
+    try {
+      const approvedAgents = await storage.getApprovedAgents();
+      if (approvedAgents && approvedAgents.length > 0) {
+        const fallbackAgent = approvedAgents[0];
+        const fallbackUser = await storage.getUser(fallbackAgent.userId);
+        const displayName = [fallbackAgent.firstName, fallbackAgent.lastName]
+          .filter(Boolean)
+          .join(' ') || fallbackUser?.fullName || fallbackUser?.username || DEFAULT_AGENT_USERNAME;
+
+        cachedDefaultAgent = {
+          id: fallbackAgent.id,
+          name: displayName,
+          email: fallbackUser?.email || null
+        };
+        cachedDefaultAgentAt = Date.now();
+        return cachedDefaultAgent;
+      }
+    } catch (err) {
+      console.error('Error while attempting fallback to approved agents for default agent:', err);
+    }
+
+    console.warn('Default agent user not found and no approved agents available. Update DEFAULT_AGENT_USERNAME/EMAIL if needed.');
+    cachedDefaultAgent = null;
+    cachedDefaultAgentAt = Date.now();
+    return null;
+  }
+
+  const agentRecord = await storage.getAgentByUserId(defaultAgentUser.id);
+  if (!agentRecord || agentRecord.approvalStatus !== 'approved') {
+    console.warn('Default agent record missing or not approved.');
+    cachedDefaultAgent = null;
+    cachedDefaultAgentAt = Date.now();
+    return null;
+  }
+
+  const displayName = [agentRecord.firstName, agentRecord.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim() || defaultAgentUser.fullName || defaultAgentUser.username || DEFAULT_AGENT_USERNAME;
+
+  cachedDefaultAgent = {
+    id: agentRecord.id,
+    name: displayName,
+    email: defaultAgentUser.email
+  };
+  cachedDefaultAgentAt = Date.now();
+  return cachedDefaultAgent;
+};
+
 // Initialize Chapa Payment Gateway
 const CHAPA_SECRET_KEY = process.env.CHAPA_SECRET_KEY;
 const CHAPA_BASE_URL = 'https://api.chapa.co/v1';
+const CHAPA_ENABLED = (process.env.CHAPA_ENABLED || '').toLowerCase() === 'true';
 
-if (!CHAPA_SECRET_KEY) {
+if (!CHAPA_ENABLED) {
+  console.info('Chapa payments disabled via CHAPA_ENABLED flag (default is disabled).');
+} else if (!CHAPA_SECRET_KEY) {
   console.warn('⚠️ CHAPA_SECRET_KEY not provided - Payment functionality will be disabled');
 }
 
@@ -360,8 +447,8 @@ const configureFileUpload = () => {
     }
   });
 
-  // File size limit (1MB as requested)
-  const fileSizeLimit = 1 * 1024 * 1024;
+  // File size limit (increase to 5MB to prevent 413 on agent document uploads)
+  const fileSizeLimit = 5 * 1024 * 1024;
 
   // File filter to only allow image files with additional logging
   const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
@@ -728,18 +815,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       console.log('Password matched successfully');
-      
+
+      // Pre-fetch agent profile so we can include it in the login response
+      let agentProfile = null;
+      try {
+        agentProfile = await storage.getAgentByUserId(user.id);
+      } catch (err) {
+        console.warn('Error fetching agent profile during login:', err);
+      }
+
       // Login the user via session
       req.login(user, (loginErr) => {
         if (loginErr) {
           console.error('Session error during login:', loginErr);
           return res.status(500).json({ message: 'Error establishing session' });
         }
-        
+
         console.log(`User ${user.username} (ID: ${user.id}) logged in successfully`);
-        
-        // Return user data without password
+
+        // Return user data without password, include agent if available
         const { password: _, resetPasswordToken, resetPasswordExpires, ...userWithoutPassword } = user;
+        if (agentProfile) {
+          // Normalize approval status and add an explicit boolean so the client
+          // can reliably decide where to route the user after login.
+          const approvalRaw = (agentProfile.approvalStatus || '').toString();
+          const approval = approvalRaw.toLowerCase();
+          const isApproved = approval === 'approved' || approval === 'verified' || (agentProfile).approved === true;
+          const agentResponse = { ...agentProfile, approvalStatusNormalized: approval, isApproved };
+          return res.json({ ...userWithoutPassword, agent: agentResponse });
+        }
+
+        // If the authenticated user has the `agent` role but no agent profile exists yet,
+        // include a synthetic pending agent object so the client will route them to
+        // the agent registration/verification flow instead of the restaurant owner dashboard.
+        if ((user as any).role === 'agent') {
+          const synthetic = {
+            id: -1,
+            userId: (user as any).id,
+            firstName: (user as any).fullName || (user as any).username || '',
+            lastName: '',
+            agentCode: null,
+            tokenBalance: 0,
+            approvalStatus: 'pending',
+            approvalStatusNormalized: 'pending',
+            isApproved: false,
+            applicationSubmitted: false,
+            createdAt: new Date().toISOString()
+          };
+          return res.json({ ...userWithoutPassword, agent: synthetic });
+        }
+
         res.json(userWithoutPassword);
       });
       
@@ -775,9 +900,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get('/api/auth/me', isAuthenticated, (req, res) => {
-    const { password, ...userWithoutPassword } = req.user as any;
-    res.json(userWithoutPassword);
+  app.get('/api/auth/me', isAuthenticated, async (req, res) => {
+    try {
+      const user = req.user as any;
+      const { password, ...userWithoutPassword } = user;
+      // Attach agent profile if exists
+      try {
+        const agent = await storage.getAgentByUserId(user.id);
+        if (agent) {
+          const approvalRaw = (agent.approvalStatus || '').toString();
+          const approval = approvalRaw.toLowerCase();
+          const isApproved = approval === 'approved' || approval === 'verified' || (agent as any).approved === true;
+          return res.json({ ...userWithoutPassword, agent: { ...agent, approvalStatusNormalized: approval, isApproved } });
+        }
+      } catch (err) {
+        console.warn('Error fetching agent profile for auth/me:', err);
+      }
+      res.json(userWithoutPassword);
+    } catch (error) {
+      console.error('Error in /api/auth/me:', error);
+      res.status(500).json({ message: 'Failed to fetch authenticated user' });
+    }
   });
   
   // User profile management routes
@@ -1078,9 +1221,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         r.isPremium && r.agentId && r.premiumExpiresAt && new Date(r.premiumExpiresAt) > now
       );
       
-      // Get the agent ID if user has agent-created restaurants (for request workflow)
-      const agentIdForRequests = userRestaurants.find(r => r.agentId)?.agentId || null;
-      
+      // Determine agent assignment (existing agent on restaurant or default agent fallback)
+      let agentIdForRequests = userRestaurants.find(r => r.agentId)?.agentId || null;
+      let agentName: string | null = null;
+
+      if (agentIdForRequests) {
+        const assignedAgent = await storage.getAgent(agentIdForRequests);
+        if (assignedAgent) {
+          const displayName = [assignedAgent.firstName, assignedAgent.lastName]
+            .filter(Boolean)
+            .join(' ')
+            .trim();
+          agentName = displayName || `Agent ${assignedAgent.agentCode || assignedAgent.id}`;
+        }
+      } else {
+        const defaultAgent = await getDefaultAgentAssignment();
+        if (defaultAgent) {
+          agentIdForRequests = defaultAgent.id;
+          agentName = defaultAgent.name;
+        }
+      }
+
       return res.json({
         tier: effectiveTier,
         isPaid: isPaid,
@@ -1088,7 +1249,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         currentRestaurants: restaurantCount,
         expiresAt: expiresAt,
         hasAgentPremiumRestaurant: hasAgentPremiumRestaurant,
-        agentId: agentIdForRequests
+        agentId: agentIdForRequests,
+        agentName
       });
     } catch (error) {
       console.error("Error getting subscription status:", error);
@@ -1218,9 +1380,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'User not found' });
       }
       
-      // Check if user is an approved agent (only approved agents can create restaurants)
-      // Admin users bypass this check
-      if (user.role !== 'admin') {
+      // Only agents must be approved to create restaurants. Regular owners can create one restaurant.
+      // Admin users bypass this check.
+      if (user.role === 'agent') {
         const agent = await storage.getAgentByUserId(userId);
         if (!agent) {
           return res.status(403).json({ 
@@ -1257,10 +1419,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId
       });
+
+      // Assign a default agent for owner-created restaurants if none provided
+      let resolvedAgentId = restaurantData.agentId ?? null;
+      if (!resolvedAgentId) {
+        const defaultAgent = await getDefaultAgentAssignment();
+        if (defaultAgent) {
+          resolvedAgentId = defaultAgent.id;
+        }
+      }
       
       // Create restaurant with pending status (requires admin approval before going live)
       const restaurant = await storage.createRestaurant({
         ...restaurantData,
+        agentId: resolvedAgentId ?? restaurantData.agentId ?? null,
         approvalStatus: 'pending',
         adminApproved: false
       });
@@ -1400,17 +1572,13 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      if (user.subscriptionTier === 'free') {
-        const imageCount = await storage.getUserImageCount(userId);
-        if (imageCount >= 10) {
-          return res.status(403).json({ 
-            message: 'Free plan image limit reached',
-            details: 'Free users are limited to 10 images. Please upgrade to continue uploading.',
-            currentImages: imageCount,
-            maxImages: 10,
-            upgradeRequired: true
-          });
-        }
+      if (isFreeTierUser(user)) {
+        return res.status(403).json({
+          message: 'Logo uploads are a premium feature.',
+          details: 'Free plan accounts can only upload banner images. Upgrade to change your logo.',
+          upgradeRequired: true,
+          allowedUpload: 'banner-only'
+        });
       }
       
       console.log(`Logo received: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
@@ -1522,17 +1690,13 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         return res.status(404).json({ message: 'User not found' });
       }
 
-      if (user.subscriptionTier === 'free') {
-        const imageCount = await storage.getUserImageCount(userId);
-        if (imageCount >= 10) {
-          return res.status(403).json({ 
-            message: 'Free plan image limit reached',
-            details: 'Free users are limited to 10 images. Please upgrade to continue uploading.',
-            currentImages: imageCount,
-            maxImages: 10,
-            upgradeRequired: true
-          });
-        }
+      if (isFreeTierUser(user)) {
+        return res.status(403).json({
+          message: 'Menu item image uploads require a paid plan.',
+          details: 'Free plan owners can only upload banner images. Upgrade to upload menu photos.',
+          upgradeRequired: true,
+          allowedUpload: 'banner-only'
+        });
       }
       
       console.log(`Banner uploaded successfully: ${req.file.filename}, Size: ${req.file.size} bytes, Type: ${req.file.mimetype}`);
@@ -1860,6 +2024,95 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     } catch (error) {
       console.error('Error fetching restaurant feedbacks:', error);
       res.status(500).json({ message: 'Failed to fetch feedbacks' });
+    }
+  });
+
+  // Customer feedback submission endpoint (public)
+  app.post('/api/restaurants/:restaurantId/feedbacks', async (req, res) => {
+    try {
+      const restaurantId = parseInt(req.params.restaurantId);
+      const restaurant = await storage.getRestaurant(restaurantId);
+
+      if (!restaurant) {
+        return res.status(404).json({ message: 'Restaurant not found' });
+      }
+
+      // Only premium restaurants accept feedback
+      const restaurantOwner = await storage.getUser(restaurant.userId);
+      let isPremium = false;
+      if (restaurantOwner && (
+        (restaurantOwner.subscriptionTier && restaurantOwner.subscriptionTier.toLowerCase() === 'premium') ||
+        (restaurantOwner.username === 'Entoto Cloud')
+      )) {
+        isPremium = true;
+      }
+      if (restaurant.isPremium === true) isPremium = true;
+
+      if (!isPremium) {
+        return res.status(403).json({ message: 'Feedback is only available for premium restaurants', isPremium: false });
+      }
+
+      const { menuItemId, rating, comment, customerName, customerEmail } = req.body;
+      if (!rating) {
+        return res.status(400).json({ message: 'Rating is required' });
+      }
+
+      const feedbackData: any = {
+        restaurantId,
+        rating: parseInt(rating),
+        comment: comment || null,
+        customerName: customerName || null,
+        customerEmail: customerEmail || null,
+        status: 'pending'
+      };
+
+      if (menuItemId) feedbackData.menuItemId = parseInt(menuItemId);
+
+      const feedback = await storage.createFeedback(feedbackData);
+      res.status(201).json(feedback);
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Approve feedback (restaurant owner)
+  app.post('/api/feedback/:feedbackId/approve', isAuthenticated, async (req, res) => {
+    try {
+      const feedbackId = parseInt(req.params.feedbackId);
+      const feedback = await storage.getFeedback(feedbackId);
+      if (!feedback) return res.status(404).json({ message: 'Feedback not found' });
+
+      const restaurant = await storage.getRestaurant(feedback.restaurantId);
+      if (!restaurant || restaurant.userId !== (req.user as any).id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const updated = await storage.approveFeedback(feedbackId);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error approving feedback:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  });
+
+  // Reject feedback (restaurant owner)
+  app.post('/api/feedback/:feedbackId/reject', isAuthenticated, async (req, res) => {
+    try {
+      const feedbackId = parseInt(req.params.feedbackId);
+      const feedback = await storage.getFeedback(feedbackId);
+      if (!feedback) return res.status(404).json({ message: 'Feedback not found' });
+
+      const restaurant = await storage.getRestaurant(feedback.restaurantId);
+      if (!restaurant || restaurant.userId !== (req.user as any).id) {
+        return res.status(403).json({ message: 'Access denied' });
+      }
+
+      const updated = await storage.rejectFeedback(feedbackId);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error rejecting feedback:', error);
+      res.status(500).json({ message: 'Server error' });
     }
   });
 
@@ -2340,6 +2593,20 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   app.post('/api/items/:itemId/upload-image', isAuthenticated, upload.single('image'), async (req, res) => {
     try {
       const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      if (isFreeTierUser(user)) {
+        return res.status(403).json({
+          message: 'Menu item image uploads are disabled on the free plan.',
+          details: 'Upgrade your plan or contact your agent to enable menu item images.',
+          upgradeRequired: true,
+          allowedUpload: 'banner-only'
+        });
+      }
       
       if (!req.file) {
         console.warn(`Upload attempt with no file included for menu item by user ${userId}`);
@@ -2605,24 +2872,35 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
-  // Import Chapa service
-  let chapaService, SUBSCRIPTION_PLANS, convertPrice, getCurrencyByLocation;
-  try {
-    const chapaModule = await import('./chapa-service');
-    chapaService = chapaModule.chapaService;
-    SUBSCRIPTION_PLANS = chapaModule.SUBSCRIPTION_PLANS;
-    convertPrice = chapaModule.convertPrice;
-    getCurrencyByLocation = chapaModule.getCurrencyByLocation;
-  } catch (error) {
-    console.warn('Chapa service not available:', error.message);
-    chapaService = null;
-    SUBSCRIPTION_PLANS = {};
-    convertPrice = (price: number) => price;
-    getCurrencyByLocation = () => 'ETB';
+  // Import Chapa service only when enabled
+  let chapaService: any = null;
+  let SUBSCRIPTION_PLANS: any = {};
+  let convertPrice: (price: number, currency?: string) => number = (price) => price;
+  let getCurrencyByLocation: (countryCode?: string) => string = () => 'ETB';
+
+  if (CHAPA_ENABLED && CHAPA_SECRET_KEY) {
+    try {
+      const chapaModule = await import('./chapa-service');
+      chapaService = chapaModule.chapaService;
+      SUBSCRIPTION_PLANS = chapaModule.SUBSCRIPTION_PLANS;
+      convertPrice = chapaModule.convertPrice;
+      getCurrencyByLocation = chapaModule.getCurrencyByLocation;
+    } catch (error) {
+      console.warn('Chapa service not available:', error.message);
+    }
   }
+
+  const respondChapaDisabled = (res: any) => res.status(503).json({
+    message: 'Online payments are currently disabled. Please contact support to upgrade your plan.',
+    error: 'chapa_disabled'
+  });
 
   // Get subscription plans with international pricing
   app.get('/api/chapa/subscription-plans', (req, res) => {
+    if (!CHAPA_ENABLED) {
+      return respondChapaDisabled(res);
+    }
+
     try {
       const userCurrency = req.query.currency as string || 'ETB';
       const countryCode = req.query.country as string;
@@ -2674,6 +2952,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   // Initialize Chapa payment with international support
   app.post('/api/chapa/initialize-payment/:planId', isAuthenticated, async (req, res) => {
+    if (!CHAPA_ENABLED) {
+      return respondChapaDisabled(res);
+    }
+
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
@@ -3031,6 +3313,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   // Legacy Stripe endpoints - redirect to Chapa
   app.post('/api/create-subscription', isAuthenticated, async (req, res) => {
+    if (!CHAPA_ENABLED) {
+      return respondChapaDisabled(res);
+    }
+
     try {
       const { planId } = req.body;
       console.log(`Legacy Stripe payment request for plan ${planId} - redirecting to Chapa`);
@@ -3050,6 +3336,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   app.post('/api/create-subscription/:planId', isAuthenticated, async (req, res) => {
+    if (!CHAPA_ENABLED) {
+      return respondChapaDisabled(res);
+    }
+
     try {
       const planId = req.params.planId.toLowerCase();
       
@@ -3069,6 +3359,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Chapa callback endpoint (called by Chapa after payment)
   // According to Chapa docs, this receives a GET request with JSON payload: {trx_ref, ref_id, status}
   app.get('/api/chapa/callback', async (req, res) => {
+    if (!CHAPA_ENABLED) {
+      return respondChapaDisabled(res);
+    }
+
     try {
       console.log('Chapa callback received - query params:', req.query);
       
@@ -3139,6 +3433,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   // Manual payment verification endpoint
   app.post('/api/chapa/verify-payment', isAuthenticated, async (req, res) => {
+    if (!CHAPA_ENABLED) {
+      return respondChapaDisabled(res);
+    }
+
     try {
       const { txRef, planId } = req.body;
       const userId = (req.user as any).id;
@@ -3203,6 +3501,10 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   app.post('/api/verify-payment', isAuthenticated, async (req, res) => {
+    if (!CHAPA_ENABLED) {
+      return respondChapaDisabled(res);
+    }
+
     res.status(400).json({
       message: 'Stripe payment system has been replaced with Chapa. Please use /api/chapa/verify-payment',
       error: 'Payment system updated'
@@ -3291,17 +3593,87 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   app.patch('/api/admin/users/:id/subscription', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const userId = parseInt(req.params.id);
-      const { subscriptionTier } = req.body;
-      
-      if (!subscriptionTier || !['free', 'premium', 'admin'].includes(subscriptionTier)) {
+      const { subscriptionTier, duration } = req.body;
+
+      if (!subscriptionTier || !['free', 'premium', 'admin', 'business'].includes(subscriptionTier)) {
         return res.status(400).json({ message: 'Invalid subscription tier' });
       }
-      
-      const updatedUser = await storage.updateUser(userId, { subscriptionTier });
+
+      const now = new Date();
+      const activeSubscription = await storage.getActiveSubscriptionByUserId(userId);
+
+      // Removing premium (or setting free) should clear expiry and deactivate any paid subscription
+      if (subscriptionTier === 'free' || duration === 0) {
+        const updatedUser = await storage.updateUserSubscription(userId, {
+          subscriptionTier: 'free',
+          subscriptionEndDate: null
+        });
+        if (!updatedUser) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (activeSubscription) {
+          await storage.updateSubscription(activeSubscription.id, {
+            isActive: false,
+            endDate: now,
+            tier: activeSubscription.tier
+          });
+        }
+
+        // Ensure a free active subscription record exists for consistency
+        await storage.createSubscription({
+          userId,
+          tier: 'free',
+          isActive: true,
+          startDate: now,
+          paymentMethod: 'admin'
+        });
+
+        // Clear premium flags on all restaurants for this user so status reflects free tier
+        const userRestaurants = await storage.getRestaurantsByUserId(userId);
+        for (const restaurant of userRestaurants) {
+          await storage.updateRestaurant(restaurant.id, {
+            isPremium: false,
+            premiumMonths: 0,
+            premiumExpiresAt: null,
+            isActive: true
+          });
+        }
+
+        const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitive } = updatedUser;
+        return res.json(userWithoutSensitive);
+      }
+
+      // Premium/business update with duration (in days)
+      const durationDays = typeof duration === 'number' && duration > 0 ? duration : null;
+      const endDate = durationDays ? new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000) : null;
+
+      const updatedUser = await storage.updateUserSubscription(userId, {
+        subscriptionTier,
+        subscriptionEndDate: endDate ? endDate.toISOString() : null
+      });
       if (!updatedUser) {
         return res.status(404).json({ message: 'User not found' });
       }
-      
+
+      if (activeSubscription) {
+        await storage.updateSubscription(activeSubscription.id, {
+          tier: subscriptionTier,
+          isActive: true,
+          endDate: endDate ?? activeSubscription.endDate,
+          paymentMethod: 'admin'
+        });
+      } else {
+        await storage.createSubscription({
+          userId,
+          tier: subscriptionTier,
+          isActive: true,
+          startDate: now,
+          endDate: endDate ?? undefined,
+          paymentMethod: 'admin'
+        });
+      }
+
       const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitive } = updatedUser;
       res.json(userWithoutSensitive);
     } catch (error) {
@@ -3628,15 +4000,21 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         });
       }
       
-      // Process and compress the image
+      // Process and compress the image (fall back to original on failure)
       const imageBuffer = fs.readFileSync(req.file.path);
-      const compressedBuffer = await compressImageSmart(imageBuffer, {
-        targetSizeKB: 150,
-        minQuality: 50,
-        maxWidth: 1200,
-        maxHeight: 1200
-      });
-      
+      let compressedBuffer: Buffer;
+      try {
+        compressedBuffer = await compressImageSmart(imageBuffer, {
+          targetSizeKB: 150,
+          minQuality: 50,
+          maxWidth: 1200,
+          maxHeight: 1200
+        });
+      } catch (compressErr) {
+        console.warn('Image compression failed, using original buffer:', compressErr);
+        compressedBuffer = imageBuffer;
+      }
+
       // Convert to base64 for storage
       const base64Image = `data:${req.file.mimetype};base64,${compressedBuffer.toString('base64')}`;
       
@@ -3674,11 +4052,17 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       });
 
       const agent = await storage.createAgent(agentData);
-      
+
       // Update user role to agent - they still need approval before creating restaurants
       await storage.updateUser(user.id, { role: 'agent' });
 
-      res.json(agent);
+      // Return agent plus a flag indicating the application was submitted
+      const responseAgent = {
+        ...agent,
+        applicationSubmitted: true
+      };
+
+      res.json(responseAgent);
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ message: 'Validation error', errors: error.errors });
@@ -3694,9 +4078,35 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const user = req.user as any;
       const agent = await storage.getAgentByUserId(user.id);
       if (!agent) {
+        // If user role is already set to 'agent' but no agent profile exists yet,
+        // return a synthetic pending agent object so client agent pages can render
+        if (user && user.role === 'agent') {
+          const synthetic = {
+            id: -1,
+            userId: user.id,
+            firstName: user.fullName || user.username || '',
+            lastName: '',
+            agentCode: null,
+            tokenBalance: 0,
+            approvalStatus: 'pending',
+            applicationSubmitted: false,
+            createdAt: new Date().toISOString()
+          };
+          return res.json(synthetic);
+        }
         return res.status(404).json({ message: 'Agent profile not found' });
       }
-      res.json(agent);
+      // Compute whether the agent actually submitted their application (has documents or id number)
+      const applicationSubmitted = Boolean(
+        (agent as any).idFrontImageUrl || (agent as any).idNumber || (agent as any).selfieImageUrl
+      );
+
+      const responseAgent = {
+        ...agent,
+        applicationSubmitted
+      };
+
+      res.json(responseAgent);
     } catch (error) {
       console.error('Get agent profile error:', error);
       res.status(500).json({ message: 'Failed to get agent profile' });
@@ -3870,37 +4280,103 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   // ======= Restaurant Request Endpoints (Owner requests additional restaurants from Agent) =======
   
-  // Owner: Submit a request for an additional restaurant
+  // Owner: Submit a request for premium renewal with their assigned agent
   app.post('/api/restaurant-requests', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const { restaurantName, restaurantDescription, cuisine, requestedMonths, agentId, ownerNotes } = req.body;
-      
-      if (!restaurantName || !requestedMonths || !agentId) {
-        return res.status(400).json({ message: 'Restaurant name, requested months, and agent ID are required' });
+
+      let parsedRequestedMonths = Number(requestedMonths);
+      if (!Number.isFinite(parsedRequestedMonths)) {
+        // Default to 1 month if the client omitted the value
+        parsedRequestedMonths = 1;
+      }
+
+      let resolvedRestaurantName = restaurantName;
+      let resolvedRestaurantDescription = restaurantDescription ?? null;
+      let resolvedCuisine = cuisine ?? null;
+
+      const ownerRestaurants = await storage.getRestaurantsByUserId(userId);
+      const primaryRestaurant = ownerRestaurants[0];
+
+      if (!resolvedRestaurantName && primaryRestaurant) {
+        resolvedRestaurantName = primaryRestaurant.name;
+        if (!resolvedRestaurantDescription) {
+          resolvedRestaurantDescription = primaryRestaurant.description || null;
+        }
+        if (!resolvedCuisine) {
+          resolvedCuisine = primaryRestaurant.cuisine || null;
+        }
+      }
+
+      if (!resolvedRestaurantName) {
+        const user = await storage.getUser(userId);
+        resolvedRestaurantName = user?.fullName || user?.username || null;
+      }
+
+      if (!resolvedRestaurantName) {
+        return res.status(400).json({ message: 'Restaurant name is required for premium renewal requests' });
       }
       
-      if (requestedMonths < 1 || requestedMonths > 24) {
+      if (parsedRequestedMonths < 1 || parsedRequestedMonths > 24) {
         return res.status(400).json({ message: 'Requested months must be between 1 and 24' });
+      }
+
+      const parsedAgentId = agentId !== undefined && agentId !== null && `${agentId}`.trim() !== ""
+        ? Number(agentId)
+        : null;
+      let resolvedAgentId = parsedAgentId ?? primaryRestaurant?.agentId ?? null;
+
+      // Debug log to help trace failing requests (log after resolving agent)
+      console.log('Premium request values (pre-validate):', {
+        userId,
+        resolvedRestaurantName,
+        parsedRequestedMonths
+      });
+
+      if (!resolvedAgentId) {
+        const defaultAgent = await getDefaultAgentAssignment();
+        if (defaultAgent) {
+          resolvedAgentId = defaultAgent.id;
+        }
+      }
+
+      // Now log resolved agent id for debugging
+      console.log('Resolved agent for premium request:', { resolvedAgentId });
+
+      if (!resolvedAgentId) {
+        return res.status(400).json({ message: 'Agent ID is required for premium renewal requests' });
       }
       
       // Verify the agent exists and is approved
-      const agent = await storage.getAgent(agentId);
+      const agent = await storage.getAgent(resolvedAgentId);
       if (!agent || agent.approvalStatus !== 'approved') {
         return res.status(400).json({ message: 'Invalid or unapproved agent' });
       }
       
       // Create the request
-      const request = await storage.createRestaurantRequest({
-        ownerUserId: userId,
-        agentId: agentId,
-        restaurantName,
-        restaurantDescription: restaurantDescription || null,
-        cuisine: cuisine || null,
-        requestedMonths,
-        ownerNotes: ownerNotes || null
-      });
-      
+      let request;
+      try {
+        request = await storage.createRestaurantRequest({
+          ownerUserId: userId,
+          agentId: resolvedAgentId,
+          restaurantName: resolvedRestaurantName,
+          restaurantDescription: resolvedRestaurantDescription,
+          cuisine: resolvedCuisine,
+          requestedMonths: parsedRequestedMonths,
+          ownerNotes: ownerNotes || null
+        });
+      } catch (err) {
+        console.error('Failed to create restaurant request. Inputs:', {
+          ownerUserId: userId,
+          resolvedAgentId,
+          resolvedRestaurantName,
+          parsedRequestedMonths,
+          ownerNotes
+        }, 'Error:', err);
+        return res.status(500).json({ message: 'Failed to submit restaurant request', details: err instanceof Error ? err.message : String(err) });
+      }
+
       res.status(201).json({
         message: 'Restaurant request submitted successfully',
         request
@@ -3955,7 +4431,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
   
-  // Agent: Approve a restaurant request (creates the restaurant and deducts tokens)
+  // Agent: Approve a premium renewal request (renews premium and deducts tokens)
   app.post('/api/agents/restaurant-requests/:id/approve', isAuthenticated, async (req, res) => {
     try {
       const requestId = parseInt(req.params.id);
@@ -3990,23 +4466,26 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         });
       }
       
-      // Calculate premium expiry date
-      const premiumExpiresAt = new Date();
+      const ownerRestaurants = await storage.getRestaurantsByUserId(request.ownerUserId);
+      const restaurant = ownerRestaurants[0];
+
+      if (!restaurant) {
+        return res.status(400).json({ message: 'Owner must have an existing restaurant to renew premium.' });
+      }
+
+      // Calculate premium expiry date (extend from existing expiry if active)
+      const now = new Date();
+      const baseDate = restaurant.premiumExpiresAt && new Date(restaurant.premiumExpiresAt) > now
+        ? new Date(restaurant.premiumExpiresAt)
+        : now;
+      const premiumExpiresAt = new Date(baseDate);
       premiumExpiresAt.setMonth(premiumExpiresAt.getMonth() + tokensRequired);
-      
-      // Create the restaurant
-      const restaurant = await storage.createRestaurant({
-        userId: request.ownerUserId,
-        name: request.restaurantName,
-        description: request.restaurantDescription || '',
-        cuisine: request.cuisine || null,
+
+      const updatedRestaurant = await storage.updateRestaurant(restaurant.id, {
         agentId: agent.id,
-        approvalStatus: 'approved',
-        adminApproved: true,
-        approvedAt: new Date(),
         isPremium: true,
         isActive: true,
-        premiumMonths: tokensRequired,
+        premiumMonths: (restaurant.premiumMonths || 0) + tokensRequired,
         premiumExpiresAt: premiumExpiresAt
       });
       
@@ -4018,6 +4497,56 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         restaurant.id
       );
       
+      // Extend owner's subscription expiry by requested months
+      try {
+        const owner = await storage.getUser(request.ownerUserId);
+        const nowDate = new Date();
+        const currentExpiry = owner?.subscriptionExpiry ? new Date(owner.subscriptionExpiry) : null;
+        const baseExpiry = currentExpiry && currentExpiry > nowDate ? new Date(currentExpiry) : nowDate;
+        const newExpiry = new Date(baseExpiry);
+        newExpiry.setMonth(newExpiry.getMonth() + tokensRequired);
+
+        // Update user's subscription fields on the users table
+        const updatedUser = await storage.updateUserSubscription(request.ownerUserId, {
+          subscriptionTier: 'premium',
+          subscriptionEndDate: newExpiry.toISOString()
+        });
+
+        // Also ensure there is an active subscription record in the subscriptions table
+        try {
+          const activeSub = await storage.getActiveSubscriptionByUserId(request.ownerUserId);
+          if (activeSub) {
+            // extend existing active subscription
+            await storage.updateSubscription(activeSub.id, {
+              tier: 'premium',
+              isActive: true,
+              endDate: newExpiry,
+              paymentMethod: 'agent'
+            });
+            console.log(`Extended existing subscription (id=${activeSub.id}) for user ${request.ownerUserId} to ${newExpiry.toISOString()}`);
+          } else {
+            // create a new subscription record
+            await storage.createSubscription({
+              userId: request.ownerUserId,
+              tier: 'premium',
+              isActive: true,
+              startDate: nowDate,
+              endDate: newExpiry,
+              paymentMethod: 'agent'
+            });
+            console.log(`Created new subscription for user ${request.ownerUserId} until ${newExpiry.toISOString()}`);
+          }
+        } catch (subRecErr) {
+          console.error('Failed to create/update subscription record after approval:', subRecErr);
+        }
+
+        if (!updatedUser) {
+          console.warn(`updateUserSubscription did not return a user for id=${request.ownerUserId}`);
+        }
+      } catch (subErr) {
+        console.error('Failed to extend owner subscription after approval:', subErr);
+        // do not fail the approval flow for subscription update failures
+      }
       // Update the request
       await storage.updateRestaurantRequest(requestId, {
         status: 'approved',
@@ -4025,10 +4554,24 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         approvedAt: new Date(),
         createdRestaurantId: restaurant.id
       });
+
+      // Create an agent-originated message to notify the owner of the approval
+      try {
+        await storage.createAgentMessageFromAgent({
+          ownerUserId: request.ownerUserId,
+          agentId: agent.id,
+          subject: `Premium Request Approved: ${request.restaurantName}`,
+          agentResponse: agentNotes || `Your premium has been extended by ${tokensRequired} month(s).`,
+          relatedRequestId: requestId
+        });
+      } catch (msgErr) {
+        console.error('Failed to create owner notification message after approval:', msgErr);
+        // don't fail the approval flow for a notification failure
+      }
       
       res.json({
-        message: 'Restaurant request approved and restaurant created',
-        restaurant,
+        message: 'Premium subscription renewed successfully',
+        restaurant: updatedRestaurant || restaurant,
         tokensUsed: tokensRequired,
         newTokenBalance: (agent.tokenBalance || 0) - tokensRequired
       });
@@ -4069,6 +4612,166 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     } catch (error) {
       console.error('Reject restaurant request error:', error);
       res.status(500).json({ message: 'Failed to reject restaurant request' });
+    }
+  });
+
+  // ======= Agent Messaging Endpoints =======
+
+  // Owner: Send a message to assigned agent
+  app.post('/api/agent-messages', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const { subject, message, agentId } = req.body;
+
+      if (!message || !message.trim()) {
+        return res.status(400).json({ message: 'Message content is required' });
+      }
+
+      const ownerRestaurants = await storage.getRestaurantsByUserId(userId);
+      const parsedAgentId = agentId !== undefined && agentId !== null && `${agentId}`.trim() !== ""
+        ? Number(agentId)
+        : null;
+      let resolvedAgentId = parsedAgentId ?? ownerRestaurants.find(r => r.agentId)?.agentId ?? null;
+
+      if (!resolvedAgentId) {
+        const defaultAgent = await getDefaultAgentAssignment();
+        if (defaultAgent) {
+          resolvedAgentId = defaultAgent.id;
+        }
+      }
+
+      if (!resolvedAgentId) {
+        return res.status(400).json({ message: 'No agent is currently assigned to this account' });
+      }
+
+      const agent = await storage.getAgent(resolvedAgentId);
+      if (!agent || agent.approvalStatus !== 'approved') {
+        return res.status(400).json({ message: 'Invalid or unapproved agent' });
+      }
+
+      let newMessage;
+      try {
+        newMessage = await storage.createAgentMessage({
+          ownerUserId: userId,
+          agentId: resolvedAgentId,
+          subject: subject?.trim() || null,
+          message: message.trim()
+        });
+      } catch (err) {
+        console.error('Failed to create agent message. Inputs:', { ownerUserId: userId, resolvedAgentId, subject }, 'Error:', err);
+        return res.status(500).json({ message: 'Failed to send message', details: err instanceof Error ? err.message : String(err) });
+      }
+
+      res.status(201).json({
+        message: 'Message sent to agent',
+        data: newMessage
+      });
+    } catch (error) {
+      console.error('Create agent message error:', error);
+      res.status(500).json({ message: 'Failed to send message' });
+    }
+  });
+
+  // Owner: View their agent messages
+  app.get('/api/agent-messages/my', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const messages = await storage.getAgentMessagesByOwnerId(userId);
+      res.json(messages);
+    } catch (error) {
+      console.error('Get owner agent messages error:', error);
+      res.status(500).json({ message: 'Failed to fetch agent messages' });
+    }
+  });
+
+  // Agent: View messages assigned to them
+  app.get('/api/agents/me/messages', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const agent = await storage.getAgentByUserId(userId);
+
+      if (!agent) {
+        return res.status(403).json({ message: 'Not an agent' });
+      }
+
+      const messages = await storage.getAgentMessagesByAgentId(agent.id);
+      const enriched = await Promise.all(messages.map(async (msg) => {
+        const owner = await storage.getUser(msg.ownerUserId);
+        return {
+          ...msg,
+          ownerName: owner?.fullName || owner?.username || 'Restaurant Owner',
+          ownerEmail: owner?.email || null,
+          ownerPhone: owner?.phone || null
+        };
+      }));
+
+      res.json(enriched);
+    } catch (error) {
+      console.error('Get agent messages error:', error);
+      res.status(500).json({ message: 'Failed to fetch agent messages' });
+    }
+  });
+
+  // Agent: Respond to a message
+  app.post('/api/agents/messages/:id/respond', isAuthenticated, async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const agent = await storage.getAgentByUserId(userId);
+      const messageId = parseInt(req.params.id);
+      const { response } = req.body;
+
+      if (!agent) {
+        return res.status(403).json({ message: 'Not an agent' });
+      }
+
+      if (!response || !response.trim()) {
+        return res.status(400).json({ message: 'Response message is required' });
+      }
+
+      const existingMessage = await storage.getAgentMessage(messageId);
+      if (!existingMessage || existingMessage.agentId !== agent.id) {
+        return res.status(404).json({ message: 'Message not found' });
+      }
+
+      const updated = await storage.respondToAgentMessage(messageId, response.trim());
+      res.json({
+        message: 'Response sent to owner',
+        data: updated
+      });
+    } catch (error) {
+      console.error('Respond to agent message error:', error);
+      res.status(500).json({ message: 'Failed to respond to message' });
+    }
+  });
+
+  // Delete a message (owner or assigned agent can delete)
+  app.delete('/api/agent-messages/:id', isAuthenticated, async (req, res) => {
+    try {
+      const messageId = parseInt(req.params.id);
+      const userId = (req.user as any).id;
+
+      const existingMessage = await storage.getAgentMessage(messageId);
+      if (!existingMessage) {
+        return res.status(404).json({ message: 'Message not found' });
+      }
+
+      // Owner can delete their own messages
+      if (existingMessage.ownerUserId === userId) {
+        await storage.deleteAgentMessage(messageId);
+        return res.json({ message: 'Message deleted' });
+      }
+
+      // Agent can delete messages assigned to them
+      const agent = await storage.getAgentByUserId(userId);
+      if (agent && existingMessage.agentId === agent.id) {
+        await storage.deleteAgentMessage(messageId);
+        return res.json({ message: 'Message deleted' });
+      }
+
+      return res.status(403).json({ message: 'Not authorized to delete this message' });
+    } catch (error) {
+      console.error('Delete agent message error:', error);
+      res.status(500).json({ message: 'Failed to delete message' });
     }
   });
 
@@ -4533,8 +5236,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   // Object Storage API routes for background images
-  app.post('/api/objects/upload', async (req, res) => {
+  app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (isFreeTierUser(user)) {
+        return res.status(403).json({
+          error: 'Background uploads are only available on paid plans. Free plan users can only upload banner images.',
+          upgradeRequired: true
+        });
+      }
+
       const objectStorageService = new ObjectStorageService();
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       res.json({ uploadURL });
@@ -4551,6 +5268,20 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
       if (!backgroundImageUrl) {
         return res.status(400).json({ error: 'backgroundImageUrl is required' });
+      }
+
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (isFreeTierUser(user)) {
+        return res.status(403).json({
+          error: 'Background image uploads require a paid plan. Free plan owners can only change the banner image.',
+          upgradeRequired: true
+        });
       }
 
       const objectStorageService = new ObjectStorageService();

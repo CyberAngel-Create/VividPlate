@@ -7,6 +7,15 @@ async function throwIfResNotOk(res: Response) {
   }
 }
 
+export async function parseJsonResponse<T>(res: Response): Promise<T> {
+  const contentType = res.headers.get("content-type") || "";
+  if (!contentType.includes("application/json")) {
+    const text = (await res.text()) || "Unexpected response from server.";
+    throw new Error(text);
+  }
+  return res.json() as Promise<T>;
+}
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -53,7 +62,7 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    return await parseJsonResponse<T>(res);
   };
 
 export const queryClient = new QueryClient({

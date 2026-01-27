@@ -29,7 +29,7 @@ const RestaurantFeedback: React.FC<RestaurantFeedbackProps> = ({
   
   // Fetch feedback data
   const { data, isLoading, error } = useQuery<Feedback[]>({
-    queryKey: [`/api/restaurants/${restaurantId}/feedback`],
+    queryKey: [`/api/restaurants/${restaurantId}/feedbacks`],
     enabled: !!restaurantId,
   });
   

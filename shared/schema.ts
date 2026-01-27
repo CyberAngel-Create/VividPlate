@@ -695,3 +695,29 @@ export const insertRestaurantRequestSchema = createInsertSchema(restaurantReques
 
 export type RestaurantRequest = typeof restaurantRequests.$inferSelect;
 export type InsertRestaurantRequest = z.infer<typeof insertRestaurantRequestSchema>;
+
+// Agent messages table - owners can message their assigned agents
+export const agentMessages = pgTable("agent_messages", {
+  id: serial("id").primaryKey(),
+  ownerUserId: integer("owner_user_id").notNull(),
+  agentId: integer("agent_id").notNull(),
+  subject: text("subject"),
+  message: text("message").notNull(),
+  status: text("status", { enum: ["open", "responded", "closed"] }).default("open"),
+  agentResponse: text("agent_response"),
+  ownerViewed: boolean("owner_viewed").default(false),
+  agentViewed: boolean("agent_viewed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  respondedAt: timestamp("responded_at"),
+});
+
+export const insertAgentMessageSchema = createInsertSchema(agentMessages).pick({
+  ownerUserId: true,
+  agentId: true,
+  subject: true,
+  message: true,
+});
+
+export type AgentMessage = typeof agentMessages.$inferSelect;
+export type InsertAgentMessage = z.infer<typeof insertAgentMessageSchema>;

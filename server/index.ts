@@ -83,7 +83,6 @@ app.use((req, res, next) => {
   }
 
   next();
->>>>>>> 8bdda1f9747cbae0fcedc7df612ca9949fefb842
 });
 
 // ==============================
@@ -204,30 +203,8 @@ async function startTelegramBot() {
   });
 
   // ==============================
-  // Graceful shutdown
-  // ==============================
-  const shutdown = (signal: string) => {
-    console.log(`🛑 ${signal} received`);
-    server.close(() => process.exit(0));
-    setTimeout(() => process.exit(1), 10000);
-  };
-
-  process.on("SIGTERM", () => shutdown("SIGTERM"));
-  process.on("SIGINT", () => shutdown("SIGINT"));
-})().catch((err) => {
-  console.error("💥 Startup failed", err);
-=======
-  server.listen(port, "0.0.0.0", () => {
-    log(`serving on port ${port}`);
-    console.log("🚀 Application started successfully");
-
-    // Start Telegram bot only if database is ready
-    if (dbReady) {
-      startTelegramBot();
-    }
-  });
-
   // Graceful shutdown handling
+  // ==============================
   const gracefulShutdown = (signal: string) => {
     console.log(`\n🛑 Received ${signal}. Starting graceful shutdown...`);
 
@@ -248,11 +225,9 @@ async function startTelegramBot() {
     }, 10000);
   };
 
-  // Handle shutdown signals
   process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 
-  // Handle uncaught exceptions
   process.on("uncaughtException", (error) => {
     console.error("💥 Uncaught Exception:", error);
     gracefulShutdown("uncaughtException");

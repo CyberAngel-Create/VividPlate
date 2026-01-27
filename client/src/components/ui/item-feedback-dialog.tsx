@@ -65,7 +65,7 @@ const ItemFeedbackDialog: React.FC<ItemFeedbackDialogProps> = ({
 
     try {
       // Send the feedback to the API endpoint
-      const response = await apiRequest('POST', `/api/restaurants/${restaurantId}/feedback/submit`, {
+      const response = await apiRequest('POST', `/api/restaurants/${restaurantId}/feedbacks`, {
         menuItemId: menuItem.id,
         customerName: name,
         customerEmail: email,

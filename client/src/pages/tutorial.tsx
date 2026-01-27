@@ -225,9 +225,9 @@ const TutorialPage: React.FC = () => {
           </div>
           <div className="flex justify-end">
             <Button asChild variant="default" size="sm">
-              <Link href="/pricing">
+              <Link href="/request-restaurant">
                 <span className="flex items-center gap-2">
-                  View Premium Plans <ExternalLink className="h-4 w-4" />
+                  Contact Agent <ExternalLink className="h-4 w-4" />
                 </span>
               </Link>
             </Button>
