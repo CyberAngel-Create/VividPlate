@@ -6,13 +6,14 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Install native build tools
-RUN apk add --no-cache libc6-compat python3 make g++
+# Install native build tools and vips for sharp
+RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
 
 COPY package.json package-lock.json* ./
 RUN npm ci
 RUN npm install @rollup/rollup-linux-x64-musl --save-optional || true
-RUN npm install --os=linux --libc=musl --cpu=x64 sharp
+# Install sharp with platform-specific prebuilt binaries for Alpine
+RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64
 
 # ---------- Stage 2: Build ----------
 FROM node:20-alpine AS builder
@@ -25,19 +26,15 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install curl for health checks and vips for sharp
-RUN apk add --no-cache curl vips-dev
+# Install curl for health checks and vips for sharp runtime
+RUN apk add --no-cache curl vips
 
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Copy node_modules and package.json
+# Copy node_modules (with sharp pre-built for Alpine)
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json package-lock.json* ./
-
-# Remove old sharp and reinstall with correct platform
-RUN rm -rf node_modules/sharp && \
-    npm install --os=linux --libc=musl --cpu=x64 sharp
+COPY package.json ./
 
 # Copy compiled app
 COPY --from=builder /app/dist ./dist
