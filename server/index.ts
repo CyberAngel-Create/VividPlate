@@ -155,27 +155,8 @@ async function startTelegramBot() {
 // ==============================
 (async () => {
   const port = parseInt(process.env.PORT || "5000", 10);
-  let dbReady = false;
 
-  // Validate environment variables first
-  console.log("🔍 Validating environment configuration...");
-  const envCheck = DatabaseHealth.validateEnvironment();
-  if (!envCheck.valid) {
-    console.error("⚠️ Missing environment variables:", envCheck.missing);
-    console.log("⚠️ Starting in limited mode - some features may not work");
-  } else {
-    console.log("✅ Environment variables validated");
-
-    // Test database connection with retry logic
-    console.log("🔍 Testing database connection...");
-    dbReady = await DatabaseHealth.waitForDatabase(5, 2000);
-    if (!dbReady) {
-      console.error("⚠️ Database connection failed - starting in limited mode");
-    } else {
-      console.log("✅ Database connection established");
-    }
-  }
-
+  // Register routes first to ensure health endpoint is available
   const server = await registerRoutes(app);
 
   // Error handler
@@ -191,14 +172,40 @@ async function startTelegramBot() {
     serveStatic(app);
   }
 
+  // Start server immediately to meet Cloud Run's startup requirements
   server.listen(port, "0.0.0.0", () => {
     log(`serving on port ${port}`);
-    console.log("🚀 Application started successfully");
+    console.log("🚀 Server is listening and ready to accept connections");
 
-    // Start Telegram bot only if database is ready
-    if (dbReady) {
-      startTelegramBot();
-    }
+    // Initialize database connection in background (non-blocking)
+    (async () => {
+      let dbReady = false;
+      
+      console.log("🔍 Validating environment configuration...");
+      const envCheck = DatabaseHealth.validateEnvironment();
+      if (!envCheck.valid) {
+        console.error("⚠️ Missing environment variables:", envCheck.missing);
+        console.log("⚠️ Running in limited mode - some features may not work");
+      } else {
+        console.log("✅ Environment variables validated");
+
+        // Test database connection with retry logic (reduced retries for faster startup)
+        console.log("🔍 Testing database connection...");
+        dbReady = await DatabaseHealth.waitForDatabase(3, 1000);
+        if (!dbReady) {
+          console.error("⚠️ Database connection failed - running in limited mode");
+        } else {
+          console.log("✅ Database connection established");
+        }
+      }
+
+      // Start Telegram bot only if database is ready
+      if (dbReady) {
+        startTelegramBot();
+      }
+    })().catch((error) => {
+      console.error("⚠️ Background initialization error:", error);
+    });
   });
 
   // ==============================
