@@ -57,7 +57,8 @@ export function setupSimpleAuth(app) {
     }
     
     // Set user in session
-    req.session.user = user;
+    const session = req.session as any;
+    session.user = user;
     
     console.log(`Login successful for ${user.username}`);
     
@@ -80,12 +81,13 @@ export function setupSimpleAuth(app) {
   
   // Get current user endpoint
   app.get('/api/auth/me', (req, res) => {
-    if (!req.session.user) {
+    const session = req.session as any;
+    if (!session.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
     
     // Return user data without password
-    const { password: _, ...userWithoutPassword } = req.session.user;
+    const { password: _, ...userWithoutPassword } = session.user;
     res.json(userWithoutPassword);
   });
   
@@ -105,7 +107,8 @@ export function setupSimpleAuth(app) {
     }
     
     // Set user in session
-    req.session.user = user;
+    const session = req.session as any;
+    session.user = user;
     
     // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
@@ -122,7 +125,8 @@ export function setupSimpleAuth(app) {
 
 // Middleware to check if user is authenticated
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.user) {
+  const session = req.session as any;
+  if (!session.user) {
     return res.status(401).json({ message: 'Authentication required' });
   }
   
@@ -131,7 +135,8 @@ export function isAuthenticated(req: Request, res: Response, next: NextFunction)
 
 // Middleware to check if user is admin
 export function isAdmin(req: Request, res: Response, next: NextFunction) {
-  if (!req.session.user || !req.session.user.isAdmin) {
+  const session = req.session as any;
+  if (!session.user || !session.user.isAdmin) {
     return res.status(403).json({ message: 'Admin access required' });
   }
   

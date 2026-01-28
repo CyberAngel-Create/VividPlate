@@ -12,12 +12,14 @@ const FOLDERS = {
   MENU_ITEMS: 'menu-items',
   LOGOS: 'logos',
   BANNERS: 'banners'
-};
+} as const;
+
+type FilenFolderType = typeof FOLDERS.MENU_ITEMS | typeof FOLDERS.LOGOS | typeof FOLDERS.BANNERS;
 
 // Ensure all folders exist in Filen
 async function ensureFolderStructure(email: string, password: string) {
   try {
-    const client = initializeFilenClient(email, password);
+    const client = await initializeFilenClient(email, password);
     
     // Get root directory content
     const root = await client.fs().list('/');
@@ -62,7 +64,7 @@ async function ensureFolderStructure(email: string, password: string) {
 }
 
 // Upload a file to Filen
-async function uploadToFilen(localFilePath: string, folderType: 'menu-items' | 'logos' | 'banners') {
+async function uploadToFilen(localFilePath: string, folderType: FilenFolderType) {
   try {
     const client = await initializeFilenClient();
     if (!client) {

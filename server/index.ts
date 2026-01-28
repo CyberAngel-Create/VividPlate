@@ -1,14 +1,13 @@
 import dotenv from "dotenv";
-
-// Load environment variables FIRST
-dotenv.config({ path: path.join(process.cwd(), '.env') });
-
 import express, { type Request, Response, NextFunction } from "express";
 import { setupVite, serveStatic, log } from "./vite.js";
 import fs from "fs";
 import path from "path";
 import session from "express-session";
 import memorystore from "memorystore";
+
+// Load environment variables FIRST
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 // We're using only local storage for all file operations
 console.log("Using local storage for all file operations");
@@ -112,9 +111,9 @@ app.use((req, res, next) => {
 });
 
 // Import routes and database health check
-import { registerRoutes } from "./routes";
-import { testBackblazeConnection } from "./backblaze-config";
-import { DatabaseHealth } from "./database-health";
+import { registerRoutes } from "./routes.js";
+import { testBackblazeConnection } from "./backblaze-config.js";
+import { DatabaseHealth } from "./database-health.js";
 
 // ==============================
 // Telegram bot

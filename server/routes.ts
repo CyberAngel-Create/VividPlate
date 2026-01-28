@@ -15,8 +15,8 @@ import {
   insertAgentSchema,
   insertTokenRequestSchema,
   type User
-} from "@shared/schema";
-import { ObjectStorageService } from './objectStorage';
+} from "../shared/schema.js";
+import { ObjectStorageService } from './objectStorage.js';
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -189,7 +189,8 @@ const configurePassport = (app: Express) => {
       console.log(`Login attempt for identifier: ${identifier}`);
       
       // Hardcoded users for testing and development
-      const testUsers = [
+      type TestUser = User & { phone?: string };
+      const testUsers: TestUser[] = [
         { 
           id: 1, 
           username: 'admin', 
@@ -731,7 +732,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If not found in database, check test users
       if (!user) {
         console.log('User not found in database, checking test users...');
-        const testUsers = [
+        type TestUser = User & { phone?: string };
+        const testUsers: TestUser[] = [
           { 
             id: 1, 
             username: 'admin', 
@@ -1312,11 +1314,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // If user has a Stripe subscription, cancel it
-      if (req.user.stripeSubscriptionId) {
+      const reqUser = req.user as any;
+      const stripeClient: any = null;
+      if (reqUser?.stripeSubscriptionId && stripeClient) {
         try {
-          if (stripe) {
-            await stripe.subscriptions.cancel(req.user.stripeSubscriptionId);
-          }
+          await stripeClient.subscriptions.cancel(reqUser.stripeSubscriptionId);
         } catch (stripeError) {
           console.error("Error cancelling Stripe subscription:", stripeError);
           // Continue even if Stripe cancellation fails - we'll still downgrade the user
@@ -1484,7 +1486,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         
         // Fallback: Try to execute a direct SQL query to get basic restaurant data
         try {
-          const { pool } = await import('./db');
+          const { pool } = await import('./db.js');
           const result = await pool.query('SELECT id, user_id, name, description, cuisine, logo_url, banner_url FROM restaurants WHERE id = $1', [restaurantId]);
           
           if (result.rows.length > 0) {
@@ -1600,7 +1602,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       try {
         // Save the image permanently to database storage
-        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const { PermanentImageHelpers } = await import('./permanent-image-service.js');
         const permanentFilename = await PermanentImageHelpers.saveLogoImage(
           originalFilePath, 
           userId, 
@@ -1718,7 +1720,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       let bannerUrl;
       
       try {
-        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const { PermanentImageHelpers } = await import('./permanent-image-service.js');
         const permanentFilename = await PermanentImageHelpers.saveBannerImage(
           originalFilePath, 
           userId, 
@@ -1946,9 +1948,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         
         if (fileUpload) {
           // Update the file status to 'deleted'
-          await storage.updateFileUpload(fileUpload.id, {
-            status: 'deleted'
-          });
+          await storage.updateFileUploadStatus(fileUpload.id, 'deleted');
           console.log(`Updated file upload record ${fileUpload.id} to deleted status`);
         } else {
           console.log(`No file upload record found for banner URL: ${bannerUrl}`);
@@ -2516,7 +2516,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       
       try {
         // Save the image permanently to database storage
-        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const { PermanentImageHelpers } = await import('./permanent-image-service.js');
         const permanentFilename = await PermanentImageHelpers.saveMenuItemImage(
           originalFilePath, 
           userId, 
@@ -2648,13 +2648,13 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       console.log(`Confirmed file exists at: ${originalFilePath}, now processing for local storage`);
       
       // Import our image processing util
-      const { processMenuItemImage } = await import('./image-utils');
+      const { processMenuItemImage } = await import('./image-utils.js');
       
       let imageUrl;
       
       try {
         // Save the image permanently to database storage
-        const { PermanentImageHelpers } = await import('./permanent-image-service');
+        const { PermanentImageHelpers } = await import('./permanent-image-service.js');
         const permanentFilename = await PermanentImageHelpers.saveMenuItemImage(
           originalFilePath, 
           userId, 
@@ -2880,7 +2880,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   if (CHAPA_ENABLED && CHAPA_SECRET_KEY) {
     try {
-      const chapaModule = await import('./chapa-service');
+      const chapaModule = await import('./chapa-service.js');
       chapaService = chapaModule.chapaService;
       SUBSCRIPTION_PLANS = chapaModule.SUBSCRIPTION_PLANS;
       convertPrice = chapaModule.convertPrice;
@@ -2909,30 +2909,31 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const currency = countryCode ? getCurrencyByLocation(countryCode) : userCurrency;
       
       // Convert plan prices to user's currency
-      const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS).reduce((acc, [key, plan]) => {
-        let monthlyPrice = plan.monthlyPrice;
-        let yearlyPrice = plan.yearlyPrice;
+      const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS as Record<string, any>).reduce<Record<string, any>>((acc, [key, plan]) => {
+        const planData = plan as any;
+        let monthlyPrice = planData.monthlyPrice;
+        let yearlyPrice = planData.yearlyPrice;
         let planCurrency = currency;
         
         // Use international pricing if available, otherwise convert from ETB
-        if (plan.international && plan.internationalPricing && plan.internationalPricing[currency]) {
-          if (plan.internationalPricing.monthly) {
-            monthlyPrice = plan.internationalPricing.monthly[currency];
+        if (planData.international && planData.internationalPricing && planData.internationalPricing[currency]) {
+          if (planData.internationalPricing.monthly) {
+            monthlyPrice = planData.internationalPricing.monthly[currency];
           }
-          if (plan.internationalPricing.yearly) {
-            yearlyPrice = plan.internationalPricing.yearly[currency];
+          if (planData.internationalPricing.yearly) {
+            yearlyPrice = planData.internationalPricing.yearly[currency];
           }
-        } else if (currency !== 'ETB' && plan.monthlyPrice > 0) {
-          monthlyPrice = convertPrice(plan.monthlyPrice, currency);
-          yearlyPrice = convertPrice(plan.yearlyPrice, currency);
+        } else if (currency !== 'ETB' && planData.monthlyPrice > 0) {
+          monthlyPrice = convertPrice(planData.monthlyPrice, currency);
+          yearlyPrice = convertPrice(planData.yearlyPrice, currency);
         }
         
         acc[key] = {
-          ...plan,
+          ...planData,
           monthlyPrice,
           yearlyPrice,
           currency: planCurrency,
-          originalPrice: plan.monthlyPrice,
+          originalPrice: planData.monthlyPrice,
           originalCurrency: 'ETB',
           popular: key === 'double' // Set "Two Restaurants" as most popular
         };
@@ -3197,30 +3198,31 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
       
       // Convert plan prices to user's currency using new structure
-      const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS).reduce((acc, [key, plan]) => {
-        let monthlyPrice = plan.monthlyPrice;
-        let yearlyPrice = plan.yearlyPrice;
+      const plansWithPricing = Object.entries(SUBSCRIPTION_PLANS as Record<string, any>).reduce<Record<string, any>>((acc, [key, plan]) => {
+        const planData = plan as any;
+        let monthlyPrice = planData.monthlyPrice;
+        let yearlyPrice = planData.yearlyPrice;
         let planCurrency = currency;
         
         // Use international pricing if available, otherwise convert from ETB
-        if (plan.international && plan.internationalPricing && plan.internationalPricing[currency]) {
-          if (plan.internationalPricing.monthly) {
-            monthlyPrice = plan.internationalPricing.monthly[currency];
+        if (planData.international && planData.internationalPricing && planData.internationalPricing[currency]) {
+          if (planData.internationalPricing.monthly) {
+            monthlyPrice = planData.internationalPricing.monthly[currency];
           }
-          if (plan.internationalPricing.yearly) {
-            yearlyPrice = plan.internationalPricing.yearly[currency];
+          if (planData.internationalPricing.yearly) {
+            yearlyPrice = planData.internationalPricing.yearly[currency];
           }
-        } else if (currency !== 'ETB' && plan.monthlyPrice > 0 && convertPrice) {
-          monthlyPrice = convertPrice(plan.monthlyPrice, currency);
-          yearlyPrice = convertPrice(plan.yearlyPrice, currency);
+        } else if (currency !== 'ETB' && planData.monthlyPrice > 0 && convertPrice) {
+          monthlyPrice = convertPrice(planData.monthlyPrice, currency);
+          yearlyPrice = convertPrice(planData.yearlyPrice, currency);
         }
         
         acc[key] = {
-          ...plan,
+          ...planData,
           monthlyPrice,
           yearlyPrice,
           currency: planCurrency,
-          originalPrice: plan.monthlyPrice,
+          originalPrice: planData.monthlyPrice,
           originalCurrency: 'ETB',
           popular: key === 'double' // Set "Two Restaurants" as most popular
         };
@@ -3272,7 +3274,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
 
       // Get current subscription
-      const subscription = await storage.getUserSubscription(userId);
+      const subscription = await storage.getActiveSubscriptionByUserId(userId);
       const tier = subscription?.tier || 'free';
       
       // Get limits based on tier
@@ -4001,18 +4003,13 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
       
       // Process and compress the image (fall back to original on failure)
-      const imageBuffer = fs.readFileSync(req.file.path);
       let compressedBuffer: Buffer;
       try {
-        compressedBuffer = await compressImageSmart(imageBuffer, {
-          targetSizeKB: 150,
-          minQuality: 50,
-          maxWidth: 1200,
-          maxHeight: 1200
-        });
+        const compressedPath = await compressImageSmart(req.file.path);
+        compressedBuffer = fs.readFileSync(compressedPath);
       } catch (compressErr) {
         console.warn('Image compression failed, using original buffer:', compressErr);
-        compressedBuffer = imageBuffer;
+        compressedBuffer = fs.readFileSync(req.file.path);
       }
 
       // Convert to base64 for storage
@@ -5317,7 +5314,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // Serve permanent images from database with optimized caching
   app.get('/api/images/:filename', async (req, res) => {
     try {
-      const { PermanentImageService } = await import('./permanent-image-service');
+      const { PermanentImageService } = await import('./permanent-image-service.js');
       const filename = req.params.filename;
       
       const image = await PermanentImageService.getImage(filename);

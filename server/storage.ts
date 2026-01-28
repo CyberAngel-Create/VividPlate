@@ -24,10 +24,10 @@ import {
   tokenTransactions, TokenTransaction, InsertTokenTransaction,
   restaurantRequests, RestaurantRequest, InsertRestaurantRequest,
   agentMessages, AgentMessage, InsertAgentMessage
-} from "@shared/schema";
-import { db } from "./db";
+} from "../shared/schema.js";
+import { db } from "./db.js";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
-import { phoneNumbersMatch, getPhoneNumberVariations } from "../shared/phone-utils";
+import { phoneNumbersMatch, getPhoneNumberVariations } from "../shared/phone-utils.js";
 
 export interface IStorage {
   // User operations

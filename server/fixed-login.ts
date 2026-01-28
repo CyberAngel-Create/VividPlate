@@ -12,7 +12,7 @@ export async function handleLogin(req: Request, res: Response, next: NextFunctio
     
     // List all available test users for debugging
     console.log('Available test users:');
-    const { testUsers } = await import('./mem-auth');
+    const { testUsers } = await import('./mem-auth.js');
     testUsers.forEach(user => {
       console.log(`- Username: ${user.username}, Email: ${user.email}`);
     });
