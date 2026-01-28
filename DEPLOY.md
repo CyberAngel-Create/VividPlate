@@ -33,10 +33,14 @@ If your Cloud Build is building an old commit instead of the latest commit on `m
 
 ```bash
 # Delete the old trigger (if exists)
-gcloud builds triggers delete vividplate-main-trigger --quiet
+gcloud builds triggers delete vividplate-main-trigger \
+  --project=YOUR_PROJECT_ID \
+  --quiet
 
 # Create a new trigger from the configuration file
-gcloud builds triggers import --source=cloudbuild-trigger.yaml
+gcloud builds triggers import \
+  --source=cloudbuild-trigger.yaml \
+  --project=YOUR_PROJECT_ID
 
 # OR create it directly with command
 gcloud builds triggers create github \
@@ -46,19 +50,24 @@ gcloud builds triggers create github \
   --build-config=cloudbuild.yaml \
   --name=vividplate-main-trigger \
   --description="Build and deploy VividPlate on push to main branch" \
-  --substitutions="_SERVICE_NAME=vividplate,_REGION=us-central1"
+  --substitutions="_SERVICE_NAME=vividplate,_REGION=us-central1" \
+  --project=YOUR_PROJECT_ID
 ```
 
 ### Solution 3: Manually Trigger Build for Latest Commit
 
 ```bash
-# Get the latest commit SHA on main
-git rev-parse main
+# Option A: Trigger the existing build trigger to run on main branch
+gcloud builds triggers run vividplate-main-trigger \
+  --branch=main \
+  --project=YOUR_PROJECT_ID
 
-# Submit a build manually for the latest commit
+# Option B: Submit a build from your local repository state
+# Note: This builds from your current local state, not directly from a specific commit
 gcloud builds submit \
   --config=cloudbuild.yaml \
-  --substitutions=_SERVICE_NAME=vividplate,_REGION=us-central1,COMMIT_SHA=$(git rev-parse main)
+  --substitutions=_SERVICE_NAME=vividplate,_REGION=us-central1 \
+  --project=YOUR_PROJECT_ID
 ```
 
 ### Verifying the Fix
@@ -76,11 +85,22 @@ After updating the trigger:
 - **Building wrong branch**: Verify the branch pattern is `^main$` (not `master` or other branches)
 - **Old commit being built**: The trigger might have a custom revision set - remove it to use HEAD
 
-### Current Status
+### Verifying Your Setup
 
-- **Latest commit on main**: `ccd8b8b` - Fix server build errors
-- **Expected behavior**: Build trigger should automatically build this commit on push to main
-- **If still building old commit**: Follow one of the solutions above
+To verify your trigger is working correctly:
+
+```bash
+# Check the latest commit SHA on main
+git rev-parse main
+
+# Or view recent commits
+git log --oneline -5
+```
+
+**Expected behavior**: 
+- Build trigger should automatically start a build when you push to main
+- The build should use the latest commit SHA from the main branch
+- If builds are still using an old commit, follow one of the solutions above
 
 ## Quick Deploy
 

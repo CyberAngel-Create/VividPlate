@@ -30,14 +30,15 @@ echo ""
 # Check if trigger exists
 if gcloud builds triggers describe "$TRIGGER_NAME" --project="$PROJECT_ID" &>/dev/null; then
   echo "Found existing trigger: $TRIGGER_NAME"
-  read -p "Delete and recreate? (y/N): " -n 1 -r
+  read -p "Delete and recreate the trigger? (y/N): " -n 1 -r
   echo
   if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "Deleting existing trigger..."
     gcloud builds triggers delete "$TRIGGER_NAME" --project="$PROJECT_ID" --quiet
     echo "✓ Trigger deleted"
   else
-    echo "Aborted. You can manually update the trigger in the Cloud Console."
+    echo "Operation cancelled. No changes were made to the trigger."
+    echo "To update manually, go to: https://console.cloud.google.com/cloud-build/triggers?project=$PROJECT_ID"
     exit 0
   fi
 fi
