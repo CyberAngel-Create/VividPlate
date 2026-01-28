@@ -12,6 +12,7 @@ RUN apk add --no-cache libc6-compat python3 make g++
 COPY package.json package-lock.json* ./
 RUN npm ci
 RUN npm install @rollup/rollup-linux-x64-musl --save-optional || true
+RUN npm install --os=linux --libc=musl --cpu=x64 sharp
 
 # ---------- Stage 2: Build ----------
 FROM node:20-alpine AS builder
