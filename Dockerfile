@@ -25,8 +25,8 @@ RUN npm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install curl for health checks and build tools for sharp
+RUN apk add --no-cache curl python3 make g++ vips-dev
 
 ENV NODE_ENV=production
 ENV PORT=8080
@@ -34,6 +34,9 @@ ENV PORT=8080
 # Copy node_modules and package.json
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
+
+# Rebuild sharp for Alpine Linux musl
+RUN npm rebuild sharp
 
 # Copy compiled app
 COPY --from=builder /app/dist ./dist
