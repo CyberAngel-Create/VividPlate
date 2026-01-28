@@ -1,0 +1,26 @@
+# Google Cloud Build Trigger Configuration
+# This file defines the build trigger for VividPlate
+# 
+# To create/update this trigger in Google Cloud:
+# gcloud builds triggers create github \
+#   --repo-name=VividPlate \
+#   --repo-owner=CyberAngel-Create \
+#   --branch-pattern="^main$" \
+#   --build-config=cloudbuild.yaml \
+#   --name=vividplate-main-trigger \
+#   --description="Build and deploy VividPlate on push to main branch"
+#
+# Or use this configuration file:
+# gcloud builds triggers import --source=cloudbuild-trigger.yaml
+
+name: vividplate-main-trigger
+description: Build and deploy VividPlate on push to main branch
+github:
+  owner: CyberAngel-Create
+  name: VividPlate
+  push:
+    branch: ^main$
+filename: cloudbuild.yaml
+substitutions:
+  _SERVICE_NAME: vividplate
+  _REGION: us-central1
