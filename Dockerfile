@@ -20,7 +20,12 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Build server TypeScript
 RUN npm run build
+# Build client with Vite
+RUN npx vite build
+# Move client build to where server expects it (dist/server/public)
+RUN mv dist/public dist/server/public
 
 # ---------- Stage 3: Production ----------
 FROM node:20-alpine AS runner
