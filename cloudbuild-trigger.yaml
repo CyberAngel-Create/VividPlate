@@ -1,0 +1,8 @@
+name: vividplate-main
+description: Build VividPlate on main branch
+github:
+  owner: CyberAngel-Create
+  name: VividPlate
+  push:
+    branch: "^main$"
+filename: cloudbuild.yaml

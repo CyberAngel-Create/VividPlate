@@ -2154,7 +2154,7 @@
         isEnabled,
         displayFrequency,
         maxAdsPerPage
-      });
+      } as any);
 
       res.json(updatedSettings);
     } catch (error) {
