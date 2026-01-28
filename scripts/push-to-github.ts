@@ -43,24 +43,11 @@ async function pushToGitHub() {
     }
     
     // Get the access token for git operations
-    const hostname = process.env.CONNECTORS_HOSTNAME;
-    const xDeployToken = process.env.DEPLOY_IDENTITY
-      ? 'deploy ' + process.env.DEPLOY_IDENTITY
-      : process.env.WEB_REPL_RENEWAL
-      ? 'deploy ' + process.env.WEB_REPL_RENEWAL
-      : null;
+    const accessToken = process.env.GITHUB_TOKEN || process.env.GITHUB_ACCESS_TOKEN;
 
-    const connectionSettings = await fetch(
-      'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=github',
-      {
-        headers: {
-          'Accept': 'application/json',
-          'X_DEPLOY_TOKEN': xDeployToken!
-        }
-      }
-    ).then(res => res.json()).then(data => data.items?.[0]);
-
-    const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
+    if (!accessToken) {
+      throw new Error('GitHub access token not found. Set GITHUB_TOKEN or GITHUB_ACCESS_TOKEN.');
+    }
     
     // Configure git
     const remoteUrl = `https://${accessToken}@github.com/${user.login}/${repoName}.git`;

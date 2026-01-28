@@ -50,7 +50,6 @@ import { Button } from "@/components/ui/button";
 import { SubscriptionProvider } from "@/hooks/use-subscription";
 import { SubscriptionStatusProvider } from "@/hooks/use-subscription-status";
 import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
-import AdSense from "@/components/ads/AdSense";
 import TermsOfService from "./pages/terms";
 import CategoriesPage from "./pages/categories";
 import PasswordResetHelp from "./pages/password-reset-help";
@@ -215,7 +214,6 @@ function App() {
               <SubscriptionStatusProvider>
                 <DietaryPreferencesProvider>
                   <Toaster />
-                  <AdSense />
                   <Router />
                   <CookieConsent />
                   <PWAInstaller />

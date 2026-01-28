@@ -5,7 +5,6 @@ import { Advertisement } from "@shared/schema";
 import { ExternalLink } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useLocation } from "wouter";
-import { shouldDisplayAds } from "@/lib/adsense-compliance";
 import { useSubscription } from "@/hooks/use-subscription";
 
 interface MenuAdvertisementProps {
@@ -22,12 +21,9 @@ const MenuAdvertisement = ({ position, restaurantId }: MenuAdvertisementProps) =
   const [imageUrl, setImageUrl] = useState<string>("");
   const [linkUrl, setLinkUrl] = useState<string>("");
   
-  // AdSense Policy Compliance: Check if ads should be displayed
   const isMenuRoute = location.startsWith("/menu/") || location.startsWith("/view-menu/");
-  const shouldShowAds = isMenuRoute ? !isPaid : shouldDisplayAds(isPaid, location);
-  
-  // Don't render advertisement if compliance validation fails
-  if (!shouldShowAds) {
+
+  if (isPaid && isMenuRoute) {
     return null;
   }
   

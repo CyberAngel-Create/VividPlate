@@ -99,7 +99,7 @@ const AdminPricingPage = () => {
         currency: "USD",
         isPopular: false,
         isActive: true,
-        features: ["1 restaurant", "1 menu", "AdSense integration", "QR code generation"],
+        features: ["1 restaurant", "1 menu", "QR code generation"],
         tier: "free",
         billingPeriod: "monthly",
       },

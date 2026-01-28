@@ -1,52 +1,5 @@
-import React, { useEffect } from 'react';
-import { useSubscription } from '@/hooks/use-subscription';
-import { useLocation } from 'wouter';
-import { shouldDisplayAds } from '@/lib/adsense-compliance';
+import React from "react";
 
-const AdSense: React.FC = () => {
-  const { isPaid } = useSubscription();
-  const [location] = useLocation();
-  
-  useEffect(() => {
-    // AdSense Policy Compliance: Only load AdSense script for valid pages
-    const shouldLoadAds = shouldDisplayAds(isPaid, location);
-    
-    if (!shouldLoadAds) {
-      console.log('AdSense Policy: Script not loaded - page validation failed');
-      return;
-    }
-    
-    // Only add the script if it doesn't already exist
-    if (!document.getElementById('google-adsense-script')) {
-      const script = document.createElement('script');
-      script.id = 'google-adsense-script';
-      script.async = true;
-      script.crossOrigin = 'anonymous';
-      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8447200389101391';
-      
-      // Add script to document head
-      document.head.appendChild(script);
+const AdsScriptPlaceholder: React.FC = () => null;
 
-      // Create and append ads.txt if it doesn't exist
-      const metaTag = document.createElement('meta');
-      metaTag.name = 'google-adsense-account';
-      metaTag.content = 'ca-pub-8447200389101391';
-      document.head.appendChild(metaTag);
-    }
-
-    // Initialize AdSense
-    if (!window.adsbygoogle) {
-      window.adsbygoogle = [];
-    }
-    
-    return () => {
-      // Cleanup function - in practice, we wouldn't remove the script
-      // But we could handle other cleanup if needed
-    };
-  }, [isPaid, location]);
-
-  // This component doesn't render anything visible
-  return null;
-};
-
-export default AdSense;
+export default AdsScriptPlaceholder;
