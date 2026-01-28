@@ -49,9 +49,9 @@ USER vividplate
 
 EXPOSE 8080
 
-# Health check using curl
+# Health check using curl (server exposes /health)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD curl -f http://localhost:8080/api/health || exit 1
+  CMD curl -f http://localhost:8080/health || exit 1
 
-# Start the server
-CMD ["node", "dist/index.js"]
+# Start the server (built output places server at dist/server/index.js)
+CMD ["node", "dist/server/index.js"]
