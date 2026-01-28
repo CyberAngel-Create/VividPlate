@@ -189,9 +189,11 @@ async function startTelegramBot() {
       } else {
         console.log("✅ Environment variables validated");
 
-        // Test database connection with retry logic (reduced retries for faster startup)
+        // Test database connection with retry logic (configurable via env vars)
         console.log("🔍 Testing database connection...");
-        dbReady = await DatabaseHealth.waitForDatabase(3, 1000);
+        const maxRetries = parseInt(process.env.DB_CONNECT_MAX_RETRIES || "3", 10);
+        const retryDelay = parseInt(process.env.DB_CONNECT_RETRY_DELAY || "1000", 10);
+        dbReady = await DatabaseHealth.waitForDatabase(maxRetries, retryDelay);
         if (!dbReady) {
           console.error("⚠️ Database connection failed - running in limited mode");
         } else {
