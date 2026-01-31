@@ -34,8 +34,10 @@ try {
 // Express app
 // ==============================
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Increase payload limits to allow larger JSON bodies (e.g., base64 image strings)
+// Default express.json limit is 100kb which can cause 413 errors on registration
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // ==============================
 // CORS
@@ -123,30 +125,22 @@ async function startTelegramBot() {
     console.log("⚠️ TELEGRAM_BOT_TOKEN not provided - Telegram bot disabled");
     return;
   }
-
   try {
-    // Import and run the bot as a module
-    const { spawn } = await import("child_process");
-    const botProcess = spawn("node", ["run-telegram-bot.js"], {
-      detached: false,
-      stdio: ["pipe", "pipe", "pipe"],
-    });
-
-    botProcess.stdout?.on("data", (data) => {
-      console.log(`🤖 Bot: ${data.toString().trim()}`);
-    });
-
-    botProcess.stderr?.on("data", (data) => {
-      console.error(`🤖 Bot Error: ${data.toString().trim()}`);
-    });
-
-    botProcess.on("close", (code) => {
-      console.log(`🤖 Bot process exited with code ${code}`);
-    });
-
-    console.log("🤖 Telegram bot started successfully");
+    // Initialize the Telegram bot in-process by importing the service module.
+    // This avoids relying on a separate script file being present after build/deploy
+    const mod = await import("./telegram-service.js");
+    // The module exports `telegramService` which initializes itself on import
+    if (mod && mod.telegramService && typeof mod.telegramService.isEnabled === 'function') {
+      if (mod.telegramService.isEnabled()) {
+        console.log('🤖 Telegram bot initialized in-process');
+      } else {
+        console.log('⚠️ Telegram service module loaded but bot is disabled');
+      }
+    } else {
+      console.log('🤖 Telegram module imported');
+    }
   } catch (error) {
-    console.error("❌ Failed to start Telegram bot:", error);
+    console.error("❌ Failed to initialize Telegram service:", error);
   }
 }
 

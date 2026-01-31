@@ -45,9 +45,9 @@ const TEST_USERS = [
 // Create a simple Express application
 const app = express();
 
-// Set up JSON body parsing
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Set up JSON body parsing (increase limits to accept larger payloads)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Set up session
 app.use(session({

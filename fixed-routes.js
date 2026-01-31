@@ -47,9 +47,9 @@ const TEST_USERS = [
 // Create a simple Express application to test auth
 const app = express();
 
-// Set up middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+// Set up middleware (increase limits for larger payloads)
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
 // Set up session management
 app.use(session({
