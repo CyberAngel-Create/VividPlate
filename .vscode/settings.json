@@ -1,0 +1,9 @@
+{
+    "github.copilot.chat.enabled": true,
+    "github.copilot.editor.enableCodeActions": true,
+    "github.copilot.enable": {
+        "*": true
+    },
+    "github.copilot.chat.scopeSelection": true,
+    "chat.commandCenter.enabled": true
+}
