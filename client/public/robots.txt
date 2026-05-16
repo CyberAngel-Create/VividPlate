@@ -1,0 +1,23 @@
+User-agent: *
+Allow: /
+
+# Public pages
+Allow: /pricing
+Allow: /contact
+Allow: /privacy-policy
+Allow: /terms
+Allow: /refund-policy
+Allow: /menu/
+
+# Block private/admin pages
+Disallow: /admin
+Disallow: /admin/
+Disallow: /dashboard
+Disallow: /api/
+Disallow: /agent-dashboard
+Disallow: /agent-registration
+Disallow: /manage-uploads
+Disallow: /create-menu
+Disallow: /edit-restaurant
+
+Sitemap: https://www.vividplate.com/sitemap.xml

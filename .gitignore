@@ -1,0 +1,35 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+uploads/
+
+# Secrets — never commit
+.env
+
+# Local gcloud SDK copy
+gcloud-sdk-local/
+
+# Test & diagnostic files
+cookie.txt
+cookies.txt
+diagnostic-result.json
+tsc-log.txt
+tsc-out.txt
+tsc-output.txt
+backup.sql
+check-pwd.mjs
+
+# One-off test scripts
+test-*.js
+simple-telegram-test.js
+telegram-test.js
+telegram-bot-test.js
+telegram-bot-example.js
+working-telegram-bot.js
+run-telegram-bot.js
+test-chapa-callback.html
+test-payment.html
+fixed-routes.js

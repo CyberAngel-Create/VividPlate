@@ -1,0 +1,93 @@
+# Cloud Build config to fix admin/agent passwords in production DB
+# Run with: gcloud builds submit --no-source --config cloudbuild-dbfix.yaml --project white-notch-467408-e9
+
+steps:
+  - name: 'node:20-slim'
+    entrypoint: 'bash'
+    secretEnv: ['DATABASE_URL']
+    args:
+      - '-c'
+      - |
+        npm install pg bcryptjs 2>/dev/null
+
+        node -e "
+        const { Pool } = require('pg');
+        const bcrypt = require('bcryptjs');
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false },
+          connectionTimeoutMillis: 30000,
+          max: 1
+        });
+        async function main() {
+          const client = await pool.connect();
+          console.log('Connected!');
+
+          // First: inspect actual column names
+          const { rows: cols } = await client.query(
+            'SELECT column_name FROM information_schema.columns WHERE table_name=\'users\' ORDER BY ordinal_position'
+          );
+          const colNames = cols.map(c => c.column_name);
+          console.log('Columns:', colNames.join(', '));
+
+          // List users with safe column names
+          const isAdminCol = colNames.includes('isAdmin') ? '\"isAdmin\"' : 'is_admin';
+          const subTierCol = colNames.includes('subscriptionTier') ? '\"subscriptionTier\"' : 'subscription_tier';
+          const isActiveCol = colNames.includes('isActive') ? '\"isActive\"' : 'is_active';
+          const fullNameCol = colNames.includes('fullName') ? '\"fullName\"' : 'full_name';
+          const createdAtCol = colNames.includes('createdAt') ? '\"createdAt\"' : 'created_at';
+          const updatedAtCol = colNames.includes('updatedAt') ? '\"updatedAt\"' : 'updated_at';
+
+          const { rows: users } = await client.query(
+            'SELECT id, username, email, role, ' + isAdminCol + ', ' + subTierCol + ', LEFT(password,7) as pass FROM users ORDER BY id'
+          );
+          console.log('=== USERS (' + users.length + ' total) ===');
+          users.forEach(u => console.log(JSON.stringify(u)));
+
+          // Fix/create admin
+          const adminHash = await bcrypt.hash('admin1234', 10);
+          const { rows: admins } = await client.query(
+            'SELECT id, username FROM users WHERE LOWER(username) = \'admin\' OR ' + isAdminCol + ' = true'
+          );
+
+          if (admins.length > 0) {
+            for (const a of admins) {
+              await client.query(
+                'UPDATE users SET password = \$1, ' + isAdminCol + ' = true, role = \'admin\', ' + subTierCol + ' = \'admin\', ' + isActiveCol + ' = true WHERE id = \$2',
+                [adminHash, a.id]
+              );
+              console.log('Reset password for admin:', a.username, 'ID:', a.id);
+            }
+          } else {
+            await client.query(
+              'INSERT INTO users (username, password, email, ' + fullNameCol + ', role, ' + isAdminCol + ', ' + subTierCol + ', ' + isActiveCol + ', ' + createdAtCol + ', ' + updatedAtCol + ') VALUES (\'admin\', \$1, \'admin@vividplate.com\', \'System Administrator\', \'admin\', true, \'admin\', true, NOW(), NOW())',
+              [adminHash]
+            );
+            console.log('Created new admin user');
+          }
+
+          // Fix Agent1
+          const agentHash = await bcrypt.hash('agent1234', 10);
+          await client.query(
+            'UPDATE users SET password = \$1, ' + isActiveCol + ' = true WHERE LOWER(username) = \'agent1\'',
+            [agentHash]
+          );
+          console.log('Reset Agent1 password');
+
+          console.log('');
+          console.log('SUCCESS');
+          console.log('admin -> admin1234');
+          console.log('Agent1 -> agent1234');
+          client.release();
+          await pool.end();
+        }
+        main().catch(e => { console.error(e.message); process.exit(1); });
+        "
+
+availableSecrets:
+  secretManager:
+    - versionName: projects/white-notch-467408-e9/secrets/DATABASE_URL/versions/latest
+      env: DATABASE_URL
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,79 @@
+import { createContext, ReactNode, useContext } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "./use-auth";
+
+// Subscription status interface
+export interface SubscriptionStatus {
+  tier: string;
+  isPaid: boolean;
+  isAgent?: boolean;          // included in API response
+  maxRestaurants: number;
+  currentRestaurants: number;
+  expiresAt: string | null;
+  hasAgentPremiumRestaurant?: boolean;
+  agentId?: number | null;
+  agentName?: string | null;
+}
+
+type UseSubscriptionStatusResult = {
+  subscriptionStatus: SubscriptionStatus | null;
+  isLoading: boolean;
+  error: Error | null;
+  canCreateRestaurant: boolean;
+  restaurantsRemaining: number;
+  isAgent: boolean;
+};
+
+const defaultSubscriptionStatus: SubscriptionStatus = {
+  tier: "free",
+  isPaid: false,
+  maxRestaurants: 1,
+  currentRestaurants: 0,
+  expiresAt: null,
+  hasAgentPremiumRestaurant: false,
+  agentId: null,
+  agentName: null,
+};
+
+const SubscriptionStatusContext = createContext<UseSubscriptionStatusResult | null>(null);
+
+export function SubscriptionStatusProvider({ children }: { children: ReactNode }) {
+  const {
+    data: subscriptionStatus,
+    isLoading,
+    error,
+  } = useQuery<SubscriptionStatus>({
+    queryKey: ['/api/user/subscription-status'],
+  });
+
+  // Calculate if user can create a restaurant
+  const status = subscriptionStatus || defaultSubscriptionStatus;
+  const canCreateRestaurant = status.currentRestaurants < status.maxRestaurants;
+  const restaurantsRemaining = Math.max(0, status.maxRestaurants - status.currentRestaurants);
+
+  const { user } = useAuth();
+  const isAgent = (user as any)?.role === 'agent';
+
+  const value = {
+    subscriptionStatus: subscriptionStatus || null,
+    isLoading,
+    error: error as Error | null,
+    canCreateRestaurant,
+    restaurantsRemaining,
+    isAgent,
+  };
+
+  return (
+    <SubscriptionStatusContext.Provider value={value}>
+      {children}
+    </SubscriptionStatusContext.Provider>
+  );
+}
+
+export function useSubscriptionStatus(): UseSubscriptionStatusResult {
+  const context = useContext(SubscriptionStatusContext);
+  if (!context) {
+    throw new Error("useSubscriptionStatus must be used within a SubscriptionStatusProvider");
+  }
+  return context;
+}

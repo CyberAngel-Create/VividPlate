@@ -1,0 +1,51 @@
+Menu view source detected: qr
+index-BrPxy8cr.js:710 AdSense Policy: Script not loaded - page validation failed
+manifest.json:1 Manifest: Line: 1, column: 1, Syntax error.Understand this error
+index-BrPxy8cr.js:775 Service Worker registration failed: SecurityError: Failed to register a ServiceWorker for scope ('https://vividplate.com/') with script ('https://vividplate.com/sw.js'): The script has an unsupported MIME type ('text/html').
+(anonymous) @ index-BrPxy8cr.js:775Understand this error
+2index-BrPxy8cr.js:697 Menu view source detected: qr
+index-BrPxy8cr.js:710 AdSense Policy: Script not loaded - page validation failed
+index-BrPxy8cr.js:697 Menu view source detected: qr
+index-BrPxy8cr.js:697 Recording view for restaurant 6 from source qr
+index-BrPxy8cr.js:697 View recorded successfully: Response
+index-BrPxy8cr.js:697 Menu view source detected: qr
+index-BrPxy8cr.js:697 ViewMenu - Menu data received: Object
+index-BrPxy8cr.js:697 Restaurant subscription status: Object
+index-BrPxy8cr.js:658 CustomerMenuPreview component rendered with: Object
+index-BrPxy8cr.js:658 CustomerMenuPreview - Filtering menu data: Object
+index-BrPxy8cr.js:658 Final filtered data: Array(18)
+index-BrPxy8cr.js:658 Attempted to normalize a null or undefined image URL
+qn @ index-BrPxy8cr.js:658Understand this warning
+index-BrPxy8cr.js:697 Menu view source detected: qr
+index-BrPxy8cr.js:697 ViewMenu - Menu data received: Object
+index-BrPxy8cr.js:697 Restaurant subscription status: Object
+index-BrPxy8cr.js:658 CustomerMenuPreview component rendered with: Object
+index-BrPxy8cr.js:658 CustomerMenuPreview - Filtering menu data: Object
+index-BrPxy8cr.js:658 Final filtered data: Array(18)
+index-BrPxy8cr.js:658 Attempted to normalize a null or undefined image URL
+qn @ index-BrPxy8cr.js:658Understand this warning
+index-BrPxy8cr.js:40 ReferenceError: FeedbackDialog is not defined
+    at index-BrPxy8cr.js:658:110933
+    at Array.map (<anonymous>)
+    at index-BrPxy8cr.js:658:109516
+    at Array.map (<anonymous>)
+    at pA (index-BrPxy8cr.js:658:108980)
+    at sg (index-BrPxy8cr.js:38:17392)
+    at Dj (index-BrPxy8cr.js:40:44717)
+    at Aj (index-BrPxy8cr.js:40:40316)
+    at d4 (index-BrPxy8cr.js:40:40244)
+    at Mf (index-BrPxy8cr.js:40:40097)
+mg @ index-BrPxy8cr.js:40Understand this error
+index-BrPxy8cr.js:38 Uncaught ReferenceError: FeedbackDialog is not defined
+    at index-BrPxy8cr.js:658:110933
+    at Array.map (<anonymous>)
+    at index-BrPxy8cr.js:658:109516
+    at Array.map (<anonymous>)
+    at pA (index-BrPxy8cr.js:658:108980)
+    at sg (index-BrPxy8cr.js:38:17392)
+    at Dj (index-BrPxy8cr.js:40:44717)
+    at Aj (index-BrPxy8cr.js:40:40316)
+    at d4 (index-BrPxy8cr.js:40:40244)
+    at Mf (index-BrPxy8cr.js:40:40097)Understand this error
+index-BrPxy8cr.js:697 QR code scan successfully recorded for restaurant 6
+7entoto-rendezvous:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was received
