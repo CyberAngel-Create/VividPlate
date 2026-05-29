@@ -52,13 +52,16 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
       return await bcrypt.compare(supplied, stored);
     }
 
-    // Otherwise treat it as a scrypt hash with salt
+    // Check if it's a scrypt hash with salt (format: hex.salt)
     const [hashed, salt] = stored.split('.');
-    if (!hashed || !salt) return false;
-    
-    const hashedBuf = Buffer.from(hashed, 'hex');
-    const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
-    return timingSafeEqual(hashedBuf, suppliedBuf);
+    if (hashed && salt) {
+      const hashedBuf = Buffer.from(hashed, 'hex');
+      const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
+      return timingSafeEqual(hashedBuf, suppliedBuf);
+    }
+
+    // Plain-text fallback (for dev/test users stored without hashing)
+    return supplied === stored;
   } catch (error) {
     console.error("Password comparison error:", error);
     return false;
