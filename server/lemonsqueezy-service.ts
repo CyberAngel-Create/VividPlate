@@ -9,8 +9,8 @@ import crypto from 'crypto';
 // ─── Constants ─────────────────────────────────────────────────────────────
 export const LS_API_BASE = 'https://api.lemonsqueezy.com/v1';
 export const LS_STORE_ID = process.env.LEMONSQUEEZY_STORE_ID || '338030';
-export const LS_MONTHLY_VARIANT_ID = process.env.LEMONSQUEEZY_MONTHLY_VARIANT_ID || '1659014';
-export const LS_YEARLY_VARIANT_ID = process.env.LEMONSQUEEZY_YEARLY_VARIANT_ID || '1658892';
+export const LS_MONTHLY_VARIANT_ID = process.env.LEMONSQUEEZY_MONTHLY_VARIANT_ID || '1713315';
+export const LS_YEARLY_VARIANT_ID = process.env.LEMONSQUEEZY_YEARLY_VARIANT_ID || '1713296';
 
 export const LS_PLANS = {
   monthly: {
@@ -111,6 +111,9 @@ export class LemonSqueezyService {
       data: {
         type: 'checkouts',
         attributes: {
+          product_options: {
+            redirect_url: opts.successUrl,
+          },
           checkout_options: {
             embed: false,
             media: true,
@@ -131,7 +134,6 @@ export class LemonSqueezyService {
           },
           expires_at: null,
           preview: false,
-          redirect_url: opts.successUrl,
         },
         relationships: {
           store: {
