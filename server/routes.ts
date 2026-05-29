@@ -5593,9 +5593,18 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
 
   /**
    * GET /api/ls/plans
-   * Returns public plan metadata (prices, features)
+   * Returns public plan metadata (prices, features).
+   * Returns status:'error' when LEMONSQUEEZY_API_KEY is not configured so the
+   * client can show the "Payments Not Configured" warning and disable checkout.
    */
   app.get('/api/ls/plans', (req, res) => {
+    if (!lsService) {
+      return res.json({
+        status: 'error',
+        message: 'LemonSqueezy is not configured. Set LEMONSQUEEZY_API_KEY to enable payments.',
+        plans: LS_PLANS,
+      });
+    }
     res.json({
       status: 'success',
       plans: LS_PLANS,

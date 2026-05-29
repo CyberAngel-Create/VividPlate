@@ -101,16 +101,34 @@ export default function LsSubscribe() {
 
   const handleSubscribe = async () => {
     if (!user) {
-      navigate('/login');
+      navigate('/login?redirect=/ls-subscribe');
       return;
     }
 
     setIsLoading(true);
     try {
-      const response = await apiRequest('POST', '/api/ls/create-checkout', {
-        plan: selectedPlan,
+      const response = await fetch('/api/ls/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ plan: selectedPlan }),
       });
+
+      // Session expired — send user to login
+      if (response.status === 401) {
+        navigate('/login?redirect=/ls-subscribe');
+        return;
+      }
+
       const data = await response.json();
+
+      if (response.status === 503) {
+        throw new Error('Payment service is not configured. Please contact the administrator.');
+      }
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create checkout session');
+      }
 
       if (data.status === 'success' && data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
