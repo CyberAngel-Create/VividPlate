@@ -6,60 +6,55 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Install native build tools and vips for sharp
 RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
 
 COPY package.json package-lock.json* ./
-RUN npm ci
-RUN npm install @rollup/rollup-linux-x64-musl --save-optional || true
-# Install sharp with platform-specific prebuilt binaries for Alpine
-RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64
+
+# Skip scripts so sharp doesn't try to build from source
+RUN npm ci --ignore-scripts
+
+# Install prebuilt musl/Alpine binary for sharp and rollup
+RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64 --no-save 2>/dev/null || true
+RUN npm install @rollup/rollup-linux-x64-musl --save-optional --no-save 2>/dev/null || true
 
 # ---------- Stage 2: Build ----------
 FROM node:20-alpine AS builder
 WORKDIR /app
+
+RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-# Build server TypeScript
+
 RUN npm run build
-# Build client with Vite
 RUN npx vite build
-# Move client build to where server expects it (dist/server/public)
 RUN mv dist/public dist/server/public
 
 # ---------- Stage 3: Production ----------
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install curl for health checks and vips for sharp runtime
 RUN apk add --no-cache curl vips
+
+# Create non-root user before copying files
+RUN addgroup -S nodejs && adduser -S vividplate -G nodejs
 
 ENV NODE_ENV=production
 ENV PORT=8080
 
-# Copy node_modules (with sharp pre-built for Alpine)
-COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ./
+# Copy files with correct ownership from the start (no chown -R needed)
+COPY --from=deps --chown=vividplate:nodejs /app/node_modules ./node_modules
+COPY --chown=vividplate:nodejs package.json ./
+COPY --from=builder --chown=vividplate:nodejs /app/dist ./dist
+COPY --from=builder --chown=vividplate:nodejs /app/shared ./shared
 
-# Copy compiled app
-COPY --from=builder /app/dist ./dist
+RUN mkdir -p /app/uploads && chown vividplate:nodejs /app/uploads
 
-# Copy shared folder (required for schema)
-COPY --from=builder /app/shared ./shared
-
-# Create uploads directory
-RUN mkdir -p /app/uploads
-
-# Security: Run as non-root user
-RUN addgroup -S nodejs && adduser -S vividplate -G nodejs
-RUN chown -R vividplate:nodejs /app
 USER vividplate
 
 EXPOSE 8080
 
-# Health check using curl (server exposes /health)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
-# Start the server (built output places server at dist/server/index.js)
 CMD ["node", "dist/server/index.js"]
