@@ -3917,6 +3917,40 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // Admin: fetch live LemonSqueezy subscription status for a user
+  app.get('/api/admin/users/:id/ls-subscription', isAuthenticated, isAdmin, async (req: any, res: any) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { lsService } = await import('./lemonsqueezy-service.js');
+
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ status: 'error', message: 'User not found' });
+      }
+
+      const lsSubId = (targetUser as any).lsSubscriptionId;
+      let lsDetails = null;
+
+      if (lsSubId && lsService) {
+        lsDetails = await lsService.getSubscription(lsSubId);
+      }
+
+      res.json({
+        status: 'success',
+        subscription: {
+          tier: targetUser.subscriptionTier || 'free',
+          expiry: targetUser.subscriptionExpiry,
+          lsSubscriptionId: lsSubId || null,
+          lsStatus: lsDetails?.status || null,
+          renewsAt: lsDetails?.renewsAt || null,
+        },
+      });
+    } catch (error: any) {
+      console.error('Admin LS subscription status error:', error);
+      res.status(500).json({ status: 'error', message: error.message });
+    }
+  });
+
   // Admin reset user password
   app.put('/api/admin/users/:id/reset-password', isAuthenticated, isAdmin, async (req, res) => {
     try {

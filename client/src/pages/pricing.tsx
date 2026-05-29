@@ -88,9 +88,9 @@ export default function PricingPage() {
 
   const handleSubscribe = (plan: 'monthly' | 'yearly') => {
     if (user) {
-      navigate(`/ls-subscribe`);
+      navigate(`/ls-subscribe?plan=${plan}`);
     } else {
-      navigate('/register');
+      navigate(`/register?redirect=/ls-subscribe?plan=${plan}`);
     }
   };
 

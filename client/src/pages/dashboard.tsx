@@ -74,6 +74,13 @@ const Dashboard = () => {
     queryKey: ['/api/user/subscription-status'],
   });
 
+  // LS live subscription details (only for paid users)
+  const { data: lsStatus } = useQuery<{ status: string; subscription: { tier: string; expiry: string | null; lsSubscriptionId: string | null; lsStatus: string | null; renewsAt: string | null } }>({
+    queryKey: ['/api/ls/subscription-status'],
+    enabled: !!subscriptionStatus?.isPaid,
+    staleTime: 60_000,
+  });
+
   const agentAssigned = Boolean(subscriptionStatus?.agentId);
   const canRequestAgentSupport = agentAssigned && (subscriptionStatus?.currentRestaurants ?? 0) === 0;
 
@@ -170,6 +177,11 @@ const Dashboard = () => {
 
           // Case B: Owner has an active self-paid premium subscription
           if (subscriptionStatus.isPaid) {
+            const lsSub = lsStatus?.subscription;
+            const renewalDate = lsSub?.renewsAt || lsSub?.expiry || subscriptionStatus.expiresAt;
+            const lsLiveStatus = lsSub?.lsStatus;
+            const isCancelled = lsLiveStatus === 'cancelled';
+            const isExpiringSoon = renewalDate && new Date(renewalDate).getTime() - Date.now() < 7 * 86400000;
             return (
               <div className="mb-6 p-4 rounded-lg border bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -177,23 +189,37 @@ const Dashboard = () => {
                     <CreditCard className="h-5 w-5 text-green-600 dark:text-green-300" />
                   </div>
                   <div className="flex-1">
-                    <PremiumBadge size="sm" />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <PremiumBadge size="sm" />
+                      {isCancelled && (
+                        <span className="text-xs bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200 dark:border-amber-700 px-2 py-0.5 rounded-full font-medium">
+                          Cancelled — active until expiry
+                        </span>
+                      )}
+                    </div>
                     <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      Your premium subscription is active.
+                      {isCancelled
+                        ? 'Your subscription has been cancelled but remains active until the end of the billing period.'
+                        : 'Your premium subscription is active.'}
                     </p>
-                    {subscriptionStatus.expiresAt && (
-                      <div className="mt-1 flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-green-600 dark:text-green-300" />
+                    {renewalDate && (
+                      <div className="mt-1 flex items-center gap-2 text-sm flex-wrap">
+                        <Calendar className="h-4 w-4 text-green-600 dark:text-green-300 flex-shrink-0" />
                         <span className="text-gray-600 dark:text-gray-300">
-                          Renews/expires:{" "}
-                          {new Date(subscriptionStatus.expiresAt).toLocaleDateString('en-US', {
+                          {isCancelled ? 'Access until: ' : 'Renews: '}
+                          {new Date(renewalDate).toLocaleDateString('en-US', {
                             year: 'numeric', month: 'long', day: 'numeric'
                           })}
                         </span>
-                        {new Date(subscriptionStatus.expiresAt).getTime() - Date.now() < 7 * 86400000 && (
-                          <span className="text-amber-600 font-medium">(Expires soon)</span>
+                        {isExpiringSoon && (
+                          <span className="text-amber-600 dark:text-amber-400 font-medium">(Soon)</span>
                         )}
                       </div>
+                    )}
+                    {lsSub?.lsSubscriptionId && (
+                      <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                        Subscription ID: {lsSub.lsSubscriptionId}
+                      </p>
                     )}
                   </div>
                   <button
@@ -208,9 +234,9 @@ const Dashboard = () => {
                         setLocation('/ls-subscribe');
                       }
                     }}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
+                    className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 whitespace-nowrap"
                   >
-                    Manage Plan
+                    Manage Billing
                   </button>
                 </div>
               </div>

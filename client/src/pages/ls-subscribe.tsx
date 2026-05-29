@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -13,6 +13,7 @@ import {
   CreditCard,
   RefreshCw,
   ChevronRight,
+  AlertTriangle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -62,12 +63,30 @@ const PLANS = {
   },
 };
 
+function getPlanFromUrl(): BillingPeriod {
+  const params = new URLSearchParams(window.location.search);
+  const p = params.get('plan');
+  if (p === 'monthly' || p === 'yearly') return p;
+  return 'yearly';
+}
+
 export default function LsSubscribe() {
   const [, navigate] = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [selectedPlan, setSelectedPlan] = useState<BillingPeriod>('yearly');
+  const [selectedPlan, setSelectedPlan] = useState<BillingPeriod>(getPlanFromUrl);
   const [isLoading, setIsLoading] = useState(false);
+  const [lsConfigured, setLsConfigured] = useState<boolean | null>(null);
+
+  // Check if LemonSqueezy is configured by fetching plans
+  useEffect(() => {
+    apiRequest('GET', '/api/ls/plans')
+      .then((res) => res.json())
+      .then((data) => {
+        setLsConfigured(data.status === 'success');
+      })
+      .catch(() => setLsConfigured(false));
+  }, []);
 
   // Agents use tokens, not subscriptions — redirect them away
   const isAgent = (user as any)?.role === 'agent';
@@ -94,7 +113,6 @@ export default function LsSubscribe() {
       const data = await response.json();
 
       if (data.status === 'success' && data.checkoutUrl) {
-        // Redirect to LemonSqueezy hosted checkout
         window.location.href = data.checkoutUrl;
       } else {
         throw new Error(data.message || 'Failed to create checkout session');
@@ -110,7 +128,6 @@ export default function LsSubscribe() {
   };
 
   const plan = PLANS[selectedPlan];
-  const otherPlan = PLANS[selectedPlan === 'monthly' ? 'yearly' : 'monthly'];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900 text-white">
@@ -119,9 +136,8 @@ export default function LsSubscribe() {
         <meta name="description" content="Upgrade to VividPlate Premium. $25/month or $250/year. Unlimited menu items, custom themes, analytics, and priority support." />
         <meta name="robots" content="noindex" />
       </Helmet>
-      {/* Header */}
+
       <div className="relative overflow-hidden">
-        {/* Background glow */}
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-orange-500/20 rounded-full blur-[120px]" />
         </div>
@@ -149,6 +165,19 @@ export default function LsSubscribe() {
               One subscription, every feature. No hidden fees. Cancel anytime.
             </p>
           </div>
+
+          {/* Payment not configured warning */}
+          {lsConfigured === false && (
+            <div className="max-w-md mx-auto mb-8 bg-amber-500/10 border border-amber-500/40 rounded-xl p-4 flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-amber-300 font-medium text-sm">Payment system not configured</p>
+                <p className="text-amber-400/70 text-xs mt-1">
+                  The LemonSqueezy integration is not yet set up. Please contact the administrator to enable payments.
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Billing Toggle */}
           <div className="flex justify-center mb-10">
@@ -242,14 +271,24 @@ export default function LsSubscribe() {
           <div className="max-w-md mx-auto text-center">
             <Button
               onClick={handleSubscribe}
-              disabled={isLoading}
+              disabled={isLoading || lsConfigured === false}
               size="lg"
-              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-base py-6 rounded-xl shadow-lg shadow-orange-500/30 border-0 transition-all duration-200 hover:shadow-xl hover:shadow-orange-500/40 hover:-translate-y-0.5"
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-bold text-base py-6 rounded-xl shadow-lg shadow-orange-500/30 border-0 transition-all duration-200 hover:shadow-xl hover:shadow-orange-500/40 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
             >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Creating checkout…
+                </>
+              ) : lsConfigured === null ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Loading…
+                </>
+              ) : lsConfigured === false ? (
+                <>
+                  <AlertTriangle className="mr-2 h-5 w-5" />
+                  Payments Not Configured
                 </>
               ) : (
                 <>
