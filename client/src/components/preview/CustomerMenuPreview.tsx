@@ -208,7 +208,19 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [activeMainCategory, setActiveMainCategory] = useState<string | null>(null);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid'); // Grid view as default
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>(() => {
+    try {
+      if (restaurant.themeSettings) {
+        const settings = typeof restaurant.themeSettings === 'string'
+          ? JSON.parse(restaurant.themeSettings as string)
+          : (restaurant.themeSettings as Record<string, any>);
+        if (settings.defaultMenuView === 'list' || settings.defaultMenuView === 'grid') {
+          return settings.defaultMenuView;
+        }
+      }
+    } catch {}
+    return 'grid';
+  });
   const [mounted, setMounted] = useState(false);
   const [headerFixed, setHeaderFixed] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
@@ -283,7 +295,9 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     fontFamily: "Inter, sans-serif",
     menuItemColor: "#333333",
     menuDescriptionColor: "#666666",
-    menuPriceColor: "#111111"
+    menuPriceColor: "#111111",
+    backgroundImageUrl: "",
+    defaultMenuView: "grid"
   };
 
   // Parse theme settings from JSON string if necessary or use the provided object
@@ -355,7 +369,13 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   const containerStyle: CSSProperties = {
     backgroundColor: menuTheme.backgroundColor,
     color: menuTheme.textColor,
-    fontFamily: menuTheme.fontFamily
+    fontFamily: menuTheme.fontFamily,
+    ...(menuTheme.backgroundImageUrl ? {
+      backgroundImage: `url(${menuTheme.backgroundImageUrl})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    } : {})
   };
 
   const headerContainerStyle: CSSProperties = {

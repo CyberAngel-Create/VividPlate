@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Restaurant } from "@shared/schema";
 import { ObjectUploader } from "../../../components/ObjectUploader";
 import { useMutation } from "@tanstack/react-query";
-import { Image, X } from "lucide-react";
+import { Image, X, LayoutGrid, List } from "lucide-react";
 import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
 
 interface RestaurantThemeEditorProps {
@@ -47,7 +47,8 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
     menuItemColor: "#333333",
     menuDescriptionColor: "#666666",
     menuPriceColor: "#111111",
-    backgroundImageUrl: ""
+    backgroundImageUrl: "",
+    defaultMenuView: "grid"
   };
   
   const [theme, setTheme] = useState<Record<string, any>>(initialTheme || defaultTheme);
@@ -385,6 +386,37 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
             
             <TabsContent value="background" className="space-y-4">
               <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Default Menu View</Label>
+                  <p className="text-sm text-muted-foreground">Choose whether customers see your menu in grid or list view by default.</p>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleChange("defaultMenuView", "grid")}
+                      className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                        theme.defaultMenuView === "grid" || !theme.defaultMenuView
+                          ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                          : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}
+                    >
+                      <LayoutGrid className="h-5 w-5" />
+                      <span className="text-sm font-medium">Grid</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleChange("defaultMenuView", "list")}
+                      className={`flex-1 flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                        theme.defaultMenuView === "list"
+                          ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                          : "border-gray-200 text-gray-500 hover:border-gray-300"
+                      }`}
+                    >
+                      <List className="h-5 w-5" />
+                      <span className="text-sm font-medium">List</span>
+                    </button>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <Label>Background Image</Label>
                   {theme.backgroundImageUrl ? (
