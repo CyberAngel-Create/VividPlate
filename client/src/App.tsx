@@ -17,7 +17,6 @@ import ShareMenu from "./pages/share-menu";
 import ViewMenu from "./pages/view-menu";
 import Tutorial from "./pages/tutorial";
 import SubscriptionPage from "./pages/subscription";
-import Subscribe from "./pages/subscribe";
 import PaymentSuccess from "./pages/payment-success";
 import ManageUploads from "./pages/manage-uploads";
 import AdminDashboard from "./pages/admin-dashboard";
@@ -53,7 +52,6 @@ import { DietaryPreferencesProvider } from "@/hooks/use-dietary-preferences";
 import TermsOfService from "./pages/terms";
 import CategoriesPage from "./pages/categories";
 import PasswordResetHelp from "./pages/password-reset-help";
-import ChapaSubscribe from "./pages/chapa-subscribe";
 import RefundPolicy from "./pages/refund-policy";
 import PricingPage from "./pages/pricing";
 import ChangePassword from "./pages/change-password";
@@ -178,9 +176,9 @@ function Router() {
         <AuthenticatedRoute path="/manage-uploads/:restaurantId" component={ManageUploads} />
         <AuthenticatedRoute path="/tutorial" component={Tutorial} />
         <AuthenticatedRoute path="/subscription" component={SubscriptionPage} />
-        <AuthenticatedRoute path="/subscribe/:planId" component={Subscribe} />
-        <AuthenticatedRoute path="/subscribe" component={Subscribe} />
-        <AuthenticatedRoute path="/chapa-subscribe/:planId" component={ChapaSubscribe} />
+        <AuthenticatedRoute path="/subscribe/:planId" component={SubscriptionPage} />
+        <AuthenticatedRoute path="/subscribe" component={SubscriptionPage} />
+        <AuthenticatedRoute path="/chapa-subscribe/:planId" component={SubscriptionPage} />
         <AuthenticatedRoute path="/ls-subscribe/:plan" component={LsSubscribe} />
         <AuthenticatedRoute path="/ls-subscribe" component={LsSubscribe} />
         <AuthenticatedRoute path="/payment-success" component={PaymentSuccess} />

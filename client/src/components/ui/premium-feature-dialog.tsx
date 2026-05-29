@@ -40,7 +40,7 @@ const PremiumFeatureDialog: React.FC<PremiumFeatureDialogProps> = ({
 
   const handleUpgradeClick = () => {
     setIsOpen(false);
-    navigate('/subscription');
+    navigate('/ls-subscribe');
   };
 
   return (

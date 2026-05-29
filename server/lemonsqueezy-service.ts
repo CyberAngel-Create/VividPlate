@@ -206,8 +206,13 @@ export class LemonSqueezyService {
    */
   verifyWebhook(rawBody: Buffer | string, signature: string): boolean {
     if (!this.webhookSecret) {
-      console.warn('⚠️ LEMONSQUEEZY_WEBHOOK_SECRET not configured – skipping signature check');
-      return true; // Allow through in dev; tighten in prod
+      // Fail closed in production — never accept unsigned webhooks there.
+      if (process.env.NODE_ENV === 'production') {
+        console.error('❌ LEMONSQUEEZY_WEBHOOK_SECRET not configured – rejecting webhook in production');
+        return false;
+      }
+      console.warn('⚠️ LEMONSQUEEZY_WEBHOOK_SECRET not configured – skipping signature check (development only)');
+      return true;
     }
 
     try {

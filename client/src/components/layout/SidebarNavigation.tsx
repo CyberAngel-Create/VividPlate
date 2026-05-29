@@ -84,6 +84,12 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
       path: '/profile'
     },
     {
+      id: 'subscription',
+      icon: <CreditCard className="h-5 w-5" />,
+      label: 'My Subscription',
+      path: '/ls-subscribe'
+    },
+    {
       id: 'contact-agent',
       icon: <Mail className="h-5 w-5" />,
       label: 'Contact Agent',
@@ -94,6 +100,9 @@ const SidebarNavigation = ({ onLogout = () => {} }: SidebarNavigationProps) => {
   // Filter items based on subscription status
   // Hide "Upgrade Plan" for users with agent-created premium restaurants (they can't self-upgrade)
   const filteredNavItems = navItems.filter(item => {
+    // Owners on an agent-managed premium plan don't pay themselves, so hide
+    // the self-serve subscription entry for them.
+    if (item.id === 'subscription' && hasAgentPremiumRestaurant) return false;
     if (!item.showFor || item.showFor === "all") return true;
     if (item.showFor === "premium" && isPaid) return true;
     if (item.showFor === "free" && !isPaid) {

@@ -5624,13 +5624,22 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       });
     }
 
+    const user = req.user;
+
+    // Agents use the token system, not paid subscriptions.
+    if (user?.role === 'agent') {
+      return res.status(403).json({
+        status: 'error',
+        message: 'Agents use tokens, not subscriptions. Manage tokens from the Agent Dashboard.',
+      });
+    }
+
     const { plan } = req.body;
     if (!plan || !['monthly', 'yearly'].includes(plan)) {
       return res.status(400).json({ status: 'error', message: 'Invalid plan. Choose "monthly" or "yearly".' });
     }
 
     const planData = LS_PLANS[plan as keyof typeof LS_PLANS];
-    const user = req.user;
 
     try {
       const baseUrl = `${req.protocol}://${req.get('host')}`;
