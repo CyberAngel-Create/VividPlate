@@ -4,13 +4,10 @@ import path from "path";
 // Load environment variables
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
-import { neon, neonConfig } from '@neondatabase/serverless';
-import { drizzle } from 'drizzle-orm/neon-http';
+import pkg from 'pg';
+const { Pool } = pkg;
+import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "../shared/schema.js";
-
-console.log("DATABASE_URL from env:", process.env.DATABASE_URL);
-console.log("Current working directory:", process.cwd());
-console.log(".env file path:", path.join(process.cwd(), '.env'));
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -18,16 +15,9 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Configure neon for HTTP-only connections (no WebSocket)
-neonConfig.fetchConnectionCache = true;
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: process.env.DATABASE_URL?.includes('sslmode=disable') ? false : undefined,
+});
 
-// Use HTTP adapter instead of WebSocket for better compatibility with shared hosting providers
-const sql = neon(process.env.DATABASE_URL);
-export const db = drizzle(sql, { schema });
-
-// Create a simple pool interface for backward compatibility
-export const pool = {
-  query: sql,
-  connect: () => ({ query: sql, release: () => {} }),
-  end: () => Promise.resolve()
-};
+export const db = drizzle(pool, { schema });
