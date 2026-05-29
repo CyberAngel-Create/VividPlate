@@ -366,15 +366,18 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   }, [menuData, activeCategory, activeMainCategory]);
 
   // Create styles based on theme
+  // Mobile-friendly: scroll on mobile (fixed causes iOS issues), cover on desktop
   const containerStyle: CSSProperties = {
     backgroundColor: menuTheme.backgroundColor,
     color: menuTheme.textColor,
     fontFamily: menuTheme.fontFamily,
+    minHeight: '100vh',
     ...(menuTheme.backgroundImageUrl ? {
-      backgroundImage: `url(${menuTheme.backgroundImageUrl})`,
+      backgroundImage: `url(${normalizeImageUrl(menuTheme.backgroundImageUrl)})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
+      backgroundAttachment: 'scroll',
     } : {})
   };
 

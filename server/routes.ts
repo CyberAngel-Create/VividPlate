@@ -5725,6 +5725,14 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.json({ status: 'success', checkoutUrl, checkoutId });
     } catch (error: any) {
       console.error('LemonSqueezy checkout error:', error.message);
+      // Provide detailed diagnostic info for "related resource does not exist" errors
+      if (error.message?.includes('related resource does not exist')) {
+        console.error('Diagnostic:', {
+          storeId: process.env.LEMONSQUEEZY_STORE_ID || 'not set',
+          variantId: planData.variantId,
+          apiKeySet: !!process.env.LEMONSQUEEZY_API_KEY,
+        });
+      }
       res.status(500).json({ status: 'error', message: error.message });
     }
   });
