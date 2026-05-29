@@ -373,13 +373,28 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
     color: menuTheme.textColor,
     fontFamily: menuTheme.fontFamily,
     minHeight: '100vh',
-    ...(menuTheme.backgroundImageUrl ? {
-      backgroundImage: `url(${normalizeImageUrl(menuTheme.backgroundImageUrl)})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-      backgroundAttachment: 'scroll',
-    } : {})
+    position: 'relative',
+  };
+
+  // Background image layer with opacity support (separate from content so text stays sharp)
+  const backgroundLayerStyle: CSSProperties = menuTheme.backgroundImageUrl ? {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundImage: `url(${normalizeImageUrl(menuTheme.backgroundImageUrl)})`,
+    backgroundSize: menuTheme.backgroundImageSize || 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: menuTheme.backgroundImageSize === 'repeat' ? 'repeat' : 'no-repeat',
+    backgroundAttachment: 'scroll',
+    opacity: typeof menuTheme.backgroundImageOpacity === 'number' ? menuTheme.backgroundImageOpacity : 1,
+    zIndex: 0,
+  } : {};
+
+  const contentLayerStyle: CSSProperties = {
+    position: 'relative',
+    zIndex: 1,
   };
 
   const headerContainerStyle: CSSProperties = {
@@ -403,10 +418,14 @@ const CustomerMenuPreview: React.FC<CustomerMenuPreviewProps> = ({
   };
 
   return (
-    <div 
+    <div
       className="w-full md:max-w-none lg:max-w-2xl mx-auto md:rounded-none lg:rounded-xl overflow-hidden menu-preview-shadow md:min-h-screen lg:min-h-0"
       style={containerStyle}
     >
+      {/* Background image layer (separate from content for opacity control) */}
+      {menuTheme.backgroundImageUrl && (
+        <div style={backgroundLayerStyle} aria-hidden="true" />
+      )}
       <div ref={topRef} className="absolute top-0 left-0"></div>
       {/* Restaurant header with banner slideshow */}
       <div className="relative">

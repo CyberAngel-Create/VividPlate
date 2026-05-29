@@ -47,6 +47,8 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
     menuDescriptionColor: "#666666",
     menuPriceColor: "#111111",
     backgroundImageUrl: "",
+    backgroundImageSize: "cover",
+    backgroundImageOpacity: 1,
     defaultMenuView: "grid"
   };
   
@@ -180,16 +182,38 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
     });
   };
   
-  // Preview styles for the menu
-  const previewStyle = {
+  // Preview styles for the menu (with background image support)
+  const previewContainerStyle = {
     backgroundColor: theme.backgroundColor,
     color: theme.textColor,
     fontFamily: theme.fontFamily,
-    padding: "20px",
     borderRadius: "8px",
     border: "1px solid #ddd",
     maxWidth: "400px",
-    margin: "20px auto"
+    margin: "20px auto",
+    position: "relative" as const,
+    overflow: "hidden" as const,
+    minHeight: "300px",
+  };
+
+  const previewBgStyle = theme.backgroundImageUrl ? {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundImage: `url(${theme.backgroundImageUrl})`,
+    backgroundSize: theme.backgroundImageSize || 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: theme.backgroundImageSize === 'repeat' ? 'repeat' : 'no-repeat',
+    opacity: typeof theme.backgroundImageOpacity === 'number' ? theme.backgroundImageOpacity : 1,
+    zIndex: 0,
+  } : null;
+
+  const previewContentStyle = {
+    position: "relative" as const,
+    zIndex: 1,
+    padding: "20px",
   };
   
   const headerStyle = {
@@ -435,11 +459,11 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
                 <div className="space-y-2">
                   <Label>Background Image</Label>
                   {theme.backgroundImageUrl ? (
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       <div className="relative">
-                        <img 
-                          src={theme.backgroundImageUrl} 
-                          alt="Background preview" 
+                        <img
+                          src={theme.backgroundImageUrl}
+                          alt="Background preview"
                           className="w-full h-32 object-cover rounded-md border"
                         />
                         <Button
@@ -452,6 +476,57 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
                         </Button>
                       </div>
                       <p className="text-sm text-gray-600">Current background image</p>
+
+                      {/* Background Image Size / Fit */}
+                      <div className="space-y-2">
+                        <Label className="text-sm">Image Fit</Label>
+                        <p className="text-xs text-muted-foreground">Choose how the image fills the screen.</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { value: 'cover', label: 'Cover (fill screen)', desc: 'Crops edges to fill' },
+                            { value: 'contain', label: 'Contain (show all)', desc: 'May show borders' },
+                            { value: '100% 100%', label: 'Stretch', desc: 'Distorts to fit' },
+                            { value: 'repeat', label: 'Tile (repeat)', desc: 'Repeats the image' },
+                          ].map((opt) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              onClick={() => handleChange('backgroundImageSize', opt.value)}
+                              className={`flex flex-col items-start p-2 rounded-lg border-2 text-left transition-colors ${
+                                theme.backgroundImageSize === opt.value || (!theme.backgroundImageSize && opt.value === 'cover')
+                                  ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                              }`}
+                            >
+                              <span className="text-sm font-medium">{opt.label}</span>
+                              <span className="text-xs text-muted-foreground">{opt.desc}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Background Image Opacity */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Image Opacity</Label>
+                          <span className="text-xs text-muted-foreground">
+                            {Math.round((theme.backgroundImageOpacity || 1) * 100)}%
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min={0.1}
+                          max={1}
+                          step={0.05}
+                          value={theme.backgroundImageOpacity || 1}
+                          onChange={(e) => handleChange('backgroundImageOpacity', parseFloat(e.target.value))}
+                          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Lower opacity makes text easier to read over the image.
+                        </p>
+                      </div>
+
                       {bannerOnlyPlan && (
                         <p className="text-xs text-amber-600">
                           You can remove this image, but uploading a new background requires a paid plan.
@@ -515,50 +590,49 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
         {/* Theme Preview */}
         <div>
           <h3 className="text-lg font-medium mb-4">Live Preview</h3>
-          <div style={previewStyle} className="shadow-md">
-            <div style={headerStyle}>
-              <h3 style={{ color: theme.menuItemColor, fontWeight: "bold", fontSize: "18px" }}>
-                Sample Restaurant Menu
-              </h3>
-            </div>
-            
-            <div className="space-y-6">
-              <div>
-                <h4 style={itemStyle}>Appetizers</h4>
-                <div className="space-y-4 mt-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p style={itemStyle}>Bruschetta</p>
-                      <p style={descriptionStyle}>Toasted bread with fresh tomatoes and basil</p>
+          <div style={previewContainerStyle} className="shadow-md">
+            {previewBgStyle ? <div style={previewBgStyle} /> : null}
+            <div style={previewContentStyle}>
+              <div style={headerStyle}>
+                <h3 style={{ color: theme.menuItemColor, fontWeight: "bold", fontSize: "18px" }}>
+                  Sample Restaurant Menu
+                </h3>
+              </div>
+              <div className="space-y-6">
+                <div>
+                  <h4 style={itemStyle}>Appetizers</h4>
+                  <div className="space-y-4 mt-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p style={itemStyle}>Bruschetta</p>
+                        <p style={descriptionStyle}>Toasted bread with fresh tomatoes and basil</p>
+                      </div>
+                      <p style={priceStyle}>$9.99</p>
                     </div>
-                    <p style={priceStyle}>$9.99</p>
-                  </div>
-                  
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p style={itemStyle}>Mozzarella Sticks</p>
-                      <p style={descriptionStyle}>Crispy outside, melty inside, with marinara sauce</p>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p style={itemStyle}>Mozzarella Sticks</p>
+                        <p style={descriptionStyle}>Crispy outside, melty inside, with marinara sauce</p>
+                      </div>
+                      <p style={priceStyle}>$8.99</p>
                     </div>
-                    <p style={priceStyle}>$8.99</p>
                   </div>
                 </div>
-              </div>
-              
-              <div>
-                <h4 style={itemStyle}>Main Course</h4>
-                <div className="space-y-4 mt-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p style={itemStyle}>Grilled Salmon</p>
-                      <p style={descriptionStyle}>Fresh salmon with lemon and herbs</p>
+                <div>
+                  <h4 style={itemStyle}>Main Course</h4>
+                  <div className="space-y-4 mt-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p style={itemStyle}>Grilled Salmon</p>
+                        <p style={descriptionStyle}>Fresh salmon with lemon and herbs</p>
+                      </div>
+                      <p style={priceStyle}>$24.99</p>
                     </div>
-                    <p style={priceStyle}>$24.99</p>
                   </div>
                 </div>
-              </div>
-              
-              <div>
-                <button style={buttonStyle}>View Full Menu</button>
+                <div>
+                  <button style={buttonStyle}>View Full Menu</button>
+                </div>
               </div>
             </div>
           </div>

@@ -175,7 +175,9 @@ export const restaurants = pgTable("restaurants", {
     menuItemColor: "#333333",
     menuDescriptionColor: "#666666",
     menuPriceColor: "#111111",
-    backgroundImageUrl: ""
+    backgroundImageUrl: "",
+    backgroundImageSize: "cover",
+    backgroundImageOpacity: 1
   }),
 });
 
