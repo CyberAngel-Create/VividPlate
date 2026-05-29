@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Restaurant } from "@shared/schema";
-import { ObjectUploader } from "../../../components/ObjectUploader";
 import { useMutation } from "@tanstack/react-query";
-import { Image, X, LayoutGrid, List } from "lucide-react";
+import { Image, X, LayoutGrid, List, Upload } from "lucide-react";
 import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
 
 interface RestaurantThemeEditorProps {
@@ -53,6 +52,7 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
   
   const [theme, setTheme] = useState<Record<string, any>>(initialTheme || defaultTheme);
   const [isLoading, setIsLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { subscriptionStatus } = useSubscriptionStatus();
   const bannerOnlyPlan = !subscriptionStatus || !subscriptionStatus.isPaid;
 
@@ -81,37 +81,43 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
     },
   });
 
-  // Handle background image upload
-  const handleGetUploadParameters = async () => {
-    const response = await apiRequest("POST", "/api/objects/upload");
-    const data = await response.json();
-    if (data.mode === 'local_upload') {
-      // Return local upload endpoint with POST method
-      return {
-        method: "POST" as const,
-        url: data.uploadURL,
-        isLocal: true,
-      };
-    }
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-      isLocal: false,
-    };
-  };
+  // Handle background image upload using the same pattern as menu item images
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-  const handleBackgroundImageComplete = (result: { successful: Array<{ uploadURL: string }> }) => {
-    if (result.successful && result.successful.length > 0) {
-      const uploadURL = result.successful[0].uploadURL;
-      
-      // Update theme state immediately for preview
+    setIsLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload/background-image', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+      const imageUrl = data.url;
+
       setTheme(prev => ({
         ...prev,
-        backgroundImageUrl: uploadURL
+        backgroundImageUrl: imageUrl
       }));
-
-      // Save to backend
-      backgroundImageMutation.mutate(uploadURL);
+      backgroundImageMutation.mutate(imageUrl);
+    } catch (error: any) {
+      toast({
+        title: 'Upload failed',
+        description: error.message || 'Failed to upload background image',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -460,18 +466,24 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <ObjectUploader
-                        maxNumberOfFiles={1}
-                        maxFileSize={5242880} // 5MB
-                        onGetUploadParameters={handleGetUploadParameters}
-                        onComplete={handleBackgroundImageComplete}
-                        buttonClassName="w-full"
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isLoading}
                       >
-                        <div className="flex items-center gap-2">
-                          <Image className="h-4 w-4" />
-                          <span>Upload Background Image</span>
-                        </div>
-                      </ObjectUploader>
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload Background Image
+                      </Button>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        onChange={handleFileChange}
+                        disabled={isLoading}
+                      />
                       <p className="text-sm text-gray-600">
                         Upload an image to use as background for your customer menu (max 5MB)
                       </p>

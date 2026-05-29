@@ -5491,9 +5491,9 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
-  // Direct local upload endpoint for background images (Cloud Run, local dev)
-  // Accepts raw PUT body with Content-Type: image/* — same as presigned URL
-  app.put('/api/upload/local-background', isAuthenticated, express.raw({ type: 'image/*', limit: '5mb' }), async (req, res) => {
+  // Background image upload endpoint (works like menu item image upload)
+  // Uses multer multipart form upload + PermanentImageHelpers (same as /api/upload/menuitem)
+  app.post('/api/upload/background-image', isAuthenticated, upload.single('image'), async (req, res) => {
     try {
       const userId = (req.user as any).id;
       const user = await storage.getUser(userId);
@@ -5509,13 +5509,21 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         });
       }
 
-      if (!req.body || !Buffer.isBuffer(req.body)) {
-        return res.status(400).json({ error: 'No image data received' });
+      if (!req.file) {
+        return res.status(400).json({ error: 'No image file uploaded' });
       }
 
-      const filePath = path.join(process.cwd(), 'uploads', `bg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`);
-      fs.writeFileSync(filePath, req.body);
+      // Validate file type
+      const validMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validMimeTypes.includes(req.file.mimetype)) {
+        try { fs.unlinkSync(req.file.path); } catch (e) {}
+        return res.status(400).json({
+          error: 'Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.',
+          code: 'INVALID_FILE_TYPE'
+        });
+      }
 
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
       const { PermanentImageHelpers } = await import('./permanent-image-service.js');
       const permanentFilename = await PermanentImageHelpers.saveBannerImage(filePath, userId, null);
       const imageUrl = `/api/images/${permanentFilename}`;
@@ -5526,13 +5534,19 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       }
 
       res.json({
-        success: true,
         url: imageUrl,
-        permanentFilename,
+        success: true,
+        fileDetails: {
+          name: req.file.filename,
+          size: req.file.size,
+          type: req.file.mimetype,
+          provider: 'permanent'
+        }
       });
     } catch (error) {
-      console.error('Error in local background upload:', error);
-      res.status(500).json({ error: 'Failed to upload background image', detail: String(error) });
+      console.error('Error in background image upload:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+      res.status(500).json({ error: 'Failed to upload background image', detail: errorMsg });
     }
   });
 
