@@ -38,3 +38,10 @@ externalPort = 80
 deploymentTarget = "autoscale"
 run = ["node", "dist/server/index.js"]
 build = ["npm", "run", "build"]
+
+[userenv]
+
+[userenv.shared]
+LEMONSQUEEZY_STORE_ID = "338030"
+LEMONSQUEEZY_MONTHLY_VARIANT_ID = "1659014"
+LEMONSQUEEZY_YEARLY_VARIANT_ID = "1658892"
