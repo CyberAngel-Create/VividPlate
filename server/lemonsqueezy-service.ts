@@ -162,8 +162,25 @@ export class LemonSqueezyService {
       return { checkoutUrl, checkoutId };
     } catch (error: any) {
       if (axios.isAxiosError(error)) {
-        const msg = error.response?.data?.errors?.[0]?.detail || error.message;
-        throw new Error(`LemonSqueezy checkout creation failed: ${msg}`);
+        const firstError = error.response?.data?.errors?.[0];
+        const detail = firstError?.detail || error.message;
+        const status = firstError?.status;
+        
+        // Provide clearer error messages for common issues
+        if (detail?.includes('related resource does not exist')) {
+          console.error('LemonSqueezy config error:', {
+            storeId: LS_STORE_ID,
+            variantId: opts.variantId,
+            status: status,
+            hint: 'Please ensure the variant is published in your LemonSqueezy dashboard',
+          });
+          throw new Error(
+            `LemonSqueezy checkout creation failed: The product variant is not available. ` +
+            `Please ensure your LemonSqueezy product variants are published. ` +
+            `Store: ${LS_STORE_ID}, Variant: ${opts.variantId}`
+          );
+        }
+        throw new Error(`LemonSqueezy checkout creation failed: ${detail}`);
       }
       throw error;
     }
