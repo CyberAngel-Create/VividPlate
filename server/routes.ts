@@ -162,6 +162,55 @@ if (!CHAPA_ENABLED) {
   console.warn('⚠️ CHAPA_SECRET_KEY not provided - Payment functionality will be disabled');
 }
 
+// Shared in-memory test users (used when DB is empty / for development)
+const IN_MEMORY_TEST_USERS = [
+  {
+    id: 1,
+    username: 'admin',
+    password: 'admin1234',
+    email: 'admin@example.com',
+    fullName: 'Admin User',
+    isAdmin: true,
+    subscriptionTier: 'admin',
+    isActive: true,
+    createdAt: new Date(),
+  },
+  {
+    id: 2,
+    username: 'restaurant1',
+    password: 'password123',
+    email: 'restaurant1@example.com',
+    fullName: 'Restaurant Owner',
+    isAdmin: false,
+    subscriptionTier: 'free',
+    isActive: true,
+    createdAt: new Date(),
+  },
+  {
+    id: 5,
+    username: 'entotocloud',
+    password: 'cloud123',
+    email: 'entotocloudrestaurant@gmail.com',
+    phone: '251977816299',
+    fullName: 'Entoto Cloud',
+    isAdmin: false,
+    subscriptionTier: 'premium',
+    isActive: true,
+    createdAt: new Date(),
+  },
+  {
+    id: 11,
+    username: 'freleg',
+    password: 'freleg123',
+    email: 'freleg@example.com',
+    fullName: 'Free User',
+    isAdmin: false,
+    subscriptionTier: 'free',
+    isActive: true,
+    createdAt: new Date(),
+  },
+] as const;
+
 // Configure session
 const configureSession = (app: Express) => {
   // In a production environment, you would use a real database store
@@ -199,67 +248,7 @@ const configurePassport = (app: Express) => {
     try {
       console.log(`Login attempt for identifier: ${identifier}`);
       
-      // Hardcoded users for testing and development
-      type TestUser = Partial<User> & {
-        id: number;
-        username: string;
-        password: string;
-        email: string;
-        fullName: string;
-        phone?: string | null;
-        isAdmin?: boolean;
-        subscriptionTier?: string;
-        isActive?: boolean;
-        createdAt?: Date;
-      };
-      const testUsers: TestUser[] = [
-        { 
-          id: 1, 
-          username: 'admin', 
-          password: 'admin1234',
-          email: 'admin@example.com',
-          fullName: 'Admin User',
-          isAdmin: true,
-          subscriptionTier: 'admin',
-          isActive: true,
-          createdAt: new Date()
-        },
-        { 
-          id: 2, 
-          username: 'restaurant1', 
-          password: 'password123',
-          email: 'restaurant1@example.com',
-          fullName: 'Restaurant Owner',
-          isAdmin: false,
-          subscriptionTier: 'free',
-          isActive: true,
-          createdAt: new Date()
-        },
-        { 
-          id: 5, 
-          username: 'entotocloud', 
-          password: 'cloud123',
-          email: 'entotocloudrestaurant@gmail.com',
-          phone: '251977816299',
-          fullName: 'Entoto Cloud',
-          isAdmin: false,
-          subscriptionTier: 'premium',
-          isActive: true,
-          createdAt: new Date()
-        },
-        { 
-          id: 11, 
-          username: 'freleg', 
-          password: 'freleg123',
-          email: 'freleg@example.com',
-          fullName: 'Free User',
-          isAdmin: false,
-          subscriptionTier: 'free',
-          isActive: true,
-          createdAt: new Date()
-        }
-      ];
-      
+      const testUsers = IN_MEMORY_TEST_USERS as unknown as any[];
       console.log('Looking for user with identifier:', identifier);
       
       // Try to find user from database first
@@ -341,8 +330,16 @@ const configurePassport = (app: Express) => {
     try {
       // Check for admin format (admin:id)
       if (id.startsWith('admin:')) {
-        return done(null, {
-          id: parseInt(id.split(':')[1]),
+        const adminId = parseInt(id.split(':')[1]);
+        // Try DB first
+        try {
+          const dbAdmin = await storage.getUser(adminId);
+          if (dbAdmin) return done(null, dbAdmin);
+        } catch (_) {}
+        // Fall back to in-memory admin test user
+        const inMemAdmin = IN_MEMORY_TEST_USERS.find(u => u.id === adminId && u.isAdmin);
+        return done(null, inMemAdmin || {
+          id: adminId,
           username: 'admin',
           email: 'admin@digitamenumate.com',
           fullName: 'System Administrator',
@@ -352,13 +349,18 @@ const configurePassport = (app: Express) => {
 
       // Regular user (user:id)
       const userId = parseInt(id.split(':')[1]);
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        return done(null, false);
-      }
-      
-      done(null, user);
+
+      // Try database first
+      try {
+        const dbUser = await storage.getUser(userId);
+        if (dbUser) return done(null, dbUser);
+      } catch (_) {}
+
+      // Fall back to in-memory test users when DB has no record
+      const testUser = IN_MEMORY_TEST_USERS.find(u => u.id === userId);
+      if (testUser) return done(null, testUser);
+
+      return done(null, false);
     } catch (err) {
       done(err);
     }
@@ -958,67 +960,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If not found in database, check test users
       if (!user) {
         console.log('User not found in database, checking test users...');
-        type TestUser = Partial<User> & {
-          id: number;
-          username: string;
-          password: string;
-          email: string;
-          fullName: string;
-          phone?: string | null;
-          isAdmin?: boolean;
-          subscriptionTier?: string;
-          isActive?: boolean;
-          createdAt?: Date;
-        };
-        const testUsers: TestUser[] = [
-          { 
-            id: 1, 
-            username: 'admin', 
-            password: 'admin1234',
-            email: 'admin@example.com',
-            fullName: 'Admin User',
-            isAdmin: true,
-            subscriptionTier: 'admin',
-            isActive: true,
-            createdAt: new Date()
-          },
-          { 
-            id: 2, 
-            username: 'restaurant1', 
-            password: 'password123',
-            email: 'restaurant1@example.com',
-            fullName: 'Restaurant Owner',
-            isAdmin: false,
-            subscriptionTier: 'free',
-            isActive: true,
-            createdAt: new Date()
-          },
-          { 
-            id: 5, 
-            username: 'entotocloud', 
-            password: 'cloud123',
-            email: 'entotocloudrestaurant@gmail.com',
-            fullName: 'Entoto Cloud',
-            isAdmin: false,
-            subscriptionTier: 'premium',
-            isActive: true,
-            createdAt: new Date()
-          },
-          { 
-            id: 11, 
-            username: 'freleg', 
-            password: 'freleg123',
-            email: 'freleg@example.com',
-            fullName: 'Free User',
-            isAdmin: false,
-            subscriptionTier: 'free',
-            isActive: true,
-            createdAt: new Date()
-          }
-        ];
-        
-        user = testUsers.find(u => 
-          u.username.toLowerCase() === identifier.toLowerCase() || 
+        user = (IN_MEMORY_TEST_USERS as unknown as any[]).find((u: any) =>
+          u.username.toLowerCase() === identifier.toLowerCase() ||
           u.email.toLowerCase() === identifier.toLowerCase() ||
           (u.phone && u.phone === identifier)
         );
