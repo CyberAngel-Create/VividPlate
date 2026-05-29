@@ -5456,6 +5456,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   // Object Storage API routes for background images
+  // Local fallback for non-Replit environments (Cloud Run, etc.)
   app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
@@ -5472,12 +5473,66 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         });
       }
 
-      const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
+      // Check if object storage is configured (Replit environment)
+      if (process.env.PRIVATE_OBJECT_DIR && process.env.OBJECT_STORAGE_SIDECAR_ENDPOINT) {
+        const objectStorageService = new ObjectStorageService();
+        const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+        res.json({ uploadURL, mode: 'object_storage' });
+      } else {
+        // Local file upload mode — client will use a different endpoint
+        res.json({
+          mode: 'local_upload',
+          uploadURL: '/api/upload/local-background',
+        });
+      }
     } catch (error) {
       console.error('Error getting upload URL:', error);
-      res.status(500).json({ error: 'Internal server error' });
+      res.status(500).json({ error: 'Internal server error', detail: String(error) });
+    }
+  });
+
+  // Direct local upload endpoint for background images (Cloud Run, local dev)
+  // Accepts raw PUT body with Content-Type: image/* — same as presigned URL
+  app.put('/api/upload/local-background', isAuthenticated, express.raw({ type: 'image/*', limit: '5mb' }), async (req, res) => {
+    try {
+      const userId = (req.user as any).id;
+      const user = await storage.getUser(userId);
+
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      if (isFreeTierUser(user)) {
+        return res.status(403).json({
+          error: 'Background image uploads require a paid plan.',
+          upgradeRequired: true
+        });
+      }
+
+      if (!req.body || !Buffer.isBuffer(req.body)) {
+        return res.status(400).json({ error: 'No image data received' });
+      }
+
+      const filePath = path.join(process.cwd(), 'uploads', `bg-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`);
+      fs.writeFileSync(filePath, req.body);
+
+      const { PermanentImageHelpers } = await import('./permanent-image-service.js');
+      const permanentFilename = await PermanentImageHelpers.saveBannerImage(filePath, userId, null);
+      const imageUrl = `/api/images/${permanentFilename}`;
+
+      // Clean up temporary file
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+
+      res.json({
+        success: true,
+        url: imageUrl,
+        permanentFilename,
+      });
+    } catch (error) {
+      console.error('Error in local background upload:', error);
+      res.status(500).json({ error: 'Failed to upload background image', detail: String(error) });
     }
   });
 

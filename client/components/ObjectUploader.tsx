@@ -82,7 +82,22 @@ export function ObjectUploader({
       const uploadPromise = new Promise<string>((resolve, reject) => {
         xhr.onload = () => {
           if (xhr.status === 200 || xhr.status === 204) {
-            resolve(url);
+            // For local uploads, server returns JSON with url field
+            if (method === 'POST') {
+              try {
+                const data = JSON.parse(xhr.responseText);
+                if (data.url) {
+                  resolve(data.url);
+                } else {
+                  resolve(url);
+                }
+              } catch (e) {
+                // Not JSON, use the request URL
+                resolve(url);
+              }
+            } else {
+              resolve(url);
+            }
           } else {
             reject(new Error(`Upload failed with status: ${xhr.status}`));
           }

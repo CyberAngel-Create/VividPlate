@@ -85,9 +85,18 @@ const RestaurantThemeEditor = ({ restaurantId, initialTheme, onSuccess }: Restau
   const handleGetUploadParameters = async () => {
     const response = await apiRequest("POST", "/api/objects/upload");
     const data = await response.json();
+    if (data.mode === 'local_upload') {
+      // Return local upload endpoint with POST method
+      return {
+        method: "POST" as const,
+        url: data.uploadURL,
+        isLocal: true,
+      };
+    }
     return {
       method: "PUT" as const,
       url: data.uploadURL,
+      isLocal: false,
     };
   };
 
