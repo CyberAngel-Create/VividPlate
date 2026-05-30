@@ -25,6 +25,8 @@ export const users = pgTable("users", {
   role: text("role", { enum: ["user", "agent", "admin"] }).default("user"), // User role
   lastLogin: timestamp("last_login"),
   createdAt: timestamp("created_at").defaultNow(),
+  websiteAddonActive: boolean("website_addon_active").default(false),
+  websiteAddonSubscriptionId: text("website_addon_subscription_id"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({

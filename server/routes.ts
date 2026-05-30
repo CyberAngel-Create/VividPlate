@@ -1437,7 +1437,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt: expiresAt,
         hasAgentPremiumRestaurant: hasAgentPremiumRestaurant,
         agentId: agentIdForRequests,
-        agentName
+        agentName,
+        websiteAddonActive: (user as any).websiteAddonActive === true,
       });
     } catch (error) {
       console.error("Error getting subscription status:", error);
@@ -6043,10 +6044,20 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   /**
    * GET /api/my-website/bookings
    * Returns all bookings for the current user's restaurant website.
+   * Requires paid plan + website add-on active.
    */
   app.get('/api/my-website/bookings', isAuthenticated, async (req: any, res: any) => {
     try {
       const user = req.user;
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const isPaid = freshUser.subscriptionTier === 'premium';
+      const addonActive = (freshUser as any).websiteAddonActive === true;
+      if (!isPaid || !addonActive) {
+        return res.status(403).json({ error: 'Website Builder add-on not active' });
+      }
+
       const userRestaurants = await storage.getRestaurantsByUserId(user.id);
       const restaurant = userRestaurants[0];
       if (!restaurant) return res.json({ bookings: [] });
@@ -6065,10 +6076,20 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   /**
    * PATCH /api/my-website/bookings/:id
    * Update a booking status (confirm/cancel/no_show/etc).
+   * Requires paid plan + website add-on active.
    */
   app.patch('/api/my-website/bookings/:id', isAuthenticated, async (req: any, res: any) => {
     try {
       const user = req.user;
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const isPaid = freshUser.subscriptionTier === 'premium';
+      const addonActive = (freshUser as any).websiteAddonActive === true;
+      if (!isPaid || !addonActive) {
+        return res.status(403).json({ error: 'Website Builder add-on not active' });
+      }
+
       const bookingId = parseInt(req.params.id);
       const { status, ownerNotes } = req.body;
 
@@ -6117,12 +6138,19 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   /**
    * GET /api/site/:slug
    * Public endpoint — returns website data for a published restaurant website.
+   * Also verifies the owning user still has an active website add-on.
    */
   app.get('/api/site/:slug', async (req: any, res: any) => {
     try {
       const { slug } = req.params;
       const website = await storage.getRestaurantWebsiteBySlug(slug);
       if (!website || !website.isPublished) {
+        return res.status(404).json({ error: 'Website not found' });
+      }
+
+      // Enforce add-on entitlement — if owner cancels add-on, site goes dark
+      const owner = await storage.getUser(website.userId);
+      if (!owner || owner.subscriptionTier !== 'premium' || !(owner as any).websiteAddonActive) {
         return res.status(404).json({ error: 'Website not found' });
       }
 

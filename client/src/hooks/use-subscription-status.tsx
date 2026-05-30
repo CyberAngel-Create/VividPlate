@@ -6,13 +6,14 @@ import { useAuth } from "./use-auth";
 export interface SubscriptionStatus {
   tier: string;
   isPaid: boolean;
-  isAgent?: boolean;          // included in API response
+  isAgent?: boolean;
   maxRestaurants: number;
   currentRestaurants: number;
   expiresAt: string | null;
   hasAgentPremiumRestaurant?: boolean;
   agentId?: number | null;
   agentName?: string | null;
+  websiteAddonActive?: boolean;
 }
 
 type UseSubscriptionStatusResult = {
@@ -33,6 +34,7 @@ const defaultSubscriptionStatus: SubscriptionStatus = {
   hasAgentPremiumRestaurant: false,
   agentId: null,
   agentName: null,
+  websiteAddonActive: false,
 };
 
 const SubscriptionStatusContext = createContext<UseSubscriptionStatusResult | null>(null);
