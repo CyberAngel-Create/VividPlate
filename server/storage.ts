@@ -28,7 +28,9 @@ import {
   tokenRequests, TokenRequest, InsertTokenRequest,
   tokenTransactions, TokenTransaction, InsertTokenTransaction,
   restaurantRequests, RestaurantRequest, InsertRestaurantRequest,
-  agentMessages, AgentMessage, InsertAgentMessage
+  agentMessages, AgentMessage, InsertAgentMessage,
+  restaurantWebsites, RestaurantWebsite, InsertRestaurantWebsite,
+  tableBookings, TableBooking, InsertTableBooking
 } from "../shared/schema.js";
 import { db } from "./db.js";
 import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
@@ -1913,6 +1915,75 @@ export class DatabaseStorage implements IStorage {
       console.error('deleteAgentMessage failed:', err);
       throw err;
     }
+  }
+
+  // ─── Restaurant Website Methods ─────────────────────────────────────────────
+
+  async getRestaurantWebsite(restaurantId: number): Promise<RestaurantWebsite | undefined> {
+    const [row] = await db.select().from(restaurantWebsites).where(eq(restaurantWebsites.restaurantId, restaurantId));
+    return row;
+  }
+
+  async getRestaurantWebsiteBySlug(slug: string): Promise<RestaurantWebsite | undefined> {
+    const [row] = await db.select().from(restaurantWebsites).where(eq(restaurantWebsites.slug, slug));
+    return row;
+  }
+
+  async upsertRestaurantWebsite(data: Partial<InsertRestaurantWebsite> & { restaurantId: number; userId: number; slug: string }): Promise<RestaurantWebsite> {
+    const existing = await this.getRestaurantWebsite(data.restaurantId);
+    if (existing) {
+      const [updated] = await db.update(restaurantWebsites)
+        .set({ ...data, updatedAt: new Date() } as any)
+        .where(eq(restaurantWebsites.restaurantId, data.restaurantId))
+        .returning();
+      return updated;
+    } else {
+      const [created] = await db.insert(restaurantWebsites)
+        .values(data as any)
+        .returning();
+      return created;
+    }
+  }
+
+  async updateRestaurantWebsite(id: number, data: Partial<RestaurantWebsite>): Promise<RestaurantWebsite | undefined> {
+    const [updated] = await db.update(restaurantWebsites)
+      .set({ ...data, updatedAt: new Date() } as any)
+      .where(eq(restaurantWebsites.id, id))
+      .returning();
+    return updated;
+  }
+
+  async isSlugTaken(slug: string, excludeRestaurantId?: number): Promise<boolean> {
+    const rows = await db.select().from(restaurantWebsites).where(eq(restaurantWebsites.slug, slug));
+    if (rows.length === 0) return false;
+    if (excludeRestaurantId && rows[0].restaurantId === excludeRestaurantId) return false;
+    return true;
+  }
+
+  // ─── Table Booking Methods ───────────────────────────────────────────────────
+
+  async createTableBooking(data: InsertTableBooking): Promise<TableBooking> {
+    const [created] = await db.insert(tableBookings).values(data as any).returning();
+    return created;
+  }
+
+  async getTableBookings(websiteId: number): Promise<TableBooking[]> {
+    return db.select().from(tableBookings)
+      .where(eq(tableBookings.websiteId, websiteId))
+      .orderBy(desc(tableBookings.createdAt));
+  }
+
+  async getTableBooking(id: number): Promise<TableBooking | undefined> {
+    const [row] = await db.select().from(tableBookings).where(eq(tableBookings.id, id));
+    return row;
+  }
+
+  async updateTableBooking(id: number, data: Partial<TableBooking>): Promise<TableBooking | undefined> {
+    const [updated] = await db.update(tableBookings)
+      .set({ ...data, updatedAt: new Date() } as any)
+      .where(eq(tableBookings.id, id))
+      .returning();
+    return updated;
   }
 }
 

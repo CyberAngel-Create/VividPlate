@@ -5944,6 +5944,297 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  // ─── Website Builder & Table Booking Routes ─────────────────────────────────
+
+  /**
+   * GET /api/my-website
+   * Returns the current user's restaurant website settings (or null if not created).
+   */
+  app.get('/api/my-website', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const isPaid = freshUser.subscriptionTier === 'premium';
+      const addonActive = (freshUser as any).websiteAddonActive === true;
+
+      // Get the user's first restaurant
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants[0] || null;
+
+      let website = null;
+      if (restaurant) {
+        website = await storage.getRestaurantWebsite(restaurant.id) || null;
+      }
+
+      res.json({
+        isPaid,
+        addonActive,
+        restaurant,
+        website,
+      });
+    } catch (err: any) {
+      console.error('GET /api/my-website error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * PUT /api/my-website
+   * Create or update the user's restaurant website.
+   */
+  app.put('/api/my-website', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const isPaid = freshUser.subscriptionTier === 'premium';
+      const addonActive = (freshUser as any).websiteAddonActive === true;
+      if (!isPaid || !addonActive) {
+        return res.status(403).json({ error: 'Website Builder add-on not active' });
+      }
+
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants[0];
+      if (!restaurant) return res.status(404).json({ error: 'No restaurant found' });
+
+      const { slug, template, tagline, aboutText, heroImageUrl, galleryImages, socialLinks, customSettings, bookingSettings, bookingEnabled, isPublished } = req.body;
+
+      // Validate slug
+      if (slug) {
+        const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        if (cleanSlug !== slug) {
+          return res.status(400).json({ error: 'Slug must be lowercase letters, numbers, and hyphens only' });
+        }
+        const taken = await storage.isSlugTaken(cleanSlug, restaurant.id);
+        if (taken) {
+          return res.status(409).json({ error: 'This URL slug is already taken, please choose another' });
+        }
+      }
+
+      const existing = await storage.getRestaurantWebsite(restaurant.id);
+      const finalSlug = slug || existing?.slug || restaurant.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+      const website = await storage.upsertRestaurantWebsite({
+        restaurantId: restaurant.id,
+        userId: user.id,
+        slug: finalSlug,
+        template: template || existing?.template || 'elegant',
+        tagline: tagline !== undefined ? tagline : existing?.tagline,
+        aboutText: aboutText !== undefined ? aboutText : existing?.aboutText,
+        heroImageUrl: heroImageUrl !== undefined ? heroImageUrl : existing?.heroImageUrl,
+        galleryImages: galleryImages !== undefined ? galleryImages : existing?.galleryImages,
+        socialLinks: socialLinks !== undefined ? socialLinks : existing?.socialLinks,
+        customSettings: customSettings !== undefined ? customSettings : existing?.customSettings,
+        bookingSettings: bookingSettings !== undefined ? bookingSettings : existing?.bookingSettings,
+        bookingEnabled: bookingEnabled !== undefined ? bookingEnabled : (existing?.bookingEnabled ?? true),
+        isPublished: isPublished !== undefined ? isPublished : (existing?.isPublished ?? false),
+      });
+
+      res.json({ website });
+    } catch (err: any) {
+      console.error('PUT /api/my-website error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * GET /api/my-website/bookings
+   * Returns all bookings for the current user's restaurant website.
+   */
+  app.get('/api/my-website/bookings', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants[0];
+      if (!restaurant) return res.json({ bookings: [] });
+
+      const website = await storage.getRestaurantWebsite(restaurant.id);
+      if (!website) return res.json({ bookings: [] });
+
+      const bookings = await storage.getTableBookings(website.id);
+      res.json({ bookings });
+    } catch (err: any) {
+      console.error('GET /api/my-website/bookings error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * PATCH /api/my-website/bookings/:id
+   * Update a booking status (confirm/cancel/no_show/etc).
+   */
+  app.patch('/api/my-website/bookings/:id', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const bookingId = parseInt(req.params.id);
+      const { status, ownerNotes } = req.body;
+
+      const booking = await storage.getTableBooking(bookingId);
+      if (!booking) return res.status(404).json({ error: 'Booking not found' });
+
+      // Verify ownership
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants.find(r => r.id === booking.restaurantId);
+      if (!restaurant) return res.status(403).json({ error: 'Not your booking' });
+
+      const updated = await storage.updateTableBooking(bookingId, { status, ownerNotes });
+      res.json({ booking: updated });
+    } catch (err: any) {
+      console.error('PATCH /api/my-website/bookings error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * POST /api/my-website/hero-image
+   * Upload a hero image for the website builder.
+   */
+  app.post('/api/my-website/hero-image', isAuthenticated, upload.single('image'), async (req: any, res: any) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'No image provided' });
+
+      const userId = req.user.id;
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      const { PermanentImageHelpers } = await import('./permanent-image-service.js');
+      const permanentFilename = await PermanentImageHelpers.saveBannerImage(filePath, userId, null);
+      const imageUrl = `/api/images/${permanentFilename}`;
+
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+      res.json({ url: imageUrl });
+    } catch (err: any) {
+      console.error('POST /api/my-website/hero-image error:', err);
+      if (req.file?.path && fs.existsSync(req.file.path)) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * GET /api/site/:slug
+   * Public endpoint — returns website data for a published restaurant website.
+   */
+  app.get('/api/site/:slug', async (req: any, res: any) => {
+    try {
+      const { slug } = req.params;
+      const website = await storage.getRestaurantWebsiteBySlug(slug);
+      if (!website || !website.isPublished) {
+        return res.status(404).json({ error: 'Website not found' });
+      }
+
+      const restaurant = await storage.getRestaurant(website.restaurantId);
+      if (!restaurant) return res.status(404).json({ error: 'Restaurant not found' });
+
+      // Get menu categories and items
+      const categories = await storage.getMenuCategoriesByRestaurantId(website.restaurantId);
+      const allItems = [];
+      for (const cat of categories) {
+        const items = await storage.getMenuItemsByCategoryId(cat.id);
+        allItems.push({ ...cat, items });
+      }
+
+      res.json({ website, restaurant, menu: allItems });
+    } catch (err: any) {
+      console.error('GET /api/site/:slug error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * POST /api/site/:slug/book
+   * Public endpoint — creates a table booking on a restaurant website.
+   */
+  app.post('/api/site/:slug/book', async (req: any, res: any) => {
+    try {
+      const { slug } = req.params;
+      const website = await storage.getRestaurantWebsiteBySlug(slug);
+      if (!website || !website.isPublished) {
+        return res.status(404).json({ error: 'Website not found' });
+      }
+      if (!website.bookingEnabled) {
+        return res.status(400).json({ error: 'Bookings are not enabled for this restaurant' });
+      }
+
+      const { guestName, guestEmail, guestPhone, partySize, bookingDate, bookingTime, notes } = req.body;
+      if (!guestName || !guestEmail || !partySize || !bookingDate || !bookingTime) {
+        return res.status(400).json({ error: 'Missing required booking fields' });
+      }
+
+      const booking = await storage.createTableBooking({
+        restaurantId: website.restaurantId,
+        websiteId: website.id,
+        guestName,
+        guestEmail,
+        guestPhone: guestPhone || null,
+        partySize: parseInt(String(partySize)),
+        bookingDate,
+        bookingTime,
+        notes: notes || null,
+      });
+
+      res.json({ booking, message: 'Your booking request has been submitted!' });
+    } catch (err: any) {
+      console.error('POST /api/site/:slug/book error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * POST /api/ls/website-addon-checkout
+   * Create a LemonSqueezy checkout for the Website Builder add-on ($15/month).
+   */
+  app.post('/api/ls/website-addon-checkout', isAuthenticated, async (req: any, res: any) => {
+    try {
+      if (!lsService) {
+        return res.status(503).json({ error: 'Payment service unavailable' });
+      }
+
+      const user = req.user;
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const variantId = process.env.LEMONSQUEEZY_WEBSITE_ADDON_VARIANT_ID;
+      if (!variantId) {
+        return res.status(503).json({ error: 'Website add-on variant not configured' });
+      }
+
+      const baseUrl = process.env.APP_URL || `https://${req.headers.host}`;
+      const { checkoutUrl, checkoutId } = await lsService.createCheckout({
+        variantId,
+        userEmail: freshUser.email,
+        userName: freshUser.fullName,
+        userId: freshUser.id,
+        planKey: 'monthly',
+        successUrl: `${baseUrl}/my-website?addon=success`,
+        cancelUrl: `${baseUrl}/my-website`,
+      });
+
+      res.json({ checkoutUrl, checkoutId });
+    } catch (err: any) {
+      console.error('Website addon checkout error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * POST /api/admin/users/:id/toggle-website-addon
+   * Admin endpoint to manually toggle the website addon for a user.
+   */
+  app.post('/api/admin/users/:id/toggle-website-addon', isAdmin, async (req: any, res: any) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { active } = req.body;
+      const updated = await storage.updateUser(userId, { websiteAddonActive: active } as any);
+      res.json({ user: updated });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

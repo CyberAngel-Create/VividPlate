@@ -56,6 +56,9 @@ import RefundPolicy from "./pages/refund-policy";
 import PricingPage from "./pages/pricing";
 import ChangePassword from "./pages/change-password";
 import LsSubscribe from "./pages/ls-subscribe";
+import MyWebsite from "./pages/my-website";
+import MyWebsiteBookings from "./pages/my-website-bookings";
+import SitePage from "./pages/site-page";
 import { PWAInstaller } from "@/components/PWAInstaller";
 
 function AuthenticatedRoute({ component: Component, ...rest }: { component: React.ComponentType<any>, path: string }) {
@@ -99,11 +102,12 @@ function Router() {
   const [location] = useLocation();
   const [showLoadingTimeout, setShowLoadingTimeout] = useState(false);
   const isPublicMenuView = location.startsWith("/menu/") || location.startsWith("/view-menu/");
+  const isPublicSite = location.startsWith("/site/");
   const isPublicRoute = location === "/" || location.startsWith("/login") || location.startsWith("/register") || 
                        location.startsWith("/contact") || 
                        location.startsWith("/privacy-policy") || location.startsWith("/terms") ||
                        location.startsWith("/forgot-password") || location.startsWith("/reset-password") ||
-                       location.startsWith("/admin-login") || isPublicMenuView;
+                       location.startsWith("/admin-login") || isPublicMenuView || isPublicSite;
 
   // Add timeout for loading state to prevent infinite loading, but skip for public routes
   useEffect(() => {
@@ -160,6 +164,7 @@ function Router() {
         <PublicRoute path="/password-reset-help" component={PasswordResetHelp} />
         <PublicRoute path="/menu/:restaurantName" component={ViewMenu} />
         <PublicRoute path="/view-menu/:restaurantName" component={ViewMenu} />
+        <PublicRoute path="/site/:slug" component={SitePage} />
 
         <AuthenticatedRoute path="/dashboard" component={Dashboard} />
         <AuthenticatedRoute path="/profile" component={Profile} />
@@ -189,6 +194,8 @@ function Router() {
         <AuthenticatedRoute path="/agent/change-password" component={AgentChangePassword} />
         <AuthenticatedRoute path="/change-password" component={ChangePassword} />
         <AuthenticatedRoute path="/request-restaurant" component={RequestRestaurant} />
+        <AuthenticatedRoute path="/my-website/bookings" component={MyWebsiteBookings} />
+        <AuthenticatedRoute path="/my-website" component={MyWebsite} />
 
         {/* Admin Routes */}
         <AdminRoute path="/admin" component={AdminDashboard} />

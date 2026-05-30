@@ -1,10 +1,13 @@
 import { useLocation } from "wouter";
-import { PlusCircle, Share, Eye } from "lucide-react";
+import { PlusCircle, Share, Eye, Globe } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
+import { useSubscriptionStatus } from "@/hooks/use-subscription-status";
 
 const QuickActions = () => {
   const [, setLocation] = useLocation();
   const { activeRestaurant } = useRestaurant();
+  const { subscriptionStatus } = useSubscriptionStatus();
+  const websiteAddonActive = (subscriptionStatus as any)?.websiteAddonActive;
   
   // Function to create URL-friendly restaurant name
   const getRestaurantUrlName = (name: string) => {
@@ -40,7 +43,7 @@ const QuickActions = () => {
   return (
     <div>
       <h2 className="text-xl font-heading font-semibold mb-4 dark:text-white">Quick Actions</h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div 
           className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md dark:shadow-gray-900/30 hover:shadow-lg transition-shadow flex flex-col items-center text-center cursor-pointer dark:border dark:border-gray-700"
           onClick={handleAddMenuItem}
@@ -72,6 +75,26 @@ const QuickActions = () => {
           </div>
           <h3 className="font-heading font-medium mb-2 dark:text-white">Preview Menu</h3>
           <p className="text-sm text-midgray dark:text-gray-300">See how your menu looks to customers</p>
+        </div>
+
+        <div
+          className={`p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow flex flex-col items-center text-center cursor-pointer border ${
+            websiteAddonActive
+              ? "bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 border-indigo-200 dark:border-indigo-800"
+              : "bg-white dark:bg-gray-800 dark:border-gray-700"
+          }`}
+          onClick={() => setLocation("/my-website")}
+        >
+          <div className={`p-4 rounded-full mb-3 ${websiteAddonActive ? "bg-indigo-100 dark:bg-indigo-900/40" : "bg-gray-100 dark:bg-gray-700"}`}>
+            <Globe className={`h-6 w-6 ${websiteAddonActive ? "text-indigo-600 dark:text-indigo-400" : "text-gray-400"}`} />
+          </div>
+          <h3 className="font-heading font-medium mb-2 dark:text-white">My Website</h3>
+          <p className="text-sm text-midgray dark:text-gray-300">
+            {websiteAddonActive ? "Manage your public website" : "Build a restaurant website"}
+          </p>
+          {!websiteAddonActive && (
+            <span className="mt-2 text-xs bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 px-2 py-0.5 rounded-full font-medium">Add-on</span>
+          )}
         </div>
       </div>
     </div>

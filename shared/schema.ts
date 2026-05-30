@@ -725,3 +725,77 @@ export const insertAgentMessageSchema = createInsertSchema(agentMessages).pick({
 
 export type AgentMessage = typeof agentMessages.$inferSelect;
 export type InsertAgentMessage = z.infer<typeof insertAgentMessageSchema>;
+
+// Restaurant websites table - for the Website Builder add-on
+export const restaurantWebsites = pgTable("restaurant_websites", {
+  id: serial("id").primaryKey(),
+  restaurantId: integer("restaurant_id").notNull().unique(),
+  userId: integer("user_id").notNull(),
+  slug: text("slug").notNull().unique(), // public URL slug e.g. "my-bistro"
+  template: text("template", { enum: ["elegant", "modern"] }).default("elegant"),
+  isPublished: boolean("is_published").default(false),
+  bookingEnabled: boolean("booking_enabled").default(true),
+  heroImageUrl: text("hero_image_url"),
+  tagline: text("tagline"),
+  aboutText: text("about_text"),
+  galleryImages: jsonb("gallery_images").default([]),
+  socialLinks: jsonb("social_links").default({}),
+  // template customization: colors, fonts, sections visible
+  customSettings: jsonb("custom_settings").default({}),
+  // booking settings
+  bookingSettings: jsonb("booking_settings").default({}),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertRestaurantWebsiteSchema = createInsertSchema(restaurantWebsites).pick({
+  restaurantId: true,
+  userId: true,
+  slug: true,
+  template: true,
+  isPublished: true,
+  bookingEnabled: true,
+  heroImageUrl: true,
+  tagline: true,
+  aboutText: true,
+  galleryImages: true,
+  socialLinks: true,
+  customSettings: true,
+  bookingSettings: true,
+});
+
+export type RestaurantWebsite = typeof restaurantWebsites.$inferSelect;
+export type InsertRestaurantWebsite = z.infer<typeof insertRestaurantWebsiteSchema>;
+
+// Table bookings table - for the booking form on public restaurant websites
+export const tableBookings = pgTable("table_bookings", {
+  id: serial("id").primaryKey(),
+  restaurantId: integer("restaurant_id").notNull(),
+  websiteId: integer("website_id").notNull(),
+  guestName: text("guest_name").notNull(),
+  guestEmail: text("guest_email").notNull(),
+  guestPhone: text("guest_phone"),
+  partySize: integer("party_size").notNull(),
+  bookingDate: text("booking_date").notNull(), // YYYY-MM-DD
+  bookingTime: text("booking_time").notNull(), // HH:MM
+  notes: text("notes"),
+  status: text("status", { enum: ["pending", "confirmed", "cancelled", "no_show"] }).default("pending"),
+  ownerNotes: text("owner_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertTableBookingSchema = createInsertSchema(tableBookings).pick({
+  restaurantId: true,
+  websiteId: true,
+  guestName: true,
+  guestEmail: true,
+  guestPhone: true,
+  partySize: true,
+  bookingDate: true,
+  bookingTime: true,
+  notes: true,
+});
+
+export type TableBooking = typeof tableBookings.$inferSelect;
+export type InsertTableBooking = z.infer<typeof insertTableBookingSchema>;
