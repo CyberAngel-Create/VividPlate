@@ -169,9 +169,15 @@ function BookingForm({ slug }: { slug: string }) {
 // ── Elegant Template ─────────────────────────────────────────────────────────
 
 function ElegantTemplate({ data }: { data: SiteData }) {
-  const { website, restaurant, menu } = data;
-  const [menuOpen, setMenuOpen] = useState(false);
+  const { website, restaurant } = data;
   const social = website.socialLinks || {};
+  const cs = (website.customSettings || {}) as Record<string, any>;
+  const accent = cs.accentColor || "#d97706";
+  const displayPhone = cs.contactPhone || restaurant.phone;
+  const displayEmail = cs.contactEmail || restaurant.email;
+  const displayAddress = cs.contactAddress || restaurant.address;
+  const displayHours = cs.hoursText || (typeof restaurant.hoursOfOperation === "string" ? restaurant.hoursOfOperation : null);
+  const galleryImages: string[] = Array.isArray(website.galleryImages) ? website.galleryImages : [];
 
   return (
     <div className="min-h-screen bg-gray-950 text-gray-100 font-serif">
@@ -186,20 +192,23 @@ function ElegantTemplate({ data }: { data: SiteData }) {
         {website.heroImageUrl && <div className="absolute inset-0 bg-black/60" />}
         <div className="relative z-10">
           {restaurant.logoUrl && (
-            <img src={restaurant.logoUrl} alt={restaurant.name} className="h-20 w-20 rounded-full object-cover mx-auto mb-6 border-2 border-yellow-400" />
+            <img src={restaurant.logoUrl} alt={restaurant.name} className="h-20 w-20 rounded-full object-cover mx-auto mb-6 border-2" style={{ borderColor: accent }} />
           )}
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 tracking-wide">{restaurant.name}</h1>
-          {website.tagline && <p className="text-yellow-400 text-xl md:text-2xl italic mb-6">{website.tagline}</p>}
+          {cs.headline && <p className="text-white/80 text-lg md:text-xl mb-2">{cs.headline}</p>}
+          {website.tagline && <p className="text-xl md:text-2xl italic mb-6" style={{ color: accent }}>{website.tagline}</p>}
           {restaurant.cuisine && <p className="text-gray-300 text-sm uppercase tracking-widest">{restaurant.cuisine}</p>}
           <div className="flex gap-3 justify-center mt-6">
             {website.bookingEnabled && (
-              <a href="#booking" className="bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold px-6 py-3 rounded-full text-sm uppercase tracking-wide transition-colors">
+              <a href="#booking" style={{ backgroundColor: accent, color: '#111827' }} className="font-semibold px-6 py-3 rounded-full text-sm uppercase tracking-wide transition-opacity hover:opacity-90">
                 Reserve a Table
               </a>
             )}
-            <a href="#menu" className="border border-yellow-400 text-yellow-400 hover:bg-yellow-400/10 px-6 py-3 rounded-full text-sm uppercase tracking-wide transition-colors">
-              Our Menu
-            </a>
+            {cs.showMenuLink !== false && (
+              <a href="#menu" style={{ borderColor: accent, color: accent }} className="border hover:bg-white/10 px-6 py-3 rounded-full text-sm uppercase tracking-wide transition-colors">
+                Our Menu
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -207,22 +216,36 @@ function ElegantTemplate({ data }: { data: SiteData }) {
       {/* About */}
       {(website.aboutText || restaurant.description) && (
         <section className="max-w-3xl mx-auto px-6 py-16 text-center">
-          <h2 className="text-3xl font-bold text-yellow-400 mb-6">Our Story</h2>
+          <h2 className="text-3xl font-bold mb-6" style={{ color: accent }}>Our Story</h2>
           <p className="text-gray-300 text-lg leading-relaxed">
             {website.aboutText || restaurant.description}
           </p>
         </section>
       )}
 
+      {/* Gallery */}
+      {galleryImages.length > 0 && (
+        <section className="max-w-5xl mx-auto px-6 pb-16">
+          <div className={`grid gap-3 ${galleryImages.length === 1 ? "grid-cols-1" : galleryImages.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
+            {galleryImages.map((url, i) => (
+              <div key={i} className="aspect-video overflow-hidden rounded-xl">
+                <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Menu Link */}
-      {website.customSettings?.showMenuLink !== false && (
+      {cs.showMenuLink !== false && (
         <section id="menu" className="max-w-3xl mx-auto px-6 py-16 text-center">
-          <h2 className="text-3xl font-bold text-yellow-400 mb-4">Our Menu</h2>
-          <div className="w-16 h-0.5 bg-yellow-400 mx-auto mb-8" />
+          <h2 className="text-3xl font-bold mb-4" style={{ color: accent }}>Our Menu</h2>
+          <div className="w-16 h-0.5 mx-auto mb-8" style={{ backgroundColor: accent }} />
           <p className="text-gray-400 mb-8">Explore our full selection of dishes and drinks.</p>
           <a
             href={`/menu/${encodeURIComponent(restaurant.name)}`}
-            className="inline-block bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold px-10 py-4 rounded-full text-sm uppercase tracking-widest transition-colors"
+            style={{ backgroundColor: accent, color: '#111827' }}
+            className="inline-block font-bold px-10 py-4 rounded-full text-sm uppercase tracking-widest transition-opacity hover:opacity-90"
           >
             View Our Full Menu
           </a>
@@ -231,26 +254,33 @@ function ElegantTemplate({ data }: { data: SiteData }) {
 
       {/* Info */}
       <section className="bg-gray-900 py-14 px-6">
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-          {restaurant.address && (
+        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+          {displayAddress && (
             <div>
-              <MapPin className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
-              <h4 className="font-semibold text-yellow-300 mb-1 uppercase tracking-wide text-sm">Location</h4>
-              <p className="text-gray-400 text-sm">{restaurant.address}</p>
+              <MapPin className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
+              <h4 className="font-semibold mb-1 uppercase tracking-wide text-sm" style={{ color: accent }}>Location</h4>
+              <p className="text-gray-400 text-sm">{displayAddress}</p>
             </div>
           )}
-          {restaurant.phone && (
+          {displayPhone && (
             <div>
-              <Phone className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
-              <h4 className="font-semibold text-yellow-300 mb-1 uppercase tracking-wide text-sm">Phone</h4>
-              <a href={`tel:${restaurant.phone}`} className="text-gray-400 text-sm hover:text-yellow-400">{restaurant.phone}</a>
+              <Phone className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
+              <h4 className="font-semibold mb-1 uppercase tracking-wide text-sm" style={{ color: accent }}>Phone</h4>
+              <a href={`tel:${displayPhone}`} className="text-gray-400 text-sm hover:opacity-80">{displayPhone}</a>
             </div>
           )}
-          {restaurant.email && (
+          {displayEmail && (
             <div>
-              <Mail className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
-              <h4 className="font-semibold text-yellow-300 mb-1 uppercase tracking-wide text-sm">Email</h4>
-              <a href={`mailto:${restaurant.email}`} className="text-gray-400 text-sm hover:text-yellow-400">{restaurant.email}</a>
+              <Mail className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
+              <h4 className="font-semibold mb-1 uppercase tracking-wide text-sm" style={{ color: accent }}>Email</h4>
+              <a href={`mailto:${displayEmail}`} className="text-gray-400 text-sm hover:opacity-80">{displayEmail}</a>
+            </div>
+          )}
+          {displayHours && (
+            <div>
+              <Clock className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
+              <h4 className="font-semibold mb-1 uppercase tracking-wide text-sm" style={{ color: accent }}>Hours</h4>
+              <p className="text-gray-400 text-sm whitespace-pre-line">{displayHours}</p>
             </div>
           )}
         </div>
@@ -259,9 +289,9 @@ function ElegantTemplate({ data }: { data: SiteData }) {
       {/* Booking */}
       {website.bookingEnabled && (
         <section id="booking" className="max-w-2xl mx-auto px-6 py-16">
-          <h2 className="text-3xl font-bold text-yellow-400 text-center mb-2">Reserve a Table</h2>
-          <div className="w-16 h-0.5 bg-yellow-400 mx-auto mb-10" />
-          <div className="bg-gray-900 rounded-2xl p-6 border border-yellow-900">
+          <h2 className="text-3xl font-bold text-center mb-2" style={{ color: accent }}>Reserve a Table</h2>
+          <div className="w-16 h-0.5 mx-auto mb-10" style={{ backgroundColor: accent }} />
+          <div className="bg-gray-900 rounded-2xl p-6 border border-gray-800">
             <BookingForm slug={website.slug} />
           </div>
         </section>
@@ -271,9 +301,9 @@ function ElegantTemplate({ data }: { data: SiteData }) {
       <footer className="border-t border-gray-800 py-8 px-6 text-center">
         <p className="text-gray-500 text-sm font-semibold tracking-wide mb-3">{restaurant.name}</p>
         <div className="flex justify-center gap-4 mb-4">
-          {social.instagram && <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-yellow-400 transition-colors"><Instagram className="h-5 w-5" /></a>}
-          {social.facebook && <a href={social.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-yellow-400 transition-colors"><Facebook className="h-5 w-5" /></a>}
-          {social.twitter && <a href={social.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-yellow-400 transition-colors"><Twitter className="h-5 w-5" /></a>}
+          {social.instagram && <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:opacity-80 transition-opacity"><Instagram className="h-5 w-5" /></a>}
+          {social.facebook && <a href={social.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:opacity-80 transition-opacity"><Facebook className="h-5 w-5" /></a>}
+          {social.twitter && <a href={social.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:opacity-80 transition-opacity"><Twitter className="h-5 w-5" /></a>}
         </div>
         <p className="text-gray-600 text-xs">Powered by VividPlate</p>
       </footer>
@@ -284,8 +314,16 @@ function ElegantTemplate({ data }: { data: SiteData }) {
 // ── Modern Template ─────────────────────────────────────────────────────────
 
 function ModernTemplate({ data }: { data: SiteData }) {
-  const { website, restaurant, menu } = data;
+  const { website, restaurant } = data;
   const social = website.socialLinks || {};
+  const cs = (website.customSettings || {}) as Record<string, any>;
+  const accent = cs.accentColor || "#f97316";
+  const accentLight = accent + "1a"; // ~10% opacity bg
+  const displayPhone = cs.contactPhone || restaurant.phone;
+  const displayEmail = cs.contactEmail || restaurant.email;
+  const displayAddress = cs.contactAddress || restaurant.address;
+  const displayHours = cs.hoursText || (typeof restaurant.hoursOfOperation === "string" ? restaurant.hoursOfOperation : null);
+  const galleryImages: string[] = Array.isArray(website.galleryImages) ? website.galleryImages : [];
 
   return (
     <div className="min-h-screen bg-white text-gray-900 font-sans">
@@ -296,12 +334,12 @@ function ModernTemplate({ data }: { data: SiteData }) {
           <span className="font-bold text-gray-900">{restaurant.name}</span>
         </div>
         <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-600">
-          <a href="#about" className="hover:text-orange-500 transition-colors">About</a>
-          {website.customSettings?.showMenuLink !== false && (
-            <a href="#menu" className="hover:text-orange-500 transition-colors">Menu</a>
+          <a href="#about" className="hover:opacity-70 transition-opacity">About</a>
+          {cs.showMenuLink !== false && (
+            <a href="#menu" className="hover:opacity-70 transition-opacity">Menu</a>
           )}
           {website.bookingEnabled && (
-            <a href="#booking" className="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition-colors">Book a Table</a>
+            <a href="#booking" style={{ backgroundColor: accent }} className="text-white px-4 py-2 rounded-full hover:opacity-90 transition-opacity">Book a Table</a>
           )}
         </div>
       </nav>
@@ -313,32 +351,39 @@ function ModernTemplate({ data }: { data: SiteData }) {
           backgroundImage: `url(${website.heroImageUrl})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-        } : { background: "linear-gradient(135deg, #fff7ed 0%, #fed7aa 50%, #fdba74 100%)" }}
+        } : { background: `linear-gradient(135deg, #fff7ed 0%, ${accent}33 50%, ${accent}66 100%)` }}
       >
         {website.heroImageUrl && <div className="absolute inset-0 bg-black/40" />}
         <div className="relative z-10">
           <h1 className={`text-5xl md:text-7xl font-extrabold mb-4 ${website.heroImageUrl ? "text-white" : "text-gray-900"}`}>
             {restaurant.name}
           </h1>
+          {cs.headline && (
+            <p className={`text-base md:text-lg mb-2 font-medium ${website.heroImageUrl ? "text-white/80" : "text-gray-600"}`}>
+              {cs.headline}
+            </p>
+          )}
           {website.tagline && (
-            <p className={`text-xl md:text-2xl mb-6 font-medium ${website.heroImageUrl ? "text-orange-200" : "text-orange-600"}`}>
+            <p className={`text-xl md:text-2xl mb-6 font-medium ${website.heroImageUrl ? "text-white/90" : ""}`} style={website.heroImageUrl ? undefined : { color: accent }}>
               {website.tagline}
             </p>
           )}
           {restaurant.cuisine && (
-            <span className="inline-block bg-orange-500 text-white text-sm font-semibold px-4 py-1 rounded-full mb-6">
+            <span style={{ backgroundColor: accent }} className="inline-block text-white text-sm font-semibold px-4 py-1 rounded-full mb-6">
               {restaurant.cuisine}
             </span>
           )}
           <div className="flex gap-3 justify-center mt-4">
             {website.bookingEnabled && (
-              <a href="#booking" className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-full text-sm transition-colors shadow-lg">
+              <a href="#booking" style={{ backgroundColor: accent }} className="text-white font-bold px-6 py-3 rounded-full text-sm transition-opacity shadow-lg hover:opacity-90">
                 Reserve a Table
               </a>
             )}
-            <a href="#menu" className={`font-bold px-6 py-3 rounded-full text-sm transition-colors ${website.heroImageUrl ? "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm" : "bg-white hover:bg-gray-50 text-gray-900 border border-gray-200"}`}>
-              View Menu
-            </a>
+            {cs.showMenuLink !== false && (
+              <a href="#menu" className={`font-bold px-6 py-3 rounded-full text-sm transition-colors ${website.heroImageUrl ? "bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm" : "bg-white hover:bg-gray-50 text-gray-900 border border-gray-200"}`}>
+                View Menu
+              </a>
+            )}
           </div>
         </div>
       </div>
@@ -346,23 +391,37 @@ function ModernTemplate({ data }: { data: SiteData }) {
       {/* About */}
       {(website.aboutText || restaurant.description) && (
         <section id="about" className="max-w-3xl mx-auto px-6 py-20 text-center">
-          <div className="inline-block bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">Our Story</div>
+          <div className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4" style={{ backgroundColor: accentLight, color: accent }}>Our Story</div>
           <p className="text-gray-600 text-lg leading-relaxed">
             {website.aboutText || restaurant.description}
           </p>
         </section>
       )}
 
+      {/* Gallery */}
+      {galleryImages.length > 0 && (
+        <section className="max-w-5xl mx-auto px-6 pb-16">
+          <div className={`grid gap-3 ${galleryImages.length === 1 ? "grid-cols-1" : galleryImages.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-3"}`}>
+            {galleryImages.map((url, i) => (
+              <div key={i} className="aspect-video overflow-hidden rounded-2xl shadow-sm">
+                <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Menu Link */}
-      {website.customSettings?.showMenuLink !== false && (
-        <section id="menu" className="bg-gray-50 py-20 px-6 text-center">
+      {cs.showMenuLink !== false && (
+        <section id="menu" className="py-20 px-6 text-center" style={{ backgroundColor: accentLight }}>
           <div className="max-w-2xl mx-auto">
-            <div className="inline-block bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">What We Serve</div>
+            <div className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4" style={{ backgroundColor: accentLight, color: accent }}>What We Serve</div>
             <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Our Menu</h2>
             <p className="text-gray-500 mb-8">Browse our full selection of dishes and drinks.</p>
             <a
               href={`/menu/${encodeURIComponent(restaurant.name)}`}
-              className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold px-10 py-4 rounded-full text-sm transition-colors shadow-lg"
+              style={{ backgroundColor: accent }}
+              className="inline-block text-white font-bold px-10 py-4 rounded-full text-sm transition-opacity shadow-lg hover:opacity-90"
             >
               View Our Full Menu
             </a>
@@ -374,29 +433,36 @@ function ModernTemplate({ data }: { data: SiteData }) {
       <section className="py-16 px-6 bg-white">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
-            <div className="inline-block bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Find Us</div>
+            <div className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3" style={{ backgroundColor: accentLight, color: accent }}>Find Us</div>
             <h2 className="text-3xl font-extrabold text-gray-900">Visit Us</h2>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-            {restaurant.address && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-center">
+            {displayAddress && (
               <div className="bg-gray-50 rounded-2xl p-5">
-                <MapPin className="h-6 w-6 text-orange-500 mx-auto mb-2" />
+                <MapPin className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
                 <h4 className="font-bold text-gray-900 mb-1">Location</h4>
-                <p className="text-gray-500 text-sm">{restaurant.address}</p>
+                <p className="text-gray-500 text-sm">{displayAddress}</p>
               </div>
             )}
-            {restaurant.phone && (
+            {displayPhone && (
               <div className="bg-gray-50 rounded-2xl p-5">
-                <Phone className="h-6 w-6 text-orange-500 mx-auto mb-2" />
+                <Phone className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
                 <h4 className="font-bold text-gray-900 mb-1">Phone</h4>
-                <a href={`tel:${restaurant.phone}`} className="text-gray-500 text-sm hover:text-orange-500">{restaurant.phone}</a>
+                <a href={`tel:${displayPhone}`} className="text-gray-500 text-sm hover:opacity-70">{displayPhone}</a>
               </div>
             )}
-            {restaurant.email && (
+            {displayEmail && (
               <div className="bg-gray-50 rounded-2xl p-5">
-                <Mail className="h-6 w-6 text-orange-500 mx-auto mb-2" />
+                <Mail className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
                 <h4 className="font-bold text-gray-900 mb-1">Email</h4>
-                <a href={`mailto:${restaurant.email}`} className="text-gray-500 text-sm hover:text-orange-500">{restaurant.email}</a>
+                <a href={`mailto:${displayEmail}`} className="text-gray-500 text-sm hover:opacity-70">{displayEmail}</a>
+              </div>
+            )}
+            {displayHours && (
+              <div className="bg-gray-50 rounded-2xl p-5">
+                <Clock className="h-6 w-6 mx-auto mb-2" style={{ color: accent }} />
+                <h4 className="font-bold text-gray-900 mb-1">Hours</h4>
+                <p className="text-gray-500 text-sm whitespace-pre-line">{displayHours}</p>
               </div>
             )}
           </div>
@@ -405,13 +471,13 @@ function ModernTemplate({ data }: { data: SiteData }) {
 
       {/* Booking */}
       {website.bookingEnabled && (
-        <section id="booking" className="bg-orange-50 py-16 px-6">
+        <section id="booking" className="py-16 px-6" style={{ backgroundColor: accentLight }}>
           <div className="max-w-2xl mx-auto">
             <div className="text-center mb-10">
-              <div className="inline-block bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">Reservations</div>
+              <div className="inline-block text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3" style={{ backgroundColor: accentLight, color: accent }}>Reservations</div>
               <h2 className="text-3xl font-extrabold text-gray-900">Book a Table</h2>
             </div>
-            <div className="bg-white rounded-2xl shadow-sm border border-orange-100 p-6">
+            <div className="bg-white rounded-2xl shadow-sm p-6" style={{ borderColor: accent + "33", borderWidth: 1 }}>
               <BookingForm slug={website.slug} />
             </div>
           </div>
@@ -423,9 +489,9 @@ function ModernTemplate({ data }: { data: SiteData }) {
         <p className="font-bold text-lg mb-1">{restaurant.name}</p>
         {restaurant.cuisine && <p className="text-gray-400 text-sm mb-4">{restaurant.cuisine}</p>}
         <div className="flex justify-center gap-4 mb-4">
-          {social.instagram && <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-400 transition-colors"><Instagram className="h-5 w-5" /></a>}
-          {social.facebook && <a href={social.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-400 transition-colors"><Facebook className="h-5 w-5" /></a>}
-          {social.twitter && <a href={social.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-orange-400 transition-colors"><Twitter className="h-5 w-5" /></a>}
+          {social.instagram && <a href={social.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:opacity-80 transition-opacity"><Instagram className="h-5 w-5" /></a>}
+          {social.facebook && <a href={social.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:opacity-80 transition-opacity"><Facebook className="h-5 w-5" /></a>}
+          {social.twitter && <a href={social.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:opacity-80 transition-opacity"><Twitter className="h-5 w-5" /></a>}
         </div>
         <p className="text-gray-500 text-xs">Powered by VividPlate</p>
       </footer>

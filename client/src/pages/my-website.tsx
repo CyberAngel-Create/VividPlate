@@ -53,6 +53,7 @@ export default function MyWebsitePage() {
     slug: "",
     template: "elegant",
     tagline: "",
+    headline: "",
     aboutText: "",
     heroImageUrl: "",
     bookingEnabled: true,
@@ -60,6 +61,10 @@ export default function MyWebsitePage() {
     isPublished: false,
     accentColor: "",
     galleryImages: [] as string[],
+    hoursText: "",
+    contactPhone: "",
+    contactEmail: "",
+    contactAddress: "",
     socialLinks: { instagram: "", facebook: "", twitter: "" },
   });
 
@@ -71,31 +76,40 @@ export default function MyWebsitePage() {
   useEffect(() => {
     if (data?.website) {
       const w = data.website;
+      const cs = (w.customSettings as any) || {};
       setForm({
         slug: w.slug || "",
         template: w.template || "elegant",
         tagline: w.tagline || "",
+        headline: cs.headline || "",
         aboutText: w.aboutText || "",
         heroImageUrl: w.heroImageUrl || "",
         bookingEnabled: w.bookingEnabled ?? true,
-        showMenuLink: w.customSettings?.showMenuLink ?? true,
+        showMenuLink: cs.showMenuLink ?? true,
         isPublished: w.isPublished ?? false,
-        accentColor: w.customSettings?.accentColor || "",
+        accentColor: cs.accentColor || "",
         galleryImages: (w.galleryImages as string[]) || [],
+        hoursText: cs.hoursText || "",
+        contactPhone: cs.contactPhone || "",
+        contactEmail: cs.contactEmail || "",
+        contactAddress: cs.contactAddress || "",
         socialLinks: (w.socialLinks as any) || { instagram: "", facebook: "", twitter: "" },
       });
     } else if (data?.restaurant && !data?.website) {
-      const name = data.restaurant.name || "";
+      const r = data.restaurant;
       setForm(prev => ({
         ...prev,
-        slug: name.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""),
+        slug: (r.name || "").toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""),
+        contactPhone: r.phone || "",
+        contactEmail: r.email || "",
+        contactAddress: r.address || "",
       }));
     }
   }, [data]);
 
   const saveMutation = useMutation({
     mutationFn: async (payload: typeof form) => {
-      const { accentColor, showMenuLink, galleryImages, ...rest } = payload;
+      const { accentColor, showMenuLink, galleryImages, headline, hoursText, contactPhone, contactEmail, contactAddress, ...rest } = payload;
       const body = {
         ...rest,
         galleryImages,
@@ -103,6 +117,11 @@ export default function MyWebsitePage() {
           ...(data?.website?.customSettings || {}),
           accentColor,
           showMenuLink,
+          headline,
+          hoursText,
+          contactPhone,
+          contactEmail,
+          contactAddress,
         },
       };
       const res = await fetch("/api/my-website", {
@@ -545,6 +564,15 @@ export default function MyWebsitePage() {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label htmlFor="headline">Hero Headline <span className="text-xs text-gray-400">(optional — shown in hero beneath name)</span></Label>
+                  <Input
+                    id="headline"
+                    placeholder="e.g. Authentic Italian Cuisine in the Heart of London"
+                    value={form.headline}
+                    onChange={e => setForm(prev => ({ ...prev, headline: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="aboutText">About Text</Label>
                   <Textarea
                     id="aboutText"
@@ -553,6 +581,54 @@ export default function MyWebsitePage() {
                     onChange={e => setForm(prev => ({ ...prev, aboutText: e.target.value }))}
                     rows={5}
                   />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Contact & Opening Hours</CardTitle>
+                <CardDescription>Override the contact details and hours shown on your public site</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="contactPhone">Phone</Label>
+                  <Input
+                    id="contactPhone"
+                    placeholder={data?.restaurant?.phone || "+1 555 000 0000"}
+                    value={form.contactPhone}
+                    onChange={e => setForm(prev => ({ ...prev, contactPhone: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contactEmail">Email</Label>
+                  <Input
+                    id="contactEmail"
+                    type="email"
+                    placeholder={data?.restaurant?.email || "hello@yourrestaurant.com"}
+                    value={form.contactEmail}
+                    onChange={e => setForm(prev => ({ ...prev, contactEmail: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contactAddress">Address</Label>
+                  <Input
+                    id="contactAddress"
+                    placeholder={data?.restaurant?.address || "123 Main St, City"}
+                    value={form.contactAddress}
+                    onChange={e => setForm(prev => ({ ...prev, contactAddress: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hoursText">Opening Hours</Label>
+                  <Textarea
+                    id="hoursText"
+                    placeholder={"Mon–Fri: 11am–10pm\nSat–Sun: 10am–11pm"}
+                    value={form.hoursText}
+                    onChange={e => setForm(prev => ({ ...prev, hoursText: e.target.value }))}
+                    rows={4}
+                  />
+                  <p className="text-xs text-gray-400">Enter your hours in any format. Leave blank to use your restaurant profile hours.</p>
                 </div>
               </CardContent>
             </Card>

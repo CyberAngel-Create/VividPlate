@@ -6244,6 +6244,13 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       if (!website || !website.isPublished) {
         return res.status(404).json({ error: 'Website not found' });
       }
+
+      // Enforce add-on entitlement — same as public GET
+      const owner = await storage.getUser(website.userId);
+      if (!owner || owner.subscriptionTier !== 'premium' || !(owner as any).websiteAddonActive) {
+        return res.status(404).json({ error: 'Website not found' });
+      }
+
       if (!website.bookingEnabled) {
         return res.status(400).json({ error: 'Bookings are not enabled for this restaurant' });
       }
