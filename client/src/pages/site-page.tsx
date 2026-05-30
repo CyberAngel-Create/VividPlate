@@ -214,32 +214,20 @@ function ElegantTemplate({ data }: { data: SiteData }) {
         </section>
       )}
 
-      {/* Menu */}
-      <section id="menu" className="max-w-4xl mx-auto px-6 py-16">
-        <h2 className="text-3xl font-bold text-yellow-400 text-center mb-2">Menu</h2>
-        <div className="w-16 h-0.5 bg-yellow-400 mx-auto mb-10" />
-        {menu.map(cat => (
-          <div key={cat.id} className="mb-10">
-            <h3 className="text-xl font-semibold text-yellow-300 uppercase tracking-widest mb-4 pb-2 border-b border-yellow-900">{cat.name}</h3>
-            <div className="space-y-3">
-              {cat.items.filter(i => i.isAvailable).map(item => (
-                <div key={item.id} className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    {item.imageUrl && (
-                      <img src={item.imageUrl} alt={item.name} className="w-12 h-12 rounded-md object-cover flex-shrink-0 opacity-90" />
-                    )}
-                    <div>
-                      <p className="font-medium text-white">{item.name}</p>
-                      {item.description && <p className="text-sm text-gray-400 mt-0.5">{item.description}</p>}
-                    </div>
-                  </div>
-                  <p className="text-yellow-400 font-semibold whitespace-nowrap">{item.currency || "USD"} {item.price}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </section>
+      {/* Menu Link */}
+      {website.customSettings?.showMenuLink !== false && (
+        <section id="menu" className="max-w-3xl mx-auto px-6 py-16 text-center">
+          <h2 className="text-3xl font-bold text-yellow-400 mb-4">Our Menu</h2>
+          <div className="w-16 h-0.5 bg-yellow-400 mx-auto mb-8" />
+          <p className="text-gray-400 mb-8">Explore our full selection of dishes and drinks.</p>
+          <a
+            href={`/menu/${encodeURIComponent(restaurant.name)}`}
+            className="inline-block bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-bold px-10 py-4 rounded-full text-sm uppercase tracking-widest transition-colors"
+          >
+            View Our Full Menu
+          </a>
+        </section>
+      )}
 
       {/* Info */}
       <section className="bg-gray-900 py-14 px-6">
@@ -309,7 +297,9 @@ function ModernTemplate({ data }: { data: SiteData }) {
         </div>
         <div className="hidden sm:flex items-center gap-6 text-sm font-medium text-gray-600">
           <a href="#about" className="hover:text-orange-500 transition-colors">About</a>
-          <a href="#menu" className="hover:text-orange-500 transition-colors">Menu</a>
+          {website.customSettings?.showMenuLink !== false && (
+            <a href="#menu" className="hover:text-orange-500 transition-colors">Menu</a>
+          )}
           {website.bookingEnabled && (
             <a href="#booking" className="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition-colors">Book a Table</a>
           )}
@@ -363,39 +353,22 @@ function ModernTemplate({ data }: { data: SiteData }) {
         </section>
       )}
 
-      {/* Menu */}
-      <section id="menu" className="bg-gray-50 py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="inline-block bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-3">What We Serve</div>
-            <h2 className="text-4xl font-extrabold text-gray-900">Our Menu</h2>
+      {/* Menu Link */}
+      {website.customSettings?.showMenuLink !== false && (
+        <section id="menu" className="bg-gray-50 py-20 px-6 text-center">
+          <div className="max-w-2xl mx-auto">
+            <div className="inline-block bg-orange-100 text-orange-600 text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">What We Serve</div>
+            <h2 className="text-4xl font-extrabold text-gray-900 mb-4">Our Menu</h2>
+            <p className="text-gray-500 mb-8">Browse our full selection of dishes and drinks.</p>
+            <a
+              href={`/menu/${encodeURIComponent(restaurant.name)}`}
+              className="inline-block bg-orange-500 hover:bg-orange-600 text-white font-bold px-10 py-4 rounded-full text-sm transition-colors shadow-lg"
+            >
+              View Our Full Menu
+            </a>
           </div>
-          {menu.map(cat => (
-            <div key={cat.id} className="mb-12">
-              <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-                <span className="w-8 h-0.5 bg-orange-400 inline-block" />
-                {cat.name}
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {cat.items.filter(i => i.isAvailable).map(item => (
-                  <div key={item.id} className="bg-white rounded-2xl p-4 shadow-sm flex gap-4 items-start border border-gray-100">
-                    {item.imageUrl && (
-                      <img src={item.imageUrl} alt={item.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-bold text-gray-900 text-sm">{item.name}</p>
-                        <p className="text-orange-600 font-bold text-sm whitespace-nowrap">{item.currency || ""} {item.price}</p>
-                      </div>
-                      {item.description && <p className="text-xs text-gray-500 mt-1 line-clamp-2">{item.description}</p>}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Contact */}
       <section className="py-16 px-6 bg-white">

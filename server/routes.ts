@@ -6171,6 +6171,32 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   /**
+   * POST /api/my-website/gallery-image
+   * Upload a gallery image (up to 6 total).
+   */
+  app.post('/api/my-website/gallery-image', isAuthenticated, upload.single('image'), async (req: any, res: any) => {
+    try {
+      if (!req.file) return res.status(400).json({ error: 'No image provided' });
+
+      const userId = req.user.id;
+      const filePath = path.join(process.cwd(), 'uploads', req.file.filename);
+      const { PermanentImageHelpers } = await import('./permanent-image-service.js');
+      const permanentFilename = await PermanentImageHelpers.saveMenuItemImage(filePath, userId, null);
+      const imageUrl = `/api/images/${permanentFilename}`;
+
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+      res.json({ url: imageUrl });
+    } catch (err: any) {
+      console.error('POST /api/my-website/gallery-image error:', err);
+      if (req.file?.path && fs.existsSync(req.file.path)) {
+        try { fs.unlinkSync(req.file.path); } catch {}
+      }
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
    * GET /api/site/:slug
    * Public endpoint — returns website data for a published restaurant website.
    * Also verifies the owning user still has an active website add-on.
@@ -6294,6 +6320,174 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const updated = await storage.updateUser(userId, { websiteAddonActive: active } as any);
       res.json({ user: updated });
     } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  // ── API path aliases (spec-required paths) ────────────────────────────────
+
+  /**
+   * GET /api/restaurants/:id/website
+   * Alias of GET /api/my-website, scoped to a specific restaurant.
+   */
+  app.get('/api/restaurants/:id/website', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const restaurantId = parseInt(req.params.id);
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants.find(r => r.id === restaurantId);
+      if (!restaurant) return res.status(403).json({ error: 'Not your restaurant' });
+
+      const website = await storage.getRestaurantWebsite(restaurantId);
+      res.json({
+        isPaid: freshUser.subscriptionTier === 'premium',
+        addonActive: (freshUser as any).websiteAddonActive === true,
+        restaurant,
+        website: website || null,
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * PUT /api/restaurants/:id/website
+   * Alias of PUT /api/my-website, scoped to a specific restaurant.
+   */
+  app.put('/api/restaurants/:id/website', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const restaurantId = parseInt(req.params.id);
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const isPaid = freshUser.subscriptionTier === 'premium';
+      const addonActive = (freshUser as any).websiteAddonActive === true;
+      if (!isPaid || !addonActive) {
+        return res.status(403).json({ error: 'Website Builder add-on not active' });
+      }
+
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants.find(r => r.id === restaurantId);
+      if (!restaurant) return res.status(403).json({ error: 'Not your restaurant' });
+
+      const { slug, ...rest } = req.body;
+      if (slug) {
+        const existing = await storage.getRestaurantWebsiteBySlug(slug);
+        const current = await storage.getRestaurantWebsite(restaurantId);
+        if (existing && existing.restaurantId !== restaurantId) {
+          return res.status(409).json({ error: 'This URL slug is already taken' });
+        }
+      }
+      const website = await storage.upsertRestaurantWebsite({ restaurantId, userId: user.id, slug: slug || '', ...rest });
+      res.json({ website });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * GET /api/restaurants/:id/bookings
+   * Alias of GET /api/my-website/bookings, scoped to a specific restaurant.
+   */
+  app.get('/api/restaurants/:id/bookings', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const restaurantId = parseInt(req.params.id);
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const isPaid = freshUser.subscriptionTier === 'premium';
+      const addonActive = (freshUser as any).websiteAddonActive === true;
+      if (!isPaid || !addonActive) {
+        return res.status(403).json({ error: 'Website Builder add-on not active' });
+      }
+
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants.find(r => r.id === restaurantId);
+      if (!restaurant) return res.status(403).json({ error: 'Not your restaurant' });
+
+      const website = await storage.getRestaurantWebsite(restaurantId);
+      if (!website) return res.json({ bookings: [] });
+
+      const bookings = await storage.getTableBookings(website.id);
+      res.json({ bookings });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * PATCH /api/restaurants/:id/bookings/:bookingId
+   * Alias of PATCH /api/my-website/bookings/:id, scoped to a specific restaurant.
+   */
+  app.patch('/api/restaurants/:id/bookings/:bookingId', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const restaurantId = parseInt(req.params.id);
+      const bookingId = parseInt(req.params.bookingId);
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const isPaid = freshUser.subscriptionTier === 'premium';
+      const addonActive = (freshUser as any).websiteAddonActive === true;
+      if (!isPaid || !addonActive) {
+        return res.status(403).json({ error: 'Website Builder add-on not active' });
+      }
+
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      const restaurant = userRestaurants.find(r => r.id === restaurantId);
+      if (!restaurant) return res.status(403).json({ error: 'Not your restaurant' });
+
+      const booking = await storage.getTableBooking(bookingId);
+      if (!booking || booking.restaurantId !== restaurantId) {
+        return res.status(404).json({ error: 'Booking not found' });
+      }
+
+      const { status, ownerNotes } = req.body;
+      const updated = await storage.updateTableBooking(bookingId, { status, ownerNotes });
+      res.json({ booking: updated });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  /**
+   * POST /api/ls/create-website-addon-checkout
+   * Alias of POST /api/ls/website-addon-checkout.
+   */
+  app.post('/api/ls/create-website-addon-checkout', isAuthenticated, async (req: any, res: any) => {
+    try {
+      if (!lsService) {
+        return res.status(503).json({ error: 'Payment service unavailable' });
+      }
+
+      const user = req.user;
+      const freshUser = await storage.getUser(user.id);
+      if (!freshUser) return res.status(404).json({ error: 'User not found' });
+
+      const variantId = process.env.LEMONSQUEEZY_WEBSITE_ADDON_VARIANT_ID;
+      if (!variantId) {
+        return res.status(503).json({ error: 'Website add-on variant not configured' });
+      }
+
+      const baseUrl = process.env.APP_URL || `https://${req.headers.host}`;
+      const { checkoutUrl, checkoutId } = await lsService.createCheckout({
+        variantId,
+        userEmail: freshUser.email,
+        userName: freshUser.fullName,
+        userId: freshUser.id,
+        planKey: 'website_addon',
+        successUrl: `${baseUrl}/my-website?addon=success`,
+        cancelUrl: `${baseUrl}/my-website`,
+      });
+
+      res.json({ checkoutUrl, checkoutId });
+    } catch (err: any) {
+      console.error('Website addon checkout (alias) error:', err);
       res.status(500).json({ error: err.message });
     }
   });

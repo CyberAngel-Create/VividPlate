@@ -3,12 +3,10 @@ import { useLocation } from "wouter";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Calendar, Users, Clock, Mail, Phone, Loader2, CheckCircle, XCircle, AlertCircle, HelpCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Users, Clock, Mail, Phone, Loader2, CheckCircle, XCircle, HelpCircle } from "lucide-react";
 import { useState } from "react";
 
 interface Booking {
@@ -20,29 +18,28 @@ interface Booking {
   bookingDate: string;
   bookingTime: string;
   notes: string | null;
-  status: "pending" | "confirmed" | "cancelled" | "no_show";
+  status: "pending" | "approved" | "declined";
   ownerNotes: string | null;
   createdAt: string;
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
   pending: { label: "Pending", color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300", icon: HelpCircle },
-  confirmed: { label: "Confirmed", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300", icon: CheckCircle },
-  cancelled: { label: "Cancelled", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300", icon: XCircle },
-  no_show: { label: "No Show", color: "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400", icon: AlertCircle },
+  approved: { label: "Approved", color: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300", icon: CheckCircle },
+  declined: { label: "Declined", color: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300", icon: XCircle },
 };
 
 function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: (id: number, status: string, notes: string) => void }) {
   const [ownerNotes, setOwnerNotes] = useState(booking.ownerNotes || "");
   const [showNotes, setShowNotes] = useState(false);
-  const [updating, setUpdating] = useState(false);
+  const [updating, setUpdating] = useState<string | null>(null);
   const cfg = STATUS_CONFIG[booking.status] || STATUS_CONFIG.pending;
   const Icon = cfg.icon;
 
-  const handleStatusChange = async (status: string) => {
-    setUpdating(true);
+  const handleAction = async (status: string) => {
+    setUpdating(status);
     await onUpdate(booking.id, status, ownerNotes);
-    setUpdating(false);
+    setUpdating(null);
   };
 
   return (
@@ -85,27 +82,48 @@ function BookingCard({ booking, onUpdate }: { booking: Booking; onUpdate: (id: n
               <p className="mt-2 text-sm italic text-gray-500 dark:text-gray-400">"{booking.notes}"</p>
             )}
           </div>
+
           <div className="flex items-center gap-2 flex-shrink-0">
-            {updating ? (
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            {booking.status === "pending" ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-8 border-green-500 text-green-700 hover:bg-green-50 dark:text-green-400 dark:hover:bg-green-900/20"
+                  disabled={updating !== null}
+                  onClick={() => handleAction("approved")}
+                >
+                  {updating === "approved" ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle className="h-3 w-3 mr-1" />}
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-xs h-8 border-red-400 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                  disabled={updating !== null}
+                  onClick={() => handleAction("declined")}
+                >
+                  {updating === "declined" ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3 mr-1" />}
+                  Decline
+                </Button>
+              </>
             ) : (
-              <Select value={booking.status} onValueChange={handleStatusChange}>
-                <SelectTrigger className="w-32 h-8 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="confirmed">Confirm</SelectItem>
-                  <SelectItem value="cancelled">Cancel</SelectItem>
-                  <SelectItem value="no_show">No Show</SelectItem>
-                </SelectContent>
-              </Select>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-xs h-8 text-gray-500"
+                onClick={() => handleAction("pending")}
+                disabled={updating !== null}
+              >
+                Reset to Pending
+              </Button>
             )}
             <Button variant="ghost" size="sm" onClick={() => setShowNotes(!showNotes)} className="text-xs h-8">
               Notes
             </Button>
           </div>
         </div>
+
         {showNotes && (
           <div className="mt-3 space-y-2">
             <Label className="text-xs">Your private notes</Label>
@@ -173,9 +191,8 @@ export default function MyWebsiteBookingsPage() {
   const counts = {
     all: bookings.length,
     pending: bookings.filter(b => b.status === "pending").length,
-    confirmed: bookings.filter(b => b.status === "confirmed").length,
-    cancelled: bookings.filter(b => b.status === "cancelled").length,
-    no_show: bookings.filter(b => b.status === "no_show").length,
+    approved: bookings.filter(b => b.status === "approved").length,
+    declined: bookings.filter(b => b.status === "declined").length,
   };
 
   return (
@@ -200,9 +217,8 @@ export default function MyWebsiteBookingsPage() {
           </div>
         </div>
 
-        {/* Filter tabs */}
         <div className="flex flex-wrap gap-2 mb-6">
-          {(["all", "pending", "confirmed", "cancelled", "no_show"] as const).map(status => (
+          {(["all", "pending", "approved", "declined"] as const).map(status => (
             <button
               key={status}
               onClick={() => setFilter(status)}

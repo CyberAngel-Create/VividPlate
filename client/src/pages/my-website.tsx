@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,8 +13,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Globe, Lock, Zap, Image, ExternalLink, Calendar, Check,
-  Upload, X, Link2, Instagram, Facebook, Twitter, Loader2,
-  Palette, BookOpen
+  Upload, X, Instagram, Facebook, Twitter, Loader2,
+  Palette, BookOpen, Images
 } from "lucide-react";
 
 interface WebsiteData {
@@ -57,11 +56,16 @@ export default function MyWebsitePage() {
     aboutText: "",
     heroImageUrl: "",
     bookingEnabled: true,
+    showMenuLink: true,
     isPublished: false,
+    accentColor: "",
+    galleryImages: [] as string[],
     socialLinks: { instagram: "", facebook: "", twitter: "" },
   });
 
   const [heroUploading, setHeroUploading] = useState(false);
+  const [galleryUploading, setGalleryUploading] = useState(false);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   // Populate form from fetched data
   useEffect(() => {
@@ -74,7 +78,10 @@ export default function MyWebsitePage() {
         aboutText: w.aboutText || "",
         heroImageUrl: w.heroImageUrl || "",
         bookingEnabled: w.bookingEnabled ?? true,
+        showMenuLink: w.customSettings?.showMenuLink ?? true,
         isPublished: w.isPublished ?? false,
+        accentColor: w.customSettings?.accentColor || "",
+        galleryImages: (w.galleryImages as string[]) || [],
         socialLinks: (w.socialLinks as any) || { instagram: "", facebook: "", twitter: "" },
       });
     } else if (data?.restaurant && !data?.website) {
@@ -88,11 +95,21 @@ export default function MyWebsitePage() {
 
   const saveMutation = useMutation({
     mutationFn: async (payload: typeof form) => {
+      const { accentColor, showMenuLink, galleryImages, ...rest } = payload;
+      const body = {
+        ...rest,
+        galleryImages,
+        customSettings: {
+          ...(data?.website?.customSettings || {}),
+          accentColor,
+          showMenuLink,
+        },
+      };
       const res = await fetch("/api/my-website", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Save failed");
@@ -127,6 +144,40 @@ export default function MyWebsitePage() {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
     } finally {
       setHeroUploading(false);
+    }
+  };
+
+  const handleGalleryUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    const remaining = 6 - form.galleryImages.length;
+    const toUpload = files.slice(0, remaining);
+    if (!toUpload.length) {
+      toast({ title: "Gallery full", description: "Maximum 6 gallery images allowed.", variant: "destructive" });
+      return;
+    }
+    setGalleryUploading(true);
+    try {
+      const urls: string[] = [];
+      for (const file of toUpload) {
+        const formData = new FormData();
+        formData.append("image", file);
+        const res = await fetch("/api/my-website/gallery-image", {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || "Upload failed");
+        urls.push(json.url);
+      }
+      setForm(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...urls] }));
+      toast({ title: `${urls.length} image${urls.length > 1 ? "s" : ""} added to gallery` });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setGalleryUploading(false);
+      if (galleryInputRef.current) galleryInputRef.current.value = "";
     }
   };
 
@@ -388,6 +439,92 @@ export default function MyWebsitePage() {
                 )}
               </CardContent>
             </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Accent Colour</CardTitle>
+                <CardDescription>The primary colour used for highlights and buttons on your site</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    value={form.accentColor || "#e2852a"}
+                    onChange={e => setForm(prev => ({ ...prev, accentColor: e.target.value }))}
+                    className="w-12 h-10 rounded cursor-pointer border border-gray-200 dark:border-gray-700 p-0.5"
+                  />
+                  <Input
+                    value={form.accentColor}
+                    onChange={e => setForm(prev => ({ ...prev, accentColor: e.target.value }))}
+                    placeholder="#e2852a"
+                    className="w-36 font-mono text-sm"
+                    maxLength={7}
+                  />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-gray-400"
+                    onClick={() => setForm(prev => ({ ...prev, accentColor: "" }))}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Images className="h-4 w-4" />
+                  Photo Gallery
+                </CardTitle>
+                <CardDescription>Up to 6 photos shown on your website</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {form.galleryImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {form.galleryImages.map((url, idx) => (
+                      <div key={idx} className="relative rounded-lg overflow-hidden aspect-square">
+                        <img src={url} alt={`Gallery ${idx + 1}`} className="w-full h-full object-cover" />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-1 right-1 h-6 w-6 p-0"
+                          onClick={() => setForm(prev => ({ ...prev, galleryImages: prev.galleryImages.filter((_, i) => i !== idx) }))}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {form.galleryImages.length < 6 && (
+                  <>
+                    <div
+                      className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+                      onClick={() => galleryInputRef.current?.click()}
+                    >
+                      {galleryUploading ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-primary mx-auto mb-1" />
+                      ) : (
+                        <Upload className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                      )}
+                      <p className="text-sm text-gray-500">
+                        Click to add photos ({form.galleryImages.length}/6)
+                      </p>
+                    </div>
+                    <input
+                      ref={galleryInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={handleGalleryUpload}
+                    />
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Content Tab */}
@@ -496,6 +633,25 @@ export default function MyWebsitePage() {
                   <Switch
                     checked={form.bookingEnabled}
                     onCheckedChange={v => setForm(prev => ({ ...prev, bookingEnabled: v }))}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Link to Digital Menu</CardTitle>
+                <CardDescription>Show a "View Our Full Menu" button linking to your VividPlate digital menu</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">Show Menu Link</p>
+                    <p className="text-sm text-gray-500">Adds a button on your website that opens your full digital menu</p>
+                  </div>
+                  <Switch
+                    checked={form.showMenuLink}
+                    onCheckedChange={v => setForm(prev => ({ ...prev, showMenuLink: v }))}
                   />
                 </div>
               </CardContent>
