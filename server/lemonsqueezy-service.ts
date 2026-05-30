@@ -54,7 +54,7 @@ export const LS_PLANS = {
   },
 };
 
-export type LsPlan = keyof typeof LS_PLANS;
+export type LsPlan = keyof typeof LS_PLANS | 'website_addon';
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 export interface LsCheckoutOptions {

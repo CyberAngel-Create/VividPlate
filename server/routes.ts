@@ -5786,6 +5786,39 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const lsSubscriptionId = event?.data?.id ? String(event.data.id) : null;
       const lsCustomerId = subscriptionObj?.customer_id ? String(subscriptionObj.customer_id) : null;
 
+      // ── Website add-on events ──────────────────────────────────────────────
+      if (planKey === 'website_addon') {
+        switch (eventName) {
+          case 'subscription_created':
+          case 'subscription_updated':
+          case 'subscription_resumed': {
+            await storage.updateUser(userId, {
+              websiteAddonActive: true,
+              ...(lsSubscriptionId ? { websiteAddonSubscriptionId: lsSubscriptionId } : {}),
+            } as any);
+            console.log(`✅ User ${userId} website add-on activated (event: ${eventName})`);
+            break;
+          }
+          case 'subscription_cancelled':
+          case 'subscription_expired':
+          case 'subscription_paused': {
+            // Deactivate immediately on cancellation/pause/expiry
+            const endsAt = subscriptionObj?.ends_at;
+            const expiry = endsAt ? new Date(endsAt) : new Date();
+            const isStillActive = expiry > new Date();
+            await storage.updateUser(userId, {
+              websiteAddonActive: isStillActive,
+            } as any);
+            console.log(`🔔 User ${userId} website add-on ${eventName} – active=${isStillActive}`);
+            break;
+          }
+          default:
+            console.log(`LemonSqueezy webhook: unhandled website-addon event "${eventName}"`);
+        }
+        return res.status(200).json({ received: true });
+      }
+
+      // ── Base plan events ───────────────────────────────────────────────────
       switch (eventName) {
         case 'subscription_created':
         case 'subscription_updated':
@@ -5832,6 +5865,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
           await storage.updateUser(userId, {
             subscriptionTier: isStillActive ? 'premium' : 'free',
             subscriptionExpiry: isStillActive ? expiry : null,
+            // Also deactivate website add-on if base plan lapses
+            ...(!isStillActive ? { websiteAddonActive: false } : {}),
           } as any);
 
           console.log(`🔔 User ${userId} subscription ${eventName} – tier set to ${isStillActive ? 'premium (until expiry)' : 'free'}`);
@@ -6236,7 +6271,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         userEmail: freshUser.email,
         userName: freshUser.fullName,
         userId: freshUser.id,
-        planKey: 'monthly',
+        planKey: 'website_addon',
         successUrl: `${baseUrl}/my-website?addon=success`,
         cancelUrl: `${baseUrl}/my-website`,
       });
