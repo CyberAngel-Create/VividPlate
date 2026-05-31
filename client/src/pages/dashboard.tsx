@@ -10,7 +10,7 @@ import FeedbackSummary from "@/components/dashboard/FeedbackSummary";
 import GlobalMenuSearch from "@/components/ui/global-menu-search";
 import RestaurantOwnerLayout from "@/components/layout/RestaurantOwnerLayout";
 import { PremiumBadge } from "@/components/ui/premium-badge";
-import { Eye, QrCode, Utensils, Calendar, CreditCard, AlertCircle, Lock, Zap, Star } from "lucide-react";
+import { Eye, QrCode, Utensils, Calendar, CreditCard, AlertCircle, Lock, Zap, Star, Globe } from "lucide-react";
 import { useRestaurant } from "@/hooks/use-restaurant";
 import { useMenu } from "@/hooks/use-menu";
 import AdBanner from "@/components/ads/AdBanner";
@@ -282,6 +282,63 @@ const Dashboard = () => {
             </div>
           );
         })()}
+
+        {/* My Website Add-on Card — only for restaurant owners on paid plans */}
+        {isOwner && !isLoadingSubscription && subscriptionStatus && (
+          <div className="mb-6 p-4 rounded-lg border bg-indigo-50 border-indigo-200 dark:bg-indigo-900/20 dark:border-indigo-900">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="p-2 rounded-full bg-indigo-100 dark:bg-indigo-800">
+                <Globe className="h-5 w-5 text-indigo-600 dark:text-indigo-300" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg text-indigo-900 dark:text-indigo-200">My Website</h3>
+                {(user as any)?.websiteAddonActive ? (
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                    Your restaurant website is active. Customize it and manage bookings.
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    Get a full standalone website with table booking — <span className="font-semibold">$15/month</span> add-on.
+                  </p>
+                )}
+              </div>
+              {(user as any)?.websiteAddonActive ? (
+                <button
+                  onClick={() => setLocation('/my-website')}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 whitespace-nowrap"
+                >
+                  Manage Website
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    if (!subscriptionStatus.isPaid) {
+                      setLocation('/ls-subscribe');
+                      return;
+                    }
+                    try {
+                      const res = await fetch('/api/ls/create-website-addon-checkout', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                      });
+                      const data = await res.json();
+                      if (data.checkoutUrl) {
+                        window.location.href = data.checkoutUrl;
+                      }
+                    } catch {
+                      setLocation('/ls-subscribe');
+                    }
+                  }}
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-2 rounded-md text-sm font-bold hover:from-indigo-600 hover:to-purple-600 shadow-md whitespace-nowrap"
+                >
+                  <Zap className="h-4 w-4" />
+                  {subscriptionStatus.isPaid ? 'Activate · $15/mo' : 'Upgrade First'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Inactive Restaurant Warning */}
         {activeRestaurant && !activeRestaurant.isActive && (
