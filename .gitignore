@@ -9,6 +9,12 @@ uploads/
 # Secrets — never commit
 .env
 
+# GCP service account keys & pasted credential files
+attached_assets/
+*.json.key
+*service-account*.json
+*service-account*.txt
+
 # Local gcloud SDK copy
 gcloud-sdk-local/
 
