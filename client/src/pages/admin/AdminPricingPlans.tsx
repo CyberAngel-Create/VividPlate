@@ -74,7 +74,7 @@ const AdminPricingPlans = () => {
   });
   const [featuresText, setFeaturesText] = useState("");
 
-  const { data: plans, isLoading } = useQuery({
+  const { data: plans, isLoading } = useQuery<any>({
     queryKey: ["/api/admin/pricing-plans"],
     retry: 1,
   });

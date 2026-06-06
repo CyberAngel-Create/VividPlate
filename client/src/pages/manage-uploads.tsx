@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Loader2, Trash2, RefreshCw, Image, FileImage, FileArchive, File, FileText, FileSpreadsheet, FileX } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { RestaurantOwnerHeader } from '@/components/layout/RestaurantOwnerHeader';
+import PageHeader from '@/components/layout/PageHeader';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatFileSize, getFileTypeIcon } from '@/lib/file-utils';
@@ -115,7 +115,7 @@ const ManageUploadsPage = () => {
     return categories[activeTab] || [];
   };
 
-  if (!currentRestaurant) {
+  if (!activeRestaurant) {
     return null;
   }
 
@@ -130,7 +130,7 @@ const ManageUploadsPage = () => {
       />
       
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold">{currentRestaurant.name}</h2>
+        <h2 className="text-2xl font-bold">{activeRestaurant.name}</h2>
         <Button 
           onClick={() => refetchUploads()} 
           variant="outline" 
@@ -180,7 +180,7 @@ const ManageUploadsPage = () => {
               </div>
             ) : getActiveUploads().length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {getActiveUploads().map((file) => (
+                {getActiveUploads().map((file: FileUpload) => (
                   <Card key={file.id} className="overflow-hidden">
                     <CardHeader className="p-4 pb-2">
                       <CardTitle className="text-base line-clamp-1" title={file.originalFilename}>

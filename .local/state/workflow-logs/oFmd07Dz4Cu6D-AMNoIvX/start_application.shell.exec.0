@@ -1,0 +1,243 @@
+
+> rest-express@1.0.0 dev
+> cross-env NODE_ENV=development tsx server/index.ts
+
+[1G[0KChapa payments disabled via CHAPA_ENABLED flag (default is disabled).
+Using local storage for all file operations
+Using existing uploads directory at /home/runner/workspace/uploads
+Uploads directory is writable
+🔍 Validating environment configuration...
+✅ Environment variables validated
+🔍 Testing database connection...
+Database connection attempt 1/5
+Database connection established successfully
+✅ Database connection established
+Using existing uploads directory at /home/runner/workspace/uploads
+Uploads directory is writable
+✅ LemonSqueezy payment service initialized
+8:23:50 PM [express] serving on port 5000
+🚀 Application started successfully
+⚠️ TELEGRAM_BOT_TOKEN not provided - Telegram bot disabled
+8:24:29 PM [express] GET /api/user/subscription-status 401 in 2ms :: {"message":"Authentication requi…
+8:24:29 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+8:24:31 PM [express] GET /api/dietary-preferences 200 in 7ms
+8:25:18 PM [express] GET /api/user/subscription-status 401 in 1ms :: {"message":"Authentication requi…
+8:25:18 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+8:25:18 PM [express] GET /api/dietary-preferences 200 in 10ms
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:29:26 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-page.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:29:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-page.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:29:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-page.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m [33m(x3)[39m
+8:30:04 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:30:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website-bookings.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:30:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:30:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:31:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:31:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m [33m(x4)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:31:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=q0tjEH4LFcLbv6rVMC40h[22m [33m(x5)[39m

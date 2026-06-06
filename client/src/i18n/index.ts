@@ -474,7 +474,7 @@ i18n
     },
     lng: 'en',
     fallbackLng: 'en',
-    debug: process.env.NODE_ENV === 'development',
+    debug: import.meta.env.MODE === 'development',
     interpolation: {
       escapeValue: false, // not needed for react as it escapes by default
     },

@@ -1,0 +1,31 @@
+VERDICT: APPROVED_WITH_COMMENTS
+The diff delivers the core feature set end-to-end (website builder pages, public `/site/:slug`, booking submission/management flows, addon checkout flow, webhook activation/deactivation handling, and DB/storage support), but there are a few non-blocking gaps/inconsistencies to resolve.
+
+Critical findings / analysis:
+- Core functionality is present and wired: owners can configure/publish a website, customers can submit bookings publicly, owners can manage bookings, and LemonSqueezy addon activation state gates access/public visibility.
+- API contract divergence: task spec called out `POST /api/restaurants/:id/bookings` (public) but implementation uses `POST /api/site/:slug/book`. This works for current UI, but externaVERDICT: APPROVED_WITH_COMMENTS
+l/API consumers expecting the documented endpoint will fail.
+- Booking status model is inconsistent across layers. UI and requirements use `pending/approved/declined`, while `shared/schema.ts` defines `pending/confirmed/canThe diff delivers the core feature set end-to-end (website builder pages, public `/site/:slug`, booking submission/management flows, addon checkout flow, webhook activation/deactivation handling, and DB/storage support), but there are a few non-blocking gaps/inconsistencies to resolve.
+celled/no_show`; migration uses plain text. Runtime may still work, but this inconsistency creates fragile b
+ehavior and future migration/type risk.
+- Cancellation semantics for website addon in webhookCritical findings / analysis:
+ are not truly “disable on cancel” as stated in task outcome; code keeps addon active until `ends_at` is in the past. That may be intentiona- Core functionality is present and wired: owners can configure/publish a website, customers can submit bookings publicly, owners can manage bookings, and LemonSqueezy addon activation state gates access/public visibility.
+l business logic, but it does not strictly match the wording of done criteria.
+
+Security:
+- None observed at serious/blocking level (- API contract divergence: task spec called out `POST /api/restaurants/:id/bookings` (public) but implementation uses `POST /api/site/:slug/book`. This works for current UI, but external/API consumers expecting the documented endpoint will fail.
+authz checks for owner booking updates are present; public endpoints are intentionally open).
+
+Next actions:
+1) Add/alias `POST /api/rest- Booking status model is inconsistent across layers. UI and requirements use `pending/approved/declined`, while `shared/schema.ts` defines `pending/confirmed/cancelled/no_show`; migration uses plain text. Runtime may still work, but this inconsistency creates fragile behavior and future migration/type risk.
+aurants/:id/bookings` to the existing public booking creation flow (or update API docs/spec if slug route is the intended - Cancellation semantics for website addon in webhook are not truly “disable on cancel” as stated in task outcome; code keeps addon active until `ends_at` is in the past. That may be intentional business logic, but it does not strictly match the wording of done criteria.
+contract).
+2) Normalize booking status enum/constants across migration, schema, API, and UI (`pending/approved/declined
+`) to prevent type/runtime drift.
+3) Confirm desired billing behavior on addon cancellation (immediate disable vs active-Security:
+until-period-end) and align webhook logic/documentation accordingly.- None observed at serious/blocking level (authz checks for owner booking updates are present; public endpoints are intentionally open).
+
+Next actions:
+1) Add/alias `POST /api/restaurants/:id/bookings` to the existing public booking creation flow (or update API docs/spec if slug route is the intended contract).
+2) Normalize booking status enum/constants across migration, schema, API, and UI (`pending/approved/declined`) to prevent type/runtime drift.
+3) Confirm desired billing behavior on addon cancellation (immediate disable vs active-until-period-end) and align webhook logic/documentation accordingly.

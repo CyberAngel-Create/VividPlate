@@ -4330,7 +4330,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const user = req.user as any;
       const agent = await storage.getAgentByUserId(user.id);
       if (!agent) {
-        res.status(404).send({ message: 'Agent profile not found' });
+        res.status(404).json({ message: 'Agent profile not found' });
         return;
       }
 
@@ -4382,7 +4382,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const agent = await storage.getAgentByUserId(user.id);
       
       if (!agent) {
-        res.status(404).send({ message: 'Agent profile not found' });
+        res.status(404).json({ message: 'Agent profile not found' });
         return;
       }
       
@@ -5197,7 +5197,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       res.json(stats);
     } catch (error) {
       console.error('Get agent stats error:', error);
-      res.status(500).send({ message: 'Failed to fetch agent stats' });
+      res.status(500).json({ message: 'Failed to fetch agent stats' });
     }
   });
 
@@ -5223,7 +5223,8 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     notes: true
   }).extend({
     // @ts-ignore: zod chaining typing incompatibility in this environment
-    requestedTokens: z.number().int().min(1, "Must request at least 1 token").max(100, "Cannot request more than 100 tokens at once")
+    requestedTokens: z.coerce.number().int().min(1, "Must request at least 1 token").max(100, "Cannot request more than 100 tokens at once"),
+    notes: z.string().trim().max(500, "Notes must be 500 characters or less").optional().nullable()
   });
 
   // @ts-ignore: ignore complex Express handler typing issues in this route
@@ -5233,12 +5234,12 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const agent = await storage.getAgentByUserId(user.id);
       if (!agent) {
         // @ts-ignore
-        res.status(404).send({ message: 'Agent profile not found' });
+        res.status(404).json({ message: 'Agent profile not found' });
         return;
       }
       if (agent.approvalStatus !== 'approved') {
         // @ts-ignore
-        res.status(403).send({ message: 'Only approved agents can request tokens' });
+        res.status(403).json({ message: 'Only approved agents can request tokens' });
         return;
       }
 
@@ -5246,7 +5247,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const parseResult = tokenRequestBodySchema.safeParse(req.body as any);
       if (!parseResult.success) {
         // @ts-ignore
-        res.status(400).send({ 
+        res.status(400).json({ 
           message: 'Invalid request data',
           errors: parseResult.error.flatten().fieldErrors
         });
@@ -5258,7 +5259,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const tokenRequest = await storage.createTokenRequest({
         agentId: agent.id,
         requestedTokens,
-        notes
+        notes: notes || null
       });
 
       res.status(201).json(tokenRequest);
@@ -5327,7 +5328,11 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     try {
       const requestId = parseInt(req.params.requestId);
       const adminUser = req.user as any;
-      const { notes } = req.body;
+      const notes = typeof req.body?.notes === 'string' ? req.body.notes.trim() : undefined;
+
+      if (!Number.isInteger(requestId)) {
+        return res.status(400).json({ message: 'Invalid token request ID' });
+      }
 
       const tokenRequest = await storage.approveTokenRequest(requestId, adminUser.id, notes);
       if (!tokenRequest) {
@@ -5354,11 +5359,15 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     try {
       const requestId = parseInt(req.params.requestId);
       const adminUser = req.user as any;
-      const { notes } = req.body;
+      const notes = typeof req.body?.notes === 'string' ? req.body.notes.trim() : undefined;
+
+      if (!Number.isInteger(requestId)) {
+        return res.status(400).json({ message: 'Invalid token request ID' });
+      }
 
       const tokenRequest = await storage.rejectTokenRequest(requestId, adminUser.id, notes);
       if (!tokenRequest) {
-        return res.status(404).json({ message: 'Token request not found' });
+        return res.status(404).json({ message: 'Token request not found or already processed' });
       }
 
       await storage.createAdminLog({
@@ -5457,7 +5466,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   });
 
   // Object Storage API routes for background images
-  // Local fallback for non-Replit environments (Cloud Run, etc.)
+  // Local fallback for environments without external object storage
   app.post('/api/objects/upload', isAuthenticated, async (req, res) => {
     try {
       const userId = (req.user as any).id;
@@ -5474,7 +5483,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         });
       }
 
-      // Check if object storage is configured (Replit environment)
+      // Check if external object storage is configured
       if (process.env.PRIVATE_OBJECT_DIR && process.env.OBJECT_STORAGE_SIDECAR_ENDPOINT) {
         const objectStorageService = new ObjectStorageService();
         const uploadURL = await objectStorageService.getObjectEntityUploadURL();
@@ -5659,7 +5668,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
   // ──────────────────────────────────────────────────────────────
   // LemonSqueezy Payment Routes
   // ──────────────────────────────────────────────────────────────
-  const { lsService, LS_PLANS } = await import('./lemonsqueezy-service.js');
+  const { lsService, LS_PLANS, LS_WEBSITE_ADDON_VARIANT_ID } = await import('./lemonsqueezy-service.js');
 
   /**
    * GET /api/ls/plans
@@ -6293,10 +6302,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const freshUser = await storage.getUser(user.id);
       if (!freshUser) return res.status(404).json({ error: 'User not found' });
 
-      const variantId = process.env.LEMONSQUEEZY_WEBSITE_ADDON_VARIANT_ID;
-      if (!variantId) {
-        return res.status(503).json({ error: 'Website add-on variant not configured' });
-      }
+      const variantId = LS_WEBSITE_ADDON_VARIANT_ID;
 
       const baseUrl = process.env.APP_URL || `https://${req.headers.host}`;
       const { checkoutUrl, checkoutId } = await lsService.createCheckout({
@@ -6476,10 +6482,7 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       const freshUser = await storage.getUser(user.id);
       if (!freshUser) return res.status(404).json({ error: 'User not found' });
 
-      const variantId = process.env.LEMONSQUEEZY_WEBSITE_ADDON_VARIANT_ID;
-      if (!variantId) {
-        return res.status(503).json({ error: 'Website add-on variant not configured' });
-      }
+      const variantId = LS_WEBSITE_ADDON_VARIANT_ID;
 
       const baseUrl = process.env.APP_URL || `https://${req.headers.host}`;
       const { checkoutUrl, checkoutId } = await lsService.createCheckout({

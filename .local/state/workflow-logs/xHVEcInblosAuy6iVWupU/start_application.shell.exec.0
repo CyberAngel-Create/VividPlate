@@ -1,0 +1,238 @@
+
+> rest-express@1.0.0 dev
+> cross-env NODE_ENV=development tsx server/index.ts
+
+[1G[0KChapa payments disabled via CHAPA_ENABLED flag (default is disabled).
+Using local storage for all file operations
+Using existing uploads directory at /home/runner/workspace/uploads
+Uploads directory is writable
+🔍 Validating environment configuration...
+✅ Environment variables validated
+🔍 Testing database connection...
+Database connection attempt 1/5
+Database connection established successfully
+✅ Database connection established
+Using existing uploads directory at /home/runner/workspace/uploads
+Uploads directory is writable
+✅ LemonSqueezy payment service initialized
+8:32:51 PM [express] serving on port 5000
+🚀 Application started successfully
+⚠️ TELEGRAM_BOT_TOKEN not provided - Telegram bot disabled
+8:34:13 PM [express] GET /api/user/subscription-status 401 in 3ms :: {"message":"Authentication requi…
+8:34:13 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+8:34:13 PM [express] GET /api/dietary-preferences 200 in 6ms
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:35:34 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=IC1jKBLrcYRhIP_Ey0pWG[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:35:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=IC1jKBLrcYRhIP_Ey0pWG[22m [33m(x2)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:35:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=IC1jKBLrcYRhIP_Ey0pWG[22m [33m(x3)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:36:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/my-website.tsx, /src/index.css?v=IC1jKBLrcYRhIP_Ey0pWG[22m [33m(x4)[39m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:37:17 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-page.tsx, /src/index.css?v=IC1jKBLrcYRhIP_Ey0pWG[22m
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[1;1H[0J[2m8:38:16 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages/site-page.tsx, /src/index.css?v=IC1jKBLrcYRhIP_Ey0pWG[22m [33m(x2)[39m
+8:38:50 PM [express] GET /api/user/subscription-status 401 in 2ms :: {"message":"Authentication requi…
+8:38:50 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Authentication required"}
+8:38:51 PM [express] GET /api/dietary-preferences 200 in 7ms
+8:44:48 PM [express] GET /api/user/subscription-status 401 in 0ms :: {"message":"Authentication requi…
+8:44:48 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Authentication required"}
+8:44:50 PM [express] GET /api/dietary-preferences 200 in 5ms
+Login attempt for identifier: entotocloud
+Looking for user with identifier: entotocloud
+Calling storage.getUserByIdentifier...
+getUserByIdentifier called with: entotocloud
+Found user by username/email: entotocloud
+storage.getUserByIdentifier returned: user found
+Database user found: entotocloud entotocloudrestaurant@gmail.com 251977816299
+Provided password: cloud123
+Stored hash: $2b$10$CpR13nf5G7b6ZcS.O.v42ujEIWkla5bvwXLapR0J35XUT9Jgd9bH.
+Password comparison result: [33mtrue[39m
+Database user authenticated successfully
+8:46:47 PM [express] POST /api/auth/admin-login 403 in 236ms :: {"message":"Admin credentials require…
+Login attempt for identifier: freleg
+Looking for user with identifier: freleg
+Calling storage.getUserByIdentifier...
+getUserByIdentifier called with: freleg
+Found user by username/email: freleg
+storage.getUserByIdentifier returned: user found
+Database user found: freleg freleg@example.com 0000000011
+Provided password: freleg123
+Stored hash: $2b$10$MRGO089B6O6Aqm2uTUDxIOsROPDx9HMg984uhW9ZEc368dumH/Myq
+Password comparison result: [33mtrue[39m
+Database user authenticated successfully
+8:46:55 PM [express] POST /api/auth/admin-login 403 in 71ms :: {"message":"Admin credentials required…
+8:47:21 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Authentication required"}
+8:47:21 PM [express] GET /api/user/subscription-status 401 in 3ms :: {"message":"Authentication requi…
+8:47:21 PM [express] GET /api/dietary-preferences 200 in 7ms
+Login attempt for identifier: entotocloud
+getUserByIdentifier called with: entotocloud
+Found user by username/email: entotocloud
+User found: entotocloud, checking password...
+Authenticating user ID 5 with bcrypt
+Password validation result: true
+Password matched successfully
+User entotocloud (ID: 5) logged in successfully
+8:47:40 PM [express] POST /api/auth/login 200 in 186ms :: {"id":5,"username":"entotocloud","email":"e…
+8:47:40 PM [express] GET /api/auth/me 200 in 4ms :: {"id":5,"username":"entotocloud","email":"entotoc…
+8:47:41 PM [express] GET /api/subscription/current 304 in 62ms
+Subscription status for user 5 (entotocloud): userTier=premium, subscriptionTier=free, hasPremiumRestaurant=false, effectiveTier=premium, restaurantCount=0, expiresAt=2026-06-30T20:47:41.260Z
+Default agent user not found. Trying to fallback to any approved agent.
+Default agent user not found and no approved agents available. Update DEFAULT_AGENT_USERNAME/EMAIL if needed.
+8:47:41 PM [express] GET /api/user/subscription-status 200 in 80ms :: {"tier":"premium","isPaid":true…
+8:47:41 PM [express] GET /api/auth/me 304 in 3ms :: {"id":5,"username":"entotocloud","email":"entotoc…
+Fetching restaurants for user ID: [33m5[39m
+Restaurants fetched successfully: []
+8:47:42 PM [express] GET /api/restaurants 304 in 6ms :: []
+8:47:42 PM [express] GET /api/ls/subscription-status 304 in 4ms :: {"status":"success","subscription"…
+9:13:59 PM [express] GET /api/auth/me 200 in 14ms :: {"id":5,"username":"entotocloud","email":"entoto…
+9:13:59 PM [express] POST /api/auth/logout 200 in 3ms :: {"message":"Logged out successfully"}
+Login attempt for identifier: entotocloud
+getUserByIdentifier called with: entotocloud
+Found user by username/email: entotocloud
+User found: entotocloud, checking password...
+Authenticating user ID 5 with bcrypt
+Password validation result: true
+Password matched successfully
+User entotocloud (ID: 5) logged in successfully
+9:14:04 PM [express] POST /api/auth/login 200 in 73ms :: {"id":5,"username":"entotocloud","email":"en…
+9:14:09 PM [express] GET /api/auth/me 200 in 6ms :: {"id":5,"username":"entotocloud","email":"entotoc…
+Subscription status for user 5 (entotocloud): userTier=premium, subscriptionTier=free, hasPremiumRestaurant=false, effectiveTier=premium, restaurantCount=0, expiresAt=2026-06-30T21:14:15.753Z
+Default agent user not found. Trying to fallback to any approved agent.
+Default agent user not found and no approved agents available. Update DEFAULT_AGENT_USERNAME/EMAIL if needed.
+9:14:15 PM [express] GET /api/user/subscription-status 200 in 11ms :: {"tier":"premium","isPaid":true…
+9:14:17 PM [express] GET /api/auth/me 304 in 4ms :: {"id":5,"username":"entotocloud","email":"entotoc…
+9:14:19 PM [express] GET /api/ls/subscription-status 304 in 3ms :: {"status":"success","subscription"…

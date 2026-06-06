@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, Crown, Clock, CheckCircle, ExternalLink, RefreshCw, AlertTriangle } from "lucide-react";
+import { Calendar, Crown, Clock, CheckCircle, ExternalLink, RefreshCw, AlertTriangle, Globe } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -28,9 +29,10 @@ interface User {
   username: string;
   email: string;
   fullName: string;
-  subscriptionTier: string;
-  subscriptionExpiry?: string | null;
+  subscriptionTier: string | null;
+  subscriptionExpiry?: Date | string | null;
   isActive: boolean;
+  websiteAddonActive?: boolean | null;
 }
 
 interface LsSubStatus {
@@ -91,6 +93,30 @@ export const SubscriptionManager = ({ user }: SubscriptionManagerProps) => {
     enabled: isOpen,
     staleTime: 30_000,
     retry: false,
+  });
+
+  const toggleWebsiteAddonMutation = useMutation({
+    mutationFn: async (active: boolean) => {
+      const res = await apiRequest("POST", `/api/admin/users/${user.id}/toggle-website-addon`, {
+        active,
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/dashboard"] });
+      toast({
+        title: "Add-on Updated",
+        description: `Website Builder Add-on has been updated successfully for ${user.fullName || user.username}.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update Website Add-on. Please try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const updateSubscriptionMutation = useMutation({
@@ -271,6 +297,35 @@ export const SubscriptionManager = ({ user }: SubscriptionManagerProps) => {
                 No LemonSqueezy subscription linked to this account.
               </div>
             )}
+          </div>
+
+          {/* Website Builder Add-on */}
+          <div className="space-y-2">
+            <Label>Website Builder Add-on</Label>
+            <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/50">
+              <div className="flex items-start space-x-2">
+                <Globe className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Add-on Status</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enable or disable the custom website builder functionality.
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="website-addon-toggle"
+                  checked={user.websiteAddonActive === true}
+                  disabled={toggleWebsiteAddonMutation.isPending}
+                  onCheckedChange={(checked) => {
+                    toggleWebsiteAddonMutation.mutate(checked);
+                  }}
+                />
+                <Label htmlFor="website-addon-toggle" className="sr-only">
+                  Toggle Add-on
+                </Label>
+              </div>
+            </div>
           </div>
 
           {/* Duration Selection */}

@@ -1,0 +1,141 @@
+[1G[0K⠙[1G[0K
+> rest-express@1.0.0 dev
+> cross-env NODE_ENV=development tsx server/index.ts
+
+[1G[0K⠙[1G[0KChapa payments disabled via CHAPA_ENABLED flag (default is disabled).
+Using local storage for all file operations
+Using existing uploads directory at /home/runner/workspace/uploads
+Uploads directory is writable
+🔍 Validating environment configuration...
+✅ Environment variables validated
+🔍 Testing database connection...
+Database connection attempt 1/5
+Database connection established successfully
+✅ Database connection established
+Using existing uploads directory at /home/runner/workspace/uploads
+Uploads directory is writable
+✅ LemonSqueezy payment service initialized
+2:53:01 PM [express] serving on port 5000
+🚀 Application started successfully
+⚠️ TELEGRAM_BOT_TOKEN not provided - Telegram bot disabled
+2:53:42 PM [express] GET /api/auth/me 401 in 3ms :: {"message":"Authentication required"}
+2:53:42 PM [express] GET /api/user/subscription-status 401 in 1ms :: {"message":"Authentication requi…
+2:53:42 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+2:53:43 PM [express] GET /api/dietary-preferences 200 in 7ms
+3:02:22 PM [express] GET /api/auth/me 401 in 0ms :: {"message":"Authentication required"}
+3:04:01 PM [express] GET /api/user/subscription-status 401 in 1ms :: {"message":"Authentication requi…
+3:04:01 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+3:04:01 PM [express] GET /api/dietary-preferences 200 in 4ms
+Login attempt for identifier: freleg
+getUserByIdentifier called with: freleg
+Found user by username/email: freleg
+User found: freleg, checking password...
+Authenticating user ID 11 with bcrypt
+Password validation result: true
+Password matched successfully
+User freleg (ID: 11) logged in successfully
+3:04:09 PM [express] POST /api/auth/login 200 in 392ms :: {"id":11,"username":"freleg","email":"frele…
+3:04:09 PM [express] GET /api/subscription/current 200 in 8ms
+3:04:09 PM [express] GET /api/auth/me 200 in 3ms :: {"id":11,"username":"freleg","email":"freleg@exam…
+Subscription status for user 11 (freleg): userTier=free, subscriptionTier=free, hasPremiumRestaurant=false, effectiveTier=free, restaurantCount=0, expiresAt=null
+Default agent user not found. Trying to fallback to any approved agent.
+Default agent user not found and no approved agents available. Update DEFAULT_AGENT_USERNAME/EMAIL if needed.
+3:04:10 PM [express] GET /api/user/subscription-status 200 in 22ms :: {"tier":"free","isPaid":false,"…
+3:04:10 PM [express] GET /api/auth/me 304 in 3ms :: {"id":11,"username":"freleg","email":"freleg@exam…
+Fetching restaurants for user ID: [33m11[39m
+Restaurants fetched successfully: []
+3:04:10 PM [express] GET /api/restaurants 200 in 18ms :: []
+3:04:32 PM [express] POST /api/auth/logout 200 in 4ms :: {"message":"Logged out successfully"}
+Login attempt for identifier: bistro
+getUserByIdentifier called with: bistro
+User not found in database, checking test users...
+No test user found with that identifier
+Authentication failed: No user found with identifier "bistro"
+3:04:36 PM [express] POST /api/auth/login 401 in 4ms :: {"message":"Invalid username/email or passwor…
+3:05:18 PM [express] GET /api/user/subscription-status 401 in 2ms :: {"message":"Authentication requi…
+3:05:18 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+3:05:18 PM [express] GET /api/dietary-preferences 200 in 4ms
+Login attempt for identifier: admin
+Looking for user with identifier: admin
+Calling storage.getUserByIdentifier...
+getUserByIdentifier called with: admin
+Found user by username/email: admin
+storage.getUserByIdentifier returned: user found
+Database user found: admin admin@example.com 0000000001
+Provided password: admin123
+Stored hash: $2b$10$CEu89PmeT.56RplWld2cVOZjUCyQfVJ4.P8o26BFM.Vt5q0NEL5J2
+Password comparison result: [33mfalse[39m
+Database user found but password mismatch
+3:05:42 PM [express] POST /api/auth/admin-login 401 in 97ms
+Login attempt for identifier: admin
+Looking for user with identifier: admin
+Calling storage.getUserByIdentifier...
+getUserByIdentifier called with: admin
+Found user by username/email: admin
+storage.getUserByIdentifier returned: user found
+Database user found: admin admin@example.com 0000000001
+Provided password: admin1234
+Stored hash: $2b$10$CEu89PmeT.56RplWld2cVOZjUCyQfVJ4.P8o26BFM.Vt5q0NEL5J2
+Password comparison result: [33mtrue[39m
+Database user authenticated successfully
+3:05:47 PM [express] POST /api/auth/admin-login 200 in 88ms :: {"id":1,"username":"admin","email":"ad…
+3:05:48 PM [express] GET /api/subscription/current 304 in 5ms
+3:05:48 PM [express] GET /api/admin/dashboard 200 in 89ms :: {"totalUsers":4,"totalRestaurants":0,"ac…
+3:05:57 PM [express] GET /api/admin/users 200 in 4ms :: [{"id":1,"username":"admin","email":"admin@ex…
+3:06:03 PM [express] GET /api/admin/users/11/ls-subscription 200 in 4ms :: {"status":"success","subsc…
+3:06:09 PM [express] PATCH /api/admin/users/11/subscription 200 in 16ms :: {"id":11,"username":"frele…
+3:06:09 PM [express] GET /api/admin/users 200 in 3ms :: [{"id":1,"username":"admin","email":"admin@ex…
+3:06:11 PM [express] POST /api/auth/logout 200 in 2ms :: {"message":"Logged out successfully"}
+Login attempt for identifier: freleg
+getUserByIdentifier called with: freleg
+Found user by username/email: freleg
+User found: freleg, checking password...
+Authenticating user ID 11 with bcrypt
+Password validation result: true
+Password matched successfully
+User freleg (ID: 11) logged in successfully
+3:06:17 PM [express] POST /api/auth/login 200 in 90ms :: {"id":11,"username":"freleg","email":"freleg…
+3:06:17 PM [express] GET /api/auth/me 200 in 4ms :: {"id":11,"username":"freleg","email":"freleg@exam…
+Subscription status for user 11 (freleg): userTier=premium, subscriptionTier=premium, hasPremiumRestaurant=false, effectiveTier=premium, restaurantCount=0, expiresAt=2026-06-29T15:06:09.084Z
+Default agent user not found. Trying to fallback to any approved agent.
+Default agent user not found and no approved agents available. Update DEFAULT_AGENT_USERNAME/EMAIL if needed.
+3:06:18 PM [express] GET /api/user/subscription-status 200 in 15ms :: {"tier":"premium","isPaid":true…
+3:06:18 PM [express] GET /api/auth/me 304 in 4ms :: {"id":11,"username":"freleg","email":"freleg@exam…
+3:06:19 PM [express] GET /api/ls/subscription-status 200 in 4ms :: {"status":"success","subscription"…
+Fetching restaurants for user ID: [33m11[39m
+Restaurants fetched successfully: []
+3:06:19 PM [express] GET /api/restaurants 304 in 4ms :: []
+3:06:53 PM [express] POST /api/restaurants 400 in 19ms :: {"message":"Validation error","errors":[{"c…
+3:11:57 PM [express] GET /api/auth/me 200 in 13ms :: {"id":11,"username":"freleg","email":"freleg@exa…
+3:11:57 PM [express] GET /api/subscription/current 200 in 3ms :: {"id":1,"userId":11,"tier":"premium"…
+3:12:05 PM [express] GET /api/auth/me 200 in 4ms :: {"id":11,"username":"freleg","email":"freleg@exam…
+3:12:08 PM [express] POST /api/auth/logout 200 in 3ms :: {"message":"Logged out successfully"}
+Login attempt for identifier: bistro
+getUserByIdentifier called with: bistro
+User not found in database, checking test users...
+No test user found with that identifier
+Authentication failed: No user found with identifier "bistro"
+3:12:14 PM [express] POST /api/auth/login 401 in 3ms :: {"message":"Invalid username/email or passwor…
+Login attempt for identifier: entotocloud
+getUserByIdentifier called with: entotocloud
+Found user by username/email: entotocloud
+User found: entotocloud, checking password...
+Authenticating user ID 5 with bcrypt
+Password validation result: true
+Password matched successfully
+User entotocloud (ID: 5) logged in successfully
+3:12:19 PM [express] POST /api/auth/login 200 in 91ms :: {"id":5,"username":"entotocloud","email":"en…
+3:12:20 PM [express] GET /api/auth/me 200 in 3ms :: {"id":5,"username":"entotocloud","email":"entotoc…
+Subscription status for user 5 (entotocloud): userTier=premium, subscriptionTier=free, hasPremiumRestaurant=false, effectiveTier=premium, restaurantCount=0, expiresAt=2026-06-30T15:12:20.284Z
+Default agent user not found. Trying to fallback to any approved agent.
+Default agent user not found and no approved agents available. Update DEFAULT_AGENT_USERNAME/EMAIL if needed.
+3:12:20 PM [express] GET /api/user/subscription-status 200 in 11ms :: {"tier":"premium","isPaid":true…
+3:12:20 PM [express] GET /api/auth/me 304 in 4ms :: {"id":5,"username":"entotocloud","email":"entotoc…
+3:12:21 PM [express] GET /api/ls/subscription-status 200 in 5ms :: {"status":"success","subscription"…
+3:13:14 PM [express] POST /api/auth/logout 200 in 12ms :: {"message":"Logged out successfully"}
+4:29:43 PM [express] GET /api/auth/me 401 in 2ms :: {"message":"Authentication required"}
+4:29:43 PM [express] GET /api/user/subscription-status 401 in 1ms :: {"message":"Authentication requi…
+4:29:43 PM [express] GET /api/dietary-preferences 200 in 3ms
+5:04:31 PM [express] GET /api/auth/me 401 in 1ms :: {"message":"Authentication required"}
+5:04:31 PM [express] GET /api/user/subscription-status 401 in 0ms :: {"message":"Authentication requi…
+5:04:31 PM [express] GET /api/dietary-preferences 200 in 4ms

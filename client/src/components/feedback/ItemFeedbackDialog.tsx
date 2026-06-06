@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Image } from "lucide-react";
-import { ResponsiveImage } from "@/components/ui/responsive-image";
+import ResponsiveImage from "@/components/ui/responsive-image";
 import { MenuItem } from "@shared/schema";
 
 interface ItemFeedbackDialogProps {

@@ -48,7 +48,8 @@ import {
   Lock,
   Eye,
   EyeOff,
-  Mail
+  Mail,
+  FileText
 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 

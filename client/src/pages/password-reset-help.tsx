@@ -30,9 +30,10 @@ const PasswordResetHelp = () => {
       const response = await apiRequest("POST", "/api/auth/telegram-reset", {
         phoneNumber: phoneNumber.trim()
       });
+      const data = await response.json();
 
-      if (response.newPassword) {
-        setNewPassword(response.newPassword);
+      if (data.newPassword) {
+        setNewPassword(data.newPassword);
         toast({
           title: "Password Reset Successful",
           description: "Your new temporary password has been generated. Please change it after logging in.",
@@ -40,7 +41,7 @@ const PasswordResetHelp = () => {
       } else {
         toast({
           title: "Success",
-          description: response.message,
+          description: data.message,
         });
       }
     } catch (error: any) {

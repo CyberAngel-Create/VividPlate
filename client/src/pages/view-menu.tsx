@@ -20,7 +20,6 @@ interface CategoryWithItems extends MenuCategory {
 
 interface RestaurantWithSubscription extends Restaurant {
   subscriptionTier?: string;
-  isPremium?: boolean;
 }
 
 interface MenuData {

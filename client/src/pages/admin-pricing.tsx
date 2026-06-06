@@ -73,7 +73,7 @@ const AdminPricingPage = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<FormData>({
+  const form = useForm<any>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",

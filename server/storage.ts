@@ -33,7 +33,7 @@ import {
   tableBookings, TableBooking, InsertTableBooking
 } from "../shared/schema.js";
 import { db } from "./db.js";
-import { eq, and, count, desc, or, isNull, isNotNull, lte, gte } from "drizzle-orm";
+import { eq, and, count, desc, or, isNull, isNotNull, lte, gte, sql } from "drizzle-orm";
 import { phoneNumbersMatch, getPhoneNumberVariations } from "../shared/phone-utils.js";
 
 export interface IStorage {
@@ -1608,46 +1608,45 @@ export class DatabaseStorage implements IStorage {
   }
 
   async approveTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined> {
-    const request = await this.getTokenRequest(id);
-    if (!request || request.status !== 'pending') return undefined;
+    return await db.transaction(async (tx) => {
+      const [updated] = await tx.update(tokenRequests)
+        .set({
+          status: 'approved',
+          approvedBy: adminId,
+          approvedAt: new Date(),
+          adminNotes: notes
+        })
+        .where(and(
+          eq(tokenRequests.id, id),
+          eq(tokenRequests.status, 'pending')
+        ))
+        .returning();
 
-    const agent = await this.getAgent(request.agentId);
-    if (!agent) return undefined;
+      if (!updated) return undefined;
 
-    // Perform all operations together - if any fail, the changes will be rolled back on error
-    // Update token request status
-    const [updated] = await db.update(tokenRequests)
-      .set({
-        status: 'approved',
-        approvedBy: adminId,
-        approvedAt: new Date(),
-        adminNotes: notes
-      })
-      .where(and(
-        eq(tokenRequests.id, id),
-        eq(tokenRequests.status, 'pending') // Double-check status to prevent race conditions
-      ))
-      .returning();
+      const [agent] = await tx.update(agents)
+        .set({
+          tokenBalance: sql`${agents.tokenBalance} + ${updated.requestedTokens}`,
+          updatedAt: new Date()
+        } as any)
+        .where(eq(agents.id, updated.agentId))
+        .returning();
 
-    if (!updated) return undefined; // Request was already processed
+      if (!agent) {
+        throw new Error(`Agent ${updated.agentId} not found while approving token request ${id}`);
+      }
 
-    // Update agent token balance
-    const newBalance = (agent.tokenBalance || 0) + updated.requestedTokens;
-    await db.update(agents)
-      .set({ tokenBalance: newBalance, updatedAt: new Date() } as any)
-      .where(eq(agents.id, request.agentId));
+      await tx.insert(tokenTransactions).values({
+        agentId: updated.agentId,
+        amount: updated.requestedTokens,
+        type: 'credit',
+        reason: `Token request #${id} approved`,
+        tokenRequestId: id,
+        adminId: adminId
+      } as any);
 
-    // Create audit transaction
-    await db.insert(tokenTransactions).values({
-      agentId: request.agentId,
-      amount: updated.requestedTokens,
-      type: 'credit',
-      reason: `Token request #${id} approved`,
-      tokenRequestId: id,
-      adminId: adminId
-    } as any);
-
-    return updated;
+      return updated;
+    });
   }
 
   async rejectTokenRequest(id: number, adminId: number, notes?: string): Promise<TokenRequest | undefined> {
@@ -1658,7 +1657,10 @@ export class DatabaseStorage implements IStorage {
         approvedAt: new Date(),
         adminNotes: notes
       })
-      .where(eq(tokenRequests.id, id))
+      .where(and(
+        eq(tokenRequests.id, id),
+        eq(tokenRequests.status, 'pending')
+      ))
       .returning();
     return updated;
   }

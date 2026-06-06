@@ -16,7 +16,8 @@ import {
   EyeOff,
   Clock,
   CircleDot,
-  Key
+  Key,
+  Globe
 } from "lucide-react";
 import { SubscriptionManager } from "@/components/admin/SubscriptionManager";
 import { Badge } from "@/components/ui/badge";
@@ -507,11 +508,19 @@ const UsersAdminPage = () => {
                       )}
                     </TableCell>
                     <TableCell>
-                      <Badge 
-                        className={user.subscriptionTier === 'premium' ? 'bg-purple-500' : undefined}
-                      >
-                        {user.subscriptionTier === 'premium' ? "Premium" : "Free"}
-                      </Badge>
+                      <div className="flex flex-col gap-1.5 items-start">
+                        <Badge 
+                          className={user.subscriptionTier === 'premium' ? 'bg-purple-500' : undefined}
+                        >
+                          {user.subscriptionTier === 'premium' ? "Premium" : "Free"}
+                        </Badge>
+                        {user.websiteAddonActive && (
+                          <Badge variant="outline" className="text-xs flex items-center gap-1 border-blue-200 text-blue-700 bg-blue-50 dark:bg-blue-900/20 dark:text-blue-300 dark:border-blue-800">
+                            <Globe className="h-3 w-3" />
+                            <span>Website Add-on</span>
+                          </Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>
                       {user.createdAt

@@ -11,6 +11,8 @@ export const LS_API_BASE = 'https://api.lemonsqueezy.com/v1';
 export const LS_STORE_ID = process.env.LEMONSQUEEZY_STORE_ID || '338030';
 export const LS_MONTHLY_VARIANT_ID = process.env.LEMONSQUEEZY_MONTHLY_VARIANT_ID || '1713315';
 export const LS_YEARLY_VARIANT_ID = process.env.LEMONSQUEEZY_YEARLY_VARIANT_ID || '1713296';
+// Website Builder add-on — Product ID 1106224, Variant ID 1732293
+export const LS_WEBSITE_ADDON_VARIANT_ID = process.env.LEMONSQUEEZY_WEBSITE_ADDON_VARIANT_ID || '1732293';
 
 export const LS_PLANS = {
   monthly: {
