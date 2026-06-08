@@ -882,15 +882,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userData: InsertUser = insertUserSchema.parse(req.body as any);
       
-      // Check if username or email already exists
+      // Check if username, email, or phone already exists
       const existingUsername = await storage.getUserByUsername((userData as any).username);
       if (existingUsername) {
         return res.status(400).json({ message: 'Username already exists' });
       }
-      
+
       const existingEmail = await storage.getUserByEmail((userData as any).email);
       if (existingEmail) {
         return res.status(400).json({ message: 'Email already exists' });
+      }
+
+      const existingPhone = await storage.getUserByPhone((userData as any).phone);
+      if (existingPhone) {
+        return res.status(400).json({ message: 'Phone number already registered' });
       }
 
       // Hash the password using bcrypt before storing it
