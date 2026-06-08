@@ -15,15 +15,15 @@ $Yellow = "`e[33m"
 $Reset = "`e[0m"
 
 function Write-Success {
-    Write-Host "$Green✓$Reset $args"
+    Write-Host "$Green[OK]$Reset $args"
 }
 
 function Write-Error2 {
-    Write-Host "$Red✗$Reset $args" -ForegroundColor Red
+    Write-Host "$Red[ERROR]$Reset $args" -ForegroundColor Red
 }
 
 function Write-Warning2 {
-    Write-Host "$Yellow⚠$Reset $args"
+    Write-Host "$Yellow[WARNING]$Reset $args"
 }
 
 $Region = "us-central1"
@@ -31,10 +31,10 @@ $ServiceName = "vividplate"
 $RequiredSecrets = @("DATABASE_URL", "SESSION_SECRET", "LEMONSQUEEZY_API_KEY", "LEMONSQUEEZY_WEBHOOK_SECRET", "TELEGRAM_BOT_TOKEN")
 
 Write-Host ""
-Write-Host "╔════════════════════════════════════════════════════════╗"
-Write-Host "║        VividPlate Cloud Deployment Manager             ║"
-Write-Host "║          Project: $ProjectID"
-Write-Host "╚════════════════════════════════════════════════════════╝"
+Write-Host "=========================================================="
+Write-Host "         VividPlate Cloud Deployment Manager              "
+Write-Host "           Project: $ProjectID"
+Write-Host "=========================================================="
 Write-Host ""
 
 # Function: Check prerequisites
@@ -148,9 +148,7 @@ function Deploy {
     Write-Host "Starting build... This may take 5-10 minutes."
     Write-Host ""
     
-    gcloud builds submit --config=$BuildConfig --project=$ProjectID --substitutions=`
-        _SERVICE_NAME=$ServiceName,`
-        _REGION=$Region
+    gcloud builds submit --config=$BuildConfig --project=$ProjectID --substitutions="_SERVICE_NAME=$ServiceName,_REGION=$Region"
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host ""

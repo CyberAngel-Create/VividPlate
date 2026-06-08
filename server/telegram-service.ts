@@ -50,7 +50,7 @@ function generatePhoneVariations(phoneNumber: string): string[] {
 }
 
 class TelegramService {
-  private bot: TelegramBot;
+  private bot: any;
   private db: Pool;
   private userSessions: Map<number, any>;
 

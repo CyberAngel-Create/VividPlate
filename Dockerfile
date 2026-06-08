@@ -13,9 +13,10 @@ COPY package.json package-lock.json* ./
 # Skip scripts so sharp doesn't try to build from source
 RUN npm ci --ignore-scripts
 
-# Install prebuilt musl/Alpine binary for sharp and rollup
+# Install prebuilt musl/Alpine binary for sharp, rollup, and esbuild
 RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64 --no-save 2>/dev/null || true
 RUN npm install @rollup/rollup-linux-x64-musl --save-optional --no-save 2>/dev/null || true
+RUN npm install @esbuild/linux-x64 --no-save 2>/dev/null || true
 
 # ---------- Stage 2: Build ----------
 FROM node:20-alpine AS builder
@@ -23,12 +24,23 @@ WORKDIR /app
 
 RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY package.json package-lock.json* ./
+
+# Use npm install (not ci) to properly resolve optional platform-specific deps
+# This avoids the npm bug with rollup/esbuild musl binaries on Alpine
+RUN npm install --ignore-scripts 2>/dev/null || npm install --ignore-scripts --legacy-peer-deps
+
+# Explicitly install the Linux x64 musl binaries for rollup, esbuild, and sharp
+RUN npm install @rollup/rollup-linux-x64-musl --no-save 2>/dev/null || true
+RUN npm install @esbuild/linux-x64 --no-save 2>/dev/null || true
+RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64 --no-save 2>/dev/null || true
+
 COPY . .
 
 RUN npm run build
 RUN npx vite build
 RUN mv dist/public dist/server/public
+
 
 # ---------- Stage 3: Production ----------
 FROM node:20-alpine AS runner
