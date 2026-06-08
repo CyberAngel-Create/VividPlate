@@ -3,7 +3,13 @@
  * Integrated into the main application
  */
 
-import TelegramBot from 'node-telegram-bot-api';
+// node-telegram-bot-api is optional - only available if installed
+let TelegramBot: any;
+try {
+  TelegramBot = (await import('node-telegram-bot-api')).default;
+} catch {
+  TelegramBot = null;
+}
 import { Pool, neonConfig } from '@neondatabase/serverless';
 import ws from 'ws';
 import bcrypt from 'bcryptjs';
