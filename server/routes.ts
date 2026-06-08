@@ -6331,12 +6331,16 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
    * POST /api/admin/users/:id/toggle-website-addon
    * Admin endpoint to manually toggle the website addon for a user.
    */
-  app.post('/api/admin/users/:id/toggle-website-addon', isAdmin, async (req: any, res: any) => {
+  app.post('/api/admin/users/:id/toggle-website-addon', isAuthenticated, isAdmin, async (req: any, res: any) => {
     try {
       const userId = parseInt(req.params.id);
       const { active } = req.body;
       const updated = await storage.updateUser(userId, { websiteAddonActive: active } as any);
-      res.json({ user: updated });
+      if (!updated) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      const { password, resetPasswordToken, resetPasswordExpires, ...userWithoutSensitive } = updated;
+      res.json({ user: userWithoutSensitive });
     } catch (err: any) {
       res.status(500).json({ error: err.message });
     }
