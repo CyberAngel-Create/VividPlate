@@ -11,10 +11,11 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { QRCodeCanvas } from "qrcode.react";
 import {
   Globe, Lock, Zap, Image, ExternalLink, Calendar, Check,
   Upload, X, Instagram, Facebook, Twitter, Loader2,
-  Palette, BookOpen, Images
+  Palette, BookOpen, Images, QrCode, Download
 } from "lucide-react";
 
 interface WebsiteData {
@@ -764,6 +765,56 @@ export default function MyWebsitePage() {
                 )}
               </CardContent>
             </Card>
+
+            {form.isPublished && form.slug && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <QrCode className="h-5 w-5" />
+                    Website QR Code
+                  </CardTitle>
+                  <CardDescription>Scan this QR code to visit your website</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col sm:flex-row items-center gap-6">
+                    <div className="bg-white p-3 rounded-lg shadow-sm border">
+                      <QRCodeCanvas
+                        value={`${window.location.origin}${siteUrl}`}
+                        size={200}
+                        bgColor="transparent"
+                        fgColor="#000000"
+                        level="M"
+                        id="website-qr"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-500">
+                        Public URL: <span className="font-medium text-foreground">{window.location.origin}{siteUrl}</span>
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        Print this QR code and place it on tables, menus, or signage so guests can scan to visit your website instantly.
+                      </p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const canvas = document.getElementById("website-qr") as HTMLCanvasElement;
+                          if (canvas) {
+                            const link = document.createElement("a");
+                            link.href = canvas.toDataURL("image/png");
+                            link.download = `${form.slug}-qr-code.png`;
+                            link.click();
+                          }
+                        }}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download QR Code
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
 
