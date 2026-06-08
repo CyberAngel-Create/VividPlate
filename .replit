@@ -38,3 +38,13 @@ externalPort = 80
 deploymentTarget = "autoscale"
 run = ["node", "dist/server/index.js"]
 build = ["npm", "run", "build"]
+
+[userenv]
+
+[userenv.shared]
+EXTERNAL_DATABASE_URL = "postgresql://neondb_owner:npg_tWvqo9fuah3U@ep-calm-poetry-abx9kptm-pooler.eu-west-2.aws.neon.tech/neondb?sslmode=require"
+LEMONSQUEEZY_STORE_ID = "338030"
+LEMONSQUEEZY_MONTHLY_VARIANT_ID = "1713315"
+LEMONSQUEEZY_YEARLY_VARIANT_ID = "1713296"
+LEMONSQUEEZY_WEBSITE_ADDON_VARIANT_ID = "1732293"
+CHAPA_ENABLED = "false"
