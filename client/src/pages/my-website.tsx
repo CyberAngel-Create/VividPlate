@@ -15,7 +15,7 @@ import { QRCodeCanvas } from "qrcode.react";
 import {
   Globe, Lock, Zap, Image, ExternalLink, Calendar, Check,
   Upload, X, Instagram, Facebook, Twitter, Loader2,
-  Palette, BookOpen, Images, QrCode, Download
+  Palette, BookOpen, Images, QrCode, Download, Mail
 } from "lucide-react";
 
 interface WebsiteData {
@@ -72,6 +72,8 @@ export default function MyWebsitePage() {
   const [heroUploading, setHeroUploading] = useState(false);
   const [galleryUploading, setGalleryUploading] = useState(false);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Populate form from fetched data
   useEffect(() => {
@@ -143,6 +145,37 @@ export default function MyWebsitePage() {
       toast({ title: "Save failed", description: err.message, variant: "destructive" });
     },
   });
+
+  const handleTestEmail = async () => {
+    setTestEmailLoading(true);
+    setTestEmailResult(null);
+    try {
+      const cs = form.customSettings as any || {};
+      const res = await fetch("/api/my-website/test-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          smtpHost: cs.smtpHost,
+          smtpPort: cs.smtpPort,
+          smtpUser: cs.smtpUser,
+          smtpPass: cs.smtpPass,
+          smtpFrom: cs.smtpFrom,
+          smtpFromName: cs.smtpFromName,
+        }),
+      });
+      const json = await res.json();
+      if (res.ok) {
+        setTestEmailResult({ success: true, message: `Test email sent to ${cs.smtpFrom}.` });
+      } else {
+        setTestEmailResult({ success: false, message: json.error || "Failed to send test email." });
+      }
+    } catch (err: any) {
+      setTestEmailResult({ success: false, message: err.message || "Network error." });
+    } finally {
+      setTestEmailLoading(false);
+    }
+  };
 
   const handleHeroUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -743,6 +776,24 @@ export default function MyWebsitePage() {
                       </div>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">Use an app-specific password if using Gmail. Leave blank to skip email notifications.</p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={testEmailLoading || !form.customSettings?.smtpHost || !form.customSettings?.smtpUser || !form.customSettings?.smtpPass || !form.customSettings?.smtpFrom}
+                        onClick={handleTestEmail}
+                      >
+                        {testEmailLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Mail className="h-3 w-3 mr-1" />}
+                        Send Test Email
+                      </Button>
+                      {testEmailResult && (
+                        <span className={`text-xs flex items-center gap-1 ${testEmailResult.success ? "text-green-600" : "text-red-600"}`}>
+                          {testEmailResult.success ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                          {testEmailResult.message}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
               </CardContent>

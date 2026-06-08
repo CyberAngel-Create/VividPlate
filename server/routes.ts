@@ -6586,6 +6586,56 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
     }
   });
 
+  /**
+   * POST /api/my-website/test-email
+   * Sends a test email using the SMTP settings provided in the request body.
+   */
+  app.post('/api/my-website/test-email', isAuthenticated, async (req: any, res: any) => {
+    try {
+      const user = req.user;
+      const { smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom, smtpFromName } = req.body;
+
+      if (!smtpHost || !smtpUser || !smtpPass || !smtpFrom) {
+        return res.status(400).json({ error: 'SMTP Host, User, Password, and From Email are required.' });
+      }
+
+      const userRestaurants = await storage.getRestaurantsByUserId(user.id);
+      if (!userRestaurants || userRestaurants.length === 0) {
+        return res.status(404).json({ error: 'No restaurant found for this account.' });
+      }
+      const restaurant = userRestaurants[0];
+
+      const { sendBookingEmail } = await import('./email-service.js');
+      const result = await sendBookingEmail(
+        {
+          host: smtpHost,
+          port: parseInt(smtpPort || '587'),
+          secure: smtpPort === '465',
+          user: smtpUser,
+          pass: smtpPass,
+          from: smtpFrom,
+          fromName: smtpFromName || restaurant.name,
+        },
+        smtpFrom,
+        `Test Email – ${restaurant.name}`,
+        `<div style="font-family:Arial,sans-serif;max-width:480px;margin:0 auto;padding:24px;border:1px solid #eee;border-radius:8px;">
+          <h2 style="color:#333;margin-top:0;">SMTP Test Successful</h2>
+          <p>This is a test email from <strong>${restaurant.name}</strong>.</p>
+          <p>Your SMTP settings are configured correctly. Booking confirmation emails will be sent from this address.</p>
+        </div>`
+      );
+
+      if (result.success) {
+        res.json({ success: true });
+      } else {
+        res.status(502).json({ error: result.error || 'Email delivery failed.' });
+      }
+    } catch (err: any) {
+      console.error('POST /api/my-website/test-email error:', err);
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
