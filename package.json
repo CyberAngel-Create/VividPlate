@@ -130,9 +130,7 @@
     "vite": "^6.4.2"
   },
   "optionalDependencies": {
-    "bufferutil": "^4.0.8",
-    "@rollup/rollup-linux-x64-musl": "4.60.4",
-    "@esbuild/linux-x64": "0.25.12"
+    "bufferutil": "^4.0.8"
   },
   "overrides": {
     "form-data": "^4.0.0",

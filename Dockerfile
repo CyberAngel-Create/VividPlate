@@ -10,8 +10,8 @@ RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
 
 COPY package.json package-lock.json* ./
 
-# Skip scripts so sharp doesn't try to build from source
-RUN npm ci --ignore-scripts
+# Use npm install (not ci) to avoid lockfile sync issues with optional platform deps
+RUN npm install --ignore-scripts
 
 # Install prebuilt musl/Alpine binary for sharp, rollup, and esbuild
 RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64 --no-save 2>/dev/null || true
