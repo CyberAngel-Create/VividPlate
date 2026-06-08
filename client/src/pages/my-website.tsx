@@ -702,7 +702,7 @@ export default function MyWebsitePage() {
                 <CardDescription>Allow visitors to request a table reservation</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-4">
                   <div>
                     <p className="font-medium">Enable Booking Form</p>
                     <p className="text-sm text-gray-500">Guests can submit table booking requests from your website</p>
@@ -712,6 +712,39 @@ export default function MyWebsitePage() {
                     onCheckedChange={v => setForm(prev => ({ ...prev, bookingEnabled: v }))}
                   />
                 </div>
+                {form.bookingEnabled && (
+                  <div className="border-t pt-4 space-y-3">
+                    <p className="text-sm font-medium text-gray-700">Email Notifications</p>
+                    <p className="text-xs text-gray-500">When a guest books a table, they will receive an email confirmation. Configure your SMTP below so emails come from your address.</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label className="text-xs">SMTP Host</Label>
+                        <Input placeholder="smtp.gmail.com" value={form.customSettings?.smtpHost || ""} onChange={e => setForm(prev => ({ ...prev, customSettings: { ...prev.customSettings, smtpHost: e.target.value } }))} className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">SMTP Port</Label>
+                        <Input placeholder="587" value={form.customSettings?.smtpPort || ""} onChange={e => setForm(prev => ({ ...prev, customSettings: { ...prev.customSettings, smtpPort: e.target.value } }))} className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">SMTP User</Label>
+                        <Input placeholder="your@email.com" value={form.customSettings?.smtpUser || ""} onChange={e => setForm(prev => ({ ...prev, customSettings: { ...prev.customSettings, smtpUser: e.target.value } }))} className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">SMTP Password</Label>
+                        <Input type="password" placeholder="App password" value={form.customSettings?.smtpPass || ""} onChange={e => setForm(prev => ({ ...prev, customSettings: { ...prev.customSettings, smtpPass: e.target.value } }))} className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">From Email</Label>
+                        <Input placeholder="your@email.com" value={form.customSettings?.smtpFrom || ""} onChange={e => setForm(prev => ({ ...prev, customSettings: { ...prev.customSettings, smtpFrom: e.target.value } }))} className="h-8 text-sm" />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-xs">From Name</Label>
+                        <Input placeholder="Restaurant Name" value={form.customSettings?.smtpFromName || ""} onChange={e => setForm(prev => ({ ...prev, customSettings: { ...prev.customSettings, smtpFromName: e.target.value } }))} className="h-8 text-sm" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Use an app-specific password if using Gmail. Leave blank to skip email notifications.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

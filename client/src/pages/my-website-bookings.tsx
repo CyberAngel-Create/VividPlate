@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Calendar, Users, Clock, Mail, Phone, Loader2, CheckCircle, XCircle, HelpCircle } from "lucide-react";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 interface Booking {
   id: number;
@@ -155,6 +156,9 @@ export default function MyWebsiteBookingsPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const [filter, setFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState<string>("");
+  const [dateTo, setDateTo] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   const { data, isLoading } = useQuery<{ bookings: Booking[] }>({
     queryKey: ["/api/my-website/bookings"],
@@ -186,7 +190,25 @@ export default function MyWebsiteBookingsPage() {
   };
 
   const bookings = data?.bookings || [];
-  const filtered = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+
+  let filtered = bookings;
+  if (filter !== "all") {
+    filtered = filtered.filter(b => b.status === filter);
+  }
+  if (dateFrom) {
+    filtered = filtered.filter(b => b.bookingDate >= dateFrom);
+  }
+  if (dateTo) {
+    filtered = filtered.filter(b => b.bookingDate <= dateTo);
+  }
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(b =>
+      b.guestName.toLowerCase().includes(q) ||
+      b.guestEmail.toLowerCase().includes(q) ||
+      (b.guestPhone && b.guestPhone.includes(q))
+    );
+  }
 
   const counts = {
     all: bookings.length,
@@ -217,6 +239,32 @@ export default function MyWebsiteBookingsPage() {
           </div>
         </div>
 
+        {/* Search */}
+        <div className="mb-4">
+          <Input
+            placeholder="Search by name, email, or phone..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="max-w-md"
+          />
+        </div>
+
+        {/* Date Filters */}
+        <div className="flex flex-wrap gap-3 mb-4 items-end">
+          <div className="space-y-1">
+            <Label className="text-xs text-gray-500">From Date</Label>
+            <Input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="h-8 text-sm" />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-gray-500">To Date</Label>
+            <Input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="h-8 text-sm" />
+          </div>
+          <Button variant="ghost" size="sm" onClick={() => { setDateFrom(""); setDateTo(""); setSearchQuery(""); setFilter("all"); }} className="h-8 text-xs">
+            Clear Filters
+          </Button>
+        </div>
+
+        {/* Status Filters */}
         <div className="flex flex-wrap gap-2 mb-6">
           {(["all", "pending", "approved", "declined"] as const).map(status => (
             <button

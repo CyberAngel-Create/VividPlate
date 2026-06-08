@@ -6151,6 +6151,45 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
       if (!restaurant) return res.status(403).json({ error: 'Not your booking' });
 
       const updated = await storage.updateTableBooking(bookingId, { status, ownerNotes });
+
+      // Send status update email if status changed
+      try {
+        const website = await storage.getRestaurantWebsite(restaurant.id);
+        if (website && status) {
+          const cs = (website.customSettings as any) || {};
+          if (cs.smtpHost && cs.smtpUser && cs.smtpPass && cs.smtpFrom) {
+            const { sendBookingEmail, buildBookingStatusEmail } = await import('./email-service.js');
+            const siteUrl = `${req.protocol}://${req.get('host')}/site/${website.slug}`;
+            const html = buildBookingStatusEmail(
+              restaurant.name,
+              updated.guestName,
+              status,
+              updated.bookingDate,
+              updated.bookingTime,
+              updated.partySize,
+              ownerNotes || null,
+              siteUrl
+            );
+            await sendBookingEmail(
+              {
+                host: cs.smtpHost,
+                port: parseInt(cs.smtpPort || '587'),
+                secure: cs.smtpPort === '465',
+                user: cs.smtpUser,
+                pass: cs.smtpPass,
+                from: cs.smtpFrom,
+                fromName: cs.smtpFromName || restaurant.name,
+              },
+              updated.guestEmail,
+              `Booking ${status === 'approved' ? 'Confirmed' : status === 'declined' ? 'Declined' : 'Updated'} - ${restaurant.name}`,
+              html
+            );
+          }
+        }
+      } catch (emailErr: any) {
+        console.error('Status update email failed:', emailErr.message);
+      }
+
       res.json({ booking: updated });
     } catch (err: any) {
       console.error('PATCH /api/my-website/bookings error:', err);
@@ -6285,6 +6324,42 @@ app.get('/api/restaurants/:restaurantId', async (req, res) => {
         bookingTime,
         notes: notes || null,
       });
+
+      // Send email notification if SMTP is configured
+      try {
+        const cs = (website.customSettings as any) || {};
+        if (cs.smtpHost && cs.smtpUser && cs.smtpPass && cs.smtpFrom) {
+          const { sendBookingEmail, buildBookingCreatedEmail } = await import('./email-service.js');
+          const restaurant = await storage.getRestaurant(website.restaurantId);
+          const restaurantName = restaurant?.name || 'Restaurant';
+          const siteUrl = `${req.protocol}://${req.get('host')}/site/${slug}`;
+          const html = buildBookingCreatedEmail(
+            restaurantName,
+            guestName,
+            bookingDate,
+            bookingTime,
+            parseInt(String(partySize)),
+            siteUrl
+          );
+          await sendBookingEmail(
+            {
+              host: cs.smtpHost,
+              port: parseInt(cs.smtpPort || '587'),
+              secure: cs.smtpPort === '465',
+              user: cs.smtpUser,
+              pass: cs.smtpPass,
+              from: cs.smtpFrom,
+              fromName: cs.smtpFromName || restaurantName,
+            },
+            guestEmail,
+            `Booking Request Received - ${restaurantName}`,
+            html
+          );
+        }
+      } catch (emailErr: any) {
+        console.error('Booking email failed:', emailErr.message);
+        // Don't fail the booking if email fails
+      }
 
       res.json({ booking, message: 'Your booking request has been submitted!' });
     } catch (err: any) {
