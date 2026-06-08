@@ -113,20 +113,20 @@ function BookingForm({ slug }: { slug: string }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label htmlFor="guestName">Full Name *</Label>
-          <Input id="guestName" required value={form.guestName} onChange={e => setForm(p => ({ ...p, guestName: e.target.value }))} placeholder="Your name" />
+          <Input id="guestName" required value={form.guestName} onChange={e => setForm(p => ({ ...p, guestName: e.target.value }))} placeholder="Your name" className="text-gray-900 placeholder:text-gray-400" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="guestEmail">Email *</Label>
-          <Input id="guestEmail" type="email" required value={form.guestEmail} onChange={e => setForm(p => ({ ...p, guestEmail: e.target.value }))} placeholder="your@email.com" />
+          <Input id="guestEmail" type="email" required value={form.guestEmail} onChange={e => setForm(p => ({ ...p, guestEmail: e.target.value }))} placeholder="your@email.com" className="text-gray-900 placeholder:text-gray-400" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="guestPhone">Phone</Label>
-          <Input id="guestPhone" type="tel" value={form.guestPhone} onChange={e => setForm(p => ({ ...p, guestPhone: e.target.value }))} placeholder="+1 555 000 0000" />
+          <Input id="guestPhone" type="tel" value={form.guestPhone} onChange={e => setForm(p => ({ ...p, guestPhone: e.target.value }))} placeholder="+1 555 000 0000" className="text-gray-900 placeholder:text-gray-400" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="partySize">Party Size *</Label>
           <Select value={form.partySize} onValueChange={v => setForm(p => ({ ...p, partySize: v }))}>
-            <SelectTrigger id="partySize">
+            <SelectTrigger id="partySize" className="text-gray-900 data-[placeholder]:text-gray-400">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -138,12 +138,12 @@ function BookingForm({ slug }: { slug: string }) {
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="bookingDate">Date *</Label>
-          <Input id="bookingDate" type="date" required min={minDate} value={form.bookingDate} onChange={e => setForm(p => ({ ...p, bookingDate: e.target.value }))} />
+          <Input id="bookingDate" type="date" required min={minDate} value={form.bookingDate} onChange={e => setForm(p => ({ ...p, bookingDate: e.target.value }))} className="text-gray-900 placeholder:text-gray-400" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="bookingTime">Time *</Label>
           <Select value={form.bookingTime} onValueChange={v => setForm(p => ({ ...p, bookingTime: v }))}>
-            <SelectTrigger id="bookingTime">
+            <SelectTrigger id="bookingTime" className="text-gray-900 data-[placeholder]:text-gray-400">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -156,7 +156,7 @@ function BookingForm({ slug }: { slug: string }) {
       </div>
       <div className="space-y-1.5">
         <Label htmlFor="notes">Special Requests</Label>
-        <Textarea id="notes" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Allergies, celebrations, accessibility needs..." rows={3} />
+        <Textarea id="notes" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Allergies, celebrations, accessibility needs..." rows={3} className="text-gray-900 placeholder:text-gray-400" />
       </div>
       <Button type="submit" className="w-full" disabled={mutation.isPending}>
         {mutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Calendar className="h-4 w-4 mr-2" />}
