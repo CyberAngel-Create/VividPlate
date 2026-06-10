@@ -3,37 +3,32 @@
 # ============================================
 
 # ---------- Stage 1: Dependencies ----------
-FROM node:20-alpine AS deps
+FROM node:20-slim AS deps
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ libvips-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json* ./
+# Only copy package.json (NOT lockfile) so npm resolves platform-specific
+# optional deps (sharp, esbuild) fresh for linux/glibc
+COPY package.json ./
 
-# Use npm install (not ci) to avoid lockfile sync issues with optional platform deps
-RUN npm install --ignore-scripts
-
-# Install prebuilt musl/Alpine binary for sharp, rollup, and esbuild
-RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64 --no-save 2>/dev/null || true
-RUN npm install @rollup/rollup-linux-x64-musl --save-optional --no-save 2>/dev/null || true
-RUN npm install @esbuild/linux-x64 --no-save 2>/dev/null || true
+RUN npm install
 
 # ---------- Stage 2: Build ----------
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat python3 make g++ vips-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 make g++ libvips-dev \
+  && rm -rf /var/lib/apt/lists/*
 
-COPY package.json package-lock.json* ./
+# Only copy package.json (NOT lockfile) so npm resolves platform-specific
+# optional deps fresh for linux/glibc
+COPY package.json ./
 
-# Use npm install (not ci) to properly resolve optional platform-specific deps
-# This avoids the npm bug with rollup/esbuild musl binaries on Alpine
-RUN npm install --ignore-scripts 2>/dev/null || npm install --ignore-scripts --legacy-peer-deps
-
-# Explicitly install the Linux x64 musl binaries for rollup, esbuild, and sharp
-RUN npm install @rollup/rollup-linux-x64-musl --no-save 2>/dev/null || true
-RUN npm install @esbuild/linux-x64 --no-save 2>/dev/null || true
-RUN npm install --cpu=x64 --os=linux --libc=musl @img/sharp-linuxmusl-x64 --no-save 2>/dev/null || true
+RUN npm install
 
 COPY . .
 
@@ -41,15 +36,16 @@ RUN npm run build
 RUN npx vite build
 RUN mv dist/public dist/server/public
 
-
 # ---------- Stage 3: Production ----------
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 WORKDIR /app
 
-RUN apk add --no-cache curl vips
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl libvips \
+  && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user before copying files
-RUN addgroup -S nodejs && adduser -S vividplate -G nodejs
+RUN addgroup --system nodejs && adduser --system --ingroup nodejs vividplate
 
 ENV NODE_ENV=production
 ENV PORT=8080
