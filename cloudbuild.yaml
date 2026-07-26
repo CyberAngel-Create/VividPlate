@@ -20,16 +20,6 @@ substitutions:
   _REGION: us-central1
 
 steps:
-  # Ensure production DB has the agent/token schema before the new revision starts
-  - name: 'node:20-slim'
-    entrypoint: 'bash'
-    secretEnv: ['DATABASE_URL']
-    args:
-      - '-c'
-      - |
-        npm install pg --no-save
-        node scripts/migrate-agent-tokens.mjs
-
   # Build the container image
   - name: 'gcr.io/cloud-builders/docker'
     args:
