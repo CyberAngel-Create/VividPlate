@@ -8,6 +8,7 @@ uploads/
 
 # Secrets — never commit
 .env
+.secret_*
 
 # GCP service account keys & pasted credential files
 attached_assets/

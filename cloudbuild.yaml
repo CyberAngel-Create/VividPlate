@@ -1,16 +1,15 @@
 # Google Cloud Build configuration for VividPlate
 # Deploy to Cloud Run with a single command:
-#   gcloud builds submit --config cloudbuild.yaml --project white-notch-467408-e9
+#   gcloud builds submit --config cloudbuild.yaml --project vividplate-503310
 #
 # IMPORTANT: Before first deploy, store secrets in Secret Manager:
 #   gcloud secrets create DATABASE_URL --data-file=- <<< "postgresql://..."
 #   gcloud secrets create SESSION_SECRET --data-file=- <<< "your-secret"
 #   gcloud secrets create LEMONSQUEEZY_API_KEY --data-file=- <<< "eyJ..."
 #   gcloud secrets create LEMONSQUEEZY_WEBHOOK_SECRET --data-file=- <<< "..."
-#   gcloud secrets create TELEGRAM_BOT_TOKEN --data-file=- <<< "..."
 #
 # Grant Cloud Run SA access:
-#   PROJECT_NUMBER=$(gcloud projects describe white-notch-467408-e9 --format='value(projectNumber)')
+#   PROJECT_NUMBER=$(gcloud projects describe vividplate-503310 --format='value(projectNumber)')
 #   gcloud secrets add-iam-policy-binding DATABASE_URL \
 #     --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
 #     --role="roles/secretmanager.secretAccessor"
@@ -78,9 +77,10 @@ steps:
       - >-
         NODE_ENV=production,
         CHAPA_ENABLED=false,
+        TELEGRAM_BOT_TOKEN=false,
         LEMONSQUEEZY_STORE_ID=338030,
-        LEMONSQUEEZY_MONTHLY_VARIANT_ID=1659014,
-        LEMONSQUEEZY_YEARLY_VARIANT_ID=1658892,
+        LEMONSQUEEZY_MONTHLY_VARIANT_ID=1713315,
+        LEMONSQUEEZY_YEARLY_VARIANT_ID=1713296,
         LEMONSQUEEZY_WEBSITE_ADDON_VARIANT_ID=1732293
       # Secrets from Secret Manager (format: ENV_VAR=secret-name:version)
       - '--set-secrets'
@@ -88,8 +88,7 @@ steps:
         DATABASE_URL=DATABASE_URL:latest,
         SESSION_SECRET=SESSION_SECRET:latest,
         LEMONSQUEEZY_API_KEY=LEMONSQUEEZY_API_KEY:latest,
-        LEMONSQUEEZY_WEBHOOK_SECRET=LEMONSQUEEZY_WEBHOOK_SECRET:latest,
-        TELEGRAM_BOT_TOKEN=TELEGRAM_BOT_TOKEN:latest
+        LEMONSQUEEZY_WEBHOOK_SECRET=LEMONSQUEEZY_WEBHOOK_SECRET:latest
 
 images:
   - 'gcr.io/$PROJECT_ID/${_SERVICE_NAME}:${BUILD_ID}'
